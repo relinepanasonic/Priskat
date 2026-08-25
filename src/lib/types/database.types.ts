@@ -7,6 +7,7 @@ export type Json =
   | Json[];
 
 export type UserRole = "member" | "moderator" | "admin";
+export type UserGender = "male" | "female";
 export type PostStatus = "draft" | "scheduled" | "published";
 export type EventStatus = "draft" | "published" | "cancelled";
 export type RSVPStatus = "going" | "waitlist" | "cancelled";
@@ -21,6 +22,19 @@ export interface Profile {
   skills: string[];
   interests: string[];
   role: UserRole;
+  gender: UserGender | null;
+  completed_modules: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyDevotion {
+  id: string;
+  publish_date: string;
+  verse_reference: string;
+  verse_text: string;
+  prayer_title: string;
+  prayer_text: string;
   created_at: string;
   updated_at: string;
 }
@@ -120,6 +134,12 @@ export type Database = {
         Update: Partial<Omit<EventRSVP, "id" | "event_id" | "user_id">>;
         Relationships: [];
       };
+      daily_devotions: {
+        Row: DailyDevotion;
+        Insert: Partial<DailyDevotion> & { publish_date: string; verse_reference: string; verse_text: string; prayer_title: string; prayer_text: string };
+        Update: Partial<Omit<DailyDevotion, "id">>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -138,6 +158,7 @@ export type Database = {
     };
     Enums: {
       user_role: UserRole;
+      user_gender: UserGender;
       post_status: PostStatus;
       event_status: EventStatus;
       rsvp_status: RSVPStatus;

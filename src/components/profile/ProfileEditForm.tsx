@@ -17,6 +17,7 @@ const schema = z.object({
   bio: z.string().max(300).optional(),
   skills: z.string().optional(),
   interests: z.string().optional(),
+  gender: z.enum(["male", "female"]).nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -40,6 +41,7 @@ export default function ProfileEditForm({ profile }: Props) {
       bio: profile.bio ?? "",
       skills: profile.skills?.join(", ") ?? "",
       interests: profile.interests?.join(", ") ?? "",
+      gender: profile.gender ?? null,
     },
   });
 
@@ -52,7 +54,7 @@ export default function ProfileEditForm({ profile }: Props) {
       const url = await uploadImage(file, "avatars", storagePath(profile.id, file.name));
       setAvatarUrl(url);
       const supabase = createClient();
-      await supabase.from("profiles").update({ avatar_url: url }).eq("id", profile.id);
+      await supabase.from("profiles").update({ avatar_url: url } as any).eq("id", profile.id);
     } catch {
       setError("Avatar upload failed.");
     } finally {
@@ -79,7 +81,8 @@ export default function ProfileEditForm({ profile }: Props) {
         bio: data.bio ?? "",
         skills: skillsArr,
         interests: interestsArr,
-      })
+        gender: data.gender,
+      } as any)
       .eq("id", profile.id);
 
     if (updateError) {
@@ -137,8 +140,18 @@ export default function ProfileEditForm({ profile }: Props) {
       </div>
 
       <div>
+        <label className="mb-1 block text-sm font-medium text-brand-light">Gender</label>
+        <select {...register("gender")} className="w-full rounded-lg bg-brand-surface border border-brand-border px-4 py-2.5 text-sm focus:border-brand-gold focus:outline-none text-brand-light">
+          <option value="">Select Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+        {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender.message}</p>}
+      </div>
+
+      <div>
         <label className="mb-1 block text-sm font-medium text-brand-light">Skills <span className="text-brand-muted font-normal">(comma-separated)</span></label>
-        <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+        <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full rounded-lg bg-brand-surface border border-brand-border px-4 py-2.5 text-sm focus:border-brand-gold focus:outline-none text-white" />
       </div>
 
       <div>

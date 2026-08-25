@@ -2,18 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Badge from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
-import RoleChangeButton from "@/components/admin/RoleChangeButton";
-import type { UserRole, Profile } from "@/lib/types/database.types";
+import AdminMemberEditDialog from "@/components/admin/AdminMemberEditDialog";
+import type { UserRole, Profile, UserGender } from "@/lib/types/database.types";
 
 export default async function AdminMembersPage() {
   const supabase = await createClient();
 
   const { data } = await supabase
     .from("profiles")
-    .select("id, username, full_name, avatar_url, role, created_at")
+    .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at")
     .order("created_at", { ascending: false });
 
-  const members = data as Pick<Profile, "id" | "username" | "full_name" | "avatar_url" | "role" | "created_at">[] | null;
+  const members = data as Pick<Profile, "id" | "username" | "full_name" | "avatar_url" | "role" | "gender" | "completed_modules" | "created_at">[] | null;
 
   const roleVariant = (role: UserRole) =>
     role === "admin" ? "gold" : role === "moderator" ? "blue" : "gray";
@@ -32,7 +32,7 @@ export default async function AdminMembersPage() {
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Member</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase hidden md:table-cell">Joined</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Role</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-brand-muted uppercase">Change Role</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-brand-muted uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-50">
@@ -59,8 +59,8 @@ export default async function AdminMembersPage() {
                 <td className="px-4 py-3">
                   <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
                 </td>
-                <td className="px-4 py-3">
-                  <RoleChangeButton memberId={member.id} currentRole={member.role} />
+                <td className="px-4 py-3 flex justify-end">
+                  <AdminMemberEditDialog member={member} />
                 </td>
               </tr>
             ))}

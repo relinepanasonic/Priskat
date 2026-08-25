@@ -9,6 +9,7 @@ import {
   Users,
   LogOut,
   ChevronRight,
+  BookOpen,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,7 @@ const NAV = [
   { href: "/admin/news", label: "News", icon: Newspaper },
   { href: "/admin/events", label: "Events", icon: Calendar },
   { href: "/admin/members", label: "Members", icon: Users, adminOnly: true },
+  { href: "/admin/devotions", label: "Devotions", icon: BookOpen },
 ];
 
 export default function AdminSidebar({ role, fullName }: Props) {

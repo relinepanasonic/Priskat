@@ -57,3 +57,4 @@ files.forEach(file => {
 });
 
 console.log(`Updated ${changedFiles} files.`);
+
