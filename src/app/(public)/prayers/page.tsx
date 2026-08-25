@@ -37,7 +37,7 @@ export default async function PrayerPage({
     <div className="flex min-h-screen flex-col bg-brand-bg pb-16">
       <Navbar profile={profile} />
 
-      <main className="flex-1 px-4 pt-6 pb-12 max-w-md mx-auto w-full">
+      <main className="flex-1 px-4 pt-6 pb-24 max-w-md mx-auto w-full">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white mb-1">
@@ -82,3 +82,4 @@ export default async function PrayerPage({
     </div>
   );
 }
+

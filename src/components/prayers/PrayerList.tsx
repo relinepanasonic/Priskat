@@ -133,3 +133,4 @@ export default function PrayerList({ prayers, lang }: Props) {
     </div>
   );
 }
+

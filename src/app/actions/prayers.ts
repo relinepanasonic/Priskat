@@ -69,3 +69,4 @@ export async function deletePrayer(id: string) {
   revalidatePath("/prayers");
   revalidatePath("/admin/prayers");
 }
+

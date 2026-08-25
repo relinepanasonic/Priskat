@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Calendar, BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,8 @@ export default function Navbar({ profile }: NavbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-blue-100 bg-brand-surface/95 backdrop-blur-sm shadow-sm">
+    <>
+    <header className="hidden md:block sticky top-0 z-50 border-b border-brand-blue-100 bg-brand-surface/95 backdrop-blur-sm shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
@@ -149,61 +150,33 @@ export default function Navbar({ profile }: NavbarProps) {
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-brand-border bg-brand-surface px-4 pb-4">
-          <nav className="flex flex-col gap-1 pt-3">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setMobileOpen(false)}
-                className={[
-                  "px-3 py-2.5 rounded-lg text-sm font-medium",
-                  pathname === href
-                    ? "bg-brand-bg text-brand-gold"
-                    : "text-brand-light hover:bg-brand-surface-hover",
-                ].join(" ")}
-              >
-                {label}
-              </Link>
-            ))}
-            {user ? (
-              <>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="px-3 py-2.5 rounded-lg text-sm font-medium text-brand-light hover:bg-brand-surface-hover"
-                >
-                  My Profile
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="text-left px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <div className="flex gap-2 pt-2">
-                <Link
-                  href="/login"
-                  className="flex-1 rounded-lg border border-brand-blue px-4 py-2 text-center text-sm font-medium text-brand-gold"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex-1 rounded-lg bg-brand-gold text-brand-dark px-4 py-2 text-center text-sm font-medium text-white"
-                >
-                  Join
-                </Link>
-              </div>
-            )}
-          </nav>
-        </div>
-      )}
     </header>
+    
+    {/* Mobile Bottom Navigation (Visible only on mobile) */}
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
+      <div className="flex justify-around items-center h-16">
+        <Link href="/" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Home className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Home</span>
+        </Link>
+        <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/news' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Newspaper className="h-5 w-5" />
+          <span className="text-[10px] font-medium">News</span>
+        </Link>
+        <Link href="/events" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/events' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Calendar className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Events</span>
+        </Link>
+        <Link href="/prayers" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/prayers' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <BookOpen className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Prayers</span>
+        </Link>
+        <Link href={user ? "/profile" : "/login"} className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/profile' || pathname === '/login' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <User className="h-5 w-5" />
+          <span className="text-[10px] font-medium">{user ? "Profile" : "Sign In"}</span>
+        </Link>
+      </div>
+    </nav>
+    </>
   );
 }
