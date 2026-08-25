@@ -39,6 +39,45 @@ export interface DailyDevotion {
   updated_at: string;
 }
 
+export type PrayerCategory =
+  | 'rosario'
+  | 'bunda_maria'
+  | 'hati_kudus_yesus'
+  | 'roh_kudus'
+  | 'malaikat'
+  | 'jalan_salib'
+  | 'para_kudus'
+  | 'keluarga'
+  | 'doa_harian'
+  | 'tobat_syukur';
+
+export const PRAYER_CATEGORIES: { value: PrayerCategory; label_id: string; label_en: string }[] = [
+  { value: 'doa_harian', label_id: 'Doa Harian', label_en: 'Daily Prayers' },
+  { value: 'rosario', label_id: 'Rosario', label_en: 'Rosary' },
+  { value: 'bunda_maria', label_id: 'Bunda Maria', label_en: 'Virgin Mary' },
+  { value: 'hati_kudus_yesus', label_id: 'Hati Kudus Yesus', label_en: 'Sacred Heart' },
+  { value: 'roh_kudus', label_id: 'Roh Kudus', label_en: 'Holy Spirit' },
+  { value: 'malaikat', label_id: 'Malaikat', label_en: 'Angels' },
+  { value: 'jalan_salib', label_id: 'Jalan Salib', label_en: 'Stations of the Cross' },
+  { value: 'para_kudus', label_id: 'Para Kudus', label_en: 'Saints' },
+  { value: 'keluarga', label_id: 'Keluarga', label_en: 'Family' },
+  { value: 'tobat_syukur', label_id: 'Tobat & Syukur', label_en: 'Repentance & Gratitude' },
+];
+
+export interface Prayer {
+  id: string;
+  slug: string;
+  title_id: string;
+  title_en: string;
+  body_id: string;
+  body_en: string;
+  category: PrayerCategory;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface NewsPost {
   id: string;
   author_id: string;

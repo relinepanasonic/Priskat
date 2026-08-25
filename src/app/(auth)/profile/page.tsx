@@ -103,13 +103,21 @@ export default async function ProfilePage() {
 
         {/* QUICK LINKS */}
         <section className="mb-10 grid grid-cols-2 gap-4">
-          <Link href="/gallery" className="p-4 card-3d text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
+          <Link href="/prayers" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
+             <span className="text-2xl">🙏</span>
+             <span className="text-sm font-medium text-white">Doa / Prayers</span>
+          </Link>
+          <Link href="/gallery" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
              <span className="text-2xl">📸</span>
              <span className="text-sm font-medium text-white">Gallery</span>
           </Link>
-          <Link href="/news" className="p-4 card-3d text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
+          <Link href="/news" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
              <span className="text-2xl">📰</span>
              <span className="text-sm font-medium text-white">News</span>
+          </Link>
+          <Link href="/events" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
+             <span className="text-2xl">📅</span>
+             <span className="text-sm font-medium text-white">Events</span>
           </Link>
         </section>
 
