@@ -6,6 +6,13 @@
 .pnp.js
 .yarn/install-state.gz
 
+# Data files (PDFs, etc.) — large files, keep local only
+/Data/
+prayer_text_raw.txt
+extract_prayers.js
+ui-3d-replacer.js
+ui-3d-replacer2.js
+
 # testing
 /coverage
 
