@@ -40,7 +40,7 @@ export default function ReactionButton({
     return (
       <Link
         href="/login"
-        className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-500 hover:border-red-300 hover:text-red-500 transition-colors"
+        className="inline-flex items-center gap-2 rounded-lg border border-brand-border px-4 py-2 text-sm text-brand-muted hover:border-red-300 hover:text-red-500 transition-colors"
       >
         <Heart className="h-4 w-4" />
         <span>{optimisticState.count} likes — sign in to react</span>
@@ -57,7 +57,7 @@ export default function ReactionButton({
         "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all",
         optimisticState.liked
           ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-          : "border-stone-200 text-stone-500 hover:border-red-200 hover:text-red-500",
+          : "border-brand-border text-brand-muted hover:border-red-200 hover:text-red-500",
       ].join(" ")}
     >
       <Heart

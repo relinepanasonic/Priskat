@@ -114,12 +114,12 @@ export default function NewsPostForm({ initialValues, mode = "create" }: Props) 
 
       {/* Cover Image */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">
+        <label className="mb-1 block text-sm font-medium text-brand-light">
           Cover Image
         </label>
         <div className="relative">
           {coverPreview ? (
-            <div className="relative h-48 rounded-xl overflow-hidden border border-stone-200">
+            <div className="relative h-48 rounded-xl overflow-hidden border border-brand-border">
               <Image src={coverPreview} alt="Cover" fill className="object-cover" />
               <button
                 type="button"
@@ -130,14 +130,14 @@ export default function NewsPostForm({ initialValues, mode = "create" }: Props) 
               </button>
             </div>
           ) : (
-            <label className="flex h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-200 hover:border-brand-blue transition-colors">
+            <label className="flex h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand-border hover:border-brand-blue transition-colors">
               {uploading ? (
-                <p className="text-sm text-stone-400">Uploading…</p>
+                <p className="text-sm text-brand-muted">Uploading…</p>
               ) : (
                 <>
-                  <ImagePlus className="h-8 w-8 text-stone-300 mb-2" />
-                  <p className="text-sm text-stone-400">Click to upload cover image</p>
-                  <p className="text-xs text-stone-300 mt-1">Max 2MB · Auto-compressed</p>
+                  <ImagePlus className="h-8 w-8 text-brand-muted mb-2" />
+                  <p className="text-sm text-brand-muted">Click to upload cover image</p>
+                  <p className="text-xs text-brand-muted mt-1">Max 2MB · Auto-compressed</p>
                 </>
               )}
               <input type="file" accept="image/*" className="sr-only" onChange={handleImageChange} />
@@ -148,21 +148,21 @@ export default function NewsPostForm({ initialValues, mode = "create" }: Props) 
 
       {/* Title */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Title *</label>
+        <label className="mb-1 block text-sm font-medium text-brand-light">Title *</label>
         <input
           {...register("title")}
           placeholder="Post title"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
+          className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
         />
         {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
       </div>
 
       {/* Category */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Category *</label>
+        <label className="mb-1 block text-sm font-medium text-brand-light">Category *</label>
         <select
           {...register("category")}
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
+          className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -172,14 +172,14 @@ export default function NewsPostForm({ initialValues, mode = "create" }: Props) 
 
       {/* Body */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">
+        <label className="mb-1 block text-sm font-medium text-brand-light">
           Body (HTML supported) *
         </label>
         <textarea
           {...register("body")}
           rows={14}
           placeholder="Write your post content here…"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm font-mono focus:border-brand-blue focus:outline-none resize-y"
+          className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm font-mono focus:border-brand-blue focus:outline-none resize-y"
         />
         {errors.body && <p className="mt-1 text-xs text-red-600">{errors.body.message}</p>}
       </div>
@@ -187,10 +187,10 @@ export default function NewsPostForm({ initialValues, mode = "create" }: Props) 
       {/* Status */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">Status *</label>
+          <label className="mb-1 block text-sm font-medium text-brand-light">Status *</label>
           <select
             {...register("status")}
-            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
+            className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
           >
             <option value="draft">Draft</option>
             <option value="scheduled">Scheduled</option>
@@ -199,13 +199,13 @@ export default function NewsPostForm({ initialValues, mode = "create" }: Props) 
         </div>
         {(status === "scheduled" || status === "published") && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700">
+            <label className="mb-1 block text-sm font-medium text-brand-light">
               Publish Date/Time
             </label>
             <input
               {...register("published_at")}
               type="datetime-local"
-              className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
+              className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none"
             />
           </div>
         )}

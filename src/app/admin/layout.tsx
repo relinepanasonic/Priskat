@@ -25,7 +25,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-stone-50">
+    <div className="flex min-h-screen bg-brand-surface-hover">
       <AdminSidebar role={profile.role} fullName={profile.full_name} />
       <div className="flex-1 min-w-0">
         <main className="p-6 lg:p-8">{children}</main>

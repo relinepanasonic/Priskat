@@ -11,7 +11,7 @@ export default function MemberCard({ member }: Props) {
   return (
     <Link
       href={`/directory/${member.username}`}
-      className="group flex flex-col items-center rounded-2xl border border-stone-100 bg-white p-5 shadow-sm hover:shadow-md text-center transition-all"
+      className="group flex flex-col items-center rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm hover:shadow-md text-center transition-all"
     >
       {member.avatar_url ? (
         <Image
@@ -22,14 +22,14 @@ export default function MemberCard({ member }: Props) {
           className="rounded-full object-cover mb-3"
         />
       ) : (
-        <div className="h-16 w-16 rounded-full bg-brand-blue-100 flex items-center justify-center text-brand-blue font-bold text-xl mb-3">
+        <div className="h-16 w-16 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-bold text-xl mb-3">
           {member.full_name[0]}
         </div>
       )}
-      <h3 className="font-semibold text-stone-900 group-hover:text-brand-blue transition-colors">
+      <h3 className="font-semibold text-white group-hover:text-brand-gold transition-colors">
         {member.full_name}
       </h3>
-      <p className="text-xs text-stone-400 mb-2">@{member.username}</p>
+      <p className="text-xs text-brand-muted mb-2">@{member.username}</p>
 
       {member.role !== "member" && (
         <Badge variant={member.role === "admin" ? "gold" : "blue"} className="mb-2">
@@ -38,7 +38,7 @@ export default function MemberCard({ member }: Props) {
       )}
 
       {member.bio && (
-        <p className="text-xs text-stone-500 line-clamp-2 mt-1">{member.bio}</p>
+        <p className="text-xs text-brand-muted line-clamp-2 mt-1">{member.bio}</p>
       )}
 
       {member.skills && member.skills.length > 0 && (
@@ -47,7 +47,7 @@ export default function MemberCard({ member }: Props) {
             <Badge key={s} variant="gray" className="text-xs">{s}</Badge>
           ))}
           {member.skills.length > 3 && (
-            <span className="text-xs text-stone-400">+{member.skills.length - 3}</span>
+            <span className="text-xs text-brand-muted">+{member.skills.length - 3}</span>
           )}
         </div>
       )}

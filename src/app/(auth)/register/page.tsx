@@ -60,14 +60,14 @@ export default function RegisterPage() {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
           <Mail className="h-7 w-7 text-green-600" />
         </div>
-        <h2 className="text-xl font-bold text-stone-900">Verify your email</h2>
-        <p className="mt-2 text-sm text-stone-500">
+        <h2 className="text-xl font-bold text-white">Verify your email</h2>
+        <p className="mt-2 text-sm text-brand-muted">
           We&apos;ve sent a confirmation link to your email. Click it to
           activate your account.
         </p>
         <Link
           href="/login"
-          className="mt-4 inline-block text-sm text-brand-blue hover:underline"
+          className="mt-4 inline-block text-sm text-brand-gold hover:underline"
         >
           Back to Sign In
         </Link>
@@ -77,8 +77,8 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <h2 className="mb-1 text-xl font-bold text-stone-900">Join PriskatCFM</h2>
-      <p className="mb-6 text-sm text-stone-500">Create your community account</p>
+      <h2 className="mb-1 text-xl font-bold text-white">Join PriskatCFM</h2>
+      <p className="mb-6 text-sm text-brand-muted">Create your community account</p>
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -88,15 +88,15 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">
+          <label className="mb-1 block text-sm font-medium text-brand-light">
             Full Name
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               {...register("full_name")}
               placeholder="Your full name"
-              className="w-full rounded-lg border border-stone-200 py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
             />
           </div>
           {errors.full_name && (
@@ -105,16 +105,16 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">
+          <label className="mb-1 block text-sm font-medium text-brand-light">
             Email
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               {...register("email")}
               type="email"
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-stone-200 py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
             />
           </div>
           {errors.email && (
@@ -123,21 +123,21 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">
+          <label className="mb-1 block text-sm font-medium text-brand-light">
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
               placeholder="Min. 8 characters"
-              className="w-full rounded-lg border border-stone-200 py-2.5 pl-10 pr-10 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-10 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-light"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -148,16 +148,16 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">
+          <label className="mb-1 block text-sm font-medium text-brand-light">
             Confirm Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               {...register("confirm_password")}
               type={showPassword ? "text" : "password"}
               placeholder="Repeat your password"
-              className="w-full rounded-lg border border-stone-200 py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
             />
           </div>
           {errors.confirm_password && (
@@ -172,9 +172,9 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-stone-500">
+      <p className="mt-6 text-center text-sm text-brand-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-brand-blue hover:underline">
+        <Link href="/login" className="font-medium text-brand-gold hover:underline">
           Sign In
         </Link>
       </p>

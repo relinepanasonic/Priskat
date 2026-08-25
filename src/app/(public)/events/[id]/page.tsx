@@ -61,7 +61,7 @@ export default async function EventDetailPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <Link href="/events" className="mb-6 inline-flex items-center gap-1 text-sm text-stone-500 hover:text-brand-blue transition-colors">
+      <Link href="/events" className="mb-6 inline-flex items-center gap-1 text-sm text-brand-muted hover:text-brand-gold transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to Events
       </Link>
 
@@ -73,20 +73,20 @@ export default async function EventDetailPage({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <h1 className="text-3xl font-bold text-stone-900 sm:text-4xl">{event.title}</h1>
+          <h1 className="text-3xl font-bold text-white sm:text-4xl">{event.title}</h1>
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 text-brand-gold font-medium">
               <Calendar className="h-4 w-4" />
               <span>{formatDateTime(event.event_date)}</span>
               {event.end_date && (
-                <span className="text-stone-400">→ {formatDateTime(event.end_date)}</span>
+                <span className="text-brand-muted">→ {formatDateTime(event.end_date)}</span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-stone-500">
+            <div className="flex items-center gap-2 text-brand-muted">
               <MapPin className="h-4 w-4" />
               {event.location}
             </div>
-            <div className="flex items-center gap-2 text-stone-500">
+            <div className="flex items-center gap-2 text-brand-muted">
               <Users className="h-4 w-4" />
               <LiveRSVPCount eventId={id} initialCount={goingCount} />
               {event.capacity ? ` / ${event.capacity} going` : " going"}
@@ -98,13 +98,13 @@ export default async function EventDetailPage({ params }: Props) {
             </div>
           </div>
 
-          <p className="mt-6 text-stone-700 leading-relaxed whitespace-pre-wrap">
+          <p className="mt-6 text-brand-light leading-relaxed whitespace-pre-wrap">
             {event.description}
           </p>
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
             <RSVPButton
               eventId={id}
               initialStatus={userRsvp?.status ?? null}

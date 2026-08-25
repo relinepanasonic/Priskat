@@ -36,8 +36,8 @@ export default async function EventsPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-brand-blue">Events</h1>
-        <p className="mt-1 text-stone-500">Upcoming events from PriskatCFM</p>
+        <h1 className="text-3xl font-bold text-brand-gold">Events</h1>
+        <p className="mt-1 text-brand-muted">Upcoming events from PriskatCFM</p>
       </div>
 
       {events && events.length > 0 ? (
@@ -47,9 +47,9 @@ export default async function EventsPage({ searchParams }: Props) {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="group flex flex-col rounded-2xl overflow-hidden border border-stone-100 bg-white shadow-sm hover:shadow-md transition-all"
+                className="group flex flex-col rounded-2xl overflow-hidden border border-brand-border bg-brand-surface shadow-sm hover:shadow-md transition-all"
               >
-                <div className="relative h-48 bg-brand-blue-50 flex-shrink-0">
+                <div className="relative h-48 bg-brand-bg flex-shrink-0">
                   {event.banner_image_url ? (
                     <Image
                       src={event.banner_image_url}
@@ -59,12 +59,12 @@ export default async function EventsPage({ searchParams }: Props) {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
-                      <Calendar className="h-12 w-12 text-brand-blue-200" />
+                      <Calendar className="h-12 w-12 text-brand-gold-200" />
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col flex-1 p-5">
-                  <h3 className="font-semibold text-stone-900 group-hover:text-brand-blue transition-colors line-clamp-2">
+                  <h3 className="font-semibold text-white group-hover:text-brand-gold transition-colors line-clamp-2">
                     {event.title}
                   </h3>
                   <div className="mt-3 space-y-1.5">
@@ -76,12 +76,12 @@ export default async function EventsPage({ searchParams }: Props) {
                         day: "numeric",
                       })}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-stone-400">
+                    <div className="flex items-center gap-2 text-sm text-brand-muted">
                       <MapPin className="h-3.5 w-3.5" />
                       {event.location}
                     </div>
                     {event.capacity && (
-                      <div className="flex items-center gap-2 text-sm text-stone-400">
+                      <div className="flex items-center gap-2 text-sm text-brand-muted">
                         <Users className="h-3.5 w-3.5" />
                         Capacity: {event.capacity}
                       </div>
@@ -97,8 +97,8 @@ export default async function EventsPage({ searchParams }: Props) {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Calendar className="h-12 w-12 text-stone-200 mb-3" />
-          <p className="text-stone-500">No upcoming events.</p>
+          <Calendar className="h-12 w-12 text-brand-muted mb-3" />
+          <p className="text-brand-muted">No upcoming events.</p>
         </div>
       )}
     </div>

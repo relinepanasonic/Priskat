@@ -5,11 +5,11 @@ interface BadgeProps {
 }
 
 const variantClasses = {
-  blue: "bg-brand-blue-100 text-brand-blue-700",
+  blue: "bg-brand-bg text-brand-gold-700",
   gold: "bg-brand-gold-50 text-brand-gold-400 border border-brand-gold-400",
   green: "bg-green-100 text-green-700",
   red: "bg-red-100 text-red-700",
-  gray: "bg-stone-100 text-stone-600",
+  gray: "bg-brand-surface-hover text-brand-light",
 };
 
 export default function Badge({

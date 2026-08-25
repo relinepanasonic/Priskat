@@ -21,10 +21,10 @@ export default function RSVPButton({ eventId, initialStatus, isFull, userId }: P
   if (!userId) {
     return (
       <div className="text-center">
-        <p className="mb-3 text-sm text-stone-500">Sign in to RSVP for this event</p>
+        <p className="mb-3 text-sm text-brand-muted">Sign in to RSVP for this event</p>
         <Link
           href="/login"
-          className="block w-full rounded-lg bg-brand-blue py-2.5 text-center text-sm font-medium text-white hover:bg-brand-blue-800 transition-colors"
+          className="block w-full rounded-lg bg-brand-gold text-brand-dark py-2.5 text-center text-sm font-medium text-white hover:bg-brand-gold text-brand-dark-800 transition-colors"
         >
           Sign In to RSVP
         </Link>
@@ -64,7 +64,7 @@ export default function RSVPButton({ eventId, initialStatus, isFull, userId }: P
           <span className="font-medium">You&apos;re going!</span>
         </div>
         {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
-        <Button variant="ghost" size="sm" onClick={handleCancel} loading={isPending} className="w-full text-stone-400">
+        <Button variant="ghost" size="sm" onClick={handleCancel} loading={isPending} className="w-full text-brand-muted">
           Cancel RSVP
         </Button>
       </div>
@@ -79,7 +79,7 @@ export default function RSVPButton({ eventId, initialStatus, isFull, userId }: P
           <span className="font-medium">You&apos;re on the waitlist</span>
         </div>
         {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
-        <Button variant="ghost" size="sm" onClick={handleCancel} loading={isPending} className="w-full text-stone-400">
+        <Button variant="ghost" size="sm" onClick={handleCancel} loading={isPending} className="w-full text-brand-muted">
           Leave Waitlist
         </Button>
       </div>
@@ -91,7 +91,7 @@ export default function RSVPButton({ eventId, initialStatus, isFull, userId }: P
       {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
       {isFull ? (
         <div>
-          <p className="mb-3 text-sm text-stone-500 text-center">
+          <p className="mb-3 text-sm text-brand-muted text-center">
             This event is full.
           </p>
           <Button className="w-full" onClick={handleRSVP} loading={isPending} variant="secondary">

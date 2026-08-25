@@ -62,7 +62,7 @@ export default function Pagination({
           }, [])
           .map((item, idx) =>
             item === "..." ? (
-              <span key={`ellipsis-${idx}`} className="px-2 text-stone-400">
+              <span key={`ellipsis-${idx}`} className="px-2 text-brand-muted">
                 …
               </span>
             ) : (
@@ -73,8 +73,8 @@ export default function Pagination({
                 className={[
                   "h-8 w-8 rounded-lg text-sm font-medium transition-colors",
                   item === currentPage
-                    ? "bg-brand-blue text-white"
-                    : "hover:bg-brand-blue-50 text-stone-700",
+                    ? "bg-brand-gold text-brand-dark text-white"
+                    : "hover:bg-brand-bg text-brand-light",
                 ].join(" ")}
               >
                 {item}

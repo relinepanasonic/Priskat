@@ -40,7 +40,7 @@ export default async function HomePage() {
             Welcome to{" "}
             <span className="text-brand-gold">PriskatCFM</span>
           </h1>
-          <p className="mt-6 text-lg text-brand-blue-100 max-w-2xl mx-auto">
+          <p className="mt-6 text-lg text-brand-gold-100 max-w-2xl mx-auto">
             A community platform for Priskat CFM — stay updated on news, join
             events, and connect with fellow members.
           </p>
@@ -53,7 +53,7 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/events"
-              className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 font-semibold text-white hover:bg-white/20 transition-colors"
+              className="rounded-lg border border-white/30 bg-brand-surface/10 px-6 py-3 font-semibold text-white hover:bg-brand-surface/20 transition-colors"
             >
               View Events
             </Link>
@@ -62,7 +62,7 @@ export default async function HomePage() {
       </section>
 
       {/* Stats bar */}
-      <section className="bg-brand-blue-800 text-white">
+      <section className="bg-brand-gold text-brand-dark-800 text-white">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-8 text-sm">
             <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default async function HomePage() {
         {/* Latest News */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-brand-blue">Latest News</h2>
+            <h2 className="text-2xl font-bold text-brand-gold">Latest News</h2>
             <Link
               href="/news"
               className="flex items-center gap-1 text-sm font-medium text-brand-gold hover:text-brand-gold-500 transition-colors"
@@ -100,9 +100,9 @@ export default async function HomePage() {
                 <Link
                   key={post.id}
                   href={`/news/${post.slug}`}
-                  className="group rounded-2xl overflow-hidden border border-stone-100 bg-white shadow-sm hover:shadow-md transition-shadow"
+                  className="group rounded-2xl overflow-hidden border border-brand-border bg-brand-surface shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <div className="relative h-44 bg-brand-blue-50">
+                  <div className="relative h-44 bg-brand-bg">
                     {post.cover_image_url ? (
                       <Image
                         src={post.cover_image_url}
@@ -112,7 +112,7 @@ export default async function HomePage() {
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <Newspaper className="h-12 w-12 text-brand-blue-200" />
+                        <Newspaper className="h-12 w-12 text-brand-gold-200" />
                       </div>
                     )}
                   </div>
@@ -120,10 +120,10 @@ export default async function HomePage() {
                     <Badge variant="blue" className="mb-2">
                       {post.category}
                     </Badge>
-                    <h3 className="font-semibold text-stone-900 group-hover:text-brand-blue transition-colors line-clamp-2">
+                    <h3 className="font-semibold text-white group-hover:text-brand-gold transition-colors line-clamp-2">
                       {post.title}
                     </h3>
-                    <p className="mt-1 text-xs text-stone-400">
+                    <p className="mt-1 text-xs text-brand-muted">
                       {post.published_at
                         ? formatDate(post.published_at)
                         : ""}
@@ -133,7 +133,7 @@ export default async function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-stone-500 text-center py-8">
+            <p className="text-brand-muted text-center py-8">
               No news published yet.
             </p>
           )}
@@ -142,7 +142,7 @@ export default async function HomePage() {
         {/* Upcoming Events */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-brand-blue">
+            <h2 className="text-2xl font-bold text-brand-gold">
               Upcoming Events
             </h2>
             <Link
@@ -159,7 +159,7 @@ export default async function HomePage() {
                 <Link
                   key={event.id}
                   href={`/events/${event.id}`}
-                  className="group flex gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="group flex gap-4 rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-sm hover:shadow-md transition-shadow"
                 >
                   {event.banner_image_url ? (
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl">
@@ -171,18 +171,18 @@ export default async function HomePage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-brand-blue-50">
-                      <Calendar className="h-7 w-7 text-brand-blue" />
+                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-brand-bg">
+                      <Calendar className="h-7 w-7 text-brand-gold" />
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-stone-900 group-hover:text-brand-blue transition-colors truncate">
+                    <h3 className="font-semibold text-white group-hover:text-brand-gold transition-colors truncate">
                       {event.title}
                     </h3>
                     <p className="mt-0.5 text-xs text-brand-gold font-medium">
                       {formatDate(event.event_date)}
                     </p>
-                    <p className="text-xs text-stone-400 truncate">
+                    <p className="text-xs text-brand-muted truncate">
                       {event.location}
                     </p>
                   </div>
@@ -190,7 +190,7 @@ export default async function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-stone-500 text-center py-8">
+            <p className="text-brand-muted text-center py-8">
               No upcoming events.
             </p>
           )}

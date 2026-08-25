@@ -26,36 +26,36 @@ export default async function AdminNewsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">News Posts</h1>
-          <p className="text-sm text-stone-500">{posts?.length ?? 0} total posts</p>
+          <h1 className="text-2xl font-bold text-white">News Posts</h1>
+          <p className="text-sm text-brand-muted">{posts?.length ?? 0} total posts</p>
         </div>
         <Link
           href="/admin/news/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-800 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-gold text-brand-dark px-4 py-2 text-sm font-medium text-white hover:bg-brand-gold text-brand-dark-800 transition-colors"
         >
           <Plus className="h-4 w-4" /> New Post
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-stone-100 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-brand-border bg-brand-surface overflow-hidden">
         <table className="w-full">
-          <thead className="border-b border-stone-100 bg-stone-50">
+          <thead className="border-b border-brand-border bg-brand-surface-hover">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Title</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide hidden sm:table-cell">Category</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide hidden md:table-cell">Date</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wide">Title</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wide hidden sm:table-cell">Category</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wide hidden md:table-cell">Date</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-brand-muted uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-50">
             {posts?.map((post) => (
-              <tr key={post.id} className="hover:bg-stone-50 transition-colors">
+              <tr key={post.id} className="hover:bg-brand-surface-hover transition-colors">
                 <td className="px-4 py-3">
-                  <p className="font-medium text-stone-900 line-clamp-1">{post.title}</p>
+                  <p className="font-medium text-white line-clamp-1">{post.title}</p>
                 </td>
                 <td className="px-4 py-3 hidden sm:table-cell">
-                  <span className="text-sm text-stone-500">{post.category}</span>
+                  <span className="text-sm text-brand-muted">{post.category}</span>
                 </td>
                 <td className="px-4 py-3">
                   <Badge variant={statusVariant(post.status) as "green" | "gold" | "gray"}>
@@ -63,7 +63,7 @@ export default async function AdminNewsPage() {
                   </Badge>
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell">
-                  <span className="text-sm text-stone-500">
+                  <span className="text-sm text-brand-muted">
                     {post.published_at
                       ? formatDate(post.published_at)
                       : formatDate(post.created_at)}
@@ -73,7 +73,7 @@ export default async function AdminNewsPage() {
                   <div className="flex items-center justify-end gap-2">
                     <Link
                       href={`/admin/news/${post.id}/edit`}
-                      className="rounded-lg p-1.5 text-stone-400 hover:bg-brand-blue-50 hover:text-brand-blue transition-colors"
+                      className="rounded-lg p-1.5 text-brand-muted hover:bg-brand-bg hover:text-brand-gold transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
@@ -85,9 +85,9 @@ export default async function AdminNewsPage() {
           </tbody>
         </table>
         {(!posts || posts.length === 0) && (
-          <div className="py-12 text-center text-stone-400 text-sm">
+          <div className="py-12 text-center text-brand-muted text-sm">
             No posts yet.{" "}
-            <Link href="/admin/news/new" className="text-brand-blue hover:underline">
+            <Link href="/admin/news/new" className="text-brand-gold hover:underline">
               Create your first post.
             </Link>
           </div>

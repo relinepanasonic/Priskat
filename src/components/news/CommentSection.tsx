@@ -67,13 +67,13 @@ export default function CommentSection({
 
   return (
     <section className="mt-10">
-      <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-stone-900">
-        <MessageCircle className="h-5 w-5 text-brand-blue" />
+      <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
+        <MessageCircle className="h-5 w-5 text-brand-gold" />
         Comments ({comments.length})
       </h2>
 
       {comments.length === 0 && (
-        <p className="mb-6 text-sm text-stone-400">
+        <p className="mb-6 text-sm text-brand-muted">
           No comments yet. Be the first!
         </p>
       )}
@@ -91,7 +91,7 @@ export default function CommentSection({
                   className="rounded-full object-cover"
                 />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-brand-blue-100 flex items-center justify-center text-brand-blue text-xs font-semibold">
+                <div className="h-8 w-8 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold text-xs font-semibold">
                   {(comment.profiles?.full_name ?? "U")[0]}
                 </div>
               )}
@@ -99,24 +99,24 @@ export default function CommentSection({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-stone-800">
+                  <span className="text-sm font-medium text-white">
                     {comment.profiles?.full_name ?? "Member"}
                   </span>
-                  <span className="text-xs text-stone-400">
+                  <span className="text-xs text-brand-muted">
                     {formatDate(comment.created_at, { month: "short", day: "numeric" })}
                   </span>
                 </div>
                 {currentUserId === comment.author_id && (
                   <button
                     onClick={() => handleDelete(comment.id)}
-                    className="rounded p-1 text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="rounded p-1 text-brand-muted hover:text-red-500 hover:bg-red-50 transition-colors"
                     aria-label="Delete comment"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-sm text-stone-700 break-words">
+              <p className="mt-1 text-sm text-brand-light break-words">
                 {comment.body}
               </p>
             </div>
@@ -126,7 +126,7 @@ export default function CommentSection({
 
       {currentUserId ? (
         <form onSubmit={handleSubmit} className="flex gap-3">
-          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-brand-blue flex items-center justify-center text-white text-xs font-semibold">
+          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center text-white text-xs font-semibold">
             M
           </div>
           <div className="flex-1">
@@ -139,7 +139,7 @@ export default function CommentSection({
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Write a comment..."
                 rows={2}
-                className="flex-1 resize-none rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                className="flex-1 resize-none rounded-lg border border-brand-border px-3 py-2 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
               />
               <Button
                 type="submit"
@@ -154,8 +154,8 @@ export default function CommentSection({
           </div>
         </form>
       ) : (
-        <div className="rounded-xl border border-stone-100 bg-stone-50 p-4 text-center text-sm text-stone-500">
-          <Link href="/login" className="text-brand-blue hover:underline font-medium">
+        <div className="rounded-xl border border-brand-border bg-brand-surface-hover p-4 text-center text-sm text-brand-muted">
+          <Link href="/login" className="text-brand-gold hover:underline font-medium">
             Sign in
           </Link>{" "}
           to join the conversation

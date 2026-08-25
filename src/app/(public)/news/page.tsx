@@ -57,8 +57,8 @@ export default async function NewsPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-brand-blue">Community News</h1>
-        <p className="mt-1 text-stone-500">
+        <h1 className="text-3xl font-bold text-brand-gold">Community News</h1>
+        <p className="mt-1 text-brand-muted">
           Stay updated with the latest from PriskatCFM
         </p>
       </div>
@@ -84,10 +84,10 @@ export default async function NewsPage({ searchParams }: Props) {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Newspaper className="h-12 w-12 text-stone-200 mb-3" />
-          <p className="text-stone-500">No news posts found.</p>
+          <Newspaper className="h-12 w-12 text-brand-muted mb-3" />
+          <p className="text-brand-muted">No news posts found.</p>
           {category && (
-            <Link href="/news" className="mt-2 text-sm text-brand-blue hover:underline">
+            <Link href="/news" className="mt-2 text-sm text-brand-gold hover:underline">
               Clear filter
             </Link>
           )}

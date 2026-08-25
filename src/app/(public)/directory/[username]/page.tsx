@@ -39,11 +39,11 @@ export default async function MemberProfilePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <Link href="/directory" className="mb-6 inline-flex items-center gap-1 text-sm text-stone-500 hover:text-brand-blue transition-colors">
+      <Link href="/directory" className="mb-6 inline-flex items-center gap-1 text-sm text-brand-muted hover:text-brand-gold transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to Directory
       </Link>
 
-      <div className="rounded-2xl border border-stone-100 bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-brand-border bg-brand-surface p-8 shadow-sm">
         <div className="flex items-start gap-6">
           {member.avatar_url ? (
             <Image
@@ -54,13 +54,13 @@ export default async function MemberProfilePage({ params }: Props) {
               className="rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="h-20 w-20 flex-shrink-0 rounded-full bg-brand-blue flex items-center justify-center text-white text-2xl font-bold">
+            <div className="h-20 w-20 flex-shrink-0 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center text-white text-2xl font-bold">
               {member.full_name[0]}
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-stone-900">{member.full_name}</h1>
-            <p className="text-stone-400">@{member.username}</p>
+            <h1 className="text-2xl font-bold text-white">{member.full_name}</h1>
+            <p className="text-brand-muted">@{member.username}</p>
             {member.role !== "member" && (
               <Badge variant={member.role === "admin" ? "gold" : "blue"} className="mt-2">
                 {member.role}
@@ -70,12 +70,12 @@ export default async function MemberProfilePage({ params }: Props) {
         </div>
 
         {member.bio && (
-          <p className="mt-6 text-stone-600 leading-relaxed">{member.bio}</p>
+          <p className="mt-6 text-brand-light leading-relaxed">{member.bio}</p>
         )}
 
         {member.skills && member.skills.length > 0 && (
           <div className="mt-6">
-            <h2 className="mb-2 text-sm font-semibold text-stone-700">Skills</h2>
+            <h2 className="mb-2 text-sm font-semibold text-brand-light">Skills</h2>
             <div className="flex flex-wrap gap-2">
               {member.skills.map((s: string) => (
                 <Badge key={s} variant="blue">{s}</Badge>
@@ -86,7 +86,7 @@ export default async function MemberProfilePage({ params }: Props) {
 
         {member.interests && member.interests.length > 0 && (
           <div className="mt-4">
-            <h2 className="mb-2 text-sm font-semibold text-stone-700">Interests</h2>
+            <h2 className="mb-2 text-sm font-semibold text-brand-light">Interests</h2>
             <div className="flex flex-wrap gap-2">
               {member.interests.map((i: string) => (
                 <Badge key={i} variant="gray">{i}</Badge>
@@ -95,7 +95,7 @@ export default async function MemberProfilePage({ params }: Props) {
           </div>
         )}
 
-        <p className="mt-6 text-xs text-stone-300">
+        <p className="mt-6 text-xs text-brand-muted">
           Member since {formatDate(member.created_at)}
         </p>
       </div>

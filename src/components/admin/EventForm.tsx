@@ -104,9 +104,9 @@ export default function EventForm({ initialValues, mode = "create" }: Props) {
 
       {/* Banner Image */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Banner Image</label>
+        <label className="mb-1 block text-sm font-medium text-brand-light">Banner Image</label>
         {bannerPreview ? (
-          <div className="relative h-48 rounded-xl overflow-hidden border border-stone-200">
+          <div className="relative h-48 rounded-xl overflow-hidden border border-brand-border">
             <Image src={bannerPreview} alt="Banner" fill className="object-cover" />
             <button type="button" onClick={() => { setBannerPreview(null); setUploadedUrl(""); }}
               className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white">
@@ -114,11 +114,11 @@ export default function EventForm({ initialValues, mode = "create" }: Props) {
             </button>
           </div>
         ) : (
-          <label className="flex h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-200 hover:border-brand-blue transition-colors">
-            {uploading ? <p className="text-sm text-stone-400">Uploading…</p> : (
+          <label className="flex h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand-border hover:border-brand-blue transition-colors">
+            {uploading ? <p className="text-sm text-brand-muted">Uploading…</p> : (
               <>
-                <ImagePlus className="h-8 w-8 text-stone-300 mb-2" />
-                <p className="text-sm text-stone-400">Click to upload banner</p>
+                <ImagePlus className="h-8 w-8 text-brand-muted mb-2" />
+                <p className="text-sm text-brand-muted">Click to upload banner</p>
               </>
             )}
             <input type="file" accept="image/*" className="sr-only" onChange={handleImageChange} />
@@ -127,44 +127,44 @@ export default function EventForm({ initialValues, mode = "create" }: Props) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Title *</label>
-        <input {...register("title")} placeholder="Event title" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+        <label className="mb-1 block text-sm font-medium text-brand-light">Title *</label>
+        <input {...register("title")} placeholder="Event title" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Description *</label>
-        <textarea {...register("description")} rows={5} placeholder="Event description…" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none resize-y" />
+        <label className="mb-1 block text-sm font-medium text-brand-light">Description *</label>
+        <textarea {...register("description")} rows={5} placeholder="Event description…" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none resize-y" />
         {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">Start Date & Time *</label>
-          <input {...register("event_date")} type="datetime-local" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+          <label className="mb-1 block text-sm font-medium text-brand-light">Start Date & Time *</label>
+          <input {...register("event_date")} type="datetime-local" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
           {errors.event_date && <p className="mt-1 text-xs text-red-600">{errors.event_date.message}</p>}
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">End Date & Time</label>
-          <input {...register("end_date")} type="datetime-local" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+          <label className="mb-1 block text-sm font-medium text-brand-light">End Date & Time</label>
+          <input {...register("end_date")} type="datetime-local" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">Location *</label>
-          <input {...register("location")} placeholder="Venue / address" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+          <label className="mb-1 block text-sm font-medium text-brand-light">Location *</label>
+          <input {...register("location")} placeholder="Venue / address" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
           {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">Capacity (leave blank = unlimited)</label>
-          <input {...register("capacity")} type="number" min="1" placeholder="e.g. 100" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+          <label className="mb-1 block text-sm font-medium text-brand-light">Capacity (leave blank = unlimited)</label>
+          <input {...register("capacity")} type="number" min="1" placeholder="e.g. 100" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         </div>
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Status *</label>
-        <select {...register("status")} className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none">
+        <label className="mb-1 block text-sm font-medium text-brand-light">Status *</label>
+        <select {...register("status")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none">
           <option value="draft">Draft</option>
           <option value="published">Published</option>
           <option value="cancelled">Cancelled</option>

@@ -30,8 +30,8 @@ export default function CategoryFilter({ categories, current }: Props) {
         className={[
           "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
           !current
-            ? "bg-brand-blue text-white"
-            : "border border-stone-200 text-stone-600 hover:border-brand-blue hover:text-brand-blue",
+            ? "bg-brand-gold text-brand-dark text-white"
+            : "border border-brand-border text-brand-light hover:border-brand-blue hover:text-brand-gold",
         ].join(" ")}
       >
         All
@@ -43,8 +43,8 @@ export default function CategoryFilter({ categories, current }: Props) {
           className={[
             "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
             current === cat
-              ? "bg-brand-blue text-white"
-              : "border border-stone-200 text-stone-600 hover:border-brand-blue hover:text-brand-blue",
+              ? "bg-brand-gold text-brand-dark text-white"
+              : "border border-brand-border text-brand-light hover:border-brand-blue hover:text-brand-gold",
           ].join(" ")}
         >
           {cat}

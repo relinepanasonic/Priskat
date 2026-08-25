@@ -44,18 +44,18 @@ export default function SearchBar({ placeholder = "Search…" }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 max-w-md">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
         <input
           ref={inputRef}
           defaultValue={currentQ}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-stone-200 py-2.5 pl-10 pr-8 text-sm focus:border-brand-blue focus:outline-none"
+          className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-8 text-sm focus:border-brand-blue focus:outline-none"
         />
         {currentQ && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-300 hover:text-stone-500"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-muted"
           >
             <X className="h-4 w-4" />
           </button>
@@ -64,7 +64,7 @@ export default function SearchBar({ placeholder = "Search…" }: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-blue-800 transition-colors disabled:opacity-50"
+        className="rounded-lg bg-brand-gold text-brand-dark px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-gold text-brand-dark-800 transition-colors disabled:opacity-50"
       >
         Search
       </button>

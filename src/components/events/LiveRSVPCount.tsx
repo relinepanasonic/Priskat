@@ -42,5 +42,5 @@ export default function LiveRSVPCount({ eventId, initialCount }: Props) {
     };
   }, [eventId]);
 
-  return <span className="font-semibold text-brand-blue">{count}</span>;
+  return <span className="font-semibold text-brand-gold">{count}</span>;
 }

@@ -49,18 +49,18 @@ export default function Modal({
   return (
     <dialog
       ref={dialogRef}
-      className={`w-full ${maxWidthClasses[maxWidth]} rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-black/50 open:animate-none`}
+      className={`w-full ${maxWidthClasses[maxWidth]} rounded-2xl bg-brand-surface p-0 shadow-2xl backdrop:bg-black/50 open:animate-none`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-brand-border px-6 py-4">
         {title && (
-          <h2 className="text-lg font-semibold text-stone-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-white">{title}</h2>
         )}
         <button
           onClick={onClose}
-          className="ml-auto rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors"
+          className="ml-auto rounded-lg p-1 text-brand-muted hover:bg-brand-surface-hover hover:text-brand-light transition-colors"
           aria-label="Close"
         >
           <X className="h-5 w-5" />

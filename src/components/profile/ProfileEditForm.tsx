@@ -108,7 +108,7 @@ export default function ProfileEditForm({ profile }: Props) {
           {avatarUrl ? (
             <Image src={avatarUrl} alt="Avatar" width={80} height={80} className="rounded-full object-cover" />
           ) : (
-            <div className="h-20 w-20 rounded-full bg-brand-blue flex items-center justify-center text-white text-2xl font-bold">
+            <div className="h-20 w-20 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center text-white text-2xl font-bold">
               {profile.full_name[0]}
             </div>
           )}
@@ -118,32 +118,32 @@ export default function ProfileEditForm({ profile }: Props) {
           </label>
         </div>
         <div>
-          <p className="font-medium text-stone-800">{profile.full_name}</p>
-          <p className="text-sm text-stone-400">@{profile.username}</p>
-          {uploading && <p className="text-xs text-stone-400 mt-1">Uploading…</p>}
+          <p className="font-medium text-white">{profile.full_name}</p>
+          <p className="text-sm text-brand-muted">@{profile.username}</p>
+          {uploading && <p className="text-xs text-brand-muted mt-1">Uploading…</p>}
         </div>
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Full Name *</label>
-        <input {...register("full_name")} className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+        <label className="mb-1 block text-sm font-medium text-brand-light">Full Name *</label>
+        <input {...register("full_name")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Bio <span className="text-stone-400 font-normal">(max 300 chars)</span></label>
-        <textarea {...register("bio")} rows={3} placeholder="Tell the community about yourself…" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none resize-none" />
+        <label className="mb-1 block text-sm font-medium text-brand-light">Bio <span className="text-brand-muted font-normal">(max 300 chars)</span></label>
+        <textarea {...register("bio")} rows={3} placeholder="Tell the community about yourself…" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none resize-none" />
         {errors.bio && <p className="mt-1 text-xs text-red-600">{errors.bio.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Skills <span className="text-stone-400 font-normal">(comma-separated)</span></label>
-        <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+        <label className="mb-1 block text-sm font-medium text-brand-light">Skills <span className="text-brand-muted font-normal">(comma-separated)</span></label>
+        <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700">Interests <span className="text-stone-400 font-normal">(comma-separated)</span></label>
-        <input {...register("interests")} placeholder="e.g. Prayer, Worship, Youth Ministry" className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+        <label className="mb-1 block text-sm font-medium text-brand-light">Interests <span className="text-brand-muted font-normal">(comma-separated)</span></label>
+        <input {...register("interests")} placeholder="e.g. Prayer, Worship, Youth Ministry" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
       </div>
 
       <div className="flex justify-end">

@@ -40,8 +40,8 @@ export default async function DirectoryPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-brand-blue">Member Directory</h1>
-        <p className="mt-1 text-stone-500">Find and connect with PriskatCFM members</p>
+        <h1 className="text-3xl font-bold text-brand-gold">Member Directory</h1>
+        <p className="mt-1 text-brand-muted">Find and connect with PriskatCFM members</p>
       </div>
 
       <Suspense>
@@ -61,8 +61,8 @@ export default async function DirectoryPage({ searchParams }: Props) {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Users className="h-12 w-12 text-stone-200 mb-3" />
-          <p className="text-stone-500">
+          <Users className="h-12 w-12 text-brand-muted mb-3" />
+          <p className="text-brand-muted">
             {q ? `No members found for "${q}".` : "No members yet."}
           </p>
         </div>

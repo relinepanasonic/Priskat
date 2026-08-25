@@ -22,41 +22,41 @@ export default async function AdminEventsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Events</h1>
-          <p className="text-sm text-stone-500">{events?.length ?? 0} total events</p>
+          <h1 className="text-2xl font-bold text-white">Events</h1>
+          <p className="text-sm text-brand-muted">{events?.length ?? 0} total events</p>
         </div>
         <Link
           href="/admin/events/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-800 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-gold text-brand-dark px-4 py-2 text-sm font-medium text-white hover:bg-brand-gold text-brand-dark-800 transition-colors"
         >
           <Plus className="h-4 w-4" /> New Event
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-stone-100 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-brand-border bg-brand-surface overflow-hidden">
         <table className="w-full">
-          <thead className="border-b border-stone-100 bg-stone-50">
+          <thead className="border-b border-brand-border bg-brand-surface-hover">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase">Title</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase hidden sm:table-cell">Date</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase hidden md:table-cell">Location</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-stone-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Title</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase hidden sm:table-cell">Date</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase hidden md:table-cell">Location</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Status</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-brand-muted uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-50">
             {events?.map((event) => (
-              <tr key={event.id} className="hover:bg-stone-50">
+              <tr key={event.id} className="hover:bg-brand-surface-hover">
                 <td className="px-4 py-3">
-                  <p className="font-medium text-stone-900 line-clamp-1">{event.title}</p>
+                  <p className="font-medium text-white line-clamp-1">{event.title}</p>
                   {event.capacity && (
-                    <p className="text-xs text-stone-400">Cap: {event.capacity}</p>
+                    <p className="text-xs text-brand-muted">Cap: {event.capacity}</p>
                   )}
                 </td>
-                <td className="px-4 py-3 hidden sm:table-cell text-sm text-stone-500">
+                <td className="px-4 py-3 hidden sm:table-cell text-sm text-brand-muted">
                   {formatDate(event.event_date)}
                 </td>
-                <td className="px-4 py-3 hidden md:table-cell text-sm text-stone-500">
+                <td className="px-4 py-3 hidden md:table-cell text-sm text-brand-muted">
                   {event.location}
                 </td>
                 <td className="px-4 py-3">
@@ -68,7 +68,7 @@ export default async function AdminEventsPage() {
                   <div className="flex items-center justify-end gap-2">
                     <Link
                       href={`/admin/events/${event.id}/edit`}
-                      className="rounded-lg p-1.5 text-stone-400 hover:bg-brand-blue-50 hover:text-brand-blue transition-colors"
+                      className="rounded-lg p-1.5 text-brand-muted hover:bg-brand-bg hover:text-brand-gold transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
@@ -80,9 +80,9 @@ export default async function AdminEventsPage() {
           </tbody>
         </table>
         {(!events || events.length === 0) && (
-          <div className="py-12 text-center text-stone-400 text-sm">
+          <div className="py-12 text-center text-brand-muted text-sm">
             No events yet.{" "}
-            <Link href="/admin/events/new" className="text-brand-blue hover:underline">
+            <Link href="/admin/events/new" className="text-brand-gold hover:underline">
               Create your first event.
             </Link>
           </div>

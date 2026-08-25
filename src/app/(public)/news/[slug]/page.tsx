@@ -85,10 +85,10 @@ export default async function NewsDetailPage({ params }: Props) {
         <div className="mb-4">
           <Badge variant="blue">{post.category}</Badge>
         </div>
-        <h1 className="mb-4 text-3xl font-bold text-stone-900 sm:text-5xl">
+        <h1 className="mb-4 text-3xl font-bold text-white sm:text-5xl">
           {post.title}
         </h1>
-        <div className="flex items-center justify-center gap-3 text-sm text-stone-500">
+        <div className="flex items-center justify-center gap-3 text-sm text-brand-muted">
           {post.profiles?.avatar_url ? (
             <Image
               src={post.profiles.avatar_url}
@@ -98,11 +98,11 @@ export default async function NewsDetailPage({ params }: Props) {
               className="rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-200 font-semibold text-stone-600">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-border font-semibold text-brand-light">
               {(post.profiles?.full_name ?? "U")[0]}
             </div>
           )}
-          <span className="font-medium text-stone-700">
+          <span className="font-medium text-brand-light">
             {post.profiles?.full_name ?? "Admin"}
           </span>
           <span>•</span>
@@ -114,12 +114,12 @@ export default async function NewsDetailPage({ params }: Props) {
 
       {/* Body */}
       <div
-        className="news-body text-lg text-stone-700"
+        className="news-body text-lg text-brand-light"
         dangerouslySetInnerHTML={{ __html: post.body }}
       />
 
       {/* Interactions */}
-      <div className="mt-12 flex items-center gap-4 border-b border-t border-stone-100 py-4">
+      <div className="mt-12 flex items-center gap-4 border-b border-t border-brand-border py-4">
         <ReactionButton
           postId={post.id}
           initialCount={reactions.length}

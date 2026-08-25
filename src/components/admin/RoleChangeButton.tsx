@@ -37,7 +37,7 @@ export default function RoleChangeButton({ memberId, currentRole }: Props) {
         defaultValue={currentRole}
         onChange={handleChange}
         disabled={isPending}
-        className="rounded-lg border border-stone-200 px-2 py-1 text-sm text-stone-700 focus:border-brand-blue focus:outline-none disabled:opacity-50"
+        className="rounded-lg border border-brand-border px-2 py-1 text-sm text-brand-light focus:border-brand-blue focus:outline-none disabled:opacity-50"
       >
         {ROLES.map((r) => (
           <option key={r} value={r}>{r}</option>
