@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Calendar, BookOpen } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Calendar, BookOpen, Settings, Image as ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Profile } from "@/lib/types/database.types";
+import LanguageToggle from "@/components/ui/LanguageToggle";
 
 interface NavbarProps {
   profile?: Profile | null;
+  lang?: "id" | "en";
 }
 
 const NAV_LINKS = [
@@ -22,7 +24,7 @@ const NAV_LINKS = [
   { href: "/directory", label: "Directory" },
 ];
 
-export default function Navbar({ profile }: NavbarProps) {
+export default function Navbar({ profile, lang = "id" }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useSession();
@@ -31,13 +33,25 @@ export default function Navbar({ profile }: NavbarProps) {
 
   async function handleSignOut() {
     const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
   }
 
   return (
     <>
+    {/* Mobile Top Header (Settings & Lang) */}
+    <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-brand-bg backdrop-blur-sm shadow-sm">
+      <Link href="/" className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark font-bold text-xs">P</div>
+        <span className="font-bold text-brand-gold text-sm">PriskatCFM</span>
+      </Link>
+      <div className="flex items-center gap-3">
+        <LanguageToggle currentLang={lang} />
+        <Link href="/profile" className="text-brand-light hover:text-brand-gold transition">
+          <Settings className="h-5 w-5" />
+        </Link>
+      </div>
+    </div>
+
+    {/* Desktop Header */}
     <header className="hidden md:block sticky top-0 z-50 border-b border-brand-blue-100 bg-brand-surface/95 backdrop-blur-sm shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
@@ -67,7 +81,8 @@ export default function Navbar({ profile }: NavbarProps) {
         </nav>
 
         {/* Right side */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-4">
+          <LanguageToggle currentLang={lang} />
           {user ? (
             <div className="relative">
               <button
@@ -154,26 +169,31 @@ export default function Navbar({ profile }: NavbarProps) {
     
     {/* Mobile Bottom Navigation (Visible only on mobile) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
-      <div className="flex justify-around items-center h-16">
-        <Link href="/" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Home className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Home</span>
-        </Link>
+      <div className="flex justify-around items-center h-16 px-2">
         <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/news' ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Newspaper className="h-5 w-5" />
           <span className="text-[10px] font-medium">News</span>
         </Link>
+        <Link href="/prayers" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/prayers' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <BookOpen className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Prayer</span>
+        </Link>
+        
+        {/* Center Home Button */}
+        <Link href="/" className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/' ? 'text-brand-gold' : 'text-gray-400'}`}>
+          <div className={`absolute -top-3 flex items-center justify-center h-12 w-12 rounded-full border-4 border-[#1e1e1e] ${pathname === '/' ? 'bg-brand-gold text-brand-dark' : 'bg-brand-surface text-brand-light'}`}>
+            <Home className="h-5 w-5" />
+          </div>
+          <span className="text-[10px] font-medium pt-8">Home</span>
+        </Link>
+
         <Link href="/events" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/events' ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Calendar className="h-5 w-5" />
           <span className="text-[10px] font-medium">Events</span>
         </Link>
-        <Link href="/prayers" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/prayers' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <BookOpen className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Prayers</span>
-        </Link>
-        <Link href={user ? "/profile" : "/login"} className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/profile' || pathname === '/login' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <User className="h-5 w-5" />
-          <span className="text-[10px] font-medium">{user ? "Profile" : "Sign In"}</span>
+        <Link href="/gallery" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/gallery' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <ImageIcon className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Gallery</span>
         </Link>
       </div>
     </nav>

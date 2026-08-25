@@ -2,19 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PrayerList from "@/components/prayers/PrayerList";
+import { getLanguage } from "@/lib/lang";
 import type { Prayer } from "@/lib/types/database.types";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Doa | Prayers" };
 
-export default async function PrayerPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ lang?: string }>;
-}) {
-  const params = await searchParams;
-  const lang = params.lang === "en" ? "en" : "id";
-
+export default async function PrayerPage() {
+  const lang = await getLanguage();
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -35,7 +30,7 @@ export default async function PrayerPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-bg pb-16">
-      <Navbar profile={profile} />
+      <Navbar profile={profile} lang={lang} />
 
       <main className="flex-1 px-4 pt-6 pb-24 max-w-md mx-auto w-full">
         {/* Header */}
@@ -48,30 +43,6 @@ export default async function PrayerPage({
               ? "Kumpulan doa Katolik untuk kehidupan sehari-hari"
               : "Catholic prayers for everyday life"}
           </p>
-        </div>
-
-        {/* Language Toggle */}
-        <div className="mb-6 flex items-center gap-2 bg-brand-bg rounded-full p-1 border border-brand-border shadow-3d-inset w-fit">
-          <a
-            href="/prayers"
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-              lang === "id"
-                ? "bg-brand-gold text-brand-dark shadow-glow-gold"
-                : "text-brand-muted hover:text-white"
-            }`}
-          >
-            🇮🇩 Indonesia
-          </a>
-          <a
-            href="/prayers?lang=en"
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-              lang === "en"
-                ? "bg-brand-gold text-brand-dark shadow-glow-gold"
-                : "text-brand-muted hover:text-white"
-            }`}
-          >
-            🇬🇧 English
-          </a>
         </div>
 
         {/* Prayer List with Filter + Search */}
