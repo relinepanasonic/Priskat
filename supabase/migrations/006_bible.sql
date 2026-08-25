@@ -21,3 +21,4 @@ ALTER TABLE public.bible_verses ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read access for bible_verses"
     ON public.bible_verses FOR SELECT
     USING (true);
+
