@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import { getLanguage } from "@/lib/lang";
 
 export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const lang = await getLanguage();
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,9 +25,8 @@ export default async function PublicLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar profile={profile} />
+      <Navbar profile={profile} lang={lang} />
       <main className="flex-1">{children}</main>
-      <Footer />
     </div>
   );
 }

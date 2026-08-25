@@ -11,9 +11,7 @@ export default function GalleryPage() {
   const driveFolderId = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID;
 
   return (
-    <div className="flex min-h-screen flex-col bg-brand-bg">
-      <Navbar />
-      <main className="flex-1 px-4 py-12 max-w-5xl mx-auto w-full">
+    <main className="flex-1 px-4 py-8 max-w-4xl mx-auto w-full">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold text-white mb-3">Community Gallery</h1>
           <p className="text-brand-muted max-w-2xl mx-auto">
@@ -39,9 +37,7 @@ export default function GalleryPage() {
             </p>
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+    </main>
   );
 }
 

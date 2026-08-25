@@ -5,3 +5,4 @@ export async function getLanguage(): Promise<"id" | "en"> {
   const lang = cookieStore.get("priskat_lang")?.value;
   return lang === "en" ? "en" : "id";
 }
+
