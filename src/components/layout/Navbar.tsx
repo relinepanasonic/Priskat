@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Calendar, BookOpen, Settings, Image as ImageIcon } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Book, BookOpen, Settings, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
@@ -17,11 +17,11 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
+  { href: "/prayers", label: "Prayer" },
   { href: "/news", label: "News" },
-  { href: "/events", label: "Events" },
-  { href: "/prayers", label: "🙏 Doa" },
-  { href: "/directory", label: "Directory" },
+  { href: "/", label: "Home" },
+  { href: "/friends", label: "Friends" },
+  { href: "/bible", label: "Bible" },
 ];
 
 export default function Navbar({ profile, lang = "id" }: NavbarProps) {
@@ -170,13 +170,13 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     {/* Mobile Bottom Navigation (Visible only on mobile) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
       <div className="flex justify-around items-center h-16 px-2">
-        <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/news' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Newspaper className="h-5 w-5" />
-          <span className="text-[10px] font-medium">News</span>
-        </Link>
         <Link href="/prayers" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/prayers' ? 'text-brand-gold' : 'text-gray-500'}`}>
           <BookOpen className="h-5 w-5" />
           <span className="text-[10px] font-medium">Prayer</span>
+        </Link>
+        <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/news' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Newspaper className="h-5 w-5" />
+          <span className="text-[10px] font-medium">News</span>
         </Link>
         
         {/* Center Home Button */}
@@ -187,13 +187,13 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           <span className="text-[10px] font-medium pt-8">Home</span>
         </Link>
 
-        <Link href="/events" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/events' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Calendar className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Events</span>
+        <Link href="/friends" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/friends' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Users className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Friends</span>
         </Link>
-        <Link href="/gallery" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/gallery' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <ImageIcon className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Gallery</span>
+        <Link href="/bible" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/bible' ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Book className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Bible</span>
         </Link>
       </div>
     </nav>
