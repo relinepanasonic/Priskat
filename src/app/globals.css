@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* =====================================================
+   Brand color tokens (Tailwind v4 @theme)
+   ===================================================== */
+@theme {
+  --color-brand-blue: #1B3A6B;
+  --color-brand-blue-50: #EEF2F9;
+  --color-brand-blue-100: #D6E0F0;
+  --color-brand-blue-200: #ADC1E1;
+  --color-brand-blue-800: #132A4E;
+  --color-brand-blue-900: #0B1A31;
+
+  --color-brand-gold: #C9952A;
+  --color-brand-gold-50: #FDF6E8;
+  --color-brand-gold-400: #C9952A;
+  --color-brand-gold-500: #A87520;
+  --color-brand-gold-100: #FAE9C3;
+
+  --color-brand-cream: #FDF8F0;
+  --color-brand-cream-100: #FDF8F0;
+  --color-brand-cream-200: #FAF0DC;
+}
+
+/* =====================================================
+   Base styles
+   ===================================================== */
+:root {
+  --background: #FDF8F0;
+  --foreground: #1C1917;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+:focus-visible {
+  outline: 2px solid #C9952A;
+  outline-offset: 2px;
+}
+
+/* =====================================================
+   News post body prose styles
+   ===================================================== */
+.news-body h1 { font-size: 1.875rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #1B3A6B; }
+.news-body h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #1B3A6B; }
+.news-body h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+.news-body p  { margin-bottom: 1rem; line-height: 1.75; }
+.news-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+.news-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
+.news-body blockquote { border-left: 4px solid #C9952A; padding-left: 1rem; font-style: italic; color: #57534e; margin: 1rem 0; }
+.news-body a  { color: #1B3A6B; text-decoration: underline; }
+.news-body a:hover { color: #C9952A; }
+.news-body img { border-radius: 0.5rem; margin: 1rem 0; width: 100%; object-fit: cover; }
+.news-body li { margin-bottom: 0.25rem; }
