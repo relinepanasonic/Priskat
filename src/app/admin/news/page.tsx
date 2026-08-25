@@ -37,7 +37,7 @@ export default async function AdminNewsPage() {
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-brand-border bg-brand-surface overflow-hidden">
+      <div className="card-3d overflow-hidden">
         <table className="w-full">
           <thead className="border-b border-brand-border bg-brand-surface-hover">
             <tr>

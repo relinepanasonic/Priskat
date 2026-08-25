@@ -25,9 +25,10 @@ export default async function EditDevotionPage(props: { params: Promise<{ id: st
         <h1 className="text-2xl font-bold text-white">Edit Devotion</h1>
       </div>
 
-      <div className="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+      <div className="card-3d p-6 shadow-sm">
         <DevotionForm initialData={devotion} />
       </div>
     </div>
   );
 }
+

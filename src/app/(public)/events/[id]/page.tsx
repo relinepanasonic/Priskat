@@ -104,7 +104,7 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
+          <div className="card-3d p-5 shadow-sm">
             <RSVPButton
               eventId={id}
               initialStatus={userRsvp?.status ?? null}

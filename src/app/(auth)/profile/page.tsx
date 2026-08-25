@@ -70,7 +70,7 @@ export default async function ProfilePage() {
                 <p className="text-sm text-brand-light">Module 1</p>
               </div>
             ) : (
-              <div className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center text-sm text-brand-muted">
+              <div className="p-4 card-3d text-center text-sm text-brand-muted">
                 Please edit your profile and set your gender to see your module track.
               </div>
             )}
@@ -83,7 +83,7 @@ export default async function ProfilePage() {
             <BookOpen className="w-5 h-5" /> Daily Inspiration
           </h2>
           {devotion ? (
-            <div className="bg-brand-surface rounded-2xl border border-brand-border overflow-hidden">
+            <div className="card-3d overflow-hidden">
               <div className="p-5 border-b border-brand-border/50">
                 <span className="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2 block">Verse of the Day</span>
                 <p className="text-white italic text-lg leading-relaxed mb-3">"{devotion.verse_text}"</p>
@@ -95,7 +95,7 @@ export default async function ProfilePage() {
               </div>
             </div>
           ) : (
-            <div className="p-6 bg-brand-surface rounded-2xl border border-brand-border text-center text-brand-muted text-sm">
+            <div className="p-6 card-3d text-center text-brand-muted text-sm">
               Today's devotion has not been posted yet.
             </div>
           )}
@@ -103,11 +103,11 @@ export default async function ProfilePage() {
 
         {/* QUICK LINKS */}
         <section className="mb-10 grid grid-cols-2 gap-4">
-          <Link href="/gallery" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
+          <Link href="/gallery" className="p-4 card-3d text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
              <span className="text-2xl">📸</span>
              <span className="text-sm font-medium text-white">Gallery</span>
           </Link>
-          <Link href="/news" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
+          <Link href="/news" className="p-4 card-3d text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
              <span className="text-2xl">📰</span>
              <span className="text-sm font-medium text-white">News</span>
           </Link>
@@ -116,7 +116,7 @@ export default async function ProfilePage() {
         {/* PROFILE EDIT */}
         <section>
           <h2 className="text-xl font-semibold text-brand-gold mb-4">Edit Profile</h2>
-          <div className="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+          <div className="card-3d p-6 shadow-sm">
             <ProfileEditForm profile={profile} />
           </div>
         </section>

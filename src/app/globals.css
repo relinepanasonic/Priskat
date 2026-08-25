@@ -5,26 +5,50 @@
    ===================================================== */
 @theme {
   /* Darkest background */
-  --color-brand-bg: #10232A;
+  --color-brand-bg: #272A30;
   
   /* Surface / Card color */
-  --color-brand-surface: #3D4D55;
-  --color-brand-surface-hover: #4b5d66; 
-  --color-brand-border: #293840; 
+  --color-brand-surface: #394F6B;
+  --color-brand-surface-hover: #455E7C; 
+  --color-brand-surface-beige: #C6B9A3;
+  --color-brand-border: #1C1E23; 
   
   /* Accents */
-  --color-brand-gold: #B58863;
-  --color-brand-gold-hover: #9c7554;
+  --color-brand-gold: #D6B072;
+  --color-brand-gold-hover: #FFD770;
+  
+  --color-brand-blue: #394F6B;
+  --color-brand-blue-glow: #5BA4FF;
   
   /* Text */
-  --color-brand-light: #D3C3B9;
-  --color-brand-muted: #A79E9C;
-  --color-brand-dark: #181818;
+  --color-brand-light: #EAE5D9;
+  --color-brand-muted: #9CA3AF;
+  --color-brand-dark: #121417;
+
+  /* Shadows for 3D effect */
+  --shadow-3d: 0 8px 16px -4px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  --shadow-3d-sm: 0 4px 8px -2px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  --shadow-3d-pressed: inset 0 4px 8px rgba(0, 0, 0, 0.6);
+  --shadow-3d-inset: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  --shadow-glow-blue: 0 0 15px rgba(91, 164, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  --shadow-glow-gold: 0 0 15px rgba(255, 215, 112, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 /* =====================================================
    Base styles
    ===================================================== */
+@layer components {
+  .card-3d {
+    @apply bg-brand-surface rounded-2xl shadow-3d border border-[#4A6487] text-brand-light;
+  }
+  .input-3d {
+    @apply bg-brand-bg rounded-full shadow-3d-inset border border-brand-border text-brand-light px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-blue-glow;
+  }
+  .panel-3d {
+    @apply bg-brand-bg rounded-3xl shadow-3d-sm border border-brand-border;
+  }
+}
+
 :root {
   --background: var(--color-brand-bg);
   --foreground: var(--color-brand-light);

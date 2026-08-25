@@ -100,7 +100,7 @@ export default async function HomePage() {
                 <Link
                   key={post.id}
                   href={`/news/${post.slug}`}
-                  className="group rounded-2xl overflow-hidden border border-brand-border bg-brand-surface shadow-sm hover:shadow-md transition-shadow"
+                  className="group card-3d overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="relative h-44 bg-brand-bg">
                     {post.cover_image_url ? (
@@ -159,7 +159,7 @@ export default async function HomePage() {
                 <Link
                   key={event.id}
                   href={`/events/${event.id}`}
-                  className="group flex gap-4 rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="group flex gap-4 card-3d p-4 shadow-sm hover:shadow-md transition-shadow"
                 >
                   {event.banner_image_url ? (
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl">

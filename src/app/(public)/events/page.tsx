@@ -47,7 +47,7 @@ export default async function EventsPage({ searchParams }: Props) {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="group flex flex-col rounded-2xl overflow-hidden border border-brand-border bg-brand-surface shadow-sm hover:shadow-md transition-all"
+                className="group flex flex-col card-3d overflow-hidden shadow-sm hover:shadow-md transition-all"
               >
                 <div className="relative h-48 bg-brand-bg flex-shrink-0">
                   {event.banner_image_url ? (

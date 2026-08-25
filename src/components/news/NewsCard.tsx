@@ -16,7 +16,7 @@ export default function NewsCard({ post }: Props) {
   return (
     <Link
       href={`/news/${post.slug}`}
-      className="group flex flex-col rounded-2xl overflow-hidden border border-brand-border bg-brand-surface shadow-sm hover:shadow-md transition-all duration-200"
+      className="group flex flex-col card-3d overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
     >
       <div className="relative h-44 bg-brand-bg flex-shrink-0">
         {post.cover_image_url ? (

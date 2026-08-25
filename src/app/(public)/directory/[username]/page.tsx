@@ -43,7 +43,7 @@ export default async function MemberProfilePage({ params }: Props) {
         <ArrowLeft className="h-4 w-4" /> Back to Directory
       </Link>
 
-      <div className="rounded-2xl border border-brand-border bg-brand-surface p-8 shadow-sm">
+      <div className="card-3d p-8 shadow-sm">
         <div className="flex items-start gap-6">
           {member.avatar_url ? (
             <Image

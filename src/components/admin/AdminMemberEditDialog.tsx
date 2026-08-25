@@ -46,7 +46,7 @@ export default function AdminMemberEditDialog({ member }: Props) {
         <form onSubmit={onSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-brand-light mb-1">Role</label>
-            <select name="role" defaultValue={member.role} className="w-full rounded-lg bg-brand-bg border border-brand-border px-3 py-2 text-brand-light">
+            <select name="role" defaultValue={member.role} className="w-full input-3d text-sm">
               <option value="member">Member</option>
               <option value="moderator">Moderator</option>
               <option value="admin">Admin</option>
@@ -55,7 +55,7 @@ export default function AdminMemberEditDialog({ member }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-brand-light mb-1">Gender</label>
-            <select name="gender" defaultValue={member.gender || ""} className="w-full rounded-lg bg-brand-bg border border-brand-border px-3 py-2 text-brand-light">
+            <select name="gender" defaultValue={member.gender || ""} className="w-full input-3d text-sm">
               <option value="">Unknown</option>
               <option value="male">Male</option>
               <option value="female">Female</option>

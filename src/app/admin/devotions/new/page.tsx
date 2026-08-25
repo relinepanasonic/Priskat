@@ -12,9 +12,10 @@ export default function NewDevotionPage() {
         <h1 className="text-2xl font-bold text-white">Schedule Devotion</h1>
       </div>
 
-      <div className="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+      <div className="card-3d p-6 shadow-sm">
         <DevotionForm />
       </div>
     </div>
   );
 }
+

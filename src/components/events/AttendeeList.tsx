@@ -16,7 +16,7 @@ export default function AttendeeList({ attendees }: Props) {
   if (attendees.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
+    <div className="card-3d p-5 shadow-sm">
       <h3 className="mb-3 text-sm font-semibold text-brand-light">
         Who&apos;s Going ({attendees.length})
       </h3>

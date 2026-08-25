@@ -39,7 +39,7 @@ export default function DevotionForm({ initialData }: Props) {
           name="publish_date" 
           defaultValue={initialData?.publish_date || new Date().toISOString().split("T")[0]} 
           required 
-          className="w-full rounded-lg bg-brand-bg border border-brand-border px-4 py-2.5 text-brand-light focus:border-brand-gold focus:outline-none" 
+          className="w-full input-3d text-sm" 
         />
       </div>
 
@@ -49,7 +49,7 @@ export default function DevotionForm({ initialData }: Props) {
           name="verse_reference" 
           defaultValue={initialData?.verse_reference} 
           required 
-          className="w-full rounded-lg bg-brand-bg border border-brand-border px-4 py-2.5 text-brand-light focus:border-brand-gold focus:outline-none" 
+          className="w-full input-3d text-sm" 
         />
       </div>
 
@@ -60,7 +60,7 @@ export default function DevotionForm({ initialData }: Props) {
           defaultValue={initialData?.verse_text} 
           rows={3} 
           required 
-          className="w-full rounded-lg bg-brand-bg border border-brand-border px-4 py-2.5 text-brand-light focus:border-brand-gold focus:outline-none" 
+          className="w-full input-3d text-sm" 
         />
       </div>
 
@@ -70,7 +70,7 @@ export default function DevotionForm({ initialData }: Props) {
           name="prayer_title" 
           defaultValue={initialData?.prayer_title} 
           required 
-          className="w-full rounded-lg bg-brand-bg border border-brand-border px-4 py-2.5 text-brand-light focus:border-brand-gold focus:outline-none" 
+          className="w-full input-3d text-sm" 
         />
       </div>
 
@@ -81,7 +81,7 @@ export default function DevotionForm({ initialData }: Props) {
           defaultValue={initialData?.prayer_text} 
           rows={5} 
           required 
-          className="w-full rounded-lg bg-brand-bg border border-brand-border px-4 py-2.5 text-brand-light focus:border-brand-gold focus:outline-none" 
+          className="w-full input-3d text-sm" 
         />
       </div>
 
@@ -93,3 +93,4 @@ export default function DevotionForm({ initialData }: Props) {
     </form>
   );
 }
+

@@ -57,3 +57,4 @@ export async function deleteDevotion(id: string) {
   revalidatePath("/admin/devotions");
   revalidatePath("/profile");
 }
+

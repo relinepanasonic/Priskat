@@ -32,7 +32,7 @@ export default function GalleryPage() {
             />
           </div>
         ) : (
-          <div className="text-center py-20 bg-brand-surface rounded-2xl border border-brand-border border-dashed">
+          <div className="text-center py-20 card-3d border-dashed">
             <h3 className="text-xl font-semibold text-brand-gold mb-2">Gallery is not configured yet.</h3>
             <p className="text-brand-light max-w-md mx-auto text-sm">
               To embed a Google Drive folder, add your public folder ID to your environment variables as <code>NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID</code>.
@@ -44,3 +44,4 @@ export default function GalleryPage() {
     </div>
   );
 }
+

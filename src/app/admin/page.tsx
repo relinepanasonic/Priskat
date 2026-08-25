@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
           <Link
             key={label}
             href={href}
-            className="group flex items-center gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm hover:shadow-md transition-all"
+            className="group flex items-center gap-4 card-3d p-5 shadow-sm hover:shadow-md transition-all"
           >
             <div className={`rounded-xl p-3 ${color}`}>
               <Icon className="h-6 w-6" />
@@ -47,7 +47,7 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
+        <div className="card-3d p-5 shadow-sm">
           <h2 className="mb-3 font-semibold text-white">Quick Actions</h2>
           <div className="space-y-2">
             <Link href="/admin/news/new" className="flex items-center gap-2 rounded-lg bg-brand-bg px-4 py-2.5 text-sm font-medium text-brand-gold hover:bg-brand-bg transition-colors">
@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
             </Link>
           </div>
         </div>
-        <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
+        <div className="card-3d p-5 shadow-sm">
           <h2 className="mb-3 font-semibold text-white">Activity Summary</h2>
           <p className="text-sm text-brand-muted">
             {commentCount} active comments · {memberCount} members

@@ -12,13 +12,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-gold text-brand-dark text-white hover:bg-brand-gold text-brand-dark-800 active:bg-brand-gold text-brand-dark-900 shadow-sm",
+    "bg-brand-blue text-brand-light shadow-3d hover:shadow-glow-blue hover:text-white active:shadow-3d-pressed border border-[#4A6487]",
   secondary:
-    "bg-brand-gold text-white hover:bg-brand-gold-500 active:bg-brand-gold-600 shadow-sm",
-  ghost: "bg-transparent text-brand-gold hover:bg-brand-bg",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+    "bg-brand-surface text-brand-light shadow-3d hover:bg-brand-surface-hover hover:text-white active:shadow-3d-pressed border border-[#526B8A]",
+  ghost: "bg-transparent text-brand-light hover:bg-brand-surface",
+  danger: "bg-red-900/50 border border-red-500/50 text-red-200 shadow-3d hover:shadow-glow-red active:shadow-3d-pressed",
   outline:
-    "border border-brand-blue text-brand-gold hover:bg-brand-bg bg-transparent",
+    "border border-brand-border bg-brand-bg shadow-3d-sm text-brand-light hover:bg-brand-surface active:shadow-3d-pressed",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -40,7 +40,7 @@ export default function Button({
     <button
       disabled={disabled || loading}
       className={[
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold disabled:pointer-events-none disabled:opacity-50",
         variantClasses[variant],
         sizeClasses[size],
         className,

@@ -154,7 +154,7 @@ export default function CommentSection({
           </div>
         </form>
       ) : (
-        <div className="rounded-xl border border-brand-border bg-brand-surface-hover p-4 text-center text-sm text-brand-muted">
+        <div className="card-3d-hover p-4 text-center text-sm text-brand-muted">
           <Link href="/login" className="text-brand-gold hover:underline font-medium">
             Sign in
           </Link>{" "}

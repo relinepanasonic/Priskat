@@ -141,7 +141,7 @@ export default function ProfileEditForm({ profile }: Props) {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-brand-light">Gender</label>
-        <select {...register("gender")} className="w-full rounded-lg bg-brand-surface border border-brand-border px-4 py-2.5 text-sm focus:border-brand-gold focus:outline-none text-brand-light">
+        <select {...register("gender")} className="w-full input-3d text-sm">
           <option value="">Select Gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
@@ -151,7 +151,7 @@ export default function ProfileEditForm({ profile }: Props) {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-brand-light">Skills <span className="text-brand-muted font-normal">(comma-separated)</span></label>
-        <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full rounded-lg bg-brand-surface border border-brand-border px-4 py-2.5 text-sm focus:border-brand-gold focus:outline-none text-white" />
+        <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full input-3d text-sm" />
       </div>
 
       <div>

@@ -11,7 +11,7 @@ export default function MemberCard({ member }: Props) {
   return (
     <Link
       href={`/directory/${member.username}`}
-      className="group flex flex-col items-center rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm hover:shadow-md text-center transition-all"
+      className="group flex flex-col items-center card-3d p-5 shadow-sm hover:shadow-md text-center transition-all"
     >
       {member.avatar_url ? (
         <Image
