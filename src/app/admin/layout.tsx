@@ -22,7 +22,7 @@ export default async function AdminLayout({
 
   const profile = data as Profile | null;
 
-  if (!profile || !["superadmin", "admin", "moderator"].includes(profile.role)) {
+  if (!profile || !["superadmin", "admin", "moderator"].includes(String(profile.role).toLowerCase())) {
     redirect("/");
   }
 

@@ -44,7 +44,7 @@ export default async function AdminMembersPage() {
                       <Image src={member.avatar_url} alt={member.full_name} width={32} height={32} className="rounded-full object-cover" />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold text-xs font-semibold">
-                        {member.full_name[0]}
+                        {member.full_name?.[0] || "?"}
                       </div>
                     )}
                     <div>

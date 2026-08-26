@@ -58,7 +58,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       </Link>
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
-        {profile?.role === "superadmin" && (
+        {String(profile?.role).toLowerCase() === "superadmin" && (
           <button onClick={() => setInviteOpen(true)} className="text-brand-gold hover:opacity-80 transition">
             <UserPlus className="h-5 w-5" />
           </button>
@@ -106,7 +106,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
         </nav>
 
         {/* Superadmin Invite & Database Buttons */}
-        {profile?.role === "superadmin" && (
+        {String(profile?.role).toLowerCase() === "superadmin" && (
           <div className="mt-3 space-y-1">
             <a
               href="/admin/members"
