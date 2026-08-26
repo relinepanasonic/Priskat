@@ -74,3 +74,4 @@ ALTER TABLE public.user_devotion_progress ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own progress" ON public.user_devotion_progress FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own progress" ON public.user_devotion_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own progress" ON public.user_devotion_progress FOR UPDATE USING (auth.uid() = user_id);
+
