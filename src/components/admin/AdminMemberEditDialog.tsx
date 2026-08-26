@@ -47,9 +47,9 @@ export default function AdminMemberEditDialog({ member }: Props) {
           <div>
             <label className="block text-sm font-medium text-brand-light mb-1">Role</label>
             <select name="role" defaultValue={member.role} className="w-full input-3d text-sm">
-              <option value="member">Member</option>
-              <option value="moderator">Moderator</option>
+              <option value="superadmin">Superadmin</option>
               <option value="admin">Admin</option>
+              <option value="member">Member</option>
             </select>
           </div>
 
@@ -63,20 +63,20 @@ export default function AdminMemberEditDialog({ member }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-light mb-2">Completed Modules</label>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm text-brand-light">
-                <input type="checkbox" name="modules" value="module_1" defaultChecked={member.completed_modules.includes("module_1")} className="rounded border-brand-border bg-brand-bg text-brand-gold focus:ring-brand-gold" />
-                Pria Sejati / Wanita Berhikmat (Module 1)
-              </label>
-              <label className="flex items-center gap-2 text-sm text-brand-light">
-                <input type="checkbox" name="modules" value="module_2" defaultChecked={member.completed_modules.includes("module_2")} className="rounded border-brand-border bg-brand-bg text-brand-gold focus:ring-brand-gold" />
-                Bapa Sejati (Module 2 - Men only)
-              </label>
-              <label className="flex items-center gap-2 text-sm text-brand-light">
-                <input type="checkbox" name="modules" value="module_3" defaultChecked={member.completed_modules.includes("module_3")} className="rounded border-brand-border bg-brand-bg text-brand-gold focus:ring-brand-gold" />
-                Patriot (Module 3 - Men only)
-              </label>
+            <label className="block text-sm font-medium text-brand-light mb-2">Alumni (Completed Modules)</label>
+            <div className="grid grid-cols-2 gap-2">
+              {["Pria Sejati", "Youngman", "Bapa Sejati", "Patriot", "Wanita Berhikmat", "Young Woman"].map((opt) => (
+                <label key={opt} className="flex items-center gap-2 text-sm text-brand-light bg-[#1a1d24] p-2 rounded-lg border border-[#333]">
+                  <input 
+                    type="checkbox" 
+                    name="modules" 
+                    value={opt} 
+                    defaultChecked={member.completed_modules.includes(opt)} 
+                    className="rounded border-[#555] bg-brand-bg text-brand-gold focus:ring-brand-gold" 
+                  />
+                  {opt}
+                </label>
+              ))}
             </div>
           </div>
 
