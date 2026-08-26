@@ -68,7 +68,7 @@ export default async function BiblePage() {
           <div className="grid grid-cols-1 gap-3">
             {books.map((book) => (
               <Link 
-                href={`/bible/${book.book_id}/1`} 
+                href={`/faith/bible/${book.book_id}/1`} 
                 key={book.book_id}
                 className="bg-brand-surface p-4 rounded-2xl flex items-center justify-between border border-[#333] border-t-[#444] border-l-[#444] shadow-3d active:translate-y-1 active:shadow-inner-dark transition-all"
               >
