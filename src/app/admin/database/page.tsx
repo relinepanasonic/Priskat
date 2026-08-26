@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Papa from "papaparse";
-import { UploadCloud, Database } from "lucide-react";
+import { UploadCloud, Database, AlertCircle } from "lucide-react";
 
 const GROUP_OPTIONS = ["Jabodetabek", "Bandung"];
 const CAMP_OPTIONS = [
@@ -20,48 +20,60 @@ export default function DatabasePage() {
   
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<any[][]>([]);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrorMsg(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      // The user's CSV uses semicolons. Let PapaParse auto-detect, but if it fails, we should handle it.
-      complete: (results) => {
-        // Reset file input so the same file can be selected again
-        e.target.value = "";
+    try {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          // Reset file input so the same file can be selected again
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
 
-        if (results.errors.length > 0 && results.errors[0].code !== "UndetectableDelimiter") {
-          console.warn("PapaParse errors:", results.errors);
-        }
+          if (results.errors.length > 0 && results.errors[0].code !== "UndetectableDelimiter") {
+            console.warn("PapaParse errors:", results.errors);
+            setErrorMsg("Warning: " + results.errors[0].message);
+          }
 
-        if (!results.data || results.data.length === 0) {
-          alert("File is empty or could not be parsed.");
-          return;
-        }
-        
-        // results.meta.fields contains the original headers
-        const originalHeaders = results.meta.fields || [];
-        
-        // Define new headers: Group, Camp, [original headers]
-        const newHeaders = ["Group", "Camp", ...originalHeaders];
-        
-        // Transform rows
-        const newRows = results.data.map((row: any) => {
-          const newRow = [selectedGroup, selectedCamp];
-          // Add all original column values
-          originalHeaders.forEach((col) => {
-            newRow.push(row[col]);
+          if (!results.data || results.data.length === 0) {
+            setErrorMsg("File is empty or could not be parsed.");
+            return;
+          }
+          
+          const originalHeaders = results.meta.fields || [];
+          const newHeaders = ["Group", "Camp", ...originalHeaders];
+          
+          const newRows = results.data.map((row: any) => {
+            const newRow = [selectedGroup, selectedCamp];
+            originalHeaders.forEach((col) => {
+              newRow.push(row[col]);
+            });
+            return newRow;
           });
-          return newRow;
-        });
 
-        setHeaders(newHeaders);
-        setRows(newRows);
-      }
-    });
+          setHeaders(newHeaders);
+          setRows(newRows);
+        },
+        error: (error) => {
+          console.error("PapaParse error:", error);
+          setErrorMsg("Failed to read the file: " + error.message);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+      });
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setErrorMsg("An unexpected error occurred: " + err.message);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -100,15 +112,32 @@ export default function DatabasePage() {
           </div>
         </div>
 
-        <div className="pt-2">
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#333] border-dashed rounded-xl cursor-pointer bg-[#111] hover:bg-[#1a1d24] hover:border-brand-gold transition-colors">
+        <div className="pt-2 relative">
+          <input 
+            type="file" 
+            id="csv-upload"
+            ref={fileInputRef}
+            className="sr-only" 
+            accept=".csv" 
+            onChange={handleFileUpload} 
+          />
+          <label 
+            htmlFor="csv-upload"
+            className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#333] border-dashed rounded-xl cursor-pointer bg-[#111] hover:bg-[#1a1d24] hover:border-brand-gold transition-colors"
+          >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               <UploadCloud className="w-8 h-8 mb-2 text-brand-gold" />
               <p className="text-sm text-gray-400 font-semibold">Click to upload CSV</p>
             </div>
-            <input type="file" className="hidden" accept=".csv" onChange={handleFileUpload} />
           </label>
         </div>
+
+        {errorMsg && (
+          <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl mt-4">
+            <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-red-400">{errorMsg}</p>
+          </div>
+        )}
       </div>
 
       {headers.length > 0 && (
@@ -132,7 +161,7 @@ export default function DatabasePage() {
                   <tr key={i} className="hover:bg-white/5 transition-colors">
                     {row.map((cell, j) => (
                       <td key={j} className="px-4 py-2.5 whitespace-nowrap">
-                        {cell}
+                        {String(cell)}
                       </td>
                     ))}
                   </tr>
