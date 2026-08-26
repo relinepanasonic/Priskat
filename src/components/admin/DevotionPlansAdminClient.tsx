@@ -1,259 +1,330 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { Plus, Save, Trash, ChevronRight } from "lucide-react";
 
-type Category = {
-  id: string;
-  name: string;
-  created_at: string;
-};
-
-type Plan = {
-  id: string;
-  category_id: string;
-  title: string;
-  cover_image_url: string | null;
-  duration_days: number;
-  description: string | null;
-  created_at: string;
-  devotion_categories?: { name: string } | null;
-};
-
-export default function DevotionPlansAdminClient({
+export default function FourColumnDevotionAdmin({
   initialCategories,
   initialPlans,
 }: {
-  initialCategories: Category[];
-  initialPlans: Plan[];
+  initialCategories: any[];
+  initialPlans: any[];
 }) {
-  const router = useRouter();
   const supabase = createClient();
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [plans, setPlans] = useState<Plan[]>(initialPlans);
 
-  const [isSubmittingCat, setIsSubmittingCat] = useState(false);
-  const [catName, setCatName] = useState("");
+  // Column 1: Categories
+  const [categories, setCategories] = useState(initialCategories);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
-  const [isSubmittingPlan, setIsSubmittingPlan] = useState(false);
+  // Column 2: Plans
+  const [plans, setPlans] = useState(initialPlans);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [newPlanName, setNewPlanName] = useState("");
+
+  // Column 3: Plan Details & Days
+  const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const [planTitle, setPlanTitle] = useState("");
-  const [planCategoryId, setPlanCategoryId] = useState("");
-  const [planDuration, setPlanDuration] = useState("1");
-  const [planCoverUrl, setPlanCoverUrl] = useState("");
-  const [planDescription, setPlanDescription] = useState("");
+  const [planCover, setPlanCover] = useState("");
+  const [planDesc, setPlanDesc] = useState("");
+  const [planDuration, setPlanDuration] = useState(7);
+  const [selectedDayNum, setSelectedDayNum] = useState<number | null>(null);
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
+  // Column 4: Day Content
+  const [dayData, setDayData] = useState<any>(null);
+  const [dayTitle, setDayTitle] = useState("");
+  const [dayContent, setDayContent] = useState("");
+  const [dayVerses, setDayVerses] = useState<any[]>([]);
+  
+  const [newVerseRef, setNewVerseRef] = useState("");
+  const [isSavingDay, setIsSavingDay] = useState(false);
+
+  // --- Handlers for Col 1 ---
+  const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmittingCat(true);
-    
-    const { data, error } = await supabase
-      .from("devotion_categories")
-      .insert([{ name: catName }])
-      .select()
-      .single();
-
-    if (error) {
-      alert("Error creating category: " + error.message);
-    } else if (data) {
-      setCategories([data as Category, ...categories]);
-      setCatName("");
-      router.refresh(); // to update server data if needed
+    if (!newCategoryName) return;
+    const { data, error } = await supabase.from("devotion_categories").insert({ name: newCategoryName }).select().single();
+    if (data) {
+      setCategories([data, ...categories]);
+      setNewCategoryName("");
     }
-    
-    setIsSubmittingCat(false);
   };
 
-  const handleCreatePlan = async (e: React.FormEvent) => {
+  // --- Handlers for Col 2 ---
+  const filteredPlans = plans.filter(p => p.category_id === selectedCategoryId);
+  const handleAddPlan = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!planCategoryId) {
-      alert("Please select a category");
+    if (!newPlanName || !selectedCategoryId) return;
+    const { data, error } = await supabase.from("devotion_plans").insert({
+      category_id: selectedCategoryId,
+      title: newPlanName,
+      duration_days: 7
+    }).select().single();
+    
+    if (data) {
+      setPlans([data, ...plans]);
+      setNewPlanName("");
+      selectPlan(data);
+    }
+  };
+
+  const selectPlan = (plan: any) => {
+    setSelectedPlanId(plan.id);
+    setPlanTitle(plan.title || "");
+    setPlanCover(plan.cover_image_url || "");
+    setPlanDesc(plan.description || "");
+    setPlanDuration(plan.duration_days || 7);
+    setSelectedDayNum(null);
+  };
+
+  // --- Handlers for Col 3 ---
+  const handleSavePlan = async () => {
+    if (!selectedPlanId) return;
+    setIsSavingPlan(true);
+    const { data, error } = await supabase.from("devotion_plans").update({
+      title: planTitle,
+      cover_image_url: planCover,
+      description: planDesc,
+      duration_days: planDuration
+    }).eq("id", selectedPlanId).select().single();
+    
+    if (data) {
+      setPlans(plans.map(p => p.id === selectedPlanId ? data : p));
+      alert("Plan saved!");
+    }
+    setIsSavingPlan(false);
+  };
+
+  const selectDay = async (num: number) => {
+    setSelectedDayNum(num);
+    setDayData(null);
+    setDayTitle("");
+    setDayContent("");
+    setDayVerses([]);
+
+    // Fetch day from DB
+    const { data } = await supabase
+      .from("devotion_plan_days")
+      .select("*, verses:devotion_day_verses(*)")
+      .eq("plan_id", selectedPlanId)
+      .eq("day_number", num)
+      .maybeSingle();
+
+    if (data) {
+      setDayData(data);
+      setDayTitle(data.devotional_title || "");
+      setDayContent(data.devotional_content || "");
+      if (data.verses) {
+        setDayVerses(data.verses.sort((a: any, b: any) => a.order_index - b.order_index));
+      }
+    }
+  };
+
+  // --- Handlers for Col 4 ---
+  const handleSaveDay = async () => {
+    if (!selectedPlanId || !selectedDayNum) return;
+    setIsSavingDay(true);
+    
+    if (dayData) {
+      // Update
+      await supabase.from("devotion_plan_days").update({
+        devotional_title: dayTitle,
+        devotional_content: dayContent
+      }).eq("id", dayData.id);
+    } else {
+      // Insert
+      const { data } = await supabase.from("devotion_plan_days").insert({
+        plan_id: selectedPlanId,
+        day_number: selectedDayNum,
+        devotional_title: dayTitle,
+        devotional_content: dayContent
+      }).select().single();
+      if (data) setDayData(data);
+    }
+    setIsSavingDay(false);
+    alert("Day content saved!");
+  };
+
+  const handleAddVerse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dayData || !newVerseRef) {
+      alert("Please save the day content first before adding verses.");
       return;
     }
-    
-    setIsSubmittingPlan(true);
+    const orderIndex = dayVerses.length;
+    const { data } = await supabase.from("devotion_day_verses").insert({
+      day_id: dayData.id,
+      verse_reference: newVerseRef,
+      translation: "TB",
+      order_index: orderIndex
+    }).select().single();
 
-    const { data, error } = await supabase
-      .from("devotion_plans")
-      .insert([{
-        title: planTitle,
-        category_id: planCategoryId,
-        duration_days: parseInt(planDuration) || 1,
-        cover_image_url: planCoverUrl || null,
-        description: planDescription || null,
-      }])
-      .select(`
-        *,
-        devotion_categories (
-          name
-        )
-      `)
-      .single();
-
-    if (error) {
-      alert("Error creating plan: " + error.message);
-    } else if (data) {
-      setPlans([data as unknown as Plan, ...plans]);
-      setPlanTitle("");
-      setPlanCategoryId("");
-      setPlanDuration("1");
-      setPlanCoverUrl("");
-      setPlanDescription("");
-      router.refresh();
+    if (data) {
+      setDayVerses([...dayVerses, data]);
+      setNewVerseRef("");
     }
-
-    setIsSubmittingPlan(false);
   };
 
   return (
-    <div className="space-y-12">
-      {/* Category Creation Form */}
-      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Create Category</h2>
-        <form onSubmit={handleCreateCategory} className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-          <div className="flex-1 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category Name
-            </label>
-            <input
-              type="text"
-              required
-              value={catName}
-              onChange={(e) => setCatName(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              placeholder="e.g. Lent, Advent, General"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmittingCat}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 transition-colors"
-          >
-            {isSubmittingCat ? "Creating..." : "Create Category"}
-          </button>
-        </form>
-      </section>
+    <div className="flex h-[80vh] w-full bg-white text-black border border-gray-300 rounded-xl overflow-hidden shadow-2xl">
+      
+      {/* COLUMN 1: CATEGORIES */}
+      <div className="w-1/4 border-r border-gray-300 bg-gray-50 flex flex-col">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600">
+          1. Categories
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => { setSelectedCategoryId(cat.id); setSelectedPlanId(null); setSelectedDayNum(null); }}
+              className={`w-full text-left px-4 py-3 border-b border-gray-200 flex justify-between items-center hover:bg-gray-100 transition-colors ${selectedCategoryId === cat.id ? "bg-blue-100 border-blue-200" : ""}`}
+            >
+              <span className="font-semibold text-sm">{cat.name}</span>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </button>
+          ))}
+        </div>
+        <div className="p-3 border-t border-gray-300 bg-white">
+          <form onSubmit={handleAddCategory} className="flex gap-2">
+            <input type="text" placeholder="New Category..." value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm" />
+            <button type="submit" className="bg-black text-white p-1.5 rounded"><Plus className="h-4 w-4" /></button>
+          </form>
+        </div>
+      </div>
 
-      {/* Plan Creation Form */}
-      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Create Plan</h2>
-        <form onSubmit={handleCreatePlan} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Plan Title
-              </label>
-              <input
-                type="text"
-                required
-                value={planTitle}
-                onChange={(e) => setPlanTitle(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                placeholder="e.g. 40 Days of Purpose"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                required
-                value={planCategoryId}
-                onChange={(e) => setPlanCategoryId(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              >
-                <option value="">Select a category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Duration (Days)
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={planDuration}
-                onChange={(e) => setPlanDuration(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cover Image URL (Optional)
-              </label>
-              <input
-                type="url"
-                value={planCoverUrl}
-                onChange={(e) => setPlanCoverUrl(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description (Optional)
-            </label>
-            <textarea
-              rows={3}
-              value={planDescription}
-              onChange={(e) => setPlanDescription(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              placeholder="Describe what this plan is about..."
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmittingPlan}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 transition-colors"
-          >
-            {isSubmittingPlan ? "Creating..." : "Create Plan"}
-          </button>
-        </form>
-      </section>
-
-      {/* Existing Plans List */}
-      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Existing Plans</h2>
-        {plans.length === 0 ? (
-          <p className="text-gray-500">No plans found.</p>
+      {/* COLUMN 2: PLANS */}
+      <div className="w-1/4 border-r border-gray-300 bg-gray-50 flex flex-col">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600">
+          2. Devotion Plans
+        </div>
+        {!selectedCategoryId ? (
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a category first</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="py-3 px-4 font-medium text-gray-700">Title</th>
-                  <th className="py-3 px-4 font-medium text-gray-700">Category</th>
-                  <th className="py-3 px-4 font-medium text-gray-700">Duration</th>
-                  <th className="py-3 px-4 font-medium text-gray-700">Created At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((p) => (
-                  <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 font-medium text-gray-900">{p.title}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {p.devotion_categories?.name || "Unknown"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600">{p.duration_days} days</td>
-                    <td className="py-3 px-4 text-gray-600 text-sm">
-                      {new Date(p.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
+          <>
+            <div className="flex-1 overflow-y-auto">
+              {filteredPlans.map(plan => (
+                <button
+                  key={plan.id}
+                  onClick={() => selectPlan(plan)}
+                  className={`w-full text-left px-4 py-3 border-b border-gray-200 flex flex-col hover:bg-gray-100 transition-colors ${selectedPlanId === plan.id ? "bg-blue-100 border-blue-200" : ""}`}
+                >
+                  <span className="font-semibold text-sm truncate">{plan.title}</span>
+                  <span className="text-xs text-gray-500">{plan.duration_days} Days</span>
+                </button>
+              ))}
+            </div>
+            <div className="p-3 border-t border-gray-300 bg-white">
+              <form onSubmit={handleAddPlan} className="flex gap-2">
+                <input type="text" placeholder="New Plan Title..." value={newPlanName} onChange={e => setNewPlanName(e.target.value)} className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm" />
+                <button type="submit" className="bg-black text-white p-1.5 rounded"><Plus className="h-4 w-4" /></button>
+              </form>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* COLUMN 3: PLAN DETAILS & DAYS */}
+      <div className="w-1/4 border-r border-gray-300 bg-white flex flex-col">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600">
+          3. Plan Cover & Days
+        </div>
+        {!selectedPlan ? (
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a plan first</div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            
+            <div className="space-y-2 pb-4 border-b border-gray-200">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">Title</label>
+                <input type="text" value={planTitle} onChange={e => setPlanTitle(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">Cover Image URL</label>
+                <input type="text" value={planCover} onChange={e => setPlanCover(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">Description</label>
+                <textarea rows={2} value={planDesc} onChange={e => setPlanDesc(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">Duration (Days)</label>
+                <input type="number" min="1" max="365" value={planDuration} onChange={e => setPlanDuration(parseInt(e.target.value))} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+              </div>
+              <button onClick={handleSavePlan} disabled={isSavingPlan} className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 hover:bg-blue-700">
+                {isSavingPlan ? "Saving..." : "Save Details"}
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-2">Edit Days (1 - {planDuration})</label>
+              <div className="grid grid-cols-4 gap-2">
+                {Array.from({ length: planDuration }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => selectDay(i + 1)}
+                    className={`aspect-square rounded flex items-center justify-center font-bold text-sm transition-colors border ${selectedDayNum === i + 1 ? "bg-black text-white border-black" : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"}`}
+                  >
+                    {i + 1}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+
           </div>
         )}
-      </section>
+      </div>
+
+      {/* COLUMN 4: DAY BODY */}
+      <div className="w-1/4 bg-white flex flex-col">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center">
+          <span>4. The Body</span>
+          {selectedDayNum && <span className="text-black bg-white px-2 py-0.5 rounded text-[10px]">Day {selectedDayNum}</span>}
+        </div>
+        {!selectedDayNum ? (
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a day first</div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">Section Title</label>
+                <input type="text" value={dayTitle} onChange={e => setDayTitle(e.target.value)} placeholder="e.g. Introduction" className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-semibold" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">The Prayer / Devotional</label>
+                <textarea rows={10} value={dayContent} onChange={e => setDayContent(e.target.value)} placeholder="Write the devotion here..." className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"></textarea>
+              </div>
+              <button onClick={handleSaveDay} disabled={isSavingDay} className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Save className="h-4 w-4" /> {isSavingDay ? "Saving..." : "Save Content"}
+              </button>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-xs font-bold text-gray-500 mb-2">Bible Verses</label>
+              
+              <ul className="space-y-2 mb-3">
+                {dayVerses.map(v => (
+                  <li key={v.id} className="text-sm bg-gray-100 p-2 rounded flex justify-between items-center border border-gray-200">
+                    <span className="font-semibold">{v.verse_reference}</span>
+                  </li>
+                ))}
+                {dayVerses.length === 0 && <li className="text-xs text-gray-400 italic">No verses added.</li>}
+              </ul>
+
+              <form onSubmit={handleAddVerse} className="flex gap-2">
+                <input type="text" placeholder="e.g. Yehezkiel 20:8" value={newVerseRef} onChange={e => setNewVerseRef(e.target.value)} className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                <button type="submit" className="bg-black text-white p-1.5 rounded"><Plus className="h-4 w-4" /></button>
+              </form>
+              {!dayData && <p className="text-[10px] text-red-500 mt-1">Save content first before adding verses.</p>}
+            </div>
+
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
-
-

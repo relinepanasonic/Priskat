@@ -28,7 +28,7 @@ export default async function DevotionPlansAdminPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-5xl">
+    <div className="container mx-auto p-4 md:p-8 max-w-full">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Devotion Plans Admin</h1>
         <p className="text-gray-600 mt-2">Manage devotion categories and plans.</p>
@@ -40,3 +40,4 @@ export default async function DevotionPlansAdminPage() {
     </div>
   );
 }
+
