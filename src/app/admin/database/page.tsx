@@ -87,35 +87,6 @@ export default function DatabasePage() {
           if (fileInputRef.current) {
             fileInputRef.current.value = "";
           }
-
-          if (results.errors.length > 0 && results.errors[0].code !== "UndetectableDelimiter") {
-            console.warn("PapaParse errors:", results.errors);
-            setErrorMsg("Warning: " + results.errors[0].message);
-          }
-
-          if (!results.data || results.data.length === 0) {
-            setErrorMsg("File is empty or could not be parsed.");
-            return;
-          }
-          
-          const originalHeaders = results.meta.fields || [];
-          const newHeaders = ["Group", "Camp", ...originalHeaders];
-          
-          const newRows = results.data.map((row: any) => {
-            const newRow = [selectedGroup, selectedCamp];
-            originalHeaders.forEach((col) => {
-              newRow.push(row[col]);
-            });
-            return newRow;
-          });
-
-          setHeaders(newHeaders);
-          setRows(newRows);
-        },
-        error: (error) => {
-          console.error("PapaParse error:", error);
-          setErrorMsg("Failed to read the file: " + error.message);
-          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       });
     } catch (err: any) {
