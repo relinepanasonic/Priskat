@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Book, BookOpen, Settings, Users, UserPlus } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Book, BookOpen, Settings, Users, UserPlus, Database } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
@@ -54,8 +54,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     {/* Mobile Top Header (Settings & Lang) */}
     <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark font-bold text-xs">P</div>
-        <span className="font-bold text-brand-gold text-sm">PriskatCFM</span>
+        <Image src="/logo.jpg" alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
+        <span className="font-bold text-brand-gold text-xs truncate">Catholic Family Ministry</span>
       </Link>
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
@@ -75,10 +75,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       <div className="flex flex-col h-full px-3 py-5">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 mb-8 px-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-base shadow-glow-gold">
-            P
-          </div>
-          <span className="font-bold text-white text-base tracking-wide">PriskatCFM</span>
+          <Image src="/logo.jpg" alt="Logo" width={36} height={36} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
+          <span className="font-bold text-white text-[13px] leading-tight tracking-wide">Catholic Family<br/>Ministry</span>
         </Link>
 
         {/* Desktop nav */}
@@ -107,15 +105,24 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           })}
         </nav>
 
-        {/* Superadmin Invite Button */}
+        {/* Superadmin Invite & Database Buttons */}
         {profile?.role === "superadmin" && (
-          <button
-            onClick={() => setInviteOpen(true)}
-            className="mt-3 flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>Invite User</span>
-          </button>
+          <div className="mt-3 space-y-1">
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Invite User</span>
+            </button>
+            <Link
+              href="/admin/database"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+            >
+              <Database className="h-4 w-4" />
+              <span>Database</span>
+            </Link>
+          </div>
         )}
 
         {/* Bottom Section (Lang & User) */}
