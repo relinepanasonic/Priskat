@@ -57,3 +57,4 @@ export default function FaithLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+

@@ -28,3 +28,4 @@ Replace the old "Prayer" link in the sidebar with a new "Camp" page using a camp
 2. Click "Spiritual" and ensure it redirects to `/faith/bible`.
 3. Verify the tabs (Bible, Prayer, Devotion) successfully toggle between the three views.
 4. Verify the Camp page loads correctly.
+
