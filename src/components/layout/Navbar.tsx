@@ -16,7 +16,15 @@ interface NavbarProps {
   lang?: "id" | "en";
 }
 
-const NAV_LINKS = [
+const DESKTOP_NAV_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/news", label: "News" },
+  { href: "/friends", label: "Friends" },
+  { href: "/bible", label: "Bible" },
+  { href: "/prayers", label: "Prayer" },
+];
+
+const MOBILE_NAV_LINKS = [
   { href: "/prayers", label: "Prayer" },
   { href: "/news", label: "News" },
   { href: "/", label: "Home" },
@@ -33,12 +41,15 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
 
   async function handleSignOut() {
     const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
   }
 
   return (
     <>
     {/* Mobile Top Header (Settings & Lang) */}
-    <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-brand-bg backdrop-blur-sm shadow-sm">
+    <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark font-bold text-xs">P</div>
         <span className="font-bold text-brand-gold text-sm">PriskatCFM</span>
@@ -64,14 +75,14 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
 
         {/* Desktop nav */}
         <nav className="flex-1 space-y-1">
-          {NAV_LINKS.map(({ href, label }) => {
+          {DESKTOP_NAV_LINKS.map(({ href, label }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
                 className={[
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all duration-200",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200",
                   isActive
                     ? "bg-brand-gold text-brand-dark shadow-md"
                     : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent",

@@ -13,7 +13,10 @@ import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 const schema = z
   .object({
     full_name: z.string().min(2, "Name must be at least 2 characters"),
+    username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
+    phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08 and contain only numbers"),
     email: z.string().email("Invalid email address"),
+    alumni: z.array(z.string()).min(1, "Please select at least one alumni group"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string(),
   })
@@ -23,6 +26,15 @@ const schema = z
   });
 
 type FormValues = z.infer<typeof schema>;
+
+const ALUMNI_OPTIONS = [
+  "Pria Sejati",
+  "Youngman",
+  "Bapa Sejati",
+  "Patriot",
+  "Wanita Berhikmat",
+  "Young Woman"
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,7 +46,14 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+    watch,
+    setValue
+  } = useForm<FormValues>({ 
+    resolver: zodResolver(schema),
+    defaultValues: { alumni: [] }
+  });
+  
+  const selectedAlumni = watch("alumni") || [];
 
   async function onSubmit(data: FormValues) {
     setError(null);
@@ -43,7 +62,12 @@ export default function RegisterPage() {
       email: data.email,
       password: data.password,
       options: {
-        data: { full_name: data.full_name },
+        data: { 
+          full_name: data.full_name,
+          username: data.username,
+          phone: data.phone,
+          completed_modules: data.alumni
+        },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
@@ -88,51 +112,79 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">
-            Full Name
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
-            <input
-              {...register("full_name")}
-              placeholder="Your full name"
-              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-            />
-          </div>
-          {errors.full_name && (
-            <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>
-          )}
+          <label className="mb-1 block text-sm font-medium text-brand-light">Nama</label>
+          <input
+            {...register("full_name")}
+            placeholder="Your full name"
+            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
+          />
+          {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">
-            Email
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
-            <input
-              {...register("email")}
-              type="email"
-              placeholder="you@example.com"
-              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-            />
-          </div>
-          {errors.email && (
-            <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-          )}
+          <label className="mb-1 block text-sm font-medium text-brand-light">Username</label>
+          <input
+            {...register("username")}
+            placeholder="johndoe"
+            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
+          />
+          {errors.username && <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">
-            Password
-          </label>
+          <label className="mb-1 block text-sm font-medium text-brand-light">No HP (WhatsApp)</label>
+          <input
+            {...register("phone")}
+            placeholder="08xxxxxxxxxx"
+            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
+          />
+          {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-brand-light">Email</label>
+          <input
+            {...register("email")}
+            type="email"
+            placeholder="you@example.com"
+            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
+          />
+          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+        </div>
+        
+        <div>
+          <label className="mb-2 block text-sm font-medium text-brand-light">Alumni</label>
+          <div className="grid grid-cols-2 gap-2">
+            {ALUMNI_OPTIONS.map(opt => (
+              <label key={opt} className="flex items-center space-x-2 bg-[#1a1d24] p-2 rounded-lg border border-[#333] cursor-pointer hover:border-brand-gold transition-colors">
+                <input
+                  type="checkbox"
+                  value={opt}
+                  className="rounded border-[#555] text-brand-gold focus:ring-brand-gold"
+                  checked={selectedAlumni.includes(opt)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setValue("alumni", [...selectedAlumni, opt]);
+                    } else {
+                      setValue("alumni", selectedAlumni.filter(a => a !== opt));
+                    }
+                  }}
+                />
+                <span className="text-xs text-brand-light">{opt}</span>
+              </label>
+            ))}
+          </div>
+          {errors.alumni && <p className="mt-1 text-xs text-red-600">{errors.alumni.message}</p>}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-brand-light">Password</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
               placeholder="Min. 8 characters"
-              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-10 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full rounded-lg border border-brand-border py-2.5 pl-4 pr-10 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
             />
             <button
               type="button"
@@ -142,32 +194,23 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && (
-            <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-          )}
+          {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">
-            Confirm Password
-          </label>
+          <label className="mb-1 block text-sm font-medium text-brand-light">Confirm Password</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               {...register("confirm_password")}
               type={showPassword ? "text" : "password"}
               placeholder="Repeat your password"
-              className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full rounded-lg border border-brand-border py-2.5 pl-4 pr-10 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
             />
           </div>
-          {errors.confirm_password && (
-            <p className="mt-1 text-xs text-red-600">
-              {errors.confirm_password.message}
-            </p>
-          )}
+          {errors.confirm_password && <p className="mt-1 text-xs text-red-600">{errors.confirm_password.message}</p>}
         </div>
 
-        <Button type="submit" className="w-full" loading={isSubmitting}>
+        <Button type="submit" className="w-full mt-2" loading={isSubmitting}>
           Create Account
         </Button>
       </form>
