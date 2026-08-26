@@ -24,9 +24,9 @@ export default async function PublicLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
       <Navbar profile={profile} lang={lang} />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 overflow-x-hidden md:h-screen md:overflow-y-auto">{children}</main>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export default async function AdminLayout({
 
   const profile = data as Pick<Profile, "role" | "full_name"> | null;
 
-  if (!profile || !["admin", "moderator"].includes(profile.role)) {
+  if (!profile || !["superadmin", "admin", "moderator"].includes(profile.role)) {
     redirect("/");
   }
 

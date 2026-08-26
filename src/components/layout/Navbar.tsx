@@ -51,86 +51,114 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       </div>
     </div>
 
-    {/* Desktop Header */}
-    <header className="hidden md:block sticky top-0 z-50 border-b border-brand-blue-100 bg-brand-surface/95 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    {/* Desktop Sidebar */}
+    <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 z-50 border-r border-[#333] bg-brand-surface shadow-lg">
+      <div className="flex flex-col h-full px-4 py-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-sm">
+        <Link href="/" className="flex items-center gap-3 mb-10 px-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold text-brand-dark text-white font-bold text-lg shadow-glow-gold">
             P
           </div>
-          <span className="font-bold text-brand-gold text-lg">PriskatCFM</span>
+          <span className="font-bold text-brand-gold text-xl tracking-wide">PriskatCFM</span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={[
-                "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                pathname === href
-                  ? "bg-brand-bg text-brand-gold"
-                  : "text-brand-light hover:text-brand-gold hover:bg-brand-bg",
-              ].join(" ")}
-            >
-              {label}
-            </Link>
-          ))}
+        <nav className="flex-1 space-y-2">
+          {NAV_LINKS.map(({ href, label }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={[
+                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-brand-bg text-brand-gold border border-[#333]"
+                    : "text-brand-light hover:text-brand-gold hover:bg-brand-surface-hover border border-transparent",
+                ].join(" ")}
+              >
+                {label === "Home" && <Home className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
+                {label === "Prayer" && <BookOpen className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
+                {label === "News" && <Newspaper className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
+                {label === "Friends" && <Users className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
+                {label === "Bible" && <Book className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
+                <span className={isActive ? "font-bold" : ""}>{label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Right side */}
-        <div className="hidden md:flex items-center gap-4">
-          <LanguageToggle currentLang={lang} />
+        {/* Bottom Section (Lang & User) */}
+        <div className="mt-auto space-y-4 pt-6 border-t border-[#333]">
+          <div className="px-4 flex justify-between items-center">
+            <span className="text-sm text-brand-muted">Language</span>
+            <LanguageToggle currentLang={lang} />
+          </div>
+          
           {user ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-brand-light hover:bg-brand-surface-hover transition-colors"
+                className="flex items-center w-full gap-3 rounded-xl p-3 text-sm font-medium text-brand-light hover:bg-brand-surface-hover transition-colors border border-transparent hover:border-[#333]"
               >
                 {profile?.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
                     alt={profile.full_name || "Avatar"}
-                    width={28}
-                    height={28}
-                    className="rounded-full object-cover"
+                    width={36}
+                    height={36}
+                    className="rounded-full object-cover border border-[#444]"
                   />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-semibold text-xs">
+                  <div className="h-9 w-9 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-semibold text-sm border border-[#333]">
                     {(profile?.full_name || user.email || "U")[0].toUpperCase()}
                   </div>
                 )}
-                <span className="max-w-[120px] truncate">
-                  {profile?.full_name || user.email}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 text-brand-muted" />
+                <div className="flex flex-col items-start flex-1 overflow-hidden">
+                  <span className="truncate w-full font-bold">
+                    {profile?.full_name || "User"}
+                  </span>
+                  <span className="truncate w-full text-xs text-brand-muted font-normal">
+                    {user.email}
+                  </span>
+                </div>
+                <ChevronDown className={`h-4 w-4 text-brand-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-1 w-48 rounded-xl bg-brand-surface shadow-lg border border-brand-border py-1 z-50">
+                <div className="absolute bottom-full left-0 mb-2 w-full rounded-xl bg-brand-surface shadow-2xl border border-[#333] py-2 z-50">
                   <Link
                     href="/profile"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-brand-light hover:bg-brand-surface-hover"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-light hover:bg-brand-bg hover:text-brand-gold"
                   >
                     <User className="h-4 w-4" />
                     My Profile
                   </Link>
-                  {profile?.role && ["admin", "moderator"].includes(profile.role) && (
+                  {profile?.role && ["superadmin", "admin", "moderator"].includes(profile.role) && (
                     <Link
                       href="/admin"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-brand-light hover:bg-brand-surface-hover"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-light hover:bg-brand-bg hover:text-brand-gold"
                     >
+                      <Settings className="h-4 w-4" />
                       Admin Panel
                     </Link>
                   )}
-                  <hr className="my-1 border-brand-border" />
+                  {profile?.role === "superadmin" && (
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-light hover:bg-brand-bg hover:text-brand-gold"
+                    >
+                      <Users className="h-4 w-4" />
+                      Manage Users
+                    </Link>
+                  )}
+                  <hr className="my-1 border-[#333]" />
                   <button
                     onClick={handleSignOut}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-brand-bg"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -139,33 +167,24 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
               )}
             </div>
           ) : (
-            <>
+            <div className="flex flex-col gap-2">
               <Link
                 href="/login"
-                className="text-sm font-medium text-brand-light hover:text-brand-gold transition-colors"
+                className="w-full text-center py-2.5 text-sm font-medium text-brand-light hover:text-brand-gold border border-[#333] rounded-xl hover:bg-brand-surface-hover transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="rounded-lg bg-brand-gold text-brand-dark px-4 py-2 text-sm font-medium text-white hover:bg-brand-gold text-brand-dark-800 transition-colors"
+                className="w-full text-center rounded-xl bg-brand-gold text-brand-dark px-4 py-2.5 text-sm font-bold hover:bg-yellow-400 transition-colors shadow-glow-gold"
               >
                 Join
               </Link>
-            </>
+            </div>
           )}
         </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2 rounded-lg text-brand-light hover:bg-brand-surface-hover"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
       </div>
-    </header>
+    </aside>
     
     {/* Mobile Bottom Navigation (Visible only on mobile) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">

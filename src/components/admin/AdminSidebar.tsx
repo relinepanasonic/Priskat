@@ -27,6 +27,7 @@ const NAV = [
   { href: "/admin/members", label: "Members", icon: Users, adminOnly: true },
   { href: "/admin/devotions", label: "Devotions", icon: BookOpen },
   { href: "/admin/prayers", label: "Prayers / Doa", icon: HandHeart },
+  { href: "/admin/invite", label: "Invite Users", icon: HandHeart, superAdminOnly: true },
 ];
 
 export default function AdminSidebar({ role, fullName }: Props) {
@@ -40,7 +41,11 @@ export default function AdminSidebar({ role, fullName }: Props) {
     router.refresh();
   }
 
-  const links = NAV.filter((n) => !n.adminOnly || role === "admin");
+  const links = NAV.filter((n) => {
+    if (n.superAdminOnly) return role === "superadmin";
+    if (n.adminOnly) return role === "admin" || role === "superadmin";
+    return true;
+  });
 
   return (
     <aside className="hidden md:flex w-56 flex-col border-r border-brand-border bg-brand-surface">
