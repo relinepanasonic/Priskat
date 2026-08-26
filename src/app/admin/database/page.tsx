@@ -16,6 +16,26 @@ export default function DatabasePage() {
   const [filterAngkatan, setFilterAngkatan] = useState("");
   const [filterKota, setFilterKota] = useState("");
 
+  const [groupOptions, setGroupOptions] = useState<string[]>([]);
+  const [campOptions, setCampOptions] = useState<string[]>([]);
+  const [angkatanOptions, setAngkatanOptions] = useState<string[]>([]);
+  const [kotaOptions, setKotaOptions] = useState<string[]>([]);
+
+  const fetchFilterOptions = async () => {
+    const supabase = await import("@/lib/supabase/client").then(m => m.createClient());
+    const { data } = await supabase.from("alumni_database").select("group, camp, angkatan, city");
+    if (data) {
+      setGroupOptions(Array.from(new Set(data.map(d => d.group).filter(Boolean))).sort());
+      setCampOptions(Array.from(new Set(data.map(d => d.camp).filter(Boolean))).sort());
+      setAngkatanOptions(Array.from(new Set(data.map(d => String(d.angkatan)).filter(Boolean))).sort((a, b) => Number(a) - Number(b)));
+      setKotaOptions(Array.from(new Set(data.map(d => d.city).filter(Boolean))).sort());
+    }
+  };
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
+
   const fetchAlumni = async () => {
     setIsLoading(true);
     const supabase = createClient();
@@ -71,43 +91,47 @@ export default function DatabasePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-1.5">Group</label>
-            <input 
-              type="text"
-              placeholder="e.g. Jabodetabek"
+            <select 
               value={filterGroup}
               onChange={(e) => setFilterGroup(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold placeholder-gray-600"
-            />
+              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+            >
+              <option value="">All Groups</option>
+              {groupOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp</label>
-            <input 
-              type="text"
-              placeholder="e.g. Pria Sejati"
+            <select 
               value={filterCamp}
               onChange={(e) => setFilterCamp(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold placeholder-gray-600"
-            />
+              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+            >
+              <option value="">All Camps</option>
+              {campOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-1.5">Angkatan</label>
-            <input 
-              type="text"
-              placeholder="e.g. 1"
+            <select 
               value={filterAngkatan}
               onChange={(e) => setFilterAngkatan(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold placeholder-gray-600"
-            />
+              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+            >
+              <option value="">All Angkatan</option>
+              {angkatanOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-1.5">Kota</label>
-            <input 
-              type="text"
-              placeholder="e.g. Jakarta"
+            <select 
               value={filterKota}
               onChange={(e) => setFilterKota(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold placeholder-gray-600"
-            />
+              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+            >
+              <option value="">All Kota</option>
+              {kotaOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
           </div>
         </div>
       </div>
