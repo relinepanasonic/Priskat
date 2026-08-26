@@ -154,3 +154,4 @@ export default function InvitePanel({ onClose }: Props) {
     </>
   );
 }
+
