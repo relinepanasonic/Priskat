@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Phone, MessageSquare, Tent, Heart, Pencil, Camera } from "lucide-react";
 import FeedClient from "@/components/social/FeedClient";
 import { formatDistanceToNow } from "date-fns";
+import { uploadImage, storagePath } from "@/lib/upload";
+import { createClient } from "@/lib/supabase/client";
 
 export default function HomeTabsClient({ 
   profile, 
@@ -26,13 +28,32 @@ export default function HomeTabsClient({
   
   // Gallery mock
   const defaultImage = profile.avatar_url || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1000&auto=format&fit=crop";
-  const galleryImages = [
-    defaultImage,
-    "https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=1000&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1000&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop"
-  ];
+  
   const [activeImage, setActiveImage] = useState(defaultImage);
+  const [uploading, setUploading] = useState(false);
+  const [userGallery, setUserGallery] = useState<string[]>(profile.gallery_urls || []);
+  const galleryImages = [defaultImage, ...userGallery];
+
+  const handleUploadGallery = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, "avatars", storagePath(userId, "gallery_" + Date.now() + "_" + file.name));
+      const newGallery = [...userGallery, url];
+      setUserGallery(newGallery);
+      setActiveImage(url);
+      
+      // Try to save to DB (will fail gracefully if column doesn't exist yet)
+      const supabase = createClient();
+      await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId);
+    } catch (err) {
+      console.error("Upload failed", err);
+      alert("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-md mx-auto bg-brand-dark min-h-screen relative font-sans text-white pb-24 md:pb-12">
@@ -78,9 +99,10 @@ export default function HomeTabsClient({
                 <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
               </button>
             ))}
-            <button className="relative h-16 w-16 shrink-0 rounded-2xl bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold transition-colors">
-              <Camera className="h-6 w-6" />
-            </button>
+            <label className="relative h-16 w-16 shrink-0 rounded-2xl bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold transition-colors cursor-pointer">
+              {uploading ? <div className="h-4 w-4 border-2 border-brand-gold border-t-transparent rounded-full animate-spin"></div> : <Camera className="h-6 w-6" />}
+              <input type="file" accept="image/*" className="sr-only" onChange={handleUploadGallery} disabled={uploading} />
+            </label>
           </div>
         </div>
       </div>
@@ -252,3 +274,6 @@ export default function HomeTabsClient({
     </div>
   );
 }
+
+
+
