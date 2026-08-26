@@ -7,14 +7,15 @@ import { notFound } from "next/navigation";
 export default async function BibleChapterPage({
   params,
 }: {
-  params: { book: string; chapter: string };
+  params: Promise<{ book: string; chapter: string }>;
 }) {
-  const bookId = parseInt(params.book);
-  const chapter = parseInt(params.chapter);
+  const resolvedParams = await params;
+  const bookId = parseInt(resolvedParams.book);
+  const chapter = parseInt(resolvedParams.chapter);
   
   if (isNaN(bookId) || isNaN(chapter)) return notFound();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const lang = await getLanguage();
   const isId = lang === "id";
 

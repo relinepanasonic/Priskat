@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default async function BiblePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const lang = await getLanguage();
   const isId = lang === "id";
 
