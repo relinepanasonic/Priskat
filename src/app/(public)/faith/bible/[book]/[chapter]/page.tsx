@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { getLanguage } from "@/lib/lang";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
@@ -10,27 +9,35 @@ export default async function BibleChapterPage({
   params: Promise<{ book: string; chapter: string }>;
 }) {
   const resolvedParams = await params;
-  const bookId = parseInt(resolvedParams.book);
-  const chapter = parseInt(resolvedParams.chapter);
+  const bookIdStr = resolvedParams.book;
+  const chapterStr = resolvedParams.chapter;
+  const bookId = parseInt(bookIdStr);
+  const chapter = parseInt(chapterStr);
   
   if (isNaN(bookId) || isNaN(chapter)) return notFound();
 
-  const supabase = await createClient();
   const lang = await getLanguage();
   const isId = lang === "id";
 
-  const { data: verses, error } = await supabase
-    .from("bible_verses" as any)
-    .select("*")
-    .eq("book_id", bookId)
-    .eq("chapter", chapter)
-    .order("verse", { ascending: true });
+  // Fetch from the free open-source Indonesian Bible API (TB Translation)
+  let apiData = null;
+  try {
+    const res = await fetch(`https://beeble.vercel.app/api/v1/passage/${bookId}/${chapter}`, {
+      next: { revalidate: 86400 } // Cache for 24 hours
+    });
+    if (res.ok) {
+      const json = await res.json();
+      apiData = json.data;
+    }
+  } catch (error) {
+    console.error("Failed to fetch Bible chapter", error);
+  }
 
-  if (error || !verses || verses.length === 0) {
+  if (!apiData || !apiData.verses || apiData.verses.length === 0) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 text-center">
         <h2 className="text-xl font-bold text-white mb-2">Chapter Not Found</h2>
-        <p className="text-brand-muted mb-6">We couldn't find this chapter in the database.</p>
+        <p className="text-brand-muted mb-6">We couldn't load this chapter right now.</p>
         <Link href="/faith/bible" className="bg-brand-surface border border-[#333] px-6 py-2 rounded-full text-brand-gold">
           Go Back
         </Link>
@@ -38,9 +45,8 @@ export default async function BibleChapterPage({
     );
   }
 
-  const bookNameId = verses[0].book_name_id;
-  const bookNameEn = verses[0].book_name_en;
-  const currentBookName = isId ? bookNameId : bookNameEn;
+  const currentBookName = apiData.book.name;
+  const maxChapters = 150; // A fallback max, ideally we check against a map.
 
   return (
     <div className="min-h-[80vh] bg-white relative pb-32 font-serif text-[#111]">
@@ -64,18 +70,27 @@ export default async function BibleChapterPage({
 
       {/* Verses Content - Inline Paragraph */}
       <div className="px-6 md:px-12 lg:px-24 mx-auto max-w-4xl text-justify">
-        <p className="text-[19px] md:text-[22px] leading-[1.8] md:leading-[2]">
-          {verses.map((v: any) => (
-            <span key={v.id} className="inline">
-              <sup className="text-gray-400 font-sans font-semibold text-xs md:text-sm mr-1 ml-1.5 align-super">
-                {v.verse}
-              </sup>
-              <span className="text-[#222]">
-                {isId ? v.text_id : v.text_en}
+        <div className="text-[19px] md:text-[22px] leading-[1.8] md:leading-[2] text-[#222]">
+          {apiData.verses.map((v: any, index: number) => {
+            if (v.type === "title") {
+              return (
+                <h3 key={index} className="text-xl md:text-2xl font-bold italic mt-8 mb-4 text-black block">
+                  {v.content}
+                </h3>
+              );
+            }
+            return (
+              <span key={index} className="inline">
+                <sup className="text-gray-400 font-sans font-semibold text-xs md:text-sm mr-1 ml-1.5 align-super">
+                  {v.verse}
+                </sup>
+                <span>
+                  {v.content}
+                </span>
               </span>
-            </span>
-          ))}
-        </p>
+            );
+          })}
+        </div>
       </div>
 
       {/* Floating Bottom Navigation */}
