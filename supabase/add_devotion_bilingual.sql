@@ -11,3 +11,4 @@ ADD COLUMN IF NOT EXISTS description_id TEXT;
 ALTER TABLE public.devotion_plan_days 
 ADD COLUMN IF NOT EXISTS devotional_title_id TEXT,
 ADD COLUMN IF NOT EXISTS devotional_content_id TEXT;
+

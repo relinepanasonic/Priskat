@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Save, ChevronRight, Globe2 } from "lucide-react";
+import { Plus, Save, ChevronRight, Globe2, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { uploadImage } from "@/lib/upload";
+import Image from "next/image";
 
 export default function DevotionPlansAdminClient({
   initialCategories,
@@ -35,6 +37,7 @@ export default function DevotionPlansAdminClient({
   const [planDuration, setPlanDuration] = useState(7);
   const [selectedDayNum, setSelectedDayNum] = useState<number | null>(null);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Column 4: Day Content
   const [dayData, setDayData] = useState<any>(null);
@@ -95,6 +98,23 @@ export default function DevotionPlansAdminClient({
     setPlanDescId(plan.description_id || plan.description || "");
     setPlanDuration(plan.duration_days || 7);
     setSelectedDayNum(null);
+  };
+
+  const handleUploadCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedPlanId) return;
+
+    try {
+      setIsUploading(true);
+      const timestamp = Date.now();
+      const path = `cover_${selectedPlanId}_${timestamp}.webp`;
+      const url = await uploadImage(file, "devotion-covers", path);
+      setPlanCover(url);
+    } catch (err: any) {
+      alert(err.message || "Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // --- Handlers for Col 3 ---
@@ -286,8 +306,25 @@ export default function DevotionPlansAdminClient({
               </div>
               
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Cover Image URL</label>
-                <input type="text" value={planCover} onChange={e => setPlanCover(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs" />
+                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Cover Image</label>
+                <div className="flex gap-2 items-center">
+                  {planCover ? (
+                    <div className="relative h-12 w-12 rounded overflow-hidden border border-gray-300 shrink-0">
+                      <Image src={planCover} alt="Cover" fill className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded border border-gray-300 shrink-0 bg-gray-100 flex items-center justify-center text-gray-400">
+                      <ImageIcon className="h-4 w-4" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <label className={`w-full border border-gray-300 rounded px-2 py-2 text-xs flex justify-center items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      {isUploading ? 'Uploading...' : 'Upload Picture'}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleUploadCover} disabled={isUploading} />
+                    </label>
+                  </div>
+                </div>
               </div>
               
               <div>
