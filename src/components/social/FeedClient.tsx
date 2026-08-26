@@ -73,3 +73,4 @@ export default function FeedClient({ userAvatar, userName, userId }: { userAvata
     </div>
   );
 }
+

@@ -41,3 +41,4 @@ SELECT
     pr.avatar_url as author_avatar
 FROM public.community_posts p
 JOIN public.profiles pr ON p.author_id = pr.id;
+
