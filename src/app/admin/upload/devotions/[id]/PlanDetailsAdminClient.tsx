@@ -76,7 +76,7 @@ export default function PlanDetailsAdminClient({ plan, initialDays }: { plan: an
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <Link href="/admin/database/devotions" className="text-blue-500 hover:underline mb-4 inline-block">&larr; Back to Plans</Link>
+      <Link href="/admin/upload/devotions" className="text-blue-500 hover:underline mb-4 inline-block">&larr; Back to Plans</Link>
       <h1 className="text-3xl font-bold mb-2">{plan.title}</h1>
       <p className="text-gray-600 mb-8">Manage days and verses for this plan. Duration: {plan.duration_days} days.</p>
 
@@ -147,4 +147,5 @@ export default function PlanDetailsAdminClient({ plan, initialDays }: { plan: an
     </div>
   );
 }
+
 

@@ -1,18 +1,22 @@
 ﻿"use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Upload } from "lucide-react";
 
-export default function DatabaseAdminLayout({ children }: { children: React.ReactNode }) {
+export default function UploadAdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const tabs = [
-    { name: "Alumni DB", href: "/admin/database/alumni" },
-    { name: "Devotion Plans", href: "/admin/database/devotions" },
-    { name: "Prayers", href: "/admin/database/prayers" },
+    { name: "Devotion Plans", href: "/admin/upload/devotions" },
+    { name: "Prayers", href: "/admin/upload/prayers" },
   ];
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Upload className="h-6 w-6 text-brand-gold" />
+        <h1 className="text-2xl font-bold text-white">Upload Center</h1>
+      </div>
       <div className="flex space-x-2 border-b border-[#333] pb-2">
         {tabs.map(tab => (
           <Link
