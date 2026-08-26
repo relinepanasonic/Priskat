@@ -12,15 +12,19 @@ export default function BookPager() {
     if (!container) return;
 
     const checkScroll = () => {
-      setCanScrollLeft(container.scrollLeft > 0);
+      // Allow 10px threshold for browser rounding errors
+      setCanScrollLeft(container.scrollLeft > 10);
       setCanScrollRight(
-        container.scrollLeft < container.scrollWidth - container.clientWidth - 5
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 10
       );
     };
 
     container.addEventListener('scroll', checkScroll);
-    // Initial check after a slight delay to allow layout
+    
+    // Check initially and also wait for images/fonts
     setTimeout(checkScroll, 100);
+    setTimeout(checkScroll, 500);
+    setTimeout(checkScroll, 1000);
     window.addEventListener('resize', checkScroll);
 
     return () => {
@@ -32,7 +36,8 @@ export default function BookPager() {
   const scrollLeft = () => {
     const container = document.querySelector('.book-container');
     if (container) {
-      container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+      // Scroll by exactly one viewport width
+      container.scrollBy({ left: -(container.clientWidth), behavior: 'smooth' });
     }
   };
 
@@ -44,23 +49,30 @@ export default function BookPager() {
   };
 
   return (
-    <div className="hidden md:block absolute inset-y-0 left-0 right-0 pointer-events-none z-10">
+    <div className="hidden md:block absolute inset-y-0 left-0 right-0 pointer-events-none z-20">
+      
+      {/* Left Click Zone */}
       {canScrollLeft && (
-        <button 
+        <div 
           onClick={scrollLeft}
-          className="absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/50 hover:bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-black pointer-events-auto transition-all"
+          className="absolute left-0 top-0 bottom-0 w-32 cursor-pointer pointer-events-auto flex items-center group"
         >
-          <ChevronLeft className="h-8 w-8 ml-1" />
-        </button>
+          <button className="absolute left-2 w-12 h-12 bg-white/50 group-hover:bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 group-hover:text-black transition-all">
+            <ChevronLeft className="h-8 w-8 ml-1" />
+          </button>
+        </div>
       )}
       
+      {/* Right Click Zone */}
       {canScrollRight && (
-        <button 
+        <div 
           onClick={scrollRight}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/50 hover:bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-black pointer-events-auto transition-all"
+          className="absolute right-0 top-0 bottom-0 w-32 cursor-pointer pointer-events-auto flex items-center justify-end group"
         >
-          <ChevronRight className="h-8 w-8 mr-1" />
-        </button>
+          <button className="absolute right-2 w-12 h-12 bg-white/50 group-hover:bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 group-hover:text-black transition-all">
+            <ChevronRight className="h-8 w-8 mr-1" />
+          </button>
+        </div>
       )}
     </div>
   );

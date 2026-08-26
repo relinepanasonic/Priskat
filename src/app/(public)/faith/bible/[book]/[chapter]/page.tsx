@@ -47,7 +47,6 @@ export default async function BibleChapterPage({
   }
 
   const currentBookName = apiData.book.name;
-  const maxChapters = 150; // A fallback max, ideally we check against a map.
 
   return (
     <div className="min-h-[80vh] bg-white relative pb-32 font-serif text-[#111]">
@@ -59,19 +58,25 @@ export default async function BibleChapterPage({
         </Link>
       </div>
 
-      {/* Chapter Header */}
-      <div className="px-6 md:px-12 mt-2 mb-10 text-center">
-        <h2 className="text-gray-500 font-bold text-sm md:text-base uppercase tracking-widest font-sans">
-          {currentBookName}
-        </h2>
-        <h1 className="text-6xl md:text-8xl font-bold mt-2 text-black">
-          {chapter}
-        </h1>
-      </div>
+      <BookPager />
+      
+      <div 
+        className="px-6 md:px-12 lg:px-16 mx-auto max-w-5xl text-justify md:bg-[#fbfbf9] md:shadow-[0_0_40px_rgba(0,0,0,0.1)] md:py-12 md:px-16 md:rounded-lg relative md:h-[75vh] md:overflow-x-auto md:overflow-y-hidden md:snap-x md:snap-mandatory hide-scrollbar book-container" 
+        style={{columnWidth: "calc(50% - 2rem)", columnGap: "4rem", columnFill: "auto"}}
+      >
+        <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-transparent via-gray-300 to-transparent -translate-x-1/2 shadow-[-2px_0_10px_rgba(0,0,0,0.1)] pointer-events-none z-0"></div>
+        
+        <div className="text-[17px] md:text-xl leading-relaxed md:leading-[2] text-[#222] break-inside-avoid-column relative z-10">
+          
+          <div className="text-center mb-10 col-span-full break-inside-avoid">
+            <h2 className="text-gray-500 font-bold text-sm md:text-base uppercase tracking-widest font-sans">
+              {currentBookName}
+            </h2>
+            <h1 className="text-6xl md:text-8xl font-bold mt-2 text-black">
+              {chapter}
+            </h1>
+          </div>
 
-      {/* Verses Content - Inline Paragraph */}
-      <BookPager />`n      <div className="px-6 md:px-12 lg:px-16 mx-auto max-w-5xl text-justify md:bg-[#fbfbf9] md:shadow-[0_0_40px_rgba(0,0,0,0.1)] md:py-12 md:px-16 md:rounded-lg relative md:h-[75vh] md:overflow-x-auto md:overflow-y-hidden md:snap-x md:snap-mandatory hide-scrollbar book-container" style={{columnWidth: "calc(50% - 2rem)", columnGap: "4rem", columnFill: "auto"}}>
-        <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-transparent via-gray-300 to-transparent -translate-x-1/2 shadow-[-2px_0_10px_rgba(0,0,0,0.1)] pointer-events-none"></div>`n        <div className="text-[17px] md:text-xl leading-relaxed md:leading-[2] text-[#222] break-inside-avoid-column">
           {apiData.verses.map((v: any, index: number) => {
             if (v.type === "title") {
               return (
@@ -95,48 +100,29 @@ export default async function BibleChapterPage({
       </div>
 
       {/* Floating Bottom Navigation */}
-      <div className="fixed bottom-24 md:bottom-8 left-0 right-0 z-50 px-4 md:px-0 pointer-events-none">
-        <div className="max-w-md mx-auto pointer-events-auto flex items-center gap-3">
-          
+      <div className="fixed bottom-24 md:static md:mt-6 left-0 right-0 z-50 px-4 md:px-0 pointer-events-none">
+        <div className="max-w-md md:max-w-[280px] mx-auto pointer-events-auto flex items-center gap-3">
           {/* Play Button */}
-          <button className="h-14 w-14 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-black shrink-0">
-            <Play className="h-5 w-5 ml-1" fill="currentColor" />
+          <button className="h-14 w-14 md:h-10 md:w-10 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-black shrink-0">
+            <Play className="h-5 w-5 md:h-4 md:w-4 ml-1" fill="currentColor" />
           </button>
-
           {/* Chapter Navigation Pill */}
-          <div className="flex-1 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] h-14 flex items-center justify-between px-2">
+          <div className="flex-1 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] h-14 md:h-10 flex items-center justify-between px-2">
             {chapter > 1 ? (
-              <Link 
-                href={`/faith/bible/${bookId}/${chapter - 1}`}
-                className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-gray-100 text-black transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5" />
+              <Link href={`/faith/bible/${bookId}/${chapter - 1}`} className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-black transition-colors">
+                <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" />
               </Link>
-            ) : (
-              <div className="h-10 w-10" /> // Spacer
-            )}
-            
-            <span className="font-bold font-sans text-sm md:text-base text-black px-2 truncate">
+            ) : <div className="h-10 w-10 md:h-8 md:w-8" />}
+            <span className="font-bold font-sans text-sm md:text-xs text-black px-2 truncate">
               {currentBookName} {chapter}
             </span>
-            
-            <Link 
-              href={`/faith/bible/${bookId}/${chapter + 1}`}
-              className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-gray-100 text-black transition-colors"
-            >
-              <ChevronRight className="h-5 w-5" />
+            <Link href={`/faith/bible/${bookId}/${chapter + 1}`} className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-black transition-colors">
+              <ChevronRight className="h-5 w-5 md:h-4 md:w-4" />
             </Link>
           </div>
-
         </div>
       </div>
 
     </div>
   );
 }
-
-
-
-
-
-

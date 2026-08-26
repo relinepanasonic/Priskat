@@ -7,6 +7,8 @@ import { Book, Heart, Sunrise } from "lucide-react";
 export default function FaithLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  const isReadingChapter = pathname.match(/\/faith\/bible\/\d+\/\d+/);
+
   const tabs = [
     { name: "Bible", href: "/faith/bible", icon: Book },
     { name: "Prayer", href: "/faith/prayers", icon: Heart },
@@ -16,7 +18,8 @@ export default function FaithLayout({ children }: { children: React.ReactNode })
   return (
     <div className="w-full h-full p-4 md:p-8 space-y-6">
       
-      {/* Page Header */}
+      {!isReadingChapter && (
+      <>
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Spiritual Growth</h1>
         
@@ -47,6 +50,9 @@ export default function FaithLayout({ children }: { children: React.ReactNode })
         </nav>
       </div>
 
+          </>
+      )}
+
       {/* Tab Content */}
       <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-hidden min-h-[500px]">
         {children}
@@ -55,5 +61,7 @@ export default function FaithLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+
 
 
