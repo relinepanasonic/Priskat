@@ -19,8 +19,8 @@ export default async function HomePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
-    .single();
+    .eq("id", user.id).single();
+    
 
   if (!profile) {
     redirect("/login");
@@ -32,19 +32,19 @@ export default async function HomePage() {
     const { data } = await supabase
       .from("alumni_database")
       .select("*")
-      .ilike("name", `%${profile.full_name}%`)
+      .ilike("name", `%${profile.full_name || "User"}%`)
       .limit(1)
-      .single();
+      
     
-    if (data) {
-      alumniData = data;
+    if (data && data.length > 0) {
+      alumniData = data[0];
     }
   }
 
   // Fallbacks if no alumni data
   const angkatan = alumniData?.angkatan || "44";
   const city = alumniData?.city || "Surabaya";
-  const mobile = alumniData?.mobile || "+6281234567890";
+  const mobile = String(alumniData?.mobile || "+6281234567890");
   const modules = profile.completed_modules?.length ? profile.completed_modules : ["Pria Sejati", "Patriot 19"];
   const waLink = `https://wa.me/${mobile.replace(/\D/g, '')}`;
 
@@ -68,14 +68,14 @@ export default async function HomePage() {
           
           <div className="relative h-32 w-32 rounded-full border-4 border-[#1a1d24] bg-brand-bg shadow-xl overflow-hidden z-10 flex items-center justify-center">
             {profile.avatar_url ? (
-              <Image src={profile.avatar_url} alt={profile.full_name} fill className="object-cover" />
+              <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill className="object-cover" />
             ) : (
-              <span className="text-4xl font-bold text-brand-gold">{profile.full_name[0].toUpperCase()}</span>
+              <span className="text-4xl font-bold text-brand-gold">{(profile.full_name || "U")[0].toUpperCase()}</span>
             )}
           </div>
 
           <h1 className="mt-4 text-2xl font-bold text-white text-center">
-            {profile.full_name}
+            {profile.full_name || "User"}
           </h1>
           <p className="text-sm text-brand-gold mt-1 font-medium text-center">
             {city} • Angkatan {angkatan}
@@ -220,4 +220,7 @@ function ChevronRight({ className }: { className?: string }) {
     </svg>
   );
 }
+
+
+
 
