@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,7 @@ const schema = z
     alumni: z.array(z.string()).min(1, "Please select at least one alumni group"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string(),
+    role: z.string().optional(), // Added role field to pass through to Supabase
   })
   .refine((d) => d.password === d.confirm_password, {
     message: "Passwords don't match",
@@ -50,8 +51,20 @@ export default function RegisterPage() {
     setValue
   } = useForm<FormValues>({ 
     resolver: zodResolver(schema),
-    defaultValues: { alumni: [] }
+    defaultValues: { alumni: [], role: "member" }
   });
+  
+  // Read URL parameters on mount to pre-fill the form
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const inviteName = params.get("name");
+      const inviteRole = params.get("role");
+      
+      if (inviteName) setValue("full_name", inviteName);
+      if (inviteRole) setValue("role", inviteRole);
+    }
+  }, [setValue]);
   
   const selectedAlumni = watch("alumni") || [];
 
@@ -66,7 +79,8 @@ export default function RegisterPage() {
           full_name: data.full_name,
           username: data.username,
           phone: data.phone,
-          completed_modules: data.alumni
+          completed_modules: data.alumni,
+          role: data.role || "member",
         },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },

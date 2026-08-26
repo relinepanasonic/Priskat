@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Send, CheckCircle2, AlertCircle, X, UserPlus } from "lucide-react";
+import { Link as LinkIcon, CheckCircle2, X, UserPlus, Copy } from "lucide-react";
 
 interface Props {
   onClose: () => void;
@@ -16,37 +15,31 @@ const ROLE_OPTIONS = [
 
 export default function InvitePanel({ onClose }: Props) {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    setStatus("loading");
-    const supabase = createClient();
+    if (!name) return;
+    
+    // Generate the registration URL with query parameters
+    const url = new URL("/register", window.location.origin);
+    url.searchParams.set("name", name);
+    url.searchParams.set("role", role);
+    
+    setGeneratedLink(url.toString());
+    setCopied(false);
+  };
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        shouldCreateUser: true,
-        data: {
-          full_name: name,
-          role: role,
-        },
-      },
-    });
-
-    if (error) {
-      setStatus("error");
-      setMessage(error.message);
-    } else {
-      setStatus("success");
-      setMessage(`Magic link sent to ${email.trim()}`);
-      setName("");
-      setEmail("");
-      setRole("member");
+  const handleCopy = async () => {
+    if (!generatedLink) return;
+    try {
+      await navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy link", err);
     }
   };
 
@@ -77,10 +70,10 @@ export default function InvitePanel({ onClose }: Props) {
         {/* Form */}
         <div className="p-6">
           <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-            Send a magic link to onboard a new user. They will receive an email to sign in instantly.
+            Generate an invitation link for a new member. Send this link to them via WhatsApp or Email to complete their registration.
           </p>
 
-          <form onSubmit={handleInvite} className="space-y-4">
+          <form onSubmit={handleGenerate} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 Nama
@@ -89,7 +82,10 @@ export default function InvitePanel({ onClose }: Props) {
                 type="text"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setGeneratedLink(""); // Reset link if they change the name
+                }}
                 placeholder="Full name"
                 className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold transition-colors"
               />
@@ -101,7 +97,10 @@ export default function InvitePanel({ onClose }: Props) {
               </label>
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value)}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  setGeneratedLink("");
+                }}
                 className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-gold transition-colors"
               >
                 {ROLE_OPTIONS.map((r) => (
@@ -112,42 +111,34 @@ export default function InvitePanel({ onClose }: Props) {
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com"
-                className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold transition-colors"
-              />
-            </div>
-
-            {status === "success" && (
-              <div className="flex items-start gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl mt-4">
-                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-green-400">{message}</p>
+            {!generatedLink ? (
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 bg-brand-gold text-brand-dark px-4 py-3 mt-6 rounded-xl text-sm font-bold hover:bg-yellow-400 transition-colors shadow-glow-gold"
+              >
+                Generate Link
+                <LinkIcon className="h-4 w-4" />
+              </button>
+            ) : (
+              <div className="mt-6 space-y-3">
+                <label className="block text-xs font-semibold text-brand-gold">
+                  Invitation Link Ready:
+                </label>
+                <div className="flex items-center gap-2 bg-[#111] border border-brand-gold/30 rounded-xl p-2 pl-4">
+                  <div className="flex-1 truncate text-xs text-gray-300 font-mono">
+                    {generatedLink}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="flex-shrink-0 flex items-center justify-center h-8 w-8 bg-brand-gold/10 hover:bg-brand-gold/20 text-brand-gold rounded-lg transition-colors"
+                  >
+                    {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+                {copied && <p className="text-xs text-green-400 text-center">Link copied to clipboard!</p>}
               </div>
             )}
-
-            {status === "error" && (
-              <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl mt-4">
-                <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-red-400">{message}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              className="w-full flex items-center justify-center gap-2 bg-brand-gold text-brand-dark px-4 py-3 mt-6 rounded-xl text-sm font-bold hover:bg-yellow-400 transition-colors shadow-glow-gold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {status === "loading" ? "Sending..." : "Create Invite Link"}
-              <Send className="h-4 w-4" />
-            </button>
           </form>
         </div>
       </div>
