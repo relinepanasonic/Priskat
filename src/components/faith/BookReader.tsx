@@ -17,7 +17,7 @@ interface Props {
   chapter: number;
 }
 
-const WORDS_PER_PAGE = 180;
+const WORDS_PER_PAGE = 220;
 
 function splitIntoPages(verses: Verse[]): Verse[][] {
   const pages: Verse[][] = [];
@@ -58,9 +58,9 @@ function splitIntoPages(verses: Verse[]): Verse[][] {
 
 function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse[], bookName: string, chapter: number, isFirstPage: boolean }) {
   return (
-    <div className="h-full overflow-hidden p-10 lg:p-14 flex flex-col">
+    <div className="h-full overflow-y-auto hide-scrollbar p-8 lg:p-12 pb-16 lg:pb-20 flex flex-col relative">
       {isFirstPage && (
-        <div className="text-center mb-8 shrink-0">
+        <div className="hidden">
           <h2 className="text-gray-400 font-bold text-xs uppercase tracking-[0.3em] font-sans">
             {bookName}
           </h2>
@@ -69,11 +69,16 @@ function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse
           </h1>
         </div>
       )}
-      <div className="text-[15px] lg:text-[17px] leading-[1.85] text-[#222] text-justify font-serif flex-1">
+            <div className="absolute top-4 left-0 right-0 text-center pointer-events-none">
+        <span className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] font-sans">
+          {bookName} {chapter}
+        </span>
+      </div>
+      <div className="text-[14px] lg:text-[15px] leading-[1.8] text-[#222] text-justify font-serif flex-1 mt-4">
         {verses.map((v, i) => {
           if (v.type === "title") {
             return (
-              <h3 key={i} className="text-base lg:text-lg font-bold italic mt-6 mb-3 text-black block font-serif">
+              <h3 key={i} className="text-sm lg:text-base font-bold italic mt-5 mb-2 text-black block font-serif">
                 {v.content}
               </h3>
             );
@@ -176,7 +181,7 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
 
         {/* Left Page */}
         <div 
-          className="w-1/2 h-full bg-[#fbfbf6] relative cursor-pointer"
+          className="w-1/2 h-full bg-[#fbfbf6] relative cursor-pointer group"
           onClick={goPrev}
           style={{
             boxShadow: "inset -8px 0 20px rgba(0,0,0,0.08)",
@@ -210,7 +215,7 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
 
         {/* Right Page */}
         <div 
-          className="w-1/2 h-full bg-[#f9f8f3] relative cursor-pointer"
+          className="w-1/2 h-full bg-[#f9f8f3] relative cursor-pointer group"
           onClick={goNext}
           style={{
             boxShadow: "inset 8px 0 20px rgba(0,0,0,0.06)",
@@ -238,16 +243,16 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
 
         {/* Click Zone indicators */}
         {spread > 0 && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 pointer-events-none">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <ChevronLeft className="h-6 w-6 text-white/60" />
+          <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none flex items-center pl-6 z-20">
+            <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center opacity-0 opacity-100 transition-opacity">
+              <ChevronLeft className="h-8 w-8 text-black/40" />
             </div>
           </div>
         )}
         {spread < totalSpreads - 1 && (
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 pointer-events-none">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <ChevronRight className="h-6 w-6 text-white/60" />
+          <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none flex items-center justify-end pr-6 z-20">
+            <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center opacity-0 opacity-100 transition-opacity">
+              <ChevronRight className="h-8 w-8 text-black/40" />
             </div>
           </div>
         )}
@@ -287,3 +292,6 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
     </div>
   );
 }
+
+
+
