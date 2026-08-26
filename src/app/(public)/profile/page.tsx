@@ -1,131 +1,226 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import ProfileEditForm from "@/components/profile/ProfileEditForm";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import type { Metadata } from "next";
-import { Shield, BookOpen } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle, Phone, Video, Calendar, MapPin, Award, Book, Newspaper, Users, Tent, Settings, LogOut, Heart } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const revalidate = 0; // Dynamic route
 
-export default async function ProfilePage() {
+export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Fetch user profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
-    .single();
+    .eq("id", user.id).single();
+    
 
-  if (!profile) redirect("/login");
+  if (!profile) {
+    redirect("/login");
+  }
 
-  // Fetch today's devotion
-  const today = new Date().toISOString().split("T")[0];
-  const { data: devotion } = await supabase
-    .from("daily_devotions")
-    .select("*")
-    .eq("publish_date", today)
-    .single();
+  // Try to find alumni data matching the user's name
+  let alumniData = null;
+  if (profile.full_name) {
+    const { data } = await supabase
+      .from("alumni_database")
+      .select("*")
+      .ilike("name", `%${profile.full_name || "User"}%`)
+      .limit(1)
+      
+    
+    if (data && data.length > 0) {
+      alumniData = data[0];
+    }
+  }
 
-  const completed = profile.completed_modules || [];
+  // Fallbacks if no alumni data
+  const angkatan = alumniData?.angkatan || "44";
+  const city = alumniData?.city || "Surabaya";
+  const mobile = String(alumniData?.mobile || "+6281234567890");
+  const modules = profile.completed_modules?.length ? profile.completed_modules : ["Pria Sejati", "Patriot 19"];
+  const waLink = `https://wa.me/${mobile.replace(/\D/g, '')}`;
 
   return (
-    <main className="flex-1 px-4 pt-6 pb-12 max-w-md mx-auto w-full">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Welcome, {profile.full_name.split(" ")[0]}!
-        </h1>
-        <p className="text-brand-muted mb-8 text-sm">Have a blessed day.</p>
+    <div className="min-h-screen bg-brand-dark md:py-12 md:px-8 overflow-y-auto pb-24 md:pb-12">
+      <div className="max-w-md mx-auto relative md:rounded-3xl md:shadow-2xl overflow-hidden bg-[#1a1d24]">
+        
+        {/* Header Curve & Background */}
+        <div className="relative h-48 bg-gradient-to-b from-[#111] to-[#222] overflow-hidden">
+          {/* Subtle gold accent at the bottom of the dark header */}
+          <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[150%] h-48 bg-[#1a1d24] rounded-[100%] border-t-2 border-brand-gold/30"></div>
+          
+          {/* Settings Icon (Top Right) */}
+          <Link href="/profile/edit" className="absolute top-4 right-4 h-10 w-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-brand-gold hover:bg-black/50 transition-colors z-10">
+            <Settings className="h-5 w-5" />
+          </Link>
+        </div>
 
-        {/* BADGES SECTION */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-brand-gold mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5" /> My Journey
-          </h2>
-          <div className="flex flex-col gap-3">
-            {profile.gender === "male" ? (
-              <>
-                <div className={`p-4 rounded-xl border ${completed.includes('module_1') ? 'bg-brand-surface border-brand-gold shadow-lg shadow-brand-gold/10' : 'bg-brand-bg border-brand-border opacity-50'}`}>
-                  <h3 className="font-bold text-white text-lg">Pria Sejati Katolik</h3>
-                  <p className="text-sm text-brand-light">Young Man (Module 1)</p>
-                </div>
-                <div className={`p-4 rounded-xl border ${completed.includes('module_2') ? 'bg-brand-surface border-brand-gold shadow-lg shadow-brand-gold/10' : 'bg-brand-bg border-brand-border opacity-50'}`}>
-                  <h3 className="font-bold text-white text-lg">Bapa Sejati</h3>
-                  <p className="text-sm text-brand-light">Module 2</p>
-                </div>
-                <div className={`p-4 rounded-xl border ${completed.includes('module_3') ? 'bg-brand-surface border-brand-gold shadow-lg shadow-brand-gold/10' : 'bg-brand-bg border-brand-border opacity-50'}`}>
-                  <h3 className="font-bold text-white text-lg">Patriot</h3>
-                  <p className="text-sm text-brand-light">Module 3</p>
-                </div>
-              </>
-            ) : profile.gender === "female" ? (
-              <div className={`p-4 rounded-xl border ${completed.includes('module_1') ? 'bg-brand-surface border-brand-gold shadow-lg shadow-brand-gold/10' : 'bg-brand-bg border-brand-border opacity-50'}`}>
-                <h3 className="font-bold text-white text-lg">Wanita Berhikmat Katolik</h3>
-                <p className="text-sm text-brand-light">Module 1</p>
-              </div>
+        {/* Profile Avatar & Info */}
+        <div className="relative -mt-20 px-6 flex flex-col items-center">
+          
+          <div className="relative h-32 w-32 rounded-full border-4 border-[#1a1d24] bg-brand-bg shadow-xl overflow-hidden z-10 flex items-center justify-center">
+            {profile.avatar_url ? (
+              <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill className="object-cover" />
             ) : (
-              <div className="p-4 card-3d text-center text-sm text-brand-muted">
-                Please edit your profile and set your gender to see your module track.
-              </div>
+              <span className="text-4xl font-bold text-brand-gold">{(profile.full_name || "U")[0].toUpperCase()}</span>
             )}
           </div>
-        </section>
 
-        {/* DAILY DEVOTION SECTION */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-brand-gold mb-4 flex items-center gap-2">
-            <BookOpen className="w-5 h-5" /> Daily Inspiration
-          </h2>
-          {devotion ? (
-            <div className="card-3d overflow-hidden">
-              <div className="p-5 border-b border-brand-border/50">
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2 block">Verse of the Day</span>
-                <p className="text-white italic text-lg leading-relaxed mb-3">"{devotion.verse_text}"</p>
-                <p className="text-brand-gold font-medium text-sm">— {devotion.verse_reference}</p>
-              </div>
-              <div className="p-5 bg-brand-surface-hover/30">
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2 block">{devotion.prayer_title}</span>
-                <p className="text-brand-light text-sm leading-relaxed whitespace-pre-wrap">{devotion.prayer_text}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="p-6 card-3d text-center text-brand-muted text-sm">
-              Today's devotion has not been posted yet.
-            </div>
-          )}
-        </section>
+          <h1 className="mt-4 text-2xl font-bold text-white text-center">
+            {profile.full_name || "User"}
+          </h1>
+          <p className="text-sm text-brand-gold mt-1 font-medium text-center">
+            {city} • Angkatan {angkatan}
+          </p>
 
-        {/* QUICK LINKS */}
-        <section className="mb-10 grid grid-cols-2 gap-4">
-          <Link href="/prayers" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
-             <span className="text-2xl">🙏</span>
-             <span className="text-sm font-medium text-white">Doa / Prayers</span>
-          </Link>
-          <Link href="/gallery" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
-             <span className="text-2xl">📸</span>
-             <span className="text-sm font-medium text-white">Gallery</span>
-          </Link>
-          <Link href="/news" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
-             <span className="text-2xl">📰</span>
-             <span className="text-sm font-medium text-white">News</span>
-          </Link>
-          <Link href="/events" className="p-4 bg-brand-surface rounded-xl border border-brand-border text-center flex flex-col items-center gap-2 hover:border-brand-gold transition">
-             <span className="text-2xl">📅</span>
-             <span className="text-sm font-medium text-white">Events</span>
-          </Link>
-        </section>
-
-        {/* PROFILE EDIT */}
-        <section>
-          <h2 className="text-xl font-semibold text-brand-gold mb-4">Edit Profile</h2>
-          <div className="card-3d p-6 shadow-sm">
-            <ProfileEditForm profile={profile} />
+          {/* Action Buttons */}
+          <div className="flex items-center gap-4 mt-6">
+            <a href={waLink} target="_blank" rel="noreferrer" className="h-12 w-12 rounded-full bg-brand-surface border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold hover:border-brand-gold/50 transition-colors shadow-lg group">
+              <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            </a>
+            <a href={`tel:${mobile}`} className="h-12 w-12 rounded-full bg-brand-surface border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold hover:border-brand-gold/50 transition-colors shadow-lg group">
+              <Phone className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            </a>
+            <button className="h-12 w-12 rounded-full bg-brand-surface border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold hover:border-brand-gold/50 transition-colors shadow-lg group">
+              <Video className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            </button>
           </div>
-        </section>
+        </div>
 
-    </main>
+        {/* Stats / Alumni Info Pill */}
+        <div className="px-6 mt-8">
+          <div className="bg-brand-surface/50 border border-[#333] rounded-2xl p-4 flex justify-around items-center">
+            <div className="flex flex-col items-center gap-1">
+              <div className="h-8 w-8 rounded-full bg-[#111] flex items-center justify-center text-brand-gold">
+                <MapPin className="h-4 w-4" />
+              </div>
+              <span className="text-xs text-brand-muted">Regional</span>
+              <span className="text-sm font-semibold text-white">{city}</span>
+            </div>
+            
+            <div className="w-px h-10 bg-[#333]"></div>
+            
+            <div className="flex flex-col items-center gap-1">
+              <div className="h-8 w-8 rounded-full bg-[#111] flex items-center justify-center text-brand-gold">
+                <Award className="h-4 w-4" />
+              </div>
+              <span className="text-xs text-brand-muted">Angkatan</span>
+              <span className="text-sm font-semibold text-white">{angkatan}</span>
+            </div>
+
+            <div className="w-px h-10 bg-[#333]"></div>
+            
+            <div className="flex flex-col items-center gap-1">
+              <div className="h-8 w-8 rounded-full bg-[#111] flex items-center justify-center text-brand-gold">
+                <Calendar className="h-4 w-4" />
+              </div>
+              <span className="text-xs text-brand-muted">Joined</span>
+              <span className="text-sm font-semibold text-white">{new Date(profile.created_at).getFullYear()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Biography & Phone Number */}
+        <div className="px-6 mt-8 space-y-6">
+          
+          <div>
+            <h3 className="text-sm font-semibold text-brand-gold mb-2 uppercase tracking-wider">Alumni</h3>
+            <div className="flex flex-wrap gap-2">
+              {modules.map((mod: string, idx: number) => (
+                <Badge key={idx} variant="gold" className="px-3 py-1 text-sm bg-brand-gold/10 border-brand-gold/30">
+                  {mod}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-brand-gold mb-2 uppercase tracking-wider">Handphone No</h3>
+            <div className="bg-[#111] border border-[#333] rounded-xl p-4 flex items-center justify-between">
+              <span className="text-white font-medium">{mobile}</span>
+              <a href={waLink} target="_blank" rel="noreferrer" className="text-xs bg-[#25d366] text-white px-3 py-1.5 rounded-lg font-bold shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:scale-105 transition-transform">
+                Chat WA
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-brand-gold mb-2 uppercase tracking-wider">Biography</h3>
+            <div className="bg-[#111] border border-[#333] rounded-xl p-4">
+              <p className="text-brand-light text-sm leading-relaxed">
+                {profile.bio || "No biography provided. Click settings to add a bio."}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Menu Links */}
+        <div className="px-6 mt-8 mb-8 space-y-2">
+          <Link href="/faith" className="flex items-center justify-between p-4 bg-brand-surface/30 hover:bg-brand-surface rounded-xl border border-transparent hover:border-[#333] transition-colors group">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 bg-[#111] rounded-lg flex items-center justify-center text-brand-gold group-hover:scale-110 transition-transform">
+                <Book className="h-5 w-5" />
+              </div>
+              <span className="font-semibold text-brand-light group-hover:text-white transition-colors">Spiritual & Faith</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-brand-gold transition-colors" />
+          </Link>
+          
+          <Link href="/news" className="flex items-center justify-between p-4 bg-brand-surface/30 hover:bg-brand-surface rounded-xl border border-transparent hover:border-[#333] transition-colors group">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 bg-[#111] rounded-lg flex items-center justify-center text-brand-gold group-hover:scale-110 transition-transform">
+                <Newspaper className="h-5 w-5" />
+              </div>
+              <span className="font-semibold text-brand-light group-hover:text-white transition-colors">Community News</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-brand-gold transition-colors" />
+          </Link>
+
+          <Link href="/friends" className="flex items-center justify-between p-4 bg-brand-surface/30 hover:bg-brand-surface rounded-xl border border-transparent hover:border-[#333] transition-colors group">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 bg-[#111] rounded-lg flex items-center justify-center text-brand-gold group-hover:scale-110 transition-transform">
+                <Users className="h-5 w-5" />
+              </div>
+              <span className="font-semibold text-brand-light group-hover:text-white transition-colors">Alumni Directory</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-brand-gold transition-colors" />
+          </Link>
+          
+          <Link href="/camp" className="flex items-center justify-between p-4 bg-brand-surface/30 hover:bg-brand-surface rounded-xl border border-transparent hover:border-[#333] transition-colors group">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 bg-[#111] rounded-lg flex items-center justify-center text-brand-gold group-hover:scale-110 transition-transform">
+                <Tent className="h-5 w-5" />
+              </div>
+              <span className="font-semibold text-brand-light group-hover:text-white transition-colors">Camps & Events</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-brand-gold transition-colors" />
+          </Link>
+
+
+        </div>
+
+      </div>
+    </div>
   );
 }
+
+// Quick helper to avoid importing from lucide-react if not needed globally
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="m9 18 6-6-6-6"/>
+    </svg>
+  );
+}
+
+
+
+
