@@ -69,8 +69,8 @@ export default async function BibleChapterPage({
       </div>
 
       {/* Verses Content - Inline Paragraph */}
-      <div className="px-6 md:px-12 lg:px-24 mx-auto max-w-4xl text-justify">
-        <div className="text-[17px] md:text-xl leading-relaxed md:leading-[2] text-[#222]">
+      <div className="px-6 md:px-12 lg:px-16 mx-auto max-w-5xl text-justify md:columns-2 md:gap-16 md:bg-[#fbfbf9] md:shadow-[0_0_40px_rgba(0,0,0,0.1)] md:p-12 md:rounded-lg relative" style={{columnFill: "auto"}}>
+        <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-transparent via-gray-300 to-transparent -translate-x-1/2 shadow-[-2px_0_10px_rgba(0,0,0,0.1)] pointer-events-none"></div>`n        <div className="text-[17px] md:text-xl leading-relaxed md:leading-[2] text-[#222] break-inside-avoid-column">
           {apiData.verses.map((v: any, index: number) => {
             if (v.type === "title") {
               return (
@@ -133,3 +133,5 @@ export default async function BibleChapterPage({
     </div>
   );
 }
+
+

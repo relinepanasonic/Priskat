@@ -18,10 +18,8 @@ export default function FaithLayout({ children }: { children: React.ReactNode })
       
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Spiritual Growth</h1>
-        <p className="mt-2 text-brand-muted max-w-2xl text-sm">
-          Deepen your faith with daily scripture, guided prayers, and personal devotions.
-        </p>
+        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Spiritual Growth</h1>
+        
       </div>
 
       {/* Tabs Navigation */}
@@ -57,4 +55,5 @@ export default function FaithLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
 
