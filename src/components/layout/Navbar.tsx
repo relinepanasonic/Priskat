@@ -108,13 +108,13 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
         {/* Superadmin Invite & Database Buttons */}
         {profile?.role === "superadmin" && (
           <div className="mt-3 space-y-1">
-            <Link
-              href="/admin/users"
+            <a
+              href="/admin/members"
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
             >
               <Users className="h-4 w-4" />
               <span>Manage Users</span>
-            </Link>
+            </a>
             <button
               onClick={() => setInviteOpen(true)}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
@@ -122,13 +122,13 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
               <UserPlus className="h-4 w-4" />
               <span>Invite User</span>
             </button>
-            <Link
+            <a
               href="/admin/database"
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
             >
               <Database className="h-4 w-4" />
               <span>Database</span>
-            </Link>
+            </a>
           </div>
         )}
 
