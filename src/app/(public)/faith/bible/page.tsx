@@ -1,13 +1,13 @@
 import { getLanguage } from "@/lib/lang";
 import Link from "next/link";
-import { Book, ChevronRight } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 
 export const metadata = {
   title: "Bible - Priskat",
   description: "Read the Holy Bible",
 };
 
-const BIBLE_BOOKS = [
+const OLD_TESTAMENT = [
   {"no":1,"abbr":"Kej","name":"Kejadian","chapter":50},
   {"no":2,"abbr":"Kel","name":"Keluaran","chapter":40},
   {"no":3,"abbr":"Ima","name":"Imamat","chapter":27},
@@ -47,6 +47,9 @@ const BIBLE_BOOKS = [
   {"no":37,"abbr":"Hag","name":"Hagai","chapter":2},
   {"no":38,"abbr":"Zak","name":"Zakharia","chapter":14},
   {"no":39,"abbr":"Mal","name":"Maleakhi","chapter":4},
+];
+
+const NEW_TESTAMENT = [
   {"no":40,"abbr":"Mat","name":"Matius","chapter":28},
   {"no":41,"abbr":"Mar","name":"Markus","chapter":16},
   {"no":42,"abbr":"Luk","name":"Lukas","chapter":24},
@@ -76,57 +79,101 @@ const BIBLE_BOOKS = [
   {"no":66,"abbr":"Wah","name":"Wahyu","chapter":22}
 ];
 
+const DEUTEROCANONICA = [
+  {"no":67,"abbr":"Tob","name":"Tobit","chapter":14},
+  {"no":68,"abbr":"Ydt","name":"Yudit","chapter":16},
+  {"no":69,"abbr":"T.Est","name":"Tambahan Ester","chapter":6},
+  {"no":70,"abbr":"Keb","name":"Kebijaksanaan Salomo","chapter":19},
+  {"no":71,"abbr":"Sir","name":"Yesus bin Sirakh","chapter":51},
+  {"no":72,"abbr":"Bar","name":"Barukh","chapter":6},
+  {"no":73,"abbr":"T.Dan","name":"Tambahan Daniel","chapter":3},
+  {"no":74,"abbr":"1 Mak","name":"1 Makabe","chapter":16},
+  {"no":75,"abbr":"2 Mak","name":"2 Makabe","chapter":15}
+];
+
+// Helper to render the lists
+function BookList({ books, isId, isComingSoon = false }: { books: any[], isId: boolean, isComingSoon?: boolean }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 mb-10">
+      {books.map((book) => {
+        const content = (
+          <div className={`bg-brand-surface p-4 rounded-2xl flex items-center justify-between border border-[#333] border-t-[#444] border-l-[#444] shadow-3d transition-all ${!isComingSoon && 'active:translate-y-1 active:shadow-inner-dark hover:bg-[#252830]'}`}>
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 rounded-full bg-[#1e1e1e] flex items-center justify-center shadow-inner-dark text-brand-gold font-bold shrink-0 text-sm">
+                {book.abbr}
+              </div>
+              <div>
+                <h3 className={`font-medium text-lg ${isComingSoon ? 'text-gray-500' : 'text-brand-light'}`}>
+                  {book.name}
+                </h3>
+                <p className="text-brand-muted text-xs">
+                  {book.chapter} {isId ? 'Pasal' : 'Chapters'}
+                </p>
+              </div>
+            </div>
+            {isComingSoon ? (
+              <Lock className="h-5 w-5 text-gray-600 shrink-0" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-brand-muted shrink-0" />
+            )}
+          </div>
+        );
+
+        if (isComingSoon) {
+          return <div key={book.no} className="opacity-70 cursor-not-allowed">{content}</div>;
+        }
+
+        return (
+          <Link href={`/faith/bible/${book.no}/1`} key={book.no}>
+            {content}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export default async function BiblePage() {
   const lang = await getLanguage();
   const isId = lang === "id";
 
   return (
-    <div className="w-full h-full pb-8">
-      {/* Header */}
-      <div className="bg-brand-surface pt-safe pb-6 px-4 shadow-3d-heavy relative overflow-hidden z-10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-        <div className="flex items-center space-x-3 mt-4 mb-2">
-          <div className="w-10 h-10 rounded-full bg-[#1e1e1e] flex items-center justify-center shadow-inner-dark border border-[#333]">
-            <Book className="h-5 w-5 text-brand-gold" />
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-wide">
-            {isId ? "Alkitab" : "Holy Bible"}
-          </h1>
-        </div>
-        <p className="text-brand-muted text-sm px-1">
-          {isId 
-            ? "Pilih kitab untuk mulai membaca Firman Tuhan." 
-            : "Select a book to start reading the Word of God."}
-        </p>
+    <div className="w-full h-full pb-8 px-4 pt-6">
+      
+      {/* Old Testament */}
+      <div>
+        <h2 className="text-xl font-bold text-white tracking-wide border-b border-[#333] pb-2">
+          {isId ? "Perjanjian Lama" : "Old Testament"}
+        </h2>
+        <BookList books={OLD_TESTAMENT} isId={isId} />
       </div>
 
-      {/* Book List */}
-      <div className="px-4 mt-6">
-        <div className="grid grid-cols-1 gap-3">
-          {BIBLE_BOOKS.map((book) => (
-            <Link 
-              href={`/faith/bible/${book.no}/1`} 
-              key={book.no}
-              className="bg-brand-surface p-4 rounded-2xl flex items-center justify-between border border-[#333] border-t-[#444] border-l-[#444] shadow-3d active:translate-y-1 active:shadow-inner-dark transition-all"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 rounded-full bg-[#1e1e1e] flex items-center justify-center shadow-inner-dark text-brand-gold font-bold shrink-0">
-                  {book.no}
-                </div>
-                <div>
-                  <h3 className="text-brand-light font-medium text-lg">
-                    {book.name}
-                  </h3>
-                  <p className="text-brand-muted text-xs">
-                    {book.chapter} {isId ? 'Pasal' : 'Chapters'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-brand-muted shrink-0" />
-            </Link>
-          ))}
+      {/* Deuterocanonica */}
+      <div>
+        <div className="flex items-center justify-between border-b border-[#333] pb-2">
+          <h2 className="text-xl font-bold text-white tracking-wide">
+            {isId ? "Deuterokanonika" : "Deuterocanonicals"}
+          </h2>
+          <span className="text-[10px] font-bold uppercase tracking-widest bg-brand-gold/20 text-brand-gold px-2 py-1 rounded-full">
+            {isId ? "Segera Hadir" : "Coming Soon"}
+          </span>
         </div>
+        <p className="text-sm text-brand-muted mt-2">
+          {isId 
+            ? "API publik yang kami gunakan saat ini belum mendukung kitab Deuterokanonika Katolik. Kami sedang menyiapkan sumber data khusus untuk segera menghadirkannya!" 
+            : "The public API we currently use does not yet support Catholic Deuterocanonical books. We are preparing a custom data source to bring them to you soon!"}
+        </p>
+        <BookList books={DEUTEROCANONICA} isId={isId} isComingSoon={true} />
       </div>
+
+      {/* New Testament */}
+      <div>
+        <h2 className="text-xl font-bold text-white tracking-wide border-b border-[#333] pb-2">
+          {isId ? "Perjanjian Baru" : "New Testament"}
+        </h2>
+        <BookList books={NEW_TESTAMENT} isId={isId} />
+      </div>
+
     </div>
   );
 }
