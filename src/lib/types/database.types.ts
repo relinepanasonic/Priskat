@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -31,6 +31,7 @@ export interface Profile {
 export interface DevotionCategory {
   id: string;
   name: string;
+  name_id?: string | null;
   created_at: string;
 }
 
@@ -38,9 +39,11 @@ export interface DevotionPlan {
   id: string;
   category_id: string;
   title: string;
+  title_id?: string | null;
   cover_image_url: string | null;
   duration_days: number;
   description: string | null;
+  description_id?: string | null;
   created_at: string;
   categories?: DevotionCategory;
 }
@@ -50,7 +53,9 @@ export interface DevotionPlanDay {
   plan_id: string;
   day_number: number;
   devotional_title: string | null;
+  devotional_title_id?: string | null;
   devotional_content: string | null;
+  devotional_content_id?: string | null;
   created_at: string;
   verses?: DevotionDayVerse[];
 }
@@ -254,4 +259,5 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+
 
