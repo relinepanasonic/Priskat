@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["admin", "moderator"].includes(profile.role)) {
+    if (!profile || !["superadmin", "admin", "moderator"].includes(String(profile.role).toLowerCase())) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
