@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Send, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, BookOpen, HeartHandshake, X } from "lucide-react";
 import Image from "next/image";
 
 export default function FeedClient({ userAvatar, userName, userId }: { userAvatar: string | null, userName: string, userId: string }) {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [content]);
+
+  const handleSubmit = async () => {
     if (!content.trim()) return;
 
     setIsSubmitting(true);
@@ -28,7 +36,6 @@ export default function FeedClient({ userAvatar, userName, userId }: { userAvata
         alert("Failed to create post. Did you run the SQL script?");
       } else {
         setContent("");
-        // Reload page to see the new post (simple approach for now)
         window.location.reload();
       }
     } catch (err) {
@@ -39,38 +46,63 @@ export default function FeedClient({ userAvatar, userName, userId }: { userAvata
   };
 
   return (
-    <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-4 shadow-lg mb-6">
-      <div className="flex gap-3">
-        <div className="relative h-10 w-10 rounded-full border border-[#333] bg-brand-bg overflow-hidden flex-shrink-0 flex items-center justify-center">
-          {userAvatar ? (
-            <Image src={userAvatar} alt={userName} fill className="object-cover" />
-          ) : (
-            <span className="text-brand-gold font-bold">{userName[0]?.toUpperCase()}</span>
-          )}
+    <div className="bg-[#1a1d24] border-b border-[#333] p-4 mb-6 relative">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <button className="text-brand-light hover:text-white transition-colors">
+            <X className="h-6 w-6" />
+          </button>
+          <h2 className="text-xl font-bold text-white tracking-tight">New though</h2>
         </div>
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-3">
+        <button 
+          onClick={handleSubmit}
+          disabled={isSubmitting || !content.trim()}
+          className="text-brand-gold font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:text-yellow-400 transition-colors"
+        >
+          {isSubmitting ? "Posting..." : "Post"}
+        </button>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex flex-col items-center">
+          <div className="relative h-10 w-10 rounded-full border border-[#333] bg-brand-bg overflow-hidden flex-shrink-0 flex items-center justify-center z-10">
+            {userAvatar ? (
+              <Image src={userAvatar} alt={userName} fill className="object-cover" />
+            ) : (
+              <span className="text-brand-gold font-bold">{userName[0]?.toUpperCase()}</span>
+            )}
+          </div>
+          {/* Vertical line to mimic Threads connecting line */}
+          <div className="w-0.5 bg-[#333] flex-1 mt-2 mb-2"></div>
+        </div>
+
+        <div className="flex-1 flex flex-col pt-1 pb-4">
+          <div className="flex items-center gap-1 mb-1">
+            <span className="font-bold text-white text-[15px]">{userName}</span>
+          </div>
+          
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Bagikan pemikiran atau update Anda..."
-            className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-sm text-brand-light placeholder-gray-500 focus:outline-none focus:border-brand-gold/50 resize-none min-h-[80px]"
+            placeholder="What's new?"
+            rows={1}
+            className="w-full bg-transparent border-none text-[15px] text-brand-light placeholder-gray-500 focus:outline-none focus:ring-0 resize-none overflow-hidden"
           />
-          <div className="flex items-center justify-between">
-            <button type="button" className="text-brand-gold/70 hover:text-brand-gold transition-colors p-2 rounded-lg hover:bg-brand-gold/10">
+          
+          <div className="flex items-center gap-4 mt-3">
+            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2">
               <ImageIcon className="h-5 w-5" />
             </button>
-            <button 
-              type="submit" 
-              disabled={isSubmitting || !content.trim()}
-              className="bg-brand-gold text-brand-dark px-4 py-1.5 rounded-full text-sm font-bold shadow-glow-gold hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:shadow-none flex items-center gap-2"
-            >
-              {isSubmitting ? "Posting..." : "Post"}
-              <Send className="h-4 w-4" />
+            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+            </button>
+            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2">
+              <HeartHandshake className="h-5 w-5" />
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
 }
-
