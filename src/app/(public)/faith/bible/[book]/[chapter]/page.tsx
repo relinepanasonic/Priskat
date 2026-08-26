@@ -63,14 +63,14 @@ export default async function BibleChapterPage({
         <h2 className="text-gray-500 font-bold text-sm md:text-base uppercase tracking-widest font-sans">
           {currentBookName}
         </h2>
-        <h1 className="text-7xl md:text-8xl font-bold mt-2 text-black">
+        <h1 className="text-6xl md:text-8xl font-bold mt-2 text-black">
           {chapter}
         </h1>
       </div>
 
       {/* Verses Content - Inline Paragraph */}
       <div className="px-6 md:px-12 lg:px-24 mx-auto max-w-4xl text-justify">
-        <div className="text-[19px] md:text-[22px] leading-[1.8] md:leading-[2] text-[#222]">
+        <div className="text-[17px] md:text-xl leading-relaxed md:leading-[2] text-[#222]">
           {apiData.verses.map((v: any, index: number) => {
             if (v.type === "title") {
               return (

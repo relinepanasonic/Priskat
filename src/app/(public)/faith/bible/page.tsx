@@ -1,6 +1,6 @@
 import { getLanguage } from "@/lib/lang";
 import Link from "next/link";
-import { ChevronRight, Lock } from "lucide-react";
+import BookListClient from "@/components/faith/BookListClient";
 
 export const metadata = {
   title: "Bible - Priskat",
@@ -91,47 +91,6 @@ const DEUTEROCANONICA = [
   {"no":75,"abbr":"2 Mak","name":"2 Makabe","chapter":15}
 ];
 
-// Helper to render the lists
-function BookList({ books, isId, isComingSoon = false }: { books: any[], isId: boolean, isComingSoon?: boolean }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 mb-10">
-      {books.map((book) => {
-        const content = (
-          <div className={`bg-brand-surface p-4 rounded-2xl flex items-center justify-between border border-[#333] border-t-[#444] border-l-[#444] shadow-3d transition-all ${!isComingSoon && 'active:translate-y-1 active:shadow-inner-dark hover:bg-[#252830]'}`}>
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-full bg-[#1e1e1e] flex items-center justify-center shadow-inner-dark text-brand-gold font-bold shrink-0 text-sm">
-                {book.abbr}
-              </div>
-              <div>
-                <h3 className={`font-medium text-lg ${isComingSoon ? 'text-gray-500' : 'text-brand-light'}`}>
-                  {book.name}
-                </h3>
-                <p className="text-brand-muted text-xs">
-                  {book.chapter} {isId ? 'Pasal' : 'Chapters'}
-                </p>
-              </div>
-            </div>
-            {isComingSoon ? (
-              <Lock className="h-5 w-5 text-gray-600 shrink-0" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-brand-muted shrink-0" />
-            )}
-          </div>
-        );
-
-        if (isComingSoon) {
-          return <div key={book.no} className="opacity-70 cursor-not-allowed">{content}</div>;
-        }
-
-        return (
-          <Link href={`/faith/bible/${book.no}/1`} key={book.no}>
-            {content}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
 
 export default async function BiblePage() {
   const lang = await getLanguage();
@@ -145,7 +104,7 @@ export default async function BiblePage() {
         <h2 className="text-xl font-bold text-white tracking-wide border-b border-[#333] pb-2">
           {isId ? "Perjanjian Lama" : "Old Testament"}
         </h2>
-        <BookList books={OLD_TESTAMENT} isId={isId} />
+        <BookListClient books={OLD_TESTAMENT} isId={isId} />
       </div>
 
       {/* Deuterocanonica */}
@@ -163,7 +122,7 @@ export default async function BiblePage() {
             ? "API publik yang kami gunakan saat ini belum mendukung kitab Deuterokanonika Katolik. Kami sedang menyiapkan sumber data khusus untuk segera menghadirkannya!" 
             : "The public API we currently use does not yet support Catholic Deuterocanonical books. We are preparing a custom data source to bring them to you soon!"}
         </p>
-        <BookList books={DEUTEROCANONICA} isId={isId} isComingSoon={true} />
+        <BookListClient books={DEUTEROCANONICA} isId={isId} isComingSoon={true} />
       </div>
 
       {/* New Testament */}
@@ -171,9 +130,10 @@ export default async function BiblePage() {
         <h2 className="text-xl font-bold text-white tracking-wide border-b border-[#333] pb-2">
           {isId ? "Perjanjian Baru" : "New Testament"}
         </h2>
-        <BookList books={NEW_TESTAMENT} isId={isId} />
+        <BookListClient books={NEW_TESTAMENT} isId={isId} />
       </div>
 
     </div>
   );
 }
+
