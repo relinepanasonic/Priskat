@@ -12,11 +12,13 @@ import { createClient } from "@/lib/supabase/client";
 export default function HomeTabsClient({ 
   profile, 
   posts, 
-  userId 
+  userId,
+  activeDevotion
 }: { 
   profile: any, 
   posts: any[], 
-  userId: string 
+  userId: string,
+  activeDevotion?: any
 }) {
   const [activeTab, setActiveTab] = useState<"Profile" | "Though">("Profile");
 
@@ -283,5 +285,7 @@ export default function HomeTabsClient({
     </div>
   );
 }
+
+
 
 

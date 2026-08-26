@@ -28,6 +28,54 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface DevotionCategory {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface DevotionPlan {
+  id: string;
+  category_id: string;
+  title: string;
+  cover_image_url: string | null;
+  duration_days: number;
+  description: string | null;
+  created_at: string;
+  categories?: DevotionCategory;
+}
+
+export interface DevotionPlanDay {
+  id: string;
+  plan_id: string;
+  day_number: number;
+  devotional_title: string | null;
+  devotional_content: string | null;
+  created_at: string;
+  verses?: DevotionDayVerse[];
+}
+
+export interface DevotionDayVerse {
+  id: string;
+  day_id: string;
+  verse_reference: string;
+  translation: string;
+  order_index: number;
+  created_at: string;
+}
+
+export interface UserDevotionProgress {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  current_day: number;
+  completed_days: number[];
+  last_completed_at: string | null;
+  is_finished: boolean;
+  started_at: string;
+  plans?: DevotionPlan;
+}
+
 export interface DailyDevotion {
   id: string;
   publish_date: string;
@@ -206,3 +254,4 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+

@@ -48,11 +48,27 @@ export default async function HomePage() {
     console.error("Posts table might not exist yet.");
   }
 
+  // Fetch Active Devotion Plan
+  let activeDevotion: any = null;
+  try {
+    const { data } = await supabase
+      .from("user_devotion_progress")
+      .select("*, plans:devotion_plans(*)")
+      .eq("user_id", user.id)
+      .eq("is_finished", false)
+      .order("last_completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    activeDevotion = data;
+  } catch (err) {}
+
   return (
     <HomeTabsClient 
       profile={profile} 
       posts={posts} 
       userId={user.id} 
+      activeDevotion={activeDevotion}
     />
   );
 }
+
