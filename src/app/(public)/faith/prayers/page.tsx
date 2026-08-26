@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+
+
 import PrayerList from "@/components/prayers/PrayerList";
 import { getLanguage } from "@/lib/lang";
 import type { Prayer } from "@/lib/types/database.types";
@@ -29,7 +29,7 @@ export default async function PrayerPage() {
   const prayers = (prayersData ?? []) as unknown as Prayer[];
 
   return (
-    <main className="flex-1 px-4 pt-6 pb-24 max-w-md mx-auto w-full">
+    <main className="w-full h-full p-4 md:p-6">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white mb-1">

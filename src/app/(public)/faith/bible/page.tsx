@@ -31,9 +31,9 @@ export default async function BiblePage() {
   const books = Array.from(booksMap.values());
 
   return (
-    <div className="min-h-screen bg-brand-dark pb-32">
+    <div className="w-full h-full pb-8">
       {/* Header */}
-      <div className="bg-brand-surface pt-safe pb-6 px-4 rounded-b-[40px] shadow-3d-heavy relative overflow-hidden z-10">
+      <div className="bg-brand-surface pt-safe pb-6 px-4  shadow-3d-heavy relative overflow-hidden z-10">
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
         <div className="flex items-center space-x-3 mt-4 mb-2">
           <div className="w-10 h-10 rounded-full bg-[#1e1e1e] flex items-center justify-center shadow-inner-dark border border-[#333]">

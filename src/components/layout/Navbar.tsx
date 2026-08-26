@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { LogOut, User, Home, Newspaper, Book, BookOpen, Users, Database } from "lucide-react";
+import { LogOut, User, Home, Newspaper, Book, Tent, Users, Database } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
@@ -20,17 +20,9 @@ const DESKTOP_NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/news", label: "News" },
   { href: "/friends", label: "Friends" },
-  { href: "/bible", label: "Bible" },
-  { href: "/prayers", label: "Prayer" },
+  { href: "/faith", label: "Spiritual" },
+  { href: "/camp", label: "Camp" },
   { href: "/profile", label: "Profile" },
-];
-
-const MOBILE_NAV_LINKS = [
-  { href: "/prayers", label: "Prayer" },
-  { href: "/news", label: "News" },
-  { href: "/", label: "Home" },
-  { href: "/friends", label: "Friends" },
-  { href: "/bible", label: "Bible" },
 ];
 
 export default function Navbar({ profile, lang = "id" }: NavbarProps) {
@@ -74,7 +66,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
         {/* Desktop nav */}
         <nav className="flex-1 space-y-1">
           {DESKTOP_NAV_LINKS.map(({ href, label }) => {
-            const isActive = pathname === href;
+            const isActive = pathname.startsWith(href) && (href !== "/" || pathname === "/");
             return (
               <Link
                 key={href}
@@ -87,10 +79,10 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                 ].join(" ")}
               >
                 {label === "Home" && <Home className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Prayer" && <BookOpen className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Spiritual" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "News" && <Newspaper className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Friends" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Bible" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Camp" && <Tent className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Profile" && <User className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 <span>{label}</span>
               </Link>
@@ -182,11 +174,11 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     {/* Mobile Bottom Navigation (Visible only on mobile) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
       <div className="flex justify-around items-center h-16 px-2">
-        <Link href="/prayers" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/prayers' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <BookOpen className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Prayer</span>
+        <Link href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Book className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Spiritual</span>
         </Link>
-        <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/news' ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Newspaper className="h-5 w-5" />
           <span className="text-[10px] font-medium">News</span>
         </Link>
@@ -199,13 +191,13 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           <span className="text-[10px] font-medium pt-8">Home</span>
         </Link>
 
-        <Link href="/friends" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/friends' ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link href="/friends" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/friends') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Users className="h-5 w-5" />
           <span className="text-[10px] font-medium">Friends</span>
         </Link>
-        <Link href="/bible" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/bible' ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Book className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Bible</span>
+        <Link href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Tent className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Camp</span>
         </Link>
       </div>
     </nav>
