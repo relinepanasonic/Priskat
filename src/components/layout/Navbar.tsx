@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Profile } from "@/lib/types/database.types";
 import LanguageToggle from "@/components/ui/LanguageToggle";
-import InvitePanel from "@/components/layout/InvitePanel";
 
 interface NavbarProps {
   profile?: Profile | null;
@@ -38,7 +37,6 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useSession();
-  const [inviteOpen, setInviteOpen] = useState(false);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -49,7 +47,6 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
 
   return (
     <>
-    {inviteOpen && <InvitePanel onClose={() => setInviteOpen(false)} />}
     {/* Mobile Top Header (Settings & Lang) */}
     <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
@@ -58,11 +55,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       </Link>
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
-        {String(profile?.role).toLowerCase() === "superadmin" && (
-          <button onClick={() => setInviteOpen(true)} className="text-brand-gold hover:opacity-80 transition">
-            <UserPlus className="h-5 w-5" />
-          </button>
-        )}
+        
         <Link href="/profile" className="text-brand-light hover:text-brand-gold transition">
           <User className="h-5 w-5" />
         </Link>
@@ -115,13 +108,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
               <Users className="h-4 w-4" />
               <span>Manage Users</span>
             </a>
-            <button
-              onClick={() => setInviteOpen(true)}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-            >
-              <UserPlus className="h-4 w-4" />
-              <span>Invite User</span>
-            </button>
+            
             <a
               href="/admin/database"
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"

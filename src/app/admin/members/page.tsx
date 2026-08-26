@@ -3,6 +3,7 @@ import Image from "next/image";
 import Badge from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import AdminMemberEditDialog from "@/components/admin/AdminMemberEditDialog";
+import InviteUserButton from "@/components/admin/InviteUserButton";
 import type { UserRole, Profile, UserGender } from "@/lib/types/database.types";
 
 export default async function AdminMembersPage() {
@@ -20,9 +21,12 @@ export default async function AdminMembersPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Members</h1>
-        <p className="text-sm text-brand-muted">{members?.length ?? 0} total members</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Members</h1>
+          <p className="text-sm text-brand-muted">{members?.length ?? 0} total members</p>
+        </div>
+        <InviteUserButton />
       </div>
 
       <div className="card-3d overflow-hidden">
