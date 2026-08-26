@@ -48,8 +48,7 @@ export default function HomeTabsClient({
     const newGallery = userGallery.filter((_, idx) => idx !== indexToDelete);
     setUserGallery(newGallery);
     try {
-      const supabase = createClient();
-      await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId);
+      try { const supabase = createClient(); await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId); } catch (e) {}
     } catch (err) {}
   };
 
@@ -63,8 +62,7 @@ export default function HomeTabsClient({
       setUserGallery(newGallery);
       setActiveImage(url);
       
-      const supabase = createClient();
-      await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId);
+      try { const supabase = createClient(); await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId); } catch (e) {}
     } catch (err) {
       console.error("Upload failed", err);
       alert("Upload failed");
@@ -110,10 +108,10 @@ export default function HomeTabsClient({
                 >
                   <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
                 </button>
-                {idx > 0 && (
+                {idx > 0 && activeImage === img && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleDeleteImage(idx - 1); }}
-                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:scale-110 transition-transform shadow-md z-10"
+                    className="absolute -top-1.5 -right-1.5 bg-[#1a1d24] border border-[#333] text-white rounded-full p-0.5 hover:scale-110 transition-transform shadow-md z-10"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -285,3 +283,5 @@ export default function HomeTabsClient({
     </div>
   );
 }
+
+
