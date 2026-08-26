@@ -31,9 +31,11 @@ export default function DevotionPlansAdminClient({
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const [planTitle, setPlanTitle] = useState("");
   const [planTitleId, setPlanTitleId] = useState("");
+  const [planSubtitle, setPlanSubtitle] = useState("");
+  const [planSubtitleId, setPlanSubtitleId] = useState("");
+  const [planSummary, setPlanSummary] = useState("");
+  const [planSummaryId, setPlanSummaryId] = useState("");
   const [planCover, setPlanCover] = useState("");
-  const [planDesc, setPlanDesc] = useState("");
-  const [planDescId, setPlanDescId] = useState("");
   const [planDuration, setPlanDuration] = useState(7);
   const [selectedDayNum, setSelectedDayNum] = useState<number | null>(null);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
@@ -43,8 +45,16 @@ export default function DevotionPlansAdminClient({
   const [dayData, setDayData] = useState<any>(null);
   const [dayTitle, setDayTitle] = useState("");
   const [dayTitleId, setDayTitleId] = useState("");
-  const [dayContent, setDayContent] = useState("");
-  const [dayContentId, setDayContentId] = useState("");
+  
+  const [dayDevotion, setDayDevotion] = useState("");
+  const [dayDevotionId, setDayDevotionId] = useState("");
+  
+  const [dayReflection, setDayReflection] = useState("");
+  const [dayReflectionId, setDayReflectionId] = useState("");
+  
+  const [dayPrayer, setDayPrayer] = useState("");
+  const [dayPrayerId, setDayPrayerId] = useState("");
+  
   const [dayVerses, setDayVerses] = useState<any[]>([]);
   
   const [newVerseRef, setNewVerseRef] = useState("");
@@ -93,9 +103,11 @@ export default function DevotionPlansAdminClient({
     setSelectedPlanId(plan.id);
     setPlanTitle(plan.title || "");
     setPlanTitleId(plan.title_id || plan.title || "");
+    setPlanSubtitle(plan.subtitle || "");
+    setPlanSubtitleId(plan.subtitle_id || "");
+    setPlanSummary(plan.summary || plan.description || ""); // fallback to old description
+    setPlanSummaryId(plan.summary_id || plan.description_id || "");
     setPlanCover(plan.cover_image_url || "");
-    setPlanDesc(plan.description || "");
-    setPlanDescId(plan.description_id || plan.description || "");
     setPlanDuration(plan.duration_days || 7);
     setSelectedDayNum(null);
   };
@@ -124,9 +136,11 @@ export default function DevotionPlansAdminClient({
     const { data } = await supabase.from("devotion_plans").update({
       title: planTitle,
       title_id: planTitleId,
+      subtitle: planSubtitle,
+      subtitle_id: planSubtitleId,
+      summary: planSummary,
+      summary_id: planSummaryId,
       cover_image_url: planCover,
-      description: planDesc,
-      description_id: planDescId,
       duration_days: planDuration
     }).eq("id", selectedPlanId).select().single();
     
@@ -140,10 +154,10 @@ export default function DevotionPlansAdminClient({
   const selectDay = async (num: number) => {
     setSelectedDayNum(num);
     setDayData(null);
-    setDayTitle("");
-    setDayTitleId("");
-    setDayContent("");
-    setDayContentId("");
+    setDayTitle(""); setDayTitleId("");
+    setDayDevotion(""); setDayDevotionId("");
+    setDayReflection(""); setDayReflectionId("");
+    setDayPrayer(""); setDayPrayerId("");
     setDayVerses([]);
 
     const { data } = await supabase
@@ -157,8 +171,16 @@ export default function DevotionPlansAdminClient({
       setDayData(data);
       setDayTitle(data.devotional_title || "");
       setDayTitleId(data.devotional_title_id || data.devotional_title || "");
-      setDayContent(data.devotional_content || "");
-      setDayContentId(data.devotional_content_id || data.devotional_content || "");
+      
+      setDayDevotion(data.devotional_content || "");
+      setDayDevotionId(data.devotional_content_id || data.devotional_content || "");
+      
+      setDayReflection(data.reflection || "");
+      setDayReflectionId(data.reflection_id || "");
+      
+      setDayPrayer(data.prayer || "");
+      setDayPrayerId(data.prayer_id || "");
+
       if (data.verses) {
         setDayVerses(data.verses.sort((a: any, b: any) => a.order_index - b.order_index));
       }
@@ -170,21 +192,24 @@ export default function DevotionPlansAdminClient({
     if (!selectedPlanId || !selectedDayNum) return;
     setIsSavingDay(true);
     
+    const payload = {
+      devotional_title: dayTitle,
+      devotional_title_id: dayTitleId,
+      devotional_content: dayDevotion,
+      devotional_content_id: dayDevotionId,
+      reflection: dayReflection,
+      reflection_id: dayReflectionId,
+      prayer: dayPrayer,
+      prayer_id: dayPrayerId
+    };
+
     if (dayData) {
-      await supabase.from("devotion_plan_days").update({
-        devotional_title: dayTitle,
-        devotional_title_id: dayTitleId,
-        devotional_content: dayContent,
-        devotional_content_id: dayContentId
-      }).eq("id", dayData.id);
+      await supabase.from("devotion_plan_days").update(payload).eq("id", dayData.id);
     } else {
       const { data } = await supabase.from("devotion_plan_days").insert({
         plan_id: selectedPlanId,
         day_number: selectedDayNum,
-        devotional_title: dayTitle,
-        devotional_title_id: dayTitleId,
-        devotional_content: dayContent,
-        devotional_content_id: dayContentId
+        ...payload
       }).select().single();
       if (data) setDayData(data);
     }
@@ -213,7 +238,7 @@ export default function DevotionPlansAdminClient({
       
       {/* COLUMN 1: CATEGORIES */}
       <div className="w-1/4 border-r border-gray-300 bg-gray-50 flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center shrink-0">
           <span>1. Categories</span>
           <button onClick={() => setShowIdCol1(!showIdCol1)} title="Toggle Indonesian Form" className="text-gray-500 hover:text-black">
             <Globe2 className={`h-4 w-4 ${showIdCol1 ? "text-blue-500" : ""}`} />
@@ -234,7 +259,7 @@ export default function DevotionPlansAdminClient({
             </button>
           ))}
         </div>
-        <div className="p-3 border-t border-gray-300 bg-white">
+        <div className="p-3 border-t border-gray-300 bg-white shrink-0">
           <form onSubmit={handleAddCategory} className="flex flex-col gap-2">
             <input type="text" placeholder="Category Name (EN)" required value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
             {showIdCol1 && (
@@ -247,7 +272,7 @@ export default function DevotionPlansAdminClient({
 
       {/* COLUMN 2: PLANS */}
       <div className="w-1/4 border-r border-gray-300 bg-gray-50 flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center shrink-0">
           <span>2. Devotion Plans</span>
           <button onClick={() => setShowIdCol2(!showIdCol2)} title="Toggle Indonesian Form" className="text-gray-500 hover:text-black">
             <Globe2 className={`h-4 w-4 ${showIdCol2 ? "text-blue-500" : ""}`} />
@@ -270,7 +295,7 @@ export default function DevotionPlansAdminClient({
                 </button>
               ))}
             </div>
-            <div className="p-3 border-t border-gray-300 bg-white">
+            <div className="p-3 border-t border-gray-300 bg-white shrink-0">
               <form onSubmit={handleAddPlan} className="flex flex-col gap-2">
                 <input type="text" placeholder="Plan Title (EN)" required value={newPlanName} onChange={e => setNewPlanName(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
                 {showIdCol2 && (
@@ -285,7 +310,7 @@ export default function DevotionPlansAdminClient({
 
       {/* COLUMN 3: PLAN DETAILS & DAYS */}
       <div className="w-1/4 border-r border-gray-300 bg-white flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 shrink-0">
           3. Plan Cover & Details
         </div>
         {!selectedPlan ? (
@@ -302,6 +327,17 @@ export default function DevotionPlansAdminClient({
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Title (ID)</label>
                   <input type="text" value={planTitleId} onChange={e => setPlanTitleId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold bg-gray-50" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Sub Title (EN)</label>
+                  <input type="text" value={planSubtitle} onChange={e => setPlanSubtitle(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs" />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Sub Title (ID)</label>
+                  <input type="text" value={planSubtitleId} onChange={e => setPlanSubtitleId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs bg-gray-50" />
                 </div>
               </div>
               
@@ -328,12 +364,12 @@ export default function DevotionPlansAdminClient({
               </div>
               
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Description (EN)</label>
-                <textarea rows={2} value={planDesc} onChange={e => setPlanDesc(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs"></textarea>
+                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Summary (EN)</label>
+                <textarea rows={2} value={planSummary} onChange={e => setPlanSummary(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs"></textarea>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Description (ID)</label>
-                <textarea rows={2} value={planDescId} onChange={e => setPlanDescId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs bg-gray-50"></textarea>
+                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Summary (ID)</label>
+                <textarea rows={2} value={planSummaryId} onChange={e => setPlanSummaryId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs bg-gray-50"></textarea>
               </div>
               
               <div>
@@ -367,54 +403,44 @@ export default function DevotionPlansAdminClient({
 
       {/* COLUMN 4: DAY BODY */}
       <div className="w-1/4 bg-white flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center">
+        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center shrink-0">
           <span>4. The Body</span>
           {selectedDayNum && <span className="text-black bg-white px-2 py-0.5 rounded text-[10px]">Day {selectedDayNum}</span>}
         </div>
         {!selectedDayNum ? (
           <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a day first</div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
             
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Section Title (EN)</label>
-                  <input type="text" value={dayTitle} onChange={e => setDayTitle(e.target.value)} placeholder="e.g. Intro" className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold" />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Section Title (ID)</label>
-                  <input type="text" value={dayTitleId} onChange={e => setDayTitleId(e.target.value)} placeholder="e.g. Intro" className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold bg-gray-50" />
-                </div>
-              </div>
-              
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Prayer / Devotional (EN)</label>
-                <textarea rows={6} value={dayContent} onChange={e => setDayContent(e.target.value)} placeholder="Write in English..." className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
+                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Section Title (EN)</label>
+                <input type="text" value={dayTitle} onChange={e => setDayTitle(e.target.value)} placeholder="e.g. Intro" className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold" />
               </div>
-              
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Prayer / Devotional (ID)</label>
-                <textarea rows={6} value={dayContentId} onChange={e => setDayContentId(e.target.value)} placeholder="Write in Indonesian..." className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Section Title (ID)</label>
+                <input type="text" value={dayTitleId} onChange={e => setDayTitleId(e.target.value)} placeholder="e.g. Intro" className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold bg-gray-50" />
               </div>
-              
-              <button onClick={handleSaveDay} disabled={isSavingDay} className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2">
-                <Save className="h-4 w-4" /> {isSavingDay ? "Saving..." : "Save Body Content"}
-              </button>
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
-              <label className="block text-xs font-bold text-gray-700 mb-2">Bible Verses</label>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Devotion (EN)</label>
+              <textarea rows={4} value={dayDevotion} onChange={e => setDayDevotion(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
               
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mt-2 mb-1">The Devotion (ID)</label>
+              <textarea rows={4} value={dayDevotionId} onChange={e => setDayDevotionId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">The Verses</label>
               <ul className="space-y-1.5 mb-3">
                 {dayVerses.map(v => (
-                  <li key={v.id} className="text-xs bg-gray-100 p-2 rounded flex justify-between items-center border border-gray-200">
+                  <li key={v.id} className="text-xs bg-white p-2 rounded flex justify-between items-center border border-gray-200">
                     <span className="font-semibold">{v.verse_reference}</span>
                   </li>
                 ))}
                 {dayVerses.length === 0 && <li className="text-[10px] text-gray-400 italic">No verses added.</li>}
               </ul>
-
               <form onSubmit={handleAddVerse} className="flex gap-2">
                 <input type="text" placeholder="e.g. Yehezkiel 20:8" value={newVerseRef} onChange={e => setNewVerseRef(e.target.value)} className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-xs" />
                 <button type="submit" className="bg-black text-white p-1.5 rounded"><Plus className="h-3 w-3" /></button>
@@ -422,6 +448,26 @@ export default function DevotionPlansAdminClient({
               {!dayData && <p className="text-[10px] text-red-500 mt-1">Save content first before adding verses.</p>}
             </div>
 
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Reflection (EN)</label>
+              <textarea rows={3} value={dayReflection} onChange={e => setDayReflection(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
+              
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mt-2 mb-1">The Reflection (ID)</label>
+              <textarea rows={3} value={dayReflectionId} onChange={e => setDayReflectionId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+            </div>
+
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Prayer (EN)</label>
+              <textarea rows={3} value={dayPrayer} onChange={e => setDayPrayer(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
+              
+              <label className="block text-[10px] uppercase font-bold text-gray-500 mt-2 mb-1">The Prayer (ID)</label>
+              <textarea rows={3} value={dayPrayerId} onChange={e => setDayPrayerId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+            </div>
+            
+            <button onClick={handleSaveDay} disabled={isSavingDay} className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2">
+              <Save className="h-4 w-4" /> {isSavingDay ? "Saving..." : "Save Body Content"}
+            </button>
+            
           </div>
         )}
       </div>

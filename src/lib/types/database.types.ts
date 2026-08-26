@@ -40,6 +40,10 @@ export interface DevotionPlan {
   category_id: string;
   title: string;
   title_id?: string | null;
+  subtitle?: string | null;
+  subtitle_id?: string | null;
+  summary?: string | null;
+  summary_id?: string | null;
   cover_image_url: string | null;
   duration_days: number;
   description: string | null;
@@ -54,8 +58,16 @@ export interface DevotionPlanDay {
   day_number: number;
   devotional_title: string | null;
   devotional_title_id?: string | null;
+  subtitle?: string | null;
+  subtitle_id?: string | null;
+  summary?: string | null;
+  summary_id?: string | null;
   devotional_content: string | null;
   devotional_content_id?: string | null;
+  reflection?: string | null;
+  reflection_id?: string | null;
+  prayer?: string | null;
+  prayer_id?: string | null;
   created_at: string;
   verses?: DevotionDayVerse[];
 }
@@ -259,5 +271,6 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+
 
 
