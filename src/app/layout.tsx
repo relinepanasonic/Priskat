@@ -11,6 +11,17 @@ export const metadata: Metadata = {
   description:
     "A community platform for Priskat CFM — stay updated on news, join events, and connect with fellow members.",
   keywords: ["PriskatCFM", "community", "church", "events", "news"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "PriskatCFM",
+    startupImage: "/apple-touch-icon.png",
+  },
+  icons: {
+    icon: "/favicon.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({

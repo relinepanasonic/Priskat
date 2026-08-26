@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Book, BookOpen, Settings, Users } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Book, BookOpen, Settings, Users, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Profile } from "@/lib/types/database.types";
 import LanguageToggle from "@/components/ui/LanguageToggle";
+import InvitePanel from "@/components/layout/InvitePanel";
 
 interface NavbarProps {
   profile?: Profile | null;
@@ -38,6 +39,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
   const { user } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -48,6 +50,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
 
   return (
     <>
+    {inviteOpen && <InvitePanel onClose={() => setInviteOpen(false)} />}
     {/* Mobile Top Header (Settings & Lang) */}
     <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
@@ -56,6 +59,11 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       </Link>
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
+        {profile?.role === "superadmin" && (
+          <button onClick={() => setInviteOpen(true)} className="text-brand-gold hover:opacity-80 transition">
+            <UserPlus className="h-5 w-5" />
+          </button>
+        )}
         <Link href="/profile" className="text-brand-light hover:text-brand-gold transition">
           <Settings className="h-5 w-5" />
         </Link>
@@ -98,6 +106,17 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
             );
           })}
         </nav>
+
+        {/* Superadmin Invite Button */}
+        {profile?.role === "superadmin" && (
+          <button
+            onClick={() => setInviteOpen(true)}
+            className="mt-3 flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span>Invite User</span>
+          </button>
+        )}
 
         {/* Bottom Section (Lang & User) */}
         <div className="mt-auto space-y-3 pt-4 border-t border-[#333]">
