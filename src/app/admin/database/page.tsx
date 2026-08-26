@@ -28,8 +28,19 @@ export default function DatabasePage() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      // The user's CSV uses semicolons. Let PapaParse auto-detect, but if it fails, we should handle it.
       complete: (results) => {
-        if (!results.data || results.data.length === 0) return;
+        // Reset file input so the same file can be selected again
+        e.target.value = "";
+
+        if (results.errors.length > 0 && results.errors[0].code !== "UndetectableDelimiter") {
+          console.warn("PapaParse errors:", results.errors);
+        }
+
+        if (!results.data || results.data.length === 0) {
+          alert("File is empty or could not be parsed.");
+          return;
+        }
         
         // results.meta.fields contains the original headers
         const originalHeaders = results.meta.fields || [];
