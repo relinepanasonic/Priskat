@@ -135,6 +135,11 @@ export default function DatabasePage() {
           Filter and upload CSV data to the database.
         </p>
       </div>
+      <div className="flex justify-end">
+        <a href="/admin/database/view" className="bg-[#111] text-white border border-[#333] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#1a1d24] transition-colors">
+          View Database Records
+        </a>
+      </div>
 
       <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-5 space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -198,6 +203,13 @@ export default function DatabasePage() {
         <div className="bg-[#1a1d24] border border-[#333] rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[#333] bg-[#111] flex justify-between items-center">
             <h2 className="text-sm font-bold text-white">Preview Data ({rows.length} rows)</h2>
+            <button 
+                className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2"
+                onClick={handleSaveToDatabase}
+                disabled={isSaving}
+             >
+                {isSaving ? "Saving..." : "Save to Database"}
+             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-300">
@@ -228,16 +240,7 @@ export default function DatabasePage() {
               </div>
             )}
           </div>
-          <div className="p-5 bg-[#111] border-t border-[#333] flex justify-end">
-             <button 
-                className="bg-brand-gold text-brand-dark px-6 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
-                onClick={handleSaveToDatabase}
-                disabled={isSaving}
-             >
-                {isSaving ? "Saving..." : "Save to Database"}
-             </button>
-          </div>
-        </div>
+</div>
       )}
     </div>
   );
