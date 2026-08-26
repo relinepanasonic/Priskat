@@ -20,10 +20,10 @@ export default function DatabaseViewerPage() {
     const supabase = createClient();
     let query = supabase.from("alumni_database").select("*");
 
-    if (filterGroup) query = query.ilike("group", \`%\${filterGroup}%\`);
-    if (filterCamp) query = query.ilike("camp", \`%\${filterCamp}%\`);
-    if (filterAngkatan) query = query.ilike("angkatan", \`%\${filterAngkatan}%\`);
-    if (filterKota) query = query.ilike("city", \`%\${filterKota}%\`);
+    if (filterGroup) query = query.ilike("group", `%${filterGroup}%`);
+    if (filterCamp) query = query.ilike("camp", `%${filterCamp}%`);
+    if (filterAngkatan) query = query.ilike("angkatan", `%${filterAngkatan}%`);
+    if (filterKota) query = query.ilike("city", `%${filterKota}%`);
 
     query = query.order("created_at", { ascending: false }).limit(200);
 
@@ -152,3 +152,4 @@ export default function DatabaseViewerPage() {
     </div>
   );
 }
+

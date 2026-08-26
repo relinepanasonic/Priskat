@@ -34,3 +34,4 @@ content = content.replace(
 );
 
 fs.writeFileSync('src/app/admin/database/page.tsx', content);
+
