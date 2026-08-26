@@ -1,6 +1,5 @@
 import { getLanguage } from "@/lib/lang";
-import Link from "next/link";
-import BookListClient from "@/components/faith/BookListClient";
+import BibleIndexClient from "@/components/faith/BibleIndexClient";
 
 export const metadata = {
   title: "Bible - Priskat",
@@ -91,49 +90,18 @@ const DEUTEROCANONICA = [
   {"no":75,"abbr":"2 Mak","name":"2 Makabe","chapter":15}
 ];
 
-
 export default async function BiblePage() {
   const lang = await getLanguage();
   const isId = lang === "id";
 
   return (
     <div className="w-full h-full pb-8 px-4 pt-6">
-      
-      {/* Old Testament */}
-      <div>
-        <h2 className="text-xl font-bold text-white tracking-wide border-b border-[#333] pb-2">
-          {isId ? "Perjanjian Lama" : "Old Testament"}
-        </h2>
-        <BookListClient books={OLD_TESTAMENT} isId={isId} />
-      </div>
-
-      {/* Deuterocanonica */}
-      <div>
-        <div className="flex items-center justify-between border-b border-[#333] pb-2">
-          <h2 className="text-xl font-bold text-white tracking-wide">
-            {isId ? "Deuterokanonika" : "Deuterocanonicals"}
-          </h2>
-          <span className="text-[10px] font-bold uppercase tracking-widest bg-brand-gold/20 text-brand-gold px-2 py-1 rounded-full">
-            {isId ? "Segera Hadir" : "Coming Soon"}
-          </span>
-        </div>
-        <p className="text-sm text-brand-muted mt-2">
-          {isId 
-            ? "API publik yang kami gunakan saat ini belum mendukung kitab Deuterokanonika Katolik. Kami sedang menyiapkan sumber data khusus untuk segera menghadirkannya!" 
-            : "The public API we currently use does not yet support Catholic Deuterocanonical books. We are preparing a custom data source to bring them to you soon!"}
-        </p>
-        <BookListClient books={DEUTEROCANONICA} isId={isId} isComingSoon={true} />
-      </div>
-
-      {/* New Testament */}
-      <div>
-        <h2 className="text-xl font-bold text-white tracking-wide border-b border-[#333] pb-2">
-          {isId ? "Perjanjian Baru" : "New Testament"}
-        </h2>
-        <BookListClient books={NEW_TESTAMENT} isId={isId} />
-      </div>
-
+      <BibleIndexClient 
+        isId={isId}
+        oldTestament={OLD_TESTAMENT}
+        newTestament={NEW_TESTAMENT}
+        deuterocanonica={DEUTEROCANONICA}
+      />
     </div>
   );
 }
-

@@ -21,7 +21,7 @@ export default function BookListClient({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-3 mt-4 mb-10">
+    <div className="grid grid-cols-1 gap-3 mt-2 mb-4">
       {books.map((book) => {
         const isExpanded = expandedId === book.no;
         
@@ -81,3 +81,4 @@ export default function BookListClient({
     </div>
   );
 }
+
