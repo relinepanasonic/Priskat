@@ -23,6 +23,7 @@ const DESKTOP_NAV_LINKS = [
   { href: "/friends", label: "Friends" },
   { href: "/bible", label: "Bible" },
   { href: "/prayers", label: "Prayer" },
+  { href: "/profile", label: "Profile" },
 ];
 
 const MOBILE_NAV_LINKS = [
@@ -37,8 +38,6 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useSession();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
 
   async function handleSignOut() {
@@ -65,7 +64,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           </button>
         )}
         <Link href="/profile" className="text-brand-light hover:text-brand-gold transition">
-          <Settings className="h-5 w-5" />
+          <User className="h-5 w-5" />
         </Link>
       </div>
     </div>
@@ -99,6 +98,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                 {label === "News" && <Newspaper className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Friends" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Bible" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Profile" && <User className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 <span>{label}</span>
               </Link>
             );
@@ -108,6 +108,13 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
         {/* Superadmin Invite & Database Buttons */}
         {profile?.role === "superadmin" && (
           <div className="mt-3 space-y-1">
+            <Link
+              href="/admin/users"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+            >
+              <Users className="h-4 w-4" />
+              <span>Manage Users</span>
+            </Link>
             <button
               onClick={() => setInviteOpen(true)}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
@@ -133,11 +140,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           </div>
           
           {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center w-full gap-2.5 rounded-lg p-2 text-sm font-medium text-brand-light hover:bg-white/5 transition-colors border border-transparent hover:border-[#333]"
-              >
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2.5 px-2 py-1">
                 {profile?.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
@@ -147,61 +151,26 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                     className="rounded-full object-cover border border-[#444]"
                   />
                 ) : (
-                  <div className="h-8 w-8 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-semibold text-xs border border-[#333]">
+                  <div className="h-8 w-8 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-semibold text-xs border border-[#333] shrink-0">
                     {(profile?.full_name || user.email || "U")[0].toUpperCase()}
                   </div>
                 )}
-                <div className="flex flex-col items-start flex-1 overflow-hidden">
-                  <span className="truncate w-full text-[13px] font-bold text-gray-200">
+                <div className="flex flex-col items-start overflow-hidden">
+                  <span className="truncate w-full text-[12px] font-bold text-gray-200">
                     {profile?.full_name || "User"}
                   </span>
                   <span className="truncate w-full text-[10px] text-gray-500 font-normal">
                     {user.email}
                   </span>
                 </div>
-                <ChevronDown className={`h-3 w-3 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-3 w-full px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
               </button>
-
-              {userMenuOpen && (
-                <div className="absolute bottom-full left-0 mb-2 w-full rounded-xl bg-brand-surface shadow-2xl border border-[#333] py-2 z-50">
-                  <Link
-                    href="/profile"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2 text-xs text-brand-light hover:bg-brand-bg hover:text-brand-gold"
-                  >
-                    <User className="h-4 w-4" />
-                    My Profile
-                  </Link>
-                  {profile?.role && ["superadmin", "admin", "moderator"].includes(profile.role) && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-xs text-brand-light hover:bg-brand-bg hover:text-brand-gold"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Admin Panel
-                    </Link>
-                  )}
-                  {profile?.role === "superadmin" && (
-                    <Link
-                      href="/admin/users"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-xs text-brand-light hover:bg-brand-bg hover:text-brand-gold"
-                    >
-                      <Users className="h-4 w-4" />
-                      Manage Users
-                    </Link>
-                  )}
-                  <hr className="my-1 border-[#333]" />
-                  <button
-                    onClick={handleSignOut}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-xs text-red-500 hover:bg-brand-bg"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </button>
-                </div>
-              )}
             </div>
           ) : (
             <div className="flex flex-col gap-2 px-2">
