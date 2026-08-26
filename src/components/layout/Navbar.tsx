@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, Newspaper, Book, BookOpen, Settings, Users, UserPlus, Database } from "lucide-react";
+
+import { LogOut, User, Home, Newspaper, Book, BookOpen, Users, Database } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
