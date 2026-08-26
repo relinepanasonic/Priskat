@@ -61,42 +61,50 @@ export default function BookListClient({
         })}
       </div>
 
-      {/* Desktop View (3D Book Covers) */}
-      <div className="hidden md:grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6 mt-4 mb-8 perspective-[1000px]">
+      {/* Desktop View (3D Books on Shelves) */}
+      <div className="hidden md:flex flex-wrap justify-center gap-x-8 gap-y-16 mt-8 mb-12 perspective-[1500px]">
         {books.map((book) => {
           const isExpanded = expandedId === book.no;
           return (
-            <div key={book.no} className="relative">
+            <div key={book.no} className="relative w-32 xl:w-36 flex flex-col items-center">
+              
               {/* The Book Cover */}
               <div 
                 onClick={() => toggle(book.no)}
                 className={`
-                  aspect-[2/3] rounded-r-xl rounded-l-sm border-l-8 shadow-[10px_10px_20px_rgba(0,0,0,0.4)] 
-                  transition-all duration-500 transform-style-3d cursor-pointer group flex flex-col justify-between p-4
-                  ${isComingSoon ? 'opacity-50 border-gray-600 bg-[#1a1c20]' : 'border-[#8b6b22] bg-gradient-to-br from-[#2a2d35] to-[#1a1d24] hover:-translate-y-3 hover:shadow-[15px_20px_30px_rgba(0,0,0,0.5)]'}
-                  ${isExpanded ? 'rotate-y-[-20deg] scale-105' : ''}
+                  w-full aspect-[2/3] rounded-r-xl rounded-l-sm border-l-8 z-10
+                  shadow-[8px_8px_15px_rgba(0,0,0,0.5),inset_-2px_0_5px_rgba(255,255,255,0.1)] 
+                  transition-all duration-500 transform-style-3d cursor-pointer group flex flex-col justify-between p-3
+                  ${isComingSoon ? 'opacity-50 border-gray-600 bg-[#222]' : 'border-[#8b6b22] bg-gradient-to-br from-[#333742] to-[#1a1d24] hover:-translate-y-4 hover:shadow-[15px_20px_25px_rgba(0,0,0,0.6)]'}
+                  ${isExpanded ? 'rotate-y-[-25deg] -translate-y-4 scale-110 z-20 shadow-[20px_25px_30px_rgba(0,0,0,0.7)]' : ''}
                 `}
+                style={{ transformOrigin: "left center" }}
               >
                 {/* Book Spine Highlight */}
-                <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-r from-white/10 to-transparent"></div>
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-r from-white/20 to-transparent"></div>
+                {/* Book Edge Highlight */}
+                <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10"></div>
                 
-                <div className="text-brand-gold/80 font-serif text-sm">#{book.no}</div>
+                <div className="text-brand-gold/80 font-serif text-[10px] tracking-wider uppercase">#{book.no}</div>
                 
-                <div className="text-center font-serif">
-                  <h3 className={`font-bold leading-tight ${isComingSoon ? 'text-gray-500' : 'text-brand-light group-hover:text-brand-gold'} transition-colors`}>
+                <div className="text-center font-serif mt-2 mb-auto flex-1 flex items-center justify-center">
+                  <h3 className={`font-bold leading-tight text-sm ${isComingSoon ? 'text-gray-500' : 'text-brand-light group-hover:text-brand-gold'} transition-colors`}>
                     {book.name}
                   </h3>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-brand-muted">{book.chapter} {isId ? 'Pasal' : 'Ch'}</span>
+                <div className="flex items-center justify-between border-t border-white/10 pt-2 mt-2">
+                  <span className="text-[9px] text-gray-400">{book.chapter} {isId ? 'Psl' : 'Ch'}</span>
                   {isComingSoon ? <Lock className="h-3 w-3 text-gray-500" /> : <BookOpen className="h-3 w-3 text-brand-gold opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
               </div>
 
+              {/* The Shelf Segment */}
+              <div className="absolute bottom-[-10px] left-[-16px] right-[-16px] h-4 bg-gradient-to-b from-[#2a2c33] to-[#15161a] border-t border-white/5 border-b-2 border-black shadow-[0_15px_20px_rgba(0,0,0,0.6)] z-0 rounded-sm"></div>
+
               {/* Floating Chapters Menu (Pop-out when clicked) */}
               {isExpanded && !isComingSoon && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 bg-[#1a1d24] border border-brand-gold/30 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-[110%] left-1/2 -translate-x-1/2 mt-4 w-64 bg-[#1a1d24] border border-brand-gold/30 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#1a1d24] border-t border-l border-brand-gold/30 rotate-45"></div>
                   <h4 className="text-brand-gold font-serif font-bold text-center mb-3 border-b border-[#333] pb-2">
                     {book.name}
