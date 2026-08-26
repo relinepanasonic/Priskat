@@ -52,18 +52,18 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     </div>
 
     {/* Desktop Sidebar */}
-    <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 z-50 border-r border-[#333] bg-brand-surface shadow-lg">
-      <div className="flex flex-col h-full px-4 py-6">
+    <aside className="hidden md:flex flex-col w-56 h-screen sticky top-0 z-50 border-r border-[#333] bg-[#1a1d24] shadow-lg">
+      <div className="flex flex-col h-full px-3 py-5">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 mb-10 px-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold text-brand-dark text-white font-bold text-lg shadow-glow-gold">
+        <Link href="/" className="flex items-center gap-2.5 mb-8 px-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-base shadow-glow-gold">
             P
           </div>
-          <span className="font-bold text-brand-gold text-xl tracking-wide">PriskatCFM</span>
+          <span className="font-bold text-white text-base tracking-wide">PriskatCFM</span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-1">
           {NAV_LINKS.map(({ href, label }) => {
             const isActive = pathname === href;
             return (
@@ -71,27 +71,27 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                 key={href}
                 href={href}
                 className={[
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all duration-200",
                   isActive
-                    ? "bg-brand-bg text-brand-gold border border-[#333]"
-                    : "text-brand-light hover:text-brand-gold hover:bg-brand-surface-hover border border-transparent",
+                    ? "bg-brand-gold text-brand-dark shadow-md"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent",
                 ].join(" ")}
               >
-                {label === "Home" && <Home className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
-                {label === "Prayer" && <BookOpen className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
-                {label === "News" && <Newspaper className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
-                {label === "Friends" && <Users className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
-                {label === "Bible" && <Book className={`h-5 w-5 ${isActive ? "text-brand-gold" : "text-brand-muted"}`} />}
-                <span className={isActive ? "font-bold" : ""}>{label}</span>
+                {label === "Home" && <Home className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Prayer" && <BookOpen className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "News" && <Newspaper className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Friends" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Bible" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                <span>{label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom Section (Lang & User) */}
-        <div className="mt-auto space-y-4 pt-6 border-t border-[#333]">
-          <div className="px-4 flex justify-between items-center">
-            <span className="text-sm text-brand-muted">Language</span>
+        <div className="mt-auto space-y-3 pt-4 border-t border-[#333]">
+          <div className="px-3 flex justify-between items-center">
+            <span className="text-[11px] text-gray-500 font-medium">Language</span>
             <LanguageToggle currentLang={lang} />
           </div>
           
@@ -99,30 +99,30 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center w-full gap-3 rounded-xl p-3 text-sm font-medium text-brand-light hover:bg-brand-surface-hover transition-colors border border-transparent hover:border-[#333]"
+                className="flex items-center w-full gap-2.5 rounded-lg p-2 text-sm font-medium text-brand-light hover:bg-white/5 transition-colors border border-transparent hover:border-[#333]"
               >
                 {profile?.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
                     alt={profile.full_name || "Avatar"}
-                    width={36}
-                    height={36}
+                    width={32}
+                    height={32}
                     className="rounded-full object-cover border border-[#444]"
                   />
                 ) : (
-                  <div className="h-9 w-9 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-semibold text-sm border border-[#333]">
+                  <div className="h-8 w-8 rounded-full bg-brand-bg flex items-center justify-center text-brand-gold font-semibold text-xs border border-[#333]">
                     {(profile?.full_name || user.email || "U")[0].toUpperCase()}
                   </div>
                 )}
                 <div className="flex flex-col items-start flex-1 overflow-hidden">
-                  <span className="truncate w-full font-bold">
+                  <span className="truncate w-full text-[13px] font-bold text-gray-200">
                     {profile?.full_name || "User"}
                   </span>
-                  <span className="truncate w-full text-xs text-brand-muted font-normal">
+                  <span className="truncate w-full text-[10px] text-gray-500 font-normal">
                     {user.email}
                   </span>
                 </div>
-                <ChevronDown className={`h-4 w-4 text-brand-muted transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-3 w-3 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {userMenuOpen && (
@@ -130,7 +130,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                   <Link
                     href="/profile"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-light hover:bg-brand-bg hover:text-brand-gold"
+                    className="flex items-center gap-3 px-4 py-2 text-xs text-brand-light hover:bg-brand-bg hover:text-brand-gold"
                   >
                     <User className="h-4 w-4" />
                     My Profile
@@ -139,7 +139,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                     <Link
                       href="/admin"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-light hover:bg-brand-bg hover:text-brand-gold"
+                      className="flex items-center gap-3 px-4 py-2 text-xs text-brand-light hover:bg-brand-bg hover:text-brand-gold"
                     >
                       <Settings className="h-4 w-4" />
                       Admin Panel
@@ -149,7 +149,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                     <Link
                       href="/admin/users"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-light hover:bg-brand-bg hover:text-brand-gold"
+                      className="flex items-center gap-3 px-4 py-2 text-xs text-brand-light hover:bg-brand-bg hover:text-brand-gold"
                     >
                       <Users className="h-4 w-4" />
                       Manage Users
@@ -158,7 +158,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                   <hr className="my-1 border-[#333]" />
                   <button
                     onClick={handleSignOut}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-brand-bg"
+                    className="flex w-full items-center gap-3 px-4 py-2 text-xs text-red-500 hover:bg-brand-bg"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -167,16 +167,16 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 px-2">
               <Link
                 href="/login"
-                className="w-full text-center py-2.5 text-sm font-medium text-brand-light hover:text-brand-gold border border-[#333] rounded-xl hover:bg-brand-surface-hover transition-colors"
+                className="w-full text-center py-2 text-xs font-medium text-brand-light hover:text-brand-gold border border-[#333] rounded-lg hover:bg-white/5 transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="w-full text-center rounded-xl bg-brand-gold text-brand-dark px-4 py-2.5 text-sm font-bold hover:bg-yellow-400 transition-colors shadow-glow-gold"
+                className="w-full text-center rounded-lg bg-brand-gold text-brand-dark px-4 py-2 text-xs font-bold hover:bg-yellow-400 transition-colors shadow-glow-gold"
               >
                 Join
               </Link>

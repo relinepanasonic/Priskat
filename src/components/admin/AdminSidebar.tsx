@@ -48,18 +48,18 @@ export default function AdminSidebar({ role, fullName }: Props) {
   });
 
   return (
-    <aside className="hidden md:flex w-56 flex-col border-r border-brand-border bg-brand-surface">
-      <div className="px-4 py-5 border-b border-brand-border">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-sm flex items-center justify-center">
+    <aside className="hidden md:flex w-56 flex-col border-r border-[#333] bg-[#1a1d24]">
+      <div className="px-3 py-5 border-b border-[#333]">
+        <Link href="/" className="flex items-center gap-2.5 px-2">
+          <div className="h-8 w-8 rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-base flex items-center justify-center shadow-glow-gold">
             P
           </div>
-          <span className="font-bold text-brand-gold text-sm">PriskatCFM</span>
+          <span className="font-bold text-white text-base tracking-wide">PriskatCFM</span>
         </Link>
-        <p className="mt-1 text-xs text-brand-muted pl-10 capitalize">{role} panel</p>
+        <p className="mt-1 text-[11px] text-gray-500 pl-11 font-medium capitalize">{role} panel</p>
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5">
+      <nav className="flex-1 p-3 space-y-1">
         {links.map(({ href, label, icon: Icon, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (
@@ -67,35 +67,35 @@ export default function AdminSidebar({ role, fullName }: Props) {
               key={href}
               href={href}
               className={[
-                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-all duration-200",
                 active
-                  ? "bg-brand-bg text-brand-gold"
-                  : "text-brand-light hover:bg-brand-surface-hover hover:text-white",
+                  ? "bg-brand-gold text-brand-dark shadow-md"
+                  : "text-gray-400 hover:bg-white/5 hover:text-white border border-transparent",
               ].join(" ")}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={`h-4 w-4 ${active ? "text-brand-dark" : "text-gray-400"}`} />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-brand-border p-3">
-        <div className="mb-2 px-3 py-2">
-          <p className="text-sm font-medium text-white truncate">{fullName}</p>
-          <p className="text-xs text-brand-muted capitalize">{role}</p>
+      <div className="border-t border-[#333] p-3 space-y-2">
+        <div className="px-3 py-1">
+          <p className="text-[13px] font-bold text-gray-200 truncate">{fullName}</p>
+          <p className="text-[10px] text-gray-500 capitalize">{role}</p>
         </div>
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-brand-muted hover:bg-brand-surface-hover"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-gray-400 font-medium hover:bg-white/5 hover:text-white transition-colors border border-transparent"
         >
-          <ChevronRight className="h-4 w-4 rotate-180" /> View Site
+          <ChevronRight className="h-3 w-3 rotate-180" /> View Site
         </Link>
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-500 font-medium hover:bg-white/5 transition-colors border border-transparent"
         >
-          <LogOut className="h-4 w-4" /> Sign Out
+          <LogOut className="h-3 w-3" /> Sign Out
         </button>
       </div>
     </aside>
