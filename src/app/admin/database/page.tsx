@@ -21,8 +21,57 @@ export default function DatabasePage() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<any[][]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveToDatabase = async () => {
+    setIsSaving(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    
+    try {
+       const { createClient } = await import("@/lib/supabase/client");
+       const supabase = createClient();
+       
+       // Convert rows back to objects based on headers
+       const payload = rows.map(row => {
+          const obj: any = {};
+          headers.forEach((h, i) => {
+             obj[h] = row[i];
+          });
+          return {
+             group: obj["Group"],
+             camp: obj["Camp"],
+             registration_no: obj["No Registrasi"],
+             angkatan: obj["Angkatan Camp"],
+             alumni: obj["Alumni Camp"],
+             name: obj["Nama"],
+             nickname: obj["Panggilan"],
+             city: obj["Kota"],
+             province: obj["Provinsi"],
+             phone: obj["No Telephone"],
+             mobile: obj["No Handphone 1"],
+             religion: obj["Agama"],
+             parish_group: obj["Paroki (grouping)"],
+             parish: obj["Paroki"]
+          };
+       });
+       
+       const { error } = await supabase.from("alumni_database").insert(payload);
+       if (error) throw error;
+       
+       setSuccessMsg(`Successfully saved ${payload.length} records to the database!`);
+       setRows([]);
+       setHeaders([]);
+    } catch (err: any) {
+       console.error("Save error:", err);
+       setErrorMsg("Failed to save to database: " + err.message);
+    } finally {
+       setIsSaving(false);
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMsg(null);
@@ -132,6 +181,12 @@ export default function DatabasePage() {
           </label>
         </div>
 
+        {successMsg && (
+          <div className="flex items-start gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl mt-4">
+            <AlertCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-green-400">{successMsg}</p>
+          </div>
+        )}
         {errorMsg && (
           <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl mt-4">
             <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
@@ -157,7 +212,7 @@ export default function DatabasePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
-                {rows.slice(0, 50).map((row, i) => (
+                {rows.slice(0, 10).map((row, i) => (
                   <tr key={i} className="hover:bg-white/5 transition-colors">
                     {row.map((cell, j) => (
                       <td key={j} className="px-4 py-2.5 whitespace-nowrap">
@@ -168,11 +223,20 @@ export default function DatabasePage() {
                 ))}
               </tbody>
             </table>
-            {rows.length > 50 && (
+            {rows.length > 10 && (
               <div className="p-3 text-center text-xs text-gray-500 bg-[#111]">
-                Showing first 50 rows only...
+                Showing first 10 rows only (out of {rows.length} total rows)
               </div>
             )}
+          </div>
+          <div className="p-5 bg-[#111] border-t border-[#333] flex justify-end">
+             <button 
+                className="bg-brand-gold text-brand-dark px-6 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+                onClick={handleSaveToDatabase}
+                disabled={isSaving}
+             >
+                {isSaving ? "Saving..." : "Save to Database"}
+             </button>
           </div>
         </div>
       )}
