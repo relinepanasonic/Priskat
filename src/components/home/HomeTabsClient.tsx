@@ -22,31 +22,19 @@ export default function HomeTabsClient({
 }) {
   const [activeTab, setActiveTab] = useState<"Profile" | "Though">("Profile");
 
-  const angkatan = "44";
-  const city = "Surabaya";
-  const mobile = "+6281234567890";
+  const angkatan = profile.angkatan || "-";
+  const city = profile.kota || "-";
+  const mobile = profile.phone || "";
   const waLink = `https://wa.me/${mobile.replace(/\D/g, '')}`;
   
-  const defaultImage = profile.avatar_url || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1000&auto=format&fit=crop";
+  const defaultImage = profile.avatar_url || "";
   const [userGallery, setUserGallery] = useState<string[]>(profile.gallery_urls || []);
   const galleryImages = [defaultImage, ...userGallery];
   
   const [activeImage, setActiveImage] = useState(defaultImage);
   const [uploading, setUploading] = useState(false);
 
-  const [myServices, setMyServices] = useState([
-    { name: "Pria Sejati Camp 45", status: "Ongoing - Fasilitator" }, 
-    { name: "Patriot Camp 19", status: "Finished - Peserta" }
-  ]);
-
-  const handleAddService = () => {
-    const name = window.prompt("Enter Service Name (e.g. Pria Sejati Camp 46):");
-    if (name) {
-      setMyServices([{ name, status: "Ongoing - Peserta" }, ...myServices]);
-    }
-  };
-
-  const handleDeleteImage = async (indexToDelete: number) => {
+  const myServices = profile.services_history || []; const myJourney = profile.camp_history || []; const handleDeleteImage = async (indexToDelete: number) => {
     const newGallery = userGallery.filter((_, idx) => idx !== indexToDelete);
     setUserGallery(newGallery);
     try {
@@ -77,7 +65,7 @@ export default function HomeTabsClient({
     <div className="w-full max-w-md mx-auto bg-brand-dark min-h-screen relative font-sans text-white pb-24 md:pb-12">
       
       <div className="relative h-[480px] w-full bg-[#222]">
-        <Image src={activeImage} alt={profile.full_name} fill className="object-cover transition-all duration-300" />
+        {activeImage ? <Image src={activeImage} alt={profile.full_name} fill className="object-cover transition-all duration-300" /> : <div className="w-full h-full bg-black"></div>}
         
         <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/30 to-transparent"></div>
 
@@ -108,7 +96,7 @@ export default function HomeTabsClient({
                   onClick={() => setActiveImage(img)}
                   className={`relative h-full w-full rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? "border-brand-gold scale-105 shadow-[0_0_15px_rgba(212,175,55,0.3)]" : "border-transparent opacity-70 hover:opacity-100"}`}
                 >
-                  <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
+                  {img ? <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" /> : <div className="w-full h-full bg-black flex items-center justify-center text-[10px] text-gray-500">Empty</div>}
                 </button>
                 {idx > 0 && activeImage === img && (
                   <button 
@@ -183,108 +171,63 @@ export default function HomeTabsClient({
         {activeTab === "Profile" && (
           <div className="px-6 space-y-8 animate-in fade-in duration-300 pb-12">
             
+            {/* MY JOURNEY */}
             <div>
               <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Tent className="h-4 w-4" /> My Services
+                <Tent className="h-4 w-4" /> My Journey
               </h3>
               <div className="space-y-3">
-                {myServices.map((svc, idx) => (
-                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex items-center justify-between group cursor-pointer hover:border-brand-gold/50 transition-colors">
+                {myJourney.length > 0 ? myJourney.map((camp: any, idx: number) => (
+                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex items-center justify-between group">
                     <div>
-                      <h4 className="font-bold text-sm text-brand-light group-hover:text-white transition-colors">{svc.name}</h4>
-                      <p className={`text-xs mt-1 ${svc.status.includes("Ongoing") ? "text-brand-gold" : "text-gray-500"}`}>{svc.status}</p>
-                    </div>
-                    <div className="h-8 w-8 rounded-full bg-brand-dark flex items-center justify-center border border-[#333] group-hover:border-brand-gold/50 text-brand-muted">
-                      <Pencil className="h-3 w-3" />
+                      <h4 className="font-bold text-sm text-brand-light group-hover:text-white transition-colors">{camp.camp}</h4>
+                      <p className="text-xs mt-1 text-gray-500">Angkatan {camp.angkatan} • {camp.kota}</p>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-sm text-brand-muted italic">No camps added yet.</p>
+                )}
                 
-                <button onClick={handleAddService} className="w-full py-3 border border-dashed border-[#333] rounded-2xl text-xs font-bold text-brand-muted hover:text-brand-gold hover:border-brand-gold/50 transition-colors">
-                  + Add My Service
-                </button>
+                <Link href="/profile/edit" className="block text-center w-full py-3 border border-dashed border-[#333] rounded-2xl text-xs font-bold text-brand-muted hover:text-brand-gold hover:border-brand-gold/50 transition-colors">
+                  Edit My Journey
+                </Link>
               </div>
             </div>
 
+            {/* MY SERVICES */}
             <div>
               <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Heart className="h-4 w-4" /> Ongoing Devotion
+                <Heart className="h-4 w-4" /> My Services
               </h3>
               <div className="space-y-3">
-                <div className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex items-center justify-between group cursor-pointer hover:border-brand-gold/50 transition-colors">
-                  <div>
-                    <h4 className="font-bold text-sm text-brand-light group-hover:text-white transition-colors">Gospel of John</h4>
-                    <p className="text-xs text-rose-500 mt-2 font-medium bg-rose-500/10 px-2 py-1 rounded inline-flex">Reminder: Finish today&apos;s devotion!</p>
+                {myServices.length > 0 ? myServices.map((svc: any, idx: number) => (
+                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex items-center justify-between group">
+                    <div>
+                      <h4 className="font-bold text-sm text-brand-light group-hover:text-white transition-colors">{svc.position}</h4>
+                      <p className="text-xs mt-1 text-brand-gold">{svc.camp} (Angkatan {svc.angkatan} • {svc.kota})</p>
+                    </div>
                   </div>
-                  <div className="h-8 w-8 rounded-full bg-brand-dark flex items-center justify-center border border-[#333] group-hover:border-brand-gold/50 text-brand-muted">
-                    <Pencil className="h-3 w-3" />
-                  </div>
-                </div>
+                )) : (
+                  <p className="text-sm text-brand-muted italic">No services added yet.</p>
+                )}
+                
+                <Link href="/profile/edit" className="block text-center w-full py-3 border border-dashed border-[#333] rounded-2xl text-xs font-bold text-brand-muted hover:text-brand-gold hover:border-brand-gold/50 transition-colors">
+                  Edit My Services
+                </Link>
               </div>
             </div>
 
           </div>
         )}
-
-        {activeTab === "Though" && (
-          <div className="animate-in fade-in duration-300">
-            <FeedClient userId={userId} userName={profile.full_name || "User"} userAvatar={profile.avatar_url} />
-            
-            <div className="space-y-2 pb-12">
-              {posts.length > 0 ? (
-                posts.map((post) => (
-                  <div key={post.id} className="bg-[#1a1d24] border-b border-[#333] p-4 flex gap-3">
-                    <Link href={post.author_id === userId ? "/profile" : `/friends/${post.author_id}`} className="flex-shrink-0">
-                      <div className="relative h-10 w-10 rounded-full border border-[#333] bg-brand-dark overflow-hidden flex items-center justify-center z-10">
-                        {post.profiles?.avatar_url ? (
-                          <Image src={post.profiles.avatar_url} alt={post.profiles.full_name} fill className="object-cover" />
-                        ) : (
-                          <span className="text-brand-gold font-bold">{(post.profiles?.full_name || "U")[0]?.toUpperCase()}</span>
-                        )}
-                      </div>
-                    </Link>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <Link href={post.author_id === userId ? "/profile" : `/friends/${post.author_id}`}>
-                          <span className="font-bold text-white text-[15px] hover:underline">
-                            {post.profiles?.full_name || "Unknown User"}
-                          </span>
-                        </Link>
-                        <span className="text-xs text-gray-500">
-                          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                        </span>
-                      </div>
-                      
-                      <div className="text-brand-light text-[15px] leading-relaxed whitespace-pre-wrap">
-                        {post.content}
-                      </div>
-                      
-                      <div className="flex items-center gap-6 mt-4">
-                        <button className="text-gray-500 hover:text-rose-500 transition-colors">
-                          <Heart className="h-4 w-4" />
-                        </button>
-                        <button className="text-gray-500 hover:text-brand-light transition-colors">
-                          <MessageSquare className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-brand-muted mb-2">No thoughs yet.</p>
-                  <p className="text-sm text-gray-500">Share the first one!</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );
 }
+
+
+
+
+
 
 
 

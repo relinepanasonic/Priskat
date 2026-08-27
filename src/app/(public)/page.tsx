@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import HomeTabsClient from "@/components/home/HomeTabsClient";
 
@@ -19,9 +19,7 @@ export default async function HomePage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile) {
-    redirect("/login");
-  }
+  if (!profile) { redirect("/login"); } if (!profile.gender) { redirect("/profile/edit"); }
 
   // Try fetching posts for the Though tab
   let posts: any[] = [];
@@ -71,4 +69,5 @@ export default async function HomePage() {
     />
   );
 }
+
 

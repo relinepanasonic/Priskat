@@ -23,6 +23,7 @@ export interface Profile {
   angkatan?: string | null;
   kota?: string | null;
   camp_history?: any[] | null;
+  services_history?: any[] | null;
   interests: string[];
   role: UserRole;
   gender: UserGender | null;
@@ -274,6 +275,7 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+
 
 
 
