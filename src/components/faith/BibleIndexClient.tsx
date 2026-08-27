@@ -1,13 +1,14 @@
 ﻿"use client";
 
 import { useState, useMemo } from "react";
-import { Search, ChevronDown, ChevronRight, Lock } from "lucide-react";
+import { Search } from "lucide-react";
 import BookListClient from "./BookListClient";
 
 interface Book {
   no: number;
   abbr: string;
   name: string;
+  name_en: string;
   chapter: number;
 }
 
@@ -25,44 +26,23 @@ export default function BibleIndexClient({
   deuterocanonica
 }: BibleIndexClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Section expand states
-  const [expandedSections, setExpandedSections] = useState({
-    OT: true,
-    DC: true,
-    NT: true
-  });
-
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  // Filter books based on search
-  const filteredOT = useMemo(() => 
-    oldTestament.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())),
-  [oldTestament, searchQuery]);
 
   const filteredNT = useMemo(() => 
-    newTestament.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    newTestament.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.name_en.toLowerCase().includes(searchQuery.toLowerCase())),
   [newTestament, searchQuery]);
+  
+  const filteredOT = useMemo(() => 
+    oldTestament.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.name_en.toLowerCase().includes(searchQuery.toLowerCase())),
+  [oldTestament, searchQuery]);
 
   const filteredDC = useMemo(() => 
-    deuterocanonica.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    deuterocanonica.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.name_en.toLowerCase().includes(searchQuery.toLowerCase())),
   [deuterocanonica, searchQuery]);
-
-  // If searching, auto-expand sections that have results
-  // Note: we only want to auto-expand if there's actually a search query.
-  const showOT = searchQuery ? filteredOT.length > 0 : expandedSections.OT;
-  const showNT = searchQuery ? filteredNT.length > 0 : expandedSections.NT;
-  const showDC = searchQuery ? filteredDC.length > 0 : expandedSections.DC;
 
   return (
     <div className="w-full">
       {/* Search Bar */}
-      <div className="relative mb-6">
+      <div className="relative mb-8">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-gray-500" />
         </div>
@@ -75,85 +55,46 @@ export default function BibleIndexClient({
         />
       </div>
 
-      {/* Old Testament */}
-      {(filteredOT.length > 0 || !searchQuery) && (
-        <div className="mb-6">
-          <button 
-            onClick={() => toggleSection("OT")}
-            className="w-full flex items-center justify-between border-b border-[#333] pb-2 text-left"
-          >
-            <h2 className="text-xl font-bold text-white tracking-wide">
-              {isId ? "Perjanjian Lama" : "Old Testament"}
-            </h2>
-            {showOT ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />}
-          </button>
-          
-          {showOT && (
-            <div className="mt-2">
-              <BookListClient books={filteredOT} isId={isId} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Deuterocanonica */}
-      {(filteredDC.length > 0 || !searchQuery) && (
-        <div className="mb-6">
-          <button 
-            onClick={() => toggleSection("DC")}
-            className="w-full flex items-center justify-between border-b border-[#333] pb-2 text-left"
-          >
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-white tracking-wide">
-                {isId ? "Deuterokanonika" : "Deuterocanonicals"}
-              </h2>
-              <span className="text-[10px] font-bold uppercase tracking-widest bg-brand-gold/20 text-brand-gold px-2 py-1 rounded-full">
-                {isId ? "Segera Hadir" : "Coming Soon"}
-              </span>
-            </div>
-            {showDC ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />}
-          </button>
-          
-          {showDC && (
-            <div className="mt-2">
-              
-              <BookListClient books={filteredDC} isId={isId} isComingSoon={false} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* New Testament */}
-      {(filteredNT.length > 0 || !searchQuery) && (
-        <div className="mb-6">
-          <button 
-            onClick={() => toggleSection("NT")}
-            className="w-full flex items-center justify-between border-b border-[#333] pb-2 text-left"
-          >
-            <h2 className="text-xl font-bold text-white tracking-wide">
+      <div className="space-y-12 pb-12">
+        {/* New Testament */}
+        {filteredNT.length > 0 && (
+          <div className="relative">
+            <h2 className="text-xl font-bold text-white tracking-wide mb-4 pl-2">
               {isId ? "Perjanjian Baru" : "New Testament"}
             </h2>
-            {showNT ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />}
-          </button>
-          
-          {showNT && (
-            <div className="mt-2">
-              <BookListClient books={filteredNT} isId={isId} />
-            </div>
-          )}
-        </div>
-      )}
+            <BookListClient books={filteredNT} isId={isId} categoryFolder="new" />
+          </div>
+        )}
+        
+        {/* Old Testament */}
+        {filteredOT.length > 0 && (
+          <div className="relative">
+            <h2 className="text-xl font-bold text-white tracking-wide mb-4 pl-2">
+              {isId ? "Perjanjian Lama" : "Old Testament"}
+            </h2>
+            <BookListClient books={filteredOT} isId={isId} categoryFolder="old" />
+          </div>
+        )}
 
-      {/* No Results */}
-      {searchQuery && filteredOT.length === 0 && filteredNT.length === 0 && filteredDC.length === 0 && (
-        <div className="text-center py-10 bg-brand-surface/50 rounded-2xl border border-[#333] mt-4">
-          <p className="text-brand-muted">
-            {isId ? "Tidak ada kitab yang cocok dengan pencarian Anda." : "No books match your search."}
-          </p>
-        </div>
-      )}
+        {/* Deuterocanonica */}
+        {filteredDC.length > 0 && (
+          <div className="relative">
+            <h2 className="text-xl font-bold text-white tracking-wide mb-4 pl-2">
+              {isId ? "Deuterokanonika" : "Deuterocanonicals"}
+            </h2>
+            <BookListClient books={filteredDC} isId={isId} categoryFolder="deu" />
+          </div>
+        )}
+
+        {/* No Results */}
+        {searchQuery && filteredOT.length === 0 && filteredNT.length === 0 && filteredDC.length === 0 && (
+          <div className="text-center py-10 bg-brand-surface/50 rounded-2xl border border-[#333] mt-4">
+            <p className="text-brand-muted">
+              {isId ? "Tidak ada kitab yang cocok dengan pencarian Anda." : "No books match your search."}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-
