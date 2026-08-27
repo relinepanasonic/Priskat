@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition, useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Plus, Trash2, Shield, Save } from "lucide-react";
+import { Plus, Trash2, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 
@@ -61,67 +61,77 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
       <h2 className="text-xl font-semibold text-brand-gold mb-4 flex items-center gap-2">
         <Shield className="w-5 h-5" /> My Journey
       </h2>
-      <div className="card-3d p-4 shadow-sm">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <p className="text-xs text-brand-muted mb-3">Update the camps you have completed.</p>
+      <div className="card-3d p-5 shadow-sm">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <p className="text-sm text-brand-muted mb-4">Update the camps you have completed.</p>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {fields.map((item, index) => (
-              <div key={item.id} className="flex items-center gap-2">
-                <div className="flex-1 grid grid-cols-3 gap-2">
-                  <select
-                    {...register(`camps.${index}.camp`, { required: true })}
-                    className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                  >
-                    <option value="">Camp...</option>
-                    {ALUMNI_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                  
-                  <input
-                    {...register(`camps.${index}.angkatan`, { required: true })}
-                    placeholder="Angk..."
-                    className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                  />
-                  
-                  <select
-                    {...register(`camps.${index}.kota`, { required: true })}
-                    className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                  >
-                    <option value="">Kota...</option>
-                    {kotaOptions.map(kota => (
-                      <option key={kota} value={kota}>{kota}</option>
-                    ))}
-                  </select>
-                </div>
+              <div key={item.id} className="relative bg-[#1a1d24] border border-[#333] rounded-xl p-4 transition-colors hover:border-brand-gold/30">
                 {fields.length > 1 && (
                   <button 
                     type="button" 
                     onClick={() => remove(index)}
-                    className="p-2 bg-red-900/30 text-red-500 rounded-lg hover:bg-red-900/50 flex-shrink-0"
+                    className="absolute top-3 right-3 p-1.5 text-brand-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 )}
+                
+                <h4 className="text-xs font-bold text-brand-gold uppercase tracking-wider mb-3">Camp #{index + 1}</h4>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-brand-light mb-1">Select Camp</label>
+                    <select
+                      {...register(`camps.${index}.camp`, { required: true })}
+                      className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-brand-dark text-white focus:border-brand-gold focus:outline-none"
+                    >
+                      <option value="">Choose a camp...</option>
+                      {ALUMNI_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-brand-light mb-1">Angkatan</label>
+                      <input
+                        {...register(`camps.${index}.angkatan`, { required: true })}
+                        placeholder="e.g. 19"
+                        className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-brand-dark text-white focus:border-brand-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-brand-light mb-1">Kota</label>
+                      <select
+                        {...register(`camps.${index}.kota`, { required: true })}
+                        className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-brand-dark text-white focus:border-brand-gold focus:outline-none"
+                      >
+                        <option value="">City...</option>
+                        {kotaOptions.map(kota => (
+                          <option key={kota} value={kota}>{kota}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={() => append({ camp: "", angkatan: "", kota: "" })}
-              className="flex items-center gap-1 text-xs font-bold text-brand-gold hover:text-white transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add new camp
-            </button>
+          <button
+            type="button"
+            onClick={() => append({ camp: "", angkatan: "", kota: "" })}
+            className="w-full py-3 border border-dashed border-[#333] rounded-xl text-sm font-bold text-brand-muted hover:text-brand-gold hover:border-brand-gold/50 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Add Another Camp
+          </button>
 
-            <Button type="submit" loading={isPending} className="py-2 px-4 text-xs h-auto">
-              {success ? "Saved!" : "Save Journey"}
-            </Button>
-          </div>
+          <Button type="submit" loading={isPending} className="w-full py-3">
+            {success ? "Saved successfully!" : "Save My Journey"}
+          </Button>
         </form>
       </div>
     </section>
   );
 }
-
