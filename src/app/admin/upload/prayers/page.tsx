@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -23,7 +23,7 @@ export default async function AdminPrayersPage() {
           <h1 className="text-2xl font-bold text-white">Prayers / Doa</h1>
           <p className="text-sm text-brand-muted">{prayers.length} total prayers</p>
         </div>
-        <Link href="/admin/prayers/new">
+        <Link href="/admin/upload/prayers/new">
           <Button className="gap-2"><Plus className="h-4 w-4" /> Add Prayer</Button>
         </Link>
       </div>
@@ -60,7 +60,7 @@ export default async function AdminPrayersPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 flex justify-end gap-2">
-                    <Link href={`/admin/prayers/${prayer.id}/edit`}
+                    <Link href={`/admin/upload/prayers/${prayer.id}/edit`}
                       className="text-sm text-brand-gold hover:underline px-2 py-1">
                       Edit
                     </Link>
@@ -87,3 +87,4 @@ export default async function AdminPrayersPage() {
     </div>
   );
 }
+

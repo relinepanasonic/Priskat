@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -37,8 +37,8 @@ export async function createPrayer(formData: FormData) {
   if (error) return { error: { _form: error.message } };
 
   revalidatePath("/prayers");
-  revalidatePath("/admin/prayers");
-  redirect("/admin/prayers");
+  revalidatePath("/admin/upload/prayers");
+  redirect("/admin/upload/prayers");
 }
 
 export async function updatePrayer(id: string, formData: FormData) {
@@ -58,8 +58,8 @@ export async function updatePrayer(id: string, formData: FormData) {
   if (error) return { error: { _form: error.message } };
 
   revalidatePath("/prayers");
-  revalidatePath("/admin/prayers");
-  redirect("/admin/prayers");
+  revalidatePath("/admin/upload/prayers");
+  redirect("/admin/upload/prayers");
 }
 
 export async function deletePrayer(id: string) {
@@ -67,6 +67,7 @@ export async function deletePrayer(id: string) {
   const { error } = await supabase.from("prayers" as any).delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/prayers");
-  revalidatePath("/admin/prayers");
+  revalidatePath("/admin/upload/prayers");
 }
+
 
