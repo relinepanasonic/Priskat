@@ -2,15 +2,12 @@
 import { notFound, redirect } from "next/navigation";
 import ReadClient from "./ReadClient";
 
-export default async function DevotionPlanReadPage({ 
-  params 
-}: { 
-  params: { id: string, dayNum: string } 
-}) {
+export default async function DevotionPlanReadPage({ params }: { params: Promise<{ id: string, dayNum: string }> }) {
+  const resolvedParams = await params;
   const supabase = await createClient();
-  const dayNum = parseInt(params.dayNum, 10);
+  const dayNum = parseInt(resolvedParams.dayNum, 10);
   
-  if (isNaN(dayNum)) return <div className="text-white p-8">Error: Invalid dayNum {params.dayNum}</div>;
+  if (isNaN(dayNum)) return notFound();
 
   // Get user
   const { data: userData } = await supabase.auth.getUser();
@@ -23,10 +20,10 @@ export default async function DevotionPlanReadPage({
   const { data: plan } = await supabase
     .from("devotion_plans")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", resolvedParams.id)
     .single();
 
-  if (!plan) return <div className="text-white p-8">Error: Plan not found for ID {params.id}</div>;
+  if (!plan) return notFound();
 
   // Fetch this day's data
   let { data: dayData } = await supabase
@@ -52,6 +49,7 @@ export default async function DevotionPlanReadPage({
     />
   );
 }
+
 
 
 
