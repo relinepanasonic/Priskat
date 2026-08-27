@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -139,11 +139,21 @@ export default function PlansClient({
                             )}
                             
                             {/* Spine hinge overlay */}
-                            <div className="absolute inset-y-0 left-0 w-[4px] bg-gradient-to-r from-black/60 to-transparent"></div>
+                            <div className="absolute inset-y-0 left-0 w-[4px] bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10"></div>
                             {/* Page edges right side (tiny sliver) */}
-                            <div className="absolute inset-y-0 right-0 w-[2px] bg-gradient-to-l from-white/20 to-transparent"></div>
+                            <div className="absolute inset-y-0 right-0 w-[2px] bg-gradient-to-l from-white/20 to-transparent pointer-events-none z-10"></div>
+                            
+                            {/* Elegant Obi Band for Indonesian Translation */}
+                            {language === "id" && plan.title_id && (
+                              <div className="absolute bottom-4 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-1.5 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
+                                <span className="text-[10px] sm:text-xs font-serif font-bold text-[#e8decd] tracking-wide truncate w-full text-center drop-shadow-md">
+                                  {title}
+                                </span>
+                              </div>
+                            )}
+
                             {/* Glossy overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
                           </div>
                         </div>
                       );
@@ -184,8 +194,18 @@ export default function PlansClient({
                               <span className="text-white text-xs font-bold line-clamp-4 mt-2">{title}</span>
                             </div>
                           )}
-                          <div className="absolute inset-y-0 left-0 w-[4px] bg-gradient-to-r from-black/60 to-transparent"></div>
-                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="absolute inset-y-0 left-0 w-[4px] bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10"></div>
+                          <div className="absolute inset-y-0 right-0 w-[2px] bg-gradient-to-l from-white/20 to-transparent pointer-events-none z-10"></div>
+                          
+                          {language === "id" && prog.plans?.title_id && (
+                            <div className="absolute bottom-4 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-1.5 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
+                              <span className="text-[10px] sm:text-xs font-serif font-bold text-[#e8decd] tracking-wide truncate w-full text-center drop-shadow-md">
+                                {title}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
                         </div>
                       </Link>
                     )

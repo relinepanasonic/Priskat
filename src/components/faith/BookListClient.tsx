@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -42,6 +42,15 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
               <span className="text-[8px] md:text-[9px] text-gray-400">{book.chapter} {isId ? 'Psl' : 'Ch'}</span>
               <BookOpen className="h-2.5 w-2.5 text-brand-gold opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
+          </div>
+        )}
+
+        {/* Elegant Obi Band for Indonesian Translation */}
+        {isId && !imgFailed && (
+          <div className="absolute bottom-3 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-1.5 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
+            <span className="text-[9px] md:text-[10px] font-serif font-bold text-[#e8decd] tracking-widest uppercase truncate w-full text-center drop-shadow-md">
+              {book.name}
+            </span>
           </div>
         )}
 
