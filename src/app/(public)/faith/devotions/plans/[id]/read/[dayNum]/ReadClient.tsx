@@ -22,13 +22,20 @@ export default function ReadClient({
   
   // Array of pages: 1st is Devotional, rest are Verses
   const pages = [
-    { type: "devotional", title: "Devotional", content: dayData.devotional_content },
+    { type: "devotional", title: "Devotional", content: dayData.devotional_content || "No devotional content provided." },
     ...(dayData.verses || []).map((v: any) => ({
       type: "verse",
       title: `${v.verse_reference} ${v.translation}`,
-      content: `[Bible text for ${v.verse_reference} will be rendered here]` // Mock
+      content: `[The full Bible text for ${v.verse_reference} will automatically load here once the Bible database is connected.]`
     }))
   ];
+
+  if (dayData.reflection_content) {
+    pages.push({ type: "reflection", title: "Reflection", content: dayData.reflection_content });
+  }
+  if (dayData.prayer_content) {
+    pages.push({ type: "prayer", title: "Prayer", content: dayData.prayer_content });
+  }
 
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -162,4 +169,5 @@ export default function ReadClient({
     </div>
   );
 }
+
 

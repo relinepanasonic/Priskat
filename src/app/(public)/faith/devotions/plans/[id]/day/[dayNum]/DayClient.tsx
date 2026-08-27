@@ -106,16 +106,34 @@ export default function DayClient({
           <span className="text-xl text-brand-muted">›</span>
         </div>
 
-        {/* Verses Items */}
+                {/* Verses Items */}
         {dayData?.verses?.map((verse: any, idx: number) => (
           <div key={idx} className="flex items-center justify-between cursor-not-allowed">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
               <span className="text-[17px] font-medium">{verse.verse_reference} {verse.translation}</span>
             </div>
-            <span className="text-xl text-brand-muted">›</span>
+            <span className="text-xl text-brand-muted">&gt;</span>
           </div>
         ))}
+        {dayData?.reflection_content && (
+          <div className="flex items-center justify-between cursor-not-allowed">
+            <div className="flex items-center gap-4">
+              {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
+              <span className="text-[17px] font-medium">Reflection</span>
+            </div>
+            <span className="text-xl text-brand-muted">&gt;</span>
+          </div>
+        )}
+        {dayData?.prayer_content && (
+          <div className="flex items-center justify-between cursor-not-allowed">
+            <div className="flex items-center gap-4">
+              {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
+              <span className="text-[17px] font-medium">Prayer</span>
+            </div>
+            <span className="text-xl text-brand-muted">&gt;</span>
+          </div>
+        )}
       </div>
 
       {/* Floating Start Button */}
@@ -131,4 +149,6 @@ export default function DayClient({
     </div>
   );
 }
+
+
 
