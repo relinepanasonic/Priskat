@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type { Prayer, PrayerCategory } from "@/lib/types/database.types";
@@ -17,7 +17,7 @@ export default function PrayerList({ prayers, lang }: Props) {
 
   const filtered = prayers.filter((p) => {
     const matchCat = selectedCategory === "all" || p.category === selectedCategory;
-    const title = lang === "id" ? p.title_id : p.title_en;
+    const title = lang === "id" && p.title_id ? p.title_id : p.title_en;
     const matchSearch = title.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
@@ -47,7 +47,7 @@ export default function PrayerList({ prayers, lang }: Props) {
         )}
       </div>
 
-      {/* Category Filter — horizontal scroll */}
+      {/* Category Filter â€” horizontal scroll */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         <button
           onClick={() => setSelectedCategory("all")}
@@ -79,7 +79,7 @@ export default function PrayerList({ prayers, lang }: Props) {
         {filtered.length} {lang === "id" ? "doa ditemukan" : "prayers found"}
       </p>
 
-      {/* Prayer List — Accordion */}
+      {/* Prayer List â€” Accordion */}
       <div className="space-y-2">
         {filtered.length === 0 && (
           <div className="text-center py-12 text-brand-muted">
@@ -88,8 +88,8 @@ export default function PrayerList({ prayers, lang }: Props) {
           </div>
         )}
         {filtered.map((prayer) => {
-          const title = lang === "id" ? prayer.title_id : prayer.title_en;
-          const body = lang === "id" ? prayer.body_id : prayer.body_en;
+          const title = lang === "id" && prayer.title_id ? prayer.title_id : prayer.title_en;
+          const body = lang === "id" && prayer.body_id ? prayer.body_id : prayer.body_en;
           const catLabel = PRAYER_CATEGORIES.find((c) => c.value === prayer.category);
           const isOpen = openId === prayer.id;
 
@@ -98,7 +98,7 @@ export default function PrayerList({ prayers, lang }: Props) {
               key={prayer.id}
               className={`card-3d transition-all duration-300 ${isOpen ? "shadow-glow-blue" : ""}`}
             >
-              {/* Header — Click to expand */}
+              {/* Header â€” Click to expand */}
               <button
                 onClick={() => toggle(prayer.id)}
                 className="w-full flex items-center justify-between p-4 text-left"
@@ -133,4 +133,5 @@ export default function PrayerList({ prayers, lang }: Props) {
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -15,6 +15,7 @@ interface Props {
   bookName: string;
   bookId: number;
   chapter: number;
+  lang?: "id" | "en";
 }
 
 const WORDS_PER_PAGE = 220;
@@ -97,7 +98,7 @@ function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse
   );
 }
 
-export default function BookReader({ verses, bookName, bookId, chapter }: Props) {
+export default function BookReader({ verses, bookName, bookId, chapter, lang = "en" }: Props) {
   const pages = splitIntoPages(verses);
   
   // Each "spread" shows 2 pages: left and right
@@ -147,7 +148,7 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
       <div className="w-full max-w-5xl flex items-center mb-4">
         <Link href="/faith/bible" className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm">
           <ChevronLeft className="h-4 w-4" />
-          <span>Library</span>
+          <span>{lang === "id" ? "Pustaka" : "Library"}</span>
         </Link>
       </div>
 
@@ -198,7 +199,7 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
             />
           ) : (
             <div className="h-full flex items-center justify-center text-gray-300 text-sm font-serif italic">
-              — end —
+              â€” end â€”
             </div>
           )}
           {/* Page number */}
@@ -232,7 +233,7 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
             />
           ) : (
             <div className="h-full flex items-center justify-center text-gray-300 text-sm font-serif italic">
-              — end —
+              â€” end â€”
             </div>
           )}
           {/* Page number */}
@@ -292,6 +293,7 @@ export default function BookReader({ verses, bookName, bookId, chapter }: Props)
     </div>
   );
 }
+
 
 
 
