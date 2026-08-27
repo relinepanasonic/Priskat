@@ -252,9 +252,35 @@ export default function DevotionPlansAdminClient({
 
   const handleAddVerse = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dayData || !verseBook || !verseChapter || !verseNumber) return;
+    if (!verseBook || !verseChapter || !verseNumber) return;
+
+    let targetDayId = dayData?.id;
+
+    if (!targetDayId) {
+      if (!selectedPlanId || !selectedDayNum) return;
+      const { data: newDay } = await supabase.from("devotion_plan_days").insert({
+        plan_id: selectedPlanId,
+        day_number: selectedDayNum,
+        devotional_title: dayTitle,
+        devotional_title_id: dayTitleId,
+        devotional_content: dayDevotion,
+        devotional_content_id: dayDevotionId,
+        reflection_content: dayReflection,
+        reflection_content_id: dayReflectionId,
+        prayer_content: dayPrayer,
+        prayer_content_id: dayPrayerId
+      }).select().single();
+      
+      if (newDay) {
+        setDayData(newDay);
+        targetDayId = newDay.id;
+      } else {
+        return;
+      }
+    }
+
     const { data } = await supabase.from("devotion_day_verses").insert({
-      day_id: dayData.id,
+      day_id: targetDayId,
       verse_reference: `${verseBook} ${verseChapter}:${verseNumber}`,
       translation: "TB",
       order_index: dayVerses.length
@@ -478,7 +504,7 @@ export default function DevotionPlansAdminClient({
                   <button type="submit" className="bg-brand-gold text-brand-dark p-1.5 rounded font-bold"><Plus className="h-4 w-4" /></button>
                 </div>
               </form>
-              {!dayData && <p className="text-[10px] text-red-500 mt-1">Save content first before adding verses.</p>}
+              
             </div>
 
             <div>
@@ -508,6 +534,7 @@ export default function DevotionPlansAdminClient({
     </div>
   );
 }
+
 
 
 
