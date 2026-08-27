@@ -1,5 +1,5 @@
--- ============================================================
--- PriskatCFM — Initial Schema
+﻿-- ============================================================
+-- PriskatCFM â€” Initial Schema
 -- Run in Supabase SQL Editor or via `supabase db push`
 -- ============================================================
 
@@ -147,7 +147,7 @@ begin
     new.id,
     final_username,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    'member'
+    coalesce(new.raw_user_meta_data->>'role', 'member')
   );
   return new;
 end;
@@ -235,3 +235,4 @@ create trigger before_rsvp_insert
 -- ============================================================
 -- UPDATE public.profiles SET role = 'admin'
 -- WHERE id = (SELECT id FROM auth.users WHERE email = 'admin@priskatcfm.org');
+
