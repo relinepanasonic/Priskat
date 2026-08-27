@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -142,7 +142,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
   const rightPageIndex = spread * 2 + 1;
 
   return (
-    <div className="min-h-screen bg-[#2a2520] flex flex-col items-center justify-start py-4 md:py-8 px-4 relative select-none">
+    <div className="min-h-[100dvh] pb-32 bg-[#2a2520] flex flex-col items-center justify-start py-4 md:py-8 px-4 relative select-none">
       
       {/* Back Button */}
       <div className="w-full max-w-5xl flex items-center mb-4">
@@ -153,7 +153,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
       </div>
 
       {/* Mobile view: single page */}
-      <div className="md:hidden w-full max-w-sm bg-[#fbfbf6] rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.6)] min-h-[60vh] overflow-hidden">
+      <div className="md:hidden flex-1 w-full max-w-sm bg-[#fbfbf6] rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
         {pages[leftPageIndex] && (
           <PageContent
             verses={pages[leftPageIndex]}

@@ -3,11 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
-import { DevotionCategory, DevotionPlan, UserDevotionProgress } from "@/lib/types/database.types";
+import { Search, ChevronRight } from "lucide-react";
+import { DevotionCategory, DevotionPlan } from "@/lib/types/database.types";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-
 
 export default function PlansClient({ 
   categories, 
@@ -23,8 +22,8 @@ export default function PlansClient({
   language: "id" | "en"
 }) {
   const [activeTab, setActiveTab] = useState<"My Plans" | "Find Plans" | "Completed">("Find Plans");
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  
 
   const handleStartPlan = async (planId: string) => {
     if (!userId) {
@@ -42,7 +41,6 @@ export default function PlansClient({
     
     if (error) {
       if (error.code === '23505') {
-        // Already started
         router.push(`/faith/devotions/plans/${planId}/day/1`);
       } else {
         console.error(error);
@@ -53,79 +51,107 @@ export default function PlansClient({
     }
   };
 
+  const filteredPlans = plans.filter(p => {
+    const title = language === "id" && p.title_id ? p.title_id : p.title;
+    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   return (
-    <div className="w-full min-h-screen bg-brand-dark text-white font-sans pb-24">
+    <div className="w-full min-h-[100dvh] bg-brand-dark text-white font-sans pb-32">
       
-      {/* Header */}
-      <div className="px-6 pt-8 pb-4 flex justify-between items-center">
-        <h1 className="text-4xl font-bold tracking-tight">Plans</h1>
-        <button className="p-2">
-          <Search className="h-6 w-6 text-white" />
-        </button>
+      {/* Header & Search */}
+      <div className="px-6 pt-8 pb-4">
+        <h1 className="text-3xl font-bold tracking-tight mb-6">Library</h1>
+        
+        <div className="relative mb-6">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Search devotions..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full bg-[#1a1d24] border border-[#333] rounded-2xl py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-brand-gold transition-colors"
+          />
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="px-4 overflow-x-auto hide-scrollbar">
-        <div className="flex gap-2">
-          <button 
-            onClick={() => setActiveTab("My Plans")}
-            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "My Plans" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
-          >
-            My Plans
-          </button>
+      <div className="px-6 overflow-x-auto hide-scrollbar mb-8">
+        <div className="flex gap-3">
           <button 
             onClick={() => setActiveTab("Find Plans")}
-            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "Find Plans" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
+            className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activeTab === "Find Plans" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted hover:text-white"}`}
           >
-            Find Plans
+            Shelves
+          </button>
+          <button 
+            onClick={() => setActiveTab("My Plans")}
+            className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activeTab === "My Plans" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted hover:text-white"}`}
+          >
+            Currently Reading
           </button>
           <button 
             onClick={() => setActiveTab("Completed")}
-            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "Completed" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
+            className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activeTab === "Completed" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted hover:text-white"}`}
           >
-            Completed
+            Finished
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-6 mt-8 space-y-10">
+      <div className="px-6 space-y-12">
         
         {activeTab === "Find Plans" && (
           categories.map((cat) => {
-            const catPlans = plans.filter(p => p.category_id === cat.id);
+            const catPlans = filteredPlans.filter(p => p.category_id === cat.id);
             if (catPlans.length === 0) return null;
             return (
-              <div key={cat.id}>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold">{(language === "id" && cat.name_id ? cat.name_id : cat.name)}</h2>
-                  <button className="text-sm font-bold text-brand-muted flex items-center gap-1">
-                    See all <span className="text-lg">›</span>
+              <div key={cat.id} className="relative">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-white/90">{(language === "id" && cat.name_id ? cat.name_id : cat.name)}</h2>
+                  <button className="text-xs font-bold text-brand-gold flex items-center gap-1 hover:text-white transition-colors">
+                    Full shelf <ChevronRight className="h-3 w-3" />
                   </button>
                 </div>
                 
-                <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
-                  {catPlans.map(plan => (
-                    <div key={plan.id} className="min-w-[85%] sm:min-w-[300px] flex gap-4 snap-center">
-                      <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-[#2a2d35]">
-                        {plan.cover_image_url ? (
-                          <Image src={plan.cover_image_url} alt={(language === "id" && plan.title_id ? plan.title_id : plan.title)} fill className="object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#555] font-bold p-2 text-center text-xs">No Cover</div>
-                        )}
-                      </div>
-                      <div className="flex flex-col justify-center flex-1">
-                        <p className="text-brand-muted text-xs font-medium uppercase mb-1">{plan.duration_days} Days</p>
-                        <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{(language === "id" && plan.title_id ? plan.title_id : plan.title)}</h3>
-                        <button 
+                {/* BookShelf Container */}
+                <div className="relative">
+                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-2 px-2 snap-x z-10 relative">
+                    {catPlans.map(plan => {
+                      const title = language === "id" && plan.title_id ? plan.title_id : plan.title;
+                      return (
+                        <div 
+                          key={plan.id} 
                           onClick={() => handleStartPlan(plan.id)}
-                          className="mt-3 bg-brand-gold text-brand-dark font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-[#2a2d35] transition-colors"
+                          className="group relative cursor-pointer snap-center shrink-0 w-[110px] sm:w-[140px] aspect-[3/4] transition-transform duration-300 hover:-translate-y-4"
                         >
-                          Start
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                          {/* 3D Book Volume */}
+                          <div className="absolute inset-0 rounded-r-md rounded-l-[3px] overflow-hidden shadow-[-4px_0_10px_rgba(0,0,0,0.5),5px_5px_15px_rgba(0,0,0,0.6)] group-hover:shadow-[-4px_0_10px_rgba(0,0,0,0.5),10px_15px_25px_rgba(0,0,0,0.8)] transition-shadow duration-300 bg-[#2a2d35]">
+                            {plan.cover_image_url ? (
+                              <Image src={plan.cover_image_url} alt={title} fill className="object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex flex-col p-3">
+                                <span className="text-white text-xs font-bold line-clamp-4 mt-2">{title}</span>
+                              </div>
+                            )}
+                            
+                            {/* Spine hinge overlay */}
+                            <div className="absolute inset-y-0 left-0 w-[4px] bg-gradient-to-r from-black/60 to-transparent"></div>
+                            {/* Page edges right side (tiny sliver) */}
+                            <div className="absolute inset-y-0 right-0 w-[2px] bg-gradient-to-l from-white/20 to-transparent"></div>
+                            {/* Glossy overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* The Physical Shelf Line */}
+                  <div className="absolute bottom-5 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#444] z-0"></div>
                 </div>
               </div>
             );
@@ -133,31 +159,40 @@ export default function PlansClient({
         )}
 
         {activeTab === "My Plans" && (
-          <div>
+          <div className="relative">
             {userProgress.filter(p => !p.is_finished).length === 0 ? (
-              <p className="text-brand-muted">No active plans.</p>
+              <p className="text-brand-muted text-sm py-8">No active devotions.</p>
             ) : (
-              userProgress.filter(p => !p.is_finished).map(prog => (
-                <div key={prog.id} className="flex gap-4 mb-6">
-                  <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-[#2a2d35]">
-                    {prog.plans?.cover_image_url ? (
-                      <Image src={prog.plans.cover_image_url} alt={prog.plans.title} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#555] font-bold p-2 text-center text-xs">No Cover</div>
-                    )}
+              <div className="relative">
+                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-2 px-2 snap-x z-10 relative">
+                  {userProgress.filter(p => !p.is_finished).map(prog => {
+                    const title = language === "id" && prog.plans?.title_id ? prog.plans.title_id : prog.plans?.title;
+                    return (
+                      <Link 
+                        key={prog.id}
+                        href={`/faith/devotions/plans/${prog.plan_id}/day/${prog.current_day}`}
+                        className="group relative cursor-pointer snap-center shrink-0 w-[110px] sm:w-[140px] aspect-[3/4] transition-transform duration-300 hover:-translate-y-4"
+                      >
+                        <div className="absolute -top-3 -right-2 bg-brand-gold text-brand-dark text-[9px] font-bold px-2 py-0.5 rounded-full z-20 shadow-md">
+                          Day {prog.current_day}
+                        </div>
+                        <div className="absolute inset-0 rounded-r-md rounded-l-[3px] overflow-hidden shadow-[-4px_0_10px_rgba(0,0,0,0.5),5px_5px_15px_rgba(0,0,0,0.6)] group-hover:shadow-[-4px_0_10px_rgba(0,0,0,0.5),10px_15px_25px_rgba(0,0,0,0.8)] transition-shadow duration-300 bg-[#2a2d35]">
+                          {prog.plans?.cover_image_url ? (
+                            <Image src={prog.plans.cover_image_url} alt={title} fill className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col p-3">
+                              <span className="text-white text-xs font-bold line-clamp-4 mt-2">{title}</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-y-0 left-0 w-[4px] bg-gradient-to-r from-black/60 to-transparent"></div>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+                      </Link>
+                    )
+                  })}
                   </div>
-                  <div className="flex flex-col justify-center flex-1">
-                    <p className="text-brand-muted text-xs font-medium uppercase mb-1">Day {prog.current_day} of {prog.plans?.duration_days}</p>
-                    <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{(language === "id" && prog.plans?.title_id ? prog.plans.title_id : prog.plans?.title)}</h3>
-                    <Link 
-                      href={`/faith/devotions/plans/${prog.plan_id}/day/${prog.current_day}`}
-                      className="mt-3 bg-brand-gold text-brand-dark font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-brand-gold/80 transition-colors"
-                    >
-                      Continue
-                    </Link>
-                  </div>
-                </div>
-              ))
+                  <div className="absolute bottom-5 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#444] z-0"></div>
+              </div>
             )}
           </div>
         )}
@@ -166,7 +201,3 @@ export default function PlansClient({
     </div>
   );
 }
-
-
-
-

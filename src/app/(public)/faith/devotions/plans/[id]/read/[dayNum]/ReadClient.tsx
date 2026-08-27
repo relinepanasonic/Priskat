@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -137,11 +137,11 @@ export default function ReadClient({
       </div>
 
       {/* Footer Navigation */}
-      <div className="sticky bottom-0 bg-white border-t border-[#333] p-4 pb-8 flex items-center justify-between">
+      <div className="sticky bottom-0 bg-brand-dark border-t border-[#333] p-4 pb-24 flex items-center justify-between z-20">
         <button 
           onClick={handlePrev}
           disabled={currentPage === 0}
-          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] ${currentPage === 0 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
+          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] text-white ${currentPage === 0 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
         >
           <Play className="h-5 w-5 rotate-180" />
         </button>
@@ -167,7 +167,7 @@ export default function ReadClient({
         <button 
           onClick={handleNext}
           disabled={currentPage === pages.length - 1}
-          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] ${currentPage === pages.length - 1 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
+          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] text-white ${currentPage === pages.length - 1 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
         >
           <Play className="h-5 w-5" />
         </button>
