@@ -29,14 +29,14 @@ export default async function DevotionPlanReadPage({
   if (!plan) return notFound();
 
   // Fetch this day's data
-  const { data: dayData } = await supabase
+  let { data: dayData } = await supabase
     .from("devotion_plan_days")
     .select("*, verses:devotion_day_verses(*)")
     .eq("plan_id", plan.id)
     .eq("day_number", dayNum)
     .single();
 
-  if (!dayData) return notFound();
+  if (!dayData) { dayData = { devotional_title: "Coming Soon", devotional_content: "Content for this day has not been added yet.", verses: [] }; }
 
   // Sort verses by order_index
   if (dayData.verses) {
@@ -52,4 +52,6 @@ export default async function DevotionPlanReadPage({
     />
   );
 }
+
+
 
