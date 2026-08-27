@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import { Search, ChevronDown, ChevronRight, Lock } from "lucide-react";
@@ -116,12 +116,8 @@ export default function BibleIndexClient({
           
           {showDC && (
             <div className="mt-2">
-              <p className="text-sm text-brand-muted mb-2">
-                {isId 
-                  ? "API publik yang kami gunakan saat ini belum mendukung kitab Deuterokanonika Katolik. Kami sedang menyiapkan sumber data khusus untuk segera menghadirkannya!" 
-                  : "The public API we currently use does not yet support Catholic Deuterocanonical books. We are preparing a custom data source to bring them to you soon!"}
-              </p>
-              <BookListClient books={filteredDC} isId={isId} isComingSoon={true} />
+              
+              <BookListClient books={filteredDC} isId={isId} isComingSoon={false} />
             </div>
           )}
         </div>
@@ -159,4 +155,5 @@ export default function BibleIndexClient({
     </div>
   );
 }
+
 

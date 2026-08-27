@@ -14,7 +14,11 @@
   "ephesians": 49, "philippians": 50, "colossians": 51, "1 thessalonians": 52,
   "2 thessalonians": 53, "1 timothy": 54, "2 timothy": 55, "titus": 56,
   "philemon": 57, "hebrews": 58, "james": 59, "1 peter": 60, "2 peter": 61,
-  "1 john": 62, "2 john": 63, "3 john": 64, "jude": 65, "revelation": 66
+  "1 john": 62, "2 john": 63, "3 john": 64, "jude": 65, "revelation": 66,
+  
+  "tobit": 67, "yudit": 68, "tambahan ester": 69, "kebijaksanaan salomo": 70,
+  "yesus bin sirakh": 71, "sirakh": 71, "barukh": 72, "tambahan daniel": 73,
+  "1 makabe": 74, "2 makabe": 75, "wisdom": 70, "sirach": 71, "baruch": 72, "tobit": 67, "judith": 68, "1 maccabees": 74, "2 maccabees": 75
 };
 
 export async function fetchBibleVerse(reference: string, language: "en" | "id"): Promise<string> {
@@ -47,15 +51,15 @@ export async function fetchBibleVerse(reference: string, language: "en" | "id"):
     return "Failed to fetch English Bible text.";
   } else {
     // Indonesian
-    const beebleId = BEEBLE_BOOK_IDS[bookName.toLowerCase()];
-    if (!beebleId) {
+    const bookId = BEEBLE_BOOK_IDS[bookName.toLowerCase()];
+    if (!bookId) {
       return `Buku ${bookName} belum didukung dalam bahasa Indonesia.`;
     }
     
     let retries = 3;
     while (retries > 0) {
       try {
-        const res = await fetch(`https://beeble.vercel.app/api/v1/passage/${beebleId}/${chapter}`);
+        const res = await fetch(`/api/bible/${bookId}/${chapter}`);
         if (!res.ok) return "Ayat tidak ditemukan dalam bahasa Indonesia.";
         const json = await res.json();
         const verses = json.data?.verses || [];

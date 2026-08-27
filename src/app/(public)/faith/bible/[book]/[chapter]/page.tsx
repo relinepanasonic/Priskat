@@ -1,4 +1,5 @@
 ﻿import { getLanguage } from "@/lib/lang";
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BookReader from "@/components/faith/BookReader";
@@ -51,4 +52,5 @@ export default async function BibleChapterPage({
     />
   );
 }
+
 
