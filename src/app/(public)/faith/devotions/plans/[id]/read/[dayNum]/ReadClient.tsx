@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import BibleVerseDisplay from "@/components/faith/BibleVerseDisplay";
 
 export default function ReadClient({ 
   plan, 
@@ -30,7 +31,7 @@ export default function ReadClient({
     ...(dayData.verses || []).map((v: any) => ({
       type: "verse",
       title: `${v.verse_reference} ${v.translation}`,
-      content: `[The full Bible text for ${v.verse_reference} will automatically load here once the Bible database is connected.]`
+      content: <BibleVerseDisplay reference={`${v.verse_reference} ${v.translation || "TB"}`} language={language} />
     }))
   ];
 
@@ -175,6 +176,8 @@ export default function ReadClient({
     </div>
   );
 }
+
+
 
 
 
