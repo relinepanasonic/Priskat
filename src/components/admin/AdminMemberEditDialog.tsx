@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import { adminUpdateMember } from "@/app/actions/admin";
+import { adminUpdateMember, adminDeleteMember } from "@/app/actions/admin";
 import type { UserRole, UserGender } from "@/lib/types/database.types";
-import { Edit2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 
 interface Props {
   member: {
@@ -20,6 +20,7 @@ interface Props {
 export default function AdminMemberEditDialog({ member }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,8 +31,20 @@ export default function AdminMemberEditDialog({ member }: Props) {
     });
   }
 
-  const isMale = member.gender === "male";
-  const isFemale = member.gender === "female";
+  function handleDelete() {
+    if (!window.confirm(`Are you absolutely sure you want to delete ${member.full_name}? This action cannot be undone.`)) {
+      return;
+    }
+    
+    startDeleteTransition(async () => {
+      const res = await adminDeleteMember(member.id);
+      if (res.error) {
+        alert(res.error);
+      } else {
+        setOpen(false);
+      }
+    });
+  }
 
   return (
     <>
@@ -80,9 +93,20 @@ export default function AdminMemberEditDialog({ member }: Props) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" loading={isPending}>Save Changes</Button>
+          <div className="flex justify-between items-center pt-4 mt-6 border-t border-[#333]">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting || isPending}
+              className="text-red-500 hover:text-red-400 text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              {isDeleting ? "Deleting..." : "Delete User"}
+            </button>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isDeleting || isPending}>Cancel</Button>
+              <Button type="submit" loading={isPending} disabled={isDeleting}>Save Changes</Button>
+            </div>
           </div>
         </form>
       </Modal>
