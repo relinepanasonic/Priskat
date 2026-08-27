@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -16,10 +16,12 @@ const schema = z
     username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
     phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08 and contain only numbers"),
     email: z.string().email("Invalid email address"),
-    alumni: z.array(z.string()).min(1, "Please select at least one alumni group"),
+    alumni: z.array(z.string()).min(1, "Please select at least one camp module"),
+    angkatan: z.string().min(1, "Angkatan is required"),
+    kota: z.string().min(1, "Kota is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string(),
-    role: z.string().optional(), // Added role field to pass through to Supabase
+    role: z.string().optional(),
   })
   .refine((d) => d.password === d.confirm_password, {
     message: "Passwords don't match",
@@ -42,6 +44,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [kotaOptions, setKotaOptions] = useState<string[]>([]);
+  const supabase = createClient();
 
   const {
     register,
@@ -51,10 +55,9 @@ export default function RegisterPage() {
     setValue
   } = useForm<FormValues>({ 
     resolver: zodResolver(schema),
-    defaultValues: { alumni: [], role: "member" }
+    defaultValues: { alumni: [], role: "member", angkatan: "", kota: "" }
   });
   
-  // Read URL parameters on mount to pre-fill the form
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -64,13 +67,22 @@ export default function RegisterPage() {
       if (inviteName) setValue("full_name", inviteName);
       if (inviteRole) setValue("role", inviteRole);
     }
-  }, [setValue]);
+
+    // Fetch unique cities for the dropdown
+    async function fetchKota() {
+      const { data } = await supabase.from("alumni_database").select("city");
+      if (data) {
+        const uniqueCities = Array.from(new Set(data.map(d => d.city).filter(Boolean))).sort();
+        setKotaOptions(uniqueCities);
+      }
+    }
+    fetchKota();
+  }, [setValue, supabase]);
   
   const selectedAlumni = watch("alumni") || [];
 
   async function onSubmit(data: FormValues) {
     setError(null);
-    const supabase = createClient();
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -80,6 +92,8 @@ export default function RegisterPage() {
           username: data.username,
           phone: data.phone,
           completed_modules: data.alumni,
+          angkatan: data.angkatan,
+          kota: data.kota,
           role: data.role || "member",
         },
         emailRedirectTo: `${location.origin}/auth/callback`,
@@ -166,8 +180,9 @@ export default function RegisterPage() {
           {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
         </div>
         
-        <div>
-          <label className="mb-2 block text-sm font-medium text-brand-light">Alumni</label>
+        <div className="bg-[#111] p-3 rounded-xl border border-brand-border">
+          <label className="mb-2 block text-sm font-bold text-white">Alumni / Camp (Required)</label>
+          <p className="text-xs text-brand-muted mb-3">Please select at least one camp you have completed.</p>
           <div className="grid grid-cols-2 gap-2">
             {ALUMNI_OPTIONS.map(opt => (
               <label key={opt} className="flex items-center space-x-2 bg-[#1a1d24] p-2 rounded-lg border border-[#333] cursor-pointer hover:border-brand-gold transition-colors">
@@ -189,6 +204,32 @@ export default function RegisterPage() {
             ))}
           </div>
           {errors.alumni && <p className="mt-1 text-xs text-red-600">{errors.alumni.message}</p>}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-brand-light">Angkatan</label>
+            <input
+              {...register("angkatan")}
+              placeholder="e.g. 1"
+              className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
+            />
+            {errors.angkatan && <p className="mt-1 text-xs text-red-600">{errors.angkatan.message}</p>}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-brand-light">Kota</label>
+            <select
+              {...register("kota")}
+              className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
+            >
+              <option value="">Select Kota</option>
+              {kotaOptions.map(kota => (
+                <option key={kota} value={kota}>{kota}</option>
+              ))}
+            </select>
+            {errors.kota && <p className="mt-1 text-xs text-red-600">{errors.kota.message}</p>}
+          </div>
         </div>
 
         <div>

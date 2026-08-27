@@ -20,6 +20,8 @@ export interface Profile {
   avatar_url: string | null;
   bio: string;
   skills: string[];
+  angkatan?: string | null;
+  kota?: string | null;
   interests: string[];
   role: UserRole;
   gender: UserGender | null;
@@ -271,6 +273,7 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+
 
 
 
