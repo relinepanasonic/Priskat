@@ -98,7 +98,7 @@ export default function RegisterPage() {
     const primaryCamp = data.camps[0];
     const completedModules = data.camps.map(c => c.camp);
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -115,11 +115,7 @@ export default function RegisterPage() {
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setSuccess(true);
+    if (error) { setError(error.message); return; } if (signUpData?.session) { router.push("/"); router.refresh(); return; } setSuccess(true);
   }
 
   if (success) {
@@ -305,3 +301,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+
