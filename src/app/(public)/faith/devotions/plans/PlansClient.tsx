@@ -50,13 +50,13 @@ export default function PlansClient({
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-black font-sans pb-24">
+    <div className="w-full min-h-screen bg-brand-dark text-white font-sans pb-24">
       
       {/* Header */}
       <div className="px-6 pt-8 pb-4 flex justify-between items-center">
         <h1 className="text-4xl font-bold tracking-tight">Plans</h1>
         <button className="p-2">
-          <Search className="h-6 w-6 text-black" />
+          <Search className="h-6 w-6 text-white" />
         </button>
       </div>
 
@@ -65,19 +65,19 @@ export default function PlansClient({
         <div className="flex gap-2">
           <button 
             onClick={() => setActiveTab("My Plans")}
-            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "My Plans" ? "bg-black text-white" : "bg-gray-100 text-gray-500"}`}
+            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "My Plans" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
           >
             My Plans
           </button>
           <button 
             onClick={() => setActiveTab("Find Plans")}
-            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "Find Plans" ? "bg-black text-white" : "bg-gray-100 text-gray-500"}`}
+            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "Find Plans" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
           >
             Find Plans
           </button>
           <button 
             onClick={() => setActiveTab("Completed")}
-            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "Completed" ? "bg-black text-white" : "bg-gray-100 text-gray-500"}`}
+            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "Completed" ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
           >
             Completed
           </button>
@@ -95,7 +95,7 @@ export default function PlansClient({
               <div key={cat.id}>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">{cat.name}</h2>
-                  <button className="text-sm font-bold text-gray-500 flex items-center gap-1">
+                  <button className="text-sm font-bold text-brand-muted flex items-center gap-1">
                     See all <span className="text-lg">›</span>
                   </button>
                 </div>
@@ -103,19 +103,19 @@ export default function PlansClient({
                 <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
                   {catPlans.map(plan => (
                     <div key={plan.id} className="min-w-[85%] sm:min-w-[300px] flex gap-4 snap-center">
-                      <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-gray-200">
+                      <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-[#2a2d35]">
                         {plan.cover_image_url ? (
                           <Image src={plan.cover_image_url} alt={plan.title} fill className="object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold p-2 text-center text-xs">No Cover</div>
+                          <div className="w-full h-full flex items-center justify-center text-[#555] font-bold p-2 text-center text-xs">No Cover</div>
                         )}
                       </div>
                       <div className="flex flex-col justify-center flex-1">
-                        <p className="text-gray-500 text-xs font-medium uppercase mb-1">{plan.duration_days} Days</p>
+                        <p className="text-brand-muted text-xs font-medium uppercase mb-1">{plan.duration_days} Days</p>
                         <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{plan.title}</h3>
                         <button 
                           onClick={() => handleStartPlan(plan.id)}
-                          className="mt-3 bg-gray-100 text-black font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-gray-200 transition-colors"
+                          className="mt-3 bg-brand-gold text-brand-dark font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-[#2a2d35] transition-colors"
                         >
                           Start
                         </button>
@@ -131,23 +131,23 @@ export default function PlansClient({
         {activeTab === "My Plans" && (
           <div>
             {userProgress.filter(p => !p.is_finished).length === 0 ? (
-              <p className="text-gray-500">No active plans.</p>
+              <p className="text-brand-muted">No active plans.</p>
             ) : (
               userProgress.filter(p => !p.is_finished).map(prog => (
                 <div key={prog.id} className="flex gap-4 mb-6">
-                  <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-gray-200">
+                  <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-[#2a2d35]">
                     {prog.plans?.cover_image_url ? (
                       <Image src={prog.plans.cover_image_url} alt={prog.plans.title} fill className="object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold p-2 text-center text-xs">No Cover</div>
+                      <div className="w-full h-full flex items-center justify-center text-[#555] font-bold p-2 text-center text-xs">No Cover</div>
                     )}
                   </div>
                   <div className="flex flex-col justify-center flex-1">
-                    <p className="text-gray-500 text-xs font-medium uppercase mb-1">Day {prog.current_day} of {prog.plans?.duration_days}</p>
+                    <p className="text-brand-muted text-xs font-medium uppercase mb-1">Day {prog.current_day} of {prog.plans?.duration_days}</p>
                     <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{prog.plans?.title}</h3>
                     <Link 
                       href={`/faith/devotions/plans/${prog.plan_id}/day/${prog.current_day}`}
-                      className="mt-3 bg-black text-white font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-gray-800 transition-colors"
+                      className="mt-3 bg-brand-gold text-brand-dark font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-brand-gold/80 transition-colors"
                     >
                       Continue
                     </Link>
@@ -162,3 +162,4 @@ export default function PlansClient({
     </div>
   );
 }
+
