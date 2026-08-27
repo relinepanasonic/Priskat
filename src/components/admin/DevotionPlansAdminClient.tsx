@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Save, ChevronRight, Globe2, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { Plus, Save, ChevronRight, Globe2, Upload, Loader2, Image as ImageIcon, Trash2 } from "lucide-react";
 import { uploadImage } from "@/lib/upload";
 import Image from "next/image";
 
@@ -20,12 +20,14 @@ export default function DevotionPlansAdminClient({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryNameId, setNewCategoryNameId] = useState("");
+  const [searchCat, setSearchCat] = useState("");
 
   // Column 2: Plans
   const [plans, setPlans] = useState(initialPlans);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [newPlanName, setNewPlanName] = useState("");
   const [newPlanNameId, setNewPlanNameId] = useState("");
+  const [searchSub, setSearchSub] = useState("");
 
   // Column 3: Plan Details & Days
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
@@ -68,6 +70,16 @@ export default function DevotionPlansAdminClient({
   const [showIdCol2, setShowIdCol2] = useState(false);
 
   // --- Handlers for Col 1 ---
+  const handleDeleteCategory = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this category? All sub-categories inside will be deleted!")) return;
+    const { error } = await supabase.from("devotion_categories").delete().eq("id", id);
+    if (!error) {
+      setCategories(categories.filter(c => c.id !== id));
+      if (selectedCategoryId === id) setSelectedCategoryId(null);
+    }
+  };
+
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName) return;
@@ -84,6 +96,16 @@ export default function DevotionPlansAdminClient({
 
   // --- Handlers for Col 2 ---
   const filteredPlans = plans.filter(p => p.category_id === selectedCategoryId);
+  const handleDeletePlan = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this sub-category? All days and verses inside will be deleted!")) return;
+    const { error } = await supabase.from("devotion_plans").delete().eq("id", id);
+    if (!error) {
+      setPlans(plans.filter(p => p.id !== id));
+      if (selectedPlanId === id) setSelectedPlanId(null);
+    }
+  };
+
   const handleAddPlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPlanName || !selectedCategoryId) return;
@@ -220,6 +242,14 @@ export default function DevotionPlansAdminClient({
     alert("Day content saved!");
   };
 
+  const handleDeleteVerse = async (verseId: string) => {
+    if (!confirm("Are you sure you want to delete this verse?")) return;
+    const { error } = await supabase.from("devotion_verses").delete().eq("id", verseId);
+    if (!error) {
+      setDayVerses(dayVerses.filter(v => v.id !== verseId));
+    }
+  };
+
   const handleAddVerse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dayData || !verseBook || !verseChapter || !verseNumber) return;
@@ -247,18 +277,17 @@ export default function DevotionPlansAdminClient({
             <Globe2 className={`h-4 w-4 ${showIdCol1 ? "text-blue-500" : ""}`} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {categories.map(cat => (
+        <div className="p-2 border-b border-[#333] bg-[#1a1d24]"><input type="text" placeholder="Search categories..." value={searchCat} onChange={e => setSearchCat(e.target.value)} className="w-full bg-[#14151a] border border-[#333] rounded px-2 py-1.5 text-xs text-white" /></div><div className="flex-1 overflow-y-auto">{categories.filter(c => c.name.toLowerCase().includes(searchCat.toLowerCase()) || (c.name_id && c.name_id.toLowerCase().includes(searchCat.toLowerCase()))).map(cat => (
             <button
               key={cat.id}
               onClick={() => { setSelectedCategoryId(cat.id); setSelectedPlanId(null); setSelectedDayNum(null); }}
-              className={`w-full text-left px-4 py-3 border-b border-[#333] flex justify-between items-center hover:bg-[#2a2d35] transition-colors ${selectedCategoryId === cat.id ? "bg-blue-100 border-blue-200" : ""}`}
+              className={`w-full text-left px-4 py-3 border-b border-[#333] flex justify-between items-center hover:bg-[#2a2d35] transition-colors ${selectedCategoryId === cat.id ? "bg-brand-gold text-brand-dark shadow-[inset_4px_0_0_0_#000]" : "text-brand-light"}`}
             >
               <div>
-                <span className="font-semibold text-sm block">{cat.name}</span>
-                {cat.name_id && <span className="text-xs text-brand-muted italic block">{cat.name_id}</span>}
+                <span className="font-semibold text-sm block">{cat.name}</span>{cat.name_id && <span className={`text-xs italic block ${selectedCategoryId === cat.id ? "text-brand-dark/70" : "text-brand-muted"}`}>{cat.name_id}</span>}
               </div>
-              <ChevronRight className="h-4 w-4 text-gray-500" />
+              <button onClick={(e) => handleDeleteCategory(e, cat.id)} className="p-1.5 text-brand-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Delete Category"><Trash2 className="h-4 w-4" /></button>
+                <ChevronRight className="h-4 w-4 text-gray-500" />
             </button>
           ))}
         </div>
@@ -276,7 +305,7 @@ export default function DevotionPlansAdminClient({
       {/* COLUMN 2: PLANS */}
       <div className="w-1/4 border-r border-[#333] bg-[#14151a] flex flex-col">
         <div className="p-3 bg-[#2a2d35] border-b border-[#333] font-bold text-xs uppercase tracking-wider text-brand-light flex justify-between items-center shrink-0">
-          <span>2. Devotion Plans</span>
+          <span>2. Sub-Categories</span>
           <button onClick={() => setShowIdCol2(!showIdCol2)} title="Toggle Indonesian Form" className="text-brand-muted hover:text-white">
             <Globe2 className={`h-4 w-4 ${showIdCol2 ? "text-blue-500" : ""}`} />
           </button>
@@ -285,24 +314,20 @@ export default function DevotionPlansAdminClient({
           <div className="flex-1 flex items-center justify-center text-sm text-gray-500 p-4 text-center">Select a category first</div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto">
-              {filteredPlans.map(plan => (
-                <button
-                  key={plan.id}
-                  onClick={() => selectPlan(plan)}
-                  className={`w-full text-left px-4 py-3 border-b border-[#333] flex flex-col hover:bg-[#2a2d35] transition-colors ${selectedPlanId === plan.id ? "bg-blue-100 border-blue-200" : ""}`}
+            <div className="p-2 border-b border-[#333] bg-[#1a1d24]"><input type="text" placeholder="Search sub-categories..." value={searchSub} onChange={e => setSearchSub(e.target.value)} className="w-full bg-[#14151a] border border-[#333] rounded px-2 py-1.5 text-xs text-white" /></div><div className="flex-1 overflow-y-auto">{filteredPlans.filter(p => p.title.toLowerCase().includes(searchSub.toLowerCase()) || (p.title_id && p.title_id.toLowerCase().includes(searchSub.toLowerCase()))).map(plan => (
+                <button key={plan.id} onClick={() => selectPlan(plan)} className={`group relative w-full text-left px-4 py-3 border-b border-[#333] flex flex-col hover:bg-[#2a2d35] transition-colors ${selectedPlanId === plan.id ? "bg-brand-gold text-brand-dark shadow-[inset_4px_0_0_0_#000]" : "text-brand-light"}`}
                 >
-                  <span className="font-semibold text-sm truncate">{plan.title}</span>
-                  {plan.title_id && <span className="text-xs text-brand-muted truncate italic">{plan.title_id}</span>}
-                  <span className="text-[10px] uppercase font-bold text-gray-500 mt-1">{plan.duration_days} Days</span>
+                  <button onClick={(e) => handleDeletePlan(e, plan.id)} className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-brand-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover:opacity-100" title="Delete Sub-Category"><Trash2 className="h-4 w-4" /></button>
+                    <span className="font-semibold text-sm truncate pr-8">{plan.title}</span>{plan.title_id && <span className={`text-xs truncate italic ${selectedPlanId === plan.id ? "text-brand-dark/70" : "text-brand-muted"}`}>{plan.title_id}</span>}
+                  <span className={`text-[10px] uppercase font-bold mt-1 ${selectedPlanId === plan.id ? "text-brand-dark" : "text-gray-500"}`}>{plan.duration_days} Days</span>
                 </button>
               ))}
             </div>
             <div className="p-3 border-t border-[#333] bg-brand-surface shrink-0">
               <form onSubmit={handleAddPlan} className="flex flex-col gap-2">
-                <input type="text" placeholder="Plan Title (EN)" required value={newPlanName} onChange={e => setNewPlanName(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
+                <input type="text" placeholder="Sub-Category Title (EN)" required value={newPlanName} onChange={e => setNewPlanName(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
                 {showIdCol2 && (
-                  <input type="text" placeholder="Plan Title (ID)" value={newPlanNameId} onChange={e => setNewPlanNameId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
+                  <input type="text" placeholder="Sub-Category Title (ID)" value={newPlanNameId} onChange={e => setNewPlanNameId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
                 )}
                 <button type="submit" className="w-full bg-brand-gold text-brand-dark p-1.5 rounded flex justify-center items-center gap-1 text-xs font-bold"><Plus className="h-3 w-3" /> Add Plan</button>
               </form>
@@ -439,7 +464,7 @@ export default function DevotionPlansAdminClient({
               <ul className="space-y-1.5 mb-3">
                 {dayVerses.map(v => (
                   <li key={v.id} className="text-xs bg-brand-surface p-2 rounded flex justify-between items-center border border-[#333]">
-                    <span className="font-semibold">{v.verse_reference}</span>
+                    <span className="font-semibold">{v.verse_reference}</span><button onClick={() => handleDeleteVerse(v.id)} className="p-1 text-brand-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"><Trash2 className="h-3 w-3" /></button>
                   </li>
                 ))}
                 {dayVerses.length === 0 && <li className="text-[10px] text-gray-500 italic">No verses added.</li>}
@@ -484,4 +509,10 @@ export default function DevotionPlansAdminClient({
     </div>
   );
 }
+
+
+
+
+
+
 
