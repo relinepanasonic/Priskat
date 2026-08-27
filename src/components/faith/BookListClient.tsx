@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -7,10 +7,16 @@ import { BookOpen, X } from "lucide-react";
 function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
   const [imgFailed, setImgFailed] = useState(false);
   const imagePath = `/images/bible/${categoryFolder}/${book.name_en}.jpeg`;
+  const isGospel = ["Matthew", "Mark", "Luke", "John"].includes(book.name_en);
 
   return (
     <>
       <div className="relative flex flex-col items-center shrink-0 snap-center w-[110px] md:w-[130px]">
+        {/* Golden Aura for the 4 Gospels */}
+        {isGospel && (
+          <div className="absolute inset-0 bg-[#ffc837] rounded-md blur-xl opacity-40 animate-pulse pointer-events-none z-0"></div>
+        )}
+
         <div 
           onClick={() => onToggle(book.no)}
           className={`
