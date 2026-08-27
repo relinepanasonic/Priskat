@@ -12,12 +12,14 @@ export default function DayClient({
   plan, 
   dayNum, 
   progress,
-  dayData
+  dayData,
+  language
 }: { 
   plan: any;
   dayNum: number;
   progress: any;
   dayData: any;
+  language: "id" | "en";
 }) {
   const router = useRouter();
   
@@ -155,6 +157,8 @@ export default function DayClient({
     </div>
   );
 }
+
+
 
 
 

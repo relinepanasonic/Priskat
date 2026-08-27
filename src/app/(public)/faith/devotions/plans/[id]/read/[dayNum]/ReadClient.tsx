@@ -12,12 +12,14 @@ export default function ReadClient({
   plan, 
   dayNum, 
   dayData,
-  userId
+  userId,
+  language
 }: { 
   plan: any;
   dayNum: number;
   dayData: any;
   userId: string;
+  language: "id" | "en";
 }) {
   const router = useRouter();
   
@@ -173,6 +175,8 @@ export default function ReadClient({
     </div>
   );
 }
+
+
 
 
 

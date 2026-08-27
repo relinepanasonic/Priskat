@@ -13,7 +13,8 @@ export default function PlansClient({
   categories, 
   plans, 
   userProgress,
-  userId 
+  userId,
+  language
 }: { 
   categories: DevotionCategory[], 
   plans: DevotionPlan[],
@@ -165,6 +166,7 @@ export default function PlansClient({
     </div>
   );
 }
+
 
 
 
