@@ -54,3 +54,4 @@ CREATE POLICY "event_rsvps_delete"
   ON public.event_rsvps FOR DELETE
   USING (user_id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin'));
 
+

@@ -22,6 +22,7 @@ export interface Profile {
   skills: string[];
   angkatan?: string | null;
   kota?: string | null;
+  camp_history?: any[] | null;
   interests: string[];
   role: UserRole;
   gender: UserGender | null;
@@ -273,6 +274,7 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+
 
 
 

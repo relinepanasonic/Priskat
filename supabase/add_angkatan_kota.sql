@@ -1,6 +1,7 @@
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS angkatan TEXT,
-ADD COLUMN IF NOT EXISTS kota TEXT;
+ADD COLUMN IF NOT EXISTS kota TEXT,
+ADD COLUMN IF NOT EXISTS camp_history JSONB DEFAULT '[]'::jsonb;
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -23,14 +24,17 @@ begin
     final_username := base_username || counter::text;
   end loop;
 
-  insert into public.profiles(id, username, full_name, role, angkatan, kota)
+  insert into public.profiles(id, username, full_name, role, angkatan, kota, camp_history, completed_modules)
   values (
     new.id,
     final_username,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
     coalesce(new.raw_user_meta_data->>'role', 'member')::public.user_role,
     new.raw_user_meta_data->>'angkatan',
-    new.raw_user_meta_data->>'kota'
+    new.raw_user_meta_data->>'kota',
+    coalesce((new.raw_user_meta_data->>'camp_history')::jsonb, '[]'::jsonb),
+    -- Also parse completed_modules from JSON array
+    ARRAY(SELECT jsonb_array_elements_text(coalesce((new.raw_user_meta_data->>'completed_modules')::jsonb, '[]'::jsonb)))
   );
   return new;
 end;
