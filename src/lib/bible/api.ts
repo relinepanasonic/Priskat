@@ -18,7 +18,7 @@
   
   "tobit": 67, "yudit": 68, "tambahan ester": 69, "kebijaksanaan salomo": 70,
   "yesus bin sirakh": 71, "sirakh": 71, "barukh": 72, "tambahan daniel": 73,
-  "1 makabe": 74, "2 makabe": 75, "wisdom": 70, "sirach": 71, "baruch": 72, "tobit": 67, "judith": 68, "1 maccabees": 74, "2 maccabees": 75
+  "1 makabe": 74, "2 makabe": 75, "wisdom": 70, "sirach": 71, "baruch": 72, "judith": 68, "1 maccabees": 74, "2 maccabees": 75
 };
 
 export async function fetchBibleVerse(reference: string, language: "en" | "id"): Promise<string> {
@@ -78,3 +78,4 @@ export async function fetchBibleVerse(reference: string, language: "en" | "id"):
     return "Gagal mengambil teks Alkitab bahasa Indonesia.";
   }
 }
+
