@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ReadClient({ 
@@ -37,7 +37,9 @@ export default function ReadClient({
     pages.push({ type: "prayer", title: "Prayer", content: dayData.prayer });
   }
 
-  const [currentPage, setCurrentPage] = useState(0);
+  const searchParams = useSearchParams();
+  const initialPage = parseInt(searchParams.get("page") || "0", 10);
+  const [currentPage, setCurrentPage] = useState(isNaN(initialPage) ? 0 : initialPage);
 
   const handleNext = () => {
     if (currentPage < pages.length - 1) {
@@ -169,6 +171,8 @@ export default function ReadClient({
     </div>
   );
 }
+
+
 
 
 

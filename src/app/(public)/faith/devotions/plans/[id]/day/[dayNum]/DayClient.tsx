@@ -95,52 +95,56 @@ export default function DayClient({
         )}
       </div>
 
-      {/* Checklist */}
+                  {/* Checklist */}
       <div className="px-6 space-y-6">
         {/* Devotional Item */}
-        <div className="flex items-center justify-between cursor-not-allowed">
+        <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
           <div className="flex items-center gap-4">
             {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-            <span className="text-[17px] font-medium">Devotional</span>
+            <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">Devotional</span>
           </div>
-          <span className="text-xl text-brand-muted">›</span>
-        </div>
+          <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+        </Link>
 
-                {/* Verses Items */}
+        {/* Verses Items */}
         {dayData?.verses?.map((verse: any, idx: number) => (
-          <div key={idx} className="flex items-center justify-between cursor-not-allowed">
+          <Link key={idx} href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${idx + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium">{verse.verse_reference} {verse.translation}</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{verse.verse_reference} {verse.translation}</span>
             </div>
-            <span className="text-xl text-brand-muted">&gt;</span>
-          </div>
+            <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+          </Link>
         ))}
+
+        {/* Reflection Item */}
         {dayData?.reflection && (
-          <div className="flex items-center justify-between cursor-not-allowed">
+          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium">Reflection</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">Reflection</span>
             </div>
-            <span className="text-xl text-brand-muted">&gt;</span>
-          </div>
+            <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+          </Link>
         )}
+
+        {/* Prayer Item */}
         {dayData?.prayer && (
-          <div className="flex items-center justify-between cursor-not-allowed">
+          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + (dayData?.reflection ? 1 : 0) + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium">Prayer</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">Prayer</span>
             </div>
-            <span className="text-xl text-brand-muted">&gt;</span>
-          </div>
+            <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+          </Link>
         )}
       </div>
 
-      {/* Floating Start Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-brand-dark via-brand-dark/90 to-transparent">
+      {/* Static Start Button */}
+      <div className="mt-8 px-6 pb-24">
         <Link 
-          href={`/faith/devotions/plans/${plan.id}/read/${dayNum}`}
-          className="w-full max-w-md mx-auto flex justify-center py-4 bg-brand-gold text-brand-dark rounded-full font-bold text-lg hover:bg-brand-gold/80 transition-colors"
+          href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`}
+          className="w-full mx-auto flex justify-center py-4 bg-brand-gold text-brand-dark rounded-full font-bold text-lg hover:bg-brand-gold/80 transition-colors shadow-lg"
         >
           {isDayCompleted ? "Read Again" : "Start Reading"}
         </Link>
@@ -149,7 +153,3 @@ export default function DayClient({
     </div>
   );
 }
-
-
-
-
