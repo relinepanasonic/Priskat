@@ -26,7 +26,7 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
 
-  const { register, control, handleSubmit } = useForm({
+  const { register, control, handleSubmit, reset, formState: { isDirty } } = useForm({
     defaultValues: {
       services: initialServices?.length > 0 ? initialServices : [{ camp: "", angkatan: "", kota: "", position: "" }]
     }
@@ -52,7 +52,7 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
     startTransition(async () => {
       await supabase.from("profiles").update({ services_history: data.services }).eq("id", userId);
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      reset(data);
     });
   }
 
@@ -137,10 +137,11 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
           </button>
 
           <Button type="submit" loading={isPending} className="w-full py-3">
-            {success ? "Saved successfully!" : "Save My Services"}
+            {success && !isDirty ? "Saved!" : "Save My Services"}
           </Button>
         </form>
       </div>
     </section>
   );
 }
+

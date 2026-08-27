@@ -26,7 +26,7 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
 
-  const { register, control, handleSubmit } = useForm({
+  const { register, control, handleSubmit, reset, formState: { isDirty } } = useForm({
     defaultValues: {
       camps: initialHistory?.length > 0 ? initialHistory : [{ camp: "", angkatan: "", kota: "" }]
     }
@@ -52,7 +52,7 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
     startTransition(async () => {
       await supabase.from("profiles").update({ camp_history: data.camps }).eq("id", userId);
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      reset(data);
     });
   }
 
@@ -128,10 +128,11 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
           </button>
 
           <Button type="submit" loading={isPending} className="w-full py-3">
-            {success ? "Saved successfully!" : "Save My Journey"}
+            {success && !isDirty ? "Saved!" : "Save My Journey"}
           </Button>
         </form>
       </div>
     </section>
   );
 }
+
