@@ -14,6 +14,7 @@ import type { Profile } from "@/lib/types/database.types";
 
 const schema = z.object({
   full_name: z.string().min(2),
+  phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08").optional(),
   bio: z.string().max(300).optional(),
   skills: z.string().optional(),
   interests: z.string().optional(),
@@ -38,6 +39,7 @@ export default function ProfileEditForm({ profile }: Props) {
     resolver: zodResolver(schema),
     defaultValues: {
       full_name: profile.full_name,
+      phone: profile.phone ?? "",
       bio: profile.bio ?? "",
       skills: profile.skills?.join(", ") ?? "",
       interests: profile.interests?.join(", ") ?? "",
@@ -78,6 +80,7 @@ export default function ProfileEditForm({ profile }: Props) {
       .from("profiles")
       .update({
         full_name: data.full_name,
+        phone: data.phone ?? "",
         bio: data.bio ?? "",
         skills: skillsArr,
         interests: interestsArr,
@@ -128,10 +131,16 @@ export default function ProfileEditForm({ profile }: Props) {
         </div>
       </div>
 
-      <div>
+            <div>
         <label className="mb-1 block text-sm font-medium text-brand-light">Full Name *</label>
         <input {...register("full_name")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-brand-light">No HP (WhatsApp)</label>
+        <input {...register("phone")} placeholder="08xxxxxxxxxx" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
       </div>
 
       <div>
@@ -166,4 +175,5 @@ export default function ProfileEditForm({ profile }: Props) {
     </form>
   );
 }
+
 

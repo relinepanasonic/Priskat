@@ -48,9 +48,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
         
-        <Link href="/profile" className="text-brand-light hover:text-brand-gold transition">
-          <User className="h-5 w-5" />
-        </Link>
+        <button onClick={handleSignOut} className="text-brand-light hover:text-red-500 transition"><LogOut className="h-5 w-5" /></button>
       </div>
     </div>
 
@@ -211,5 +209,6 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     </>
   );
 }
+
 
 
