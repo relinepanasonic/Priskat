@@ -19,26 +19,26 @@ export default async function BibleChapterPage({
 
   let apiData = null;
   try {
-    if (bookId >= 67) {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!, 
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!, 
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    
+    // Check our DB first
+    const { data: verses, error } = await supabase
+      .from('bible_verses')
+      .select('*')
+      .eq('book_no', bookId)
+      .eq('chapter', chapter)
+      .order('verse', { ascending: true });
       
-      const { data: verses, error } = await supabase
-        .from('bible_verses')
-        .select('*')
-        .eq('book_no', bookId)
-        .eq('chapter', chapter)
-        .order('verse', { ascending: true });
-        
-      if (!error && verses && verses.length > 0) {
-        apiData = { 
-          book: { no: bookId, name: verses[0].book_name, chapter: chapter }, 
-          verses: verses.map(v => ({ verse: v.verse, type: 'content', content: v.content })) 
-        };
-      }
+    if (!error && verses && verses.length > 0) {
+      apiData = { 
+        book: { no: bookId, name: verses[0].book_name, chapter: chapter }, 
+        verses: verses.map(v => ({ verse: v.verse, type: 'content', content: v.content })) 
+      };
     } else {
+      // Fallback to beeble API
       const res = await fetch(`https://beeble.vercel.app/api/v1/passage/${bookId}/${chapter}`, {
         next: { revalidate: 86400 }
       });

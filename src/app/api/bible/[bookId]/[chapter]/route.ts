@@ -18,30 +18,22 @@ export async function GET(request: Request, context: any) {
     return NextResponse.json({ error: "Invalid bookId or chapter" }, { status: 400 });
   }
 
-  // 1. If bookId >= 67, it's a Deuterocanonical book, always query our database
-  if (bookId >= 67) {
-    const { data: verses, error } = await supabase
-      .from("bible_verses")
-      .select("*")
-      .eq("book_no", bookId)
-      .eq("chapter", chapter)
-      .order("verse", { ascending: true });
+  // 1. Try to fetch from our custom database first
+  const { data: verses, error } = await supabase
+    .from("bible_verses")
+    .select("*")
+    .eq("book_no", bookId)
+    .eq("chapter", chapter)
+    .order("verse", { ascending: true });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    if (!verses || verses.length === 0) {
-      return NextResponse.json({ error: "Chapter not found in custom DB" }, { status: 404 });
-    }
-
-    // Format response to match beeble API
+  // If found in our DB, return it immediately
+  if (!error && verses && verses.length > 0) {
     return NextResponse.json({
       data: {
         book: {
           no: bookId,
           name: verses[0].book_name,
-          chapter: verses.length // approximation of total chapters, but UI doesn't strictly need it
+          chapter: verses.length // approximation, UI doesn't strictly depend on this
         },
         verses: verses.map(v => ({
           verse: v.verse,
@@ -56,8 +48,7 @@ export async function GET(request: Request, context: any) {
     });
   }
   
-  // 2. If bookId < 67, proxy to beeble API (which returns 1-66 Protestant books)
-  // This acts as a single unified endpoint for the frontend.
+  // 2. If not found in our DB, fallback to proxying beeble API
   try {
     const res = await fetch(`https://beeble.vercel.app/api/v1/passage/${bookId}/${chapter}`, {
       next: { revalidate: 86400 } // cache for 1 day
@@ -74,7 +65,7 @@ export async function GET(request: Request, context: any) {
         'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=43200',
       },
     });
-  } catch (error) {
+  } catch (err) {
     return NextResponse.json({ error: "Failed to fetch from upstream" }, { status: 500 });
   }
 }
