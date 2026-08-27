@@ -30,11 +30,11 @@ export default function ReadClient({
     }))
   ];
 
-  if (dayData.reflection_content) {
-    pages.push({ type: "reflection", title: "Reflection", content: dayData.reflection_content });
+  if (dayData.reflection) {
+    pages.push({ type: "reflection", title: "Reflection", content: dayData.reflection });
   }
-  if (dayData.prayer_content) {
-    pages.push({ type: "prayer", title: "Prayer", content: dayData.prayer_content });
+  if (dayData.prayer) {
+    pages.push({ type: "prayer", title: "Prayer", content: dayData.prayer });
   }
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -169,5 +169,6 @@ export default function ReadClient({
     </div>
   );
 }
+
 
 

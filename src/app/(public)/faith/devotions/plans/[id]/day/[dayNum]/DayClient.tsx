@@ -116,7 +116,7 @@ export default function DayClient({
             <span className="text-xl text-brand-muted">&gt;</span>
           </div>
         ))}
-        {dayData?.reflection_content && (
+        {dayData?.reflection && (
           <div className="flex items-center justify-between cursor-not-allowed">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
@@ -125,7 +125,7 @@ export default function DayClient({
             <span className="text-xl text-brand-muted">&gt;</span>
           </div>
         )}
-        {dayData?.prayer_content && (
+        {dayData?.prayer && (
           <div className="flex items-center justify-between cursor-not-allowed">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
@@ -149,6 +149,7 @@ export default function DayClient({
     </div>
   );
 }
+
 
 
 
