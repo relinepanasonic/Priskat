@@ -16,6 +16,7 @@ export type ReactionType = "like";
 export interface Profile {
   id: string;
   username: string;
+  phone?: string | null;
   full_name: string;
   avatar_url: string | null;
   bio: string;
@@ -275,6 +276,7 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+
 
 
 
