@@ -72,7 +72,7 @@ export default function DevotionPlansAdminClient({
   // --- Handlers for Col 1 ---
   const handleDeleteCategory = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this category? All sub-categories inside will be deleted!")) return;
+    
     const { error } = await supabase.from("devotion_categories").delete().eq("id", id);
     if (!error) {
       setCategories(categories.filter(c => c.id !== id));
@@ -98,7 +98,7 @@ export default function DevotionPlansAdminClient({
   const filteredPlans = plans.filter(p => p.category_id === selectedCategoryId);
   const handleDeletePlan = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this sub-category? All days and verses inside will be deleted!")) return;
+    
     const { error } = await supabase.from("devotion_plans").delete().eq("id", id);
     if (!error) {
       setPlans(plans.filter(p => p.id !== id));
@@ -243,8 +243,8 @@ export default function DevotionPlansAdminClient({
   };
 
   const handleDeleteVerse = async (verseId: string) => {
-    if (!confirm("Are you sure you want to delete this verse?")) return;
-    const { error } = await supabase.from("devotion_verses").delete().eq("id", verseId);
+    
+    const { error } = await supabase.from("devotion_day_verses").delete().eq("id", verseId);
     if (!error) {
       setDayVerses(dayVerses.filter(v => v.id !== verseId));
     }
@@ -286,8 +286,7 @@ export default function DevotionPlansAdminClient({
               <div>
                 <span className="font-semibold text-sm block">{cat.name}</span>{cat.name_id && <span className={`text-xs italic block ${selectedCategoryId === cat.id ? "text-brand-dark/70" : "text-brand-muted"}`}>{cat.name_id}</span>}
               </div>
-              <button onClick={(e) => handleDeleteCategory(e, cat.id)} className="p-1.5 text-brand-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Delete Category"><Trash2 className="h-4 w-4" /></button>
-                <ChevronRight className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-2"><button onClick={(e) => handleDeleteCategory(e, cat.id)} className="p-1.5 text-brand-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Delete Category"><Trash2 className="h-4 w-4" /></button><ChevronRight className="h-4 w-4 text-gray-500" /></div>
             </button>
           ))}
         </div>
@@ -509,6 +508,7 @@ export default function DevotionPlansAdminClient({
     </div>
   );
 }
+
 
 
 
