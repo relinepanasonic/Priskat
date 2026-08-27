@@ -1,4 +1,6 @@
-﻿CREATE TABLE IF NOT EXISTS public.bible_verses (
+﻿DROP TABLE IF EXISTS public.bible_verses CASCADE;
+
+CREATE TABLE public.bible_verses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_no INTEGER NOT NULL,
     book_abbr TEXT NOT NULL,
