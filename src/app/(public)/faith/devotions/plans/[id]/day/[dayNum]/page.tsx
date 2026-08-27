@@ -10,7 +10,7 @@ export default async function DevotionPlanDayPage({
   const supabase = await createClient();
   const dayNum = parseInt(params.dayNum, 10);
   
-  if (isNaN(dayNum)) return notFound();
+  if (isNaN(dayNum)) return <div className="text-white p-8">Error: Invalid dayNum {params.dayNum}</div>;
 
   // Get user
   const { data: userData } = await supabase.auth.getUser();
@@ -26,7 +26,7 @@ export default async function DevotionPlanDayPage({
     .eq("id", params.id)
     .single();
 
-  if (!plan) return notFound();
+  if (!plan) return <div className="text-white p-8">Error: Plan not found for ID {params.id}</div>;
 
   // Fetch progress
   const { data: progress } = await supabase
@@ -62,4 +62,5 @@ export default async function DevotionPlanDayPage({
     />
   );
 }
+
 
