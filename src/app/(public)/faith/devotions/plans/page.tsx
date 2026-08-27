@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import PlansClient from "./PlansClient";
+import { getLanguage } from "@/lib/lang";
 
 export const metadata = {
   title: "Devotion Plans",
@@ -7,6 +8,7 @@ export const metadata = {
 
 export default async function DevotionPlansPage() {
   const supabase = await createClient();
+  const language = await getLanguage();
 
   // Fetch categories
   const { data: categoriesData } = await supabase
@@ -38,7 +40,9 @@ export default async function DevotionPlansPage() {
       categories={categoriesData || []} 
       plans={plansData || []} 
       userProgress={progressData} 
-      userId={userId} 
+      userId={userId}
+      language={language} 
     />
   );
 }
+

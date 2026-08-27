@@ -8,6 +8,7 @@ import { DevotionCategory, DevotionPlan, UserDevotionProgress } from "@/lib/type
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
+
 export default function PlansClient({ 
   categories, 
   plans, 
@@ -17,10 +18,12 @@ export default function PlansClient({
   categories: DevotionCategory[], 
   plans: DevotionPlan[],
   userProgress: any[],
-  userId?: string
+  userId?: string,
+  language: "id" | "en"
 }) {
   const [activeTab, setActiveTab] = useState<"My Plans" | "Find Plans" | "Completed">("Find Plans");
   const router = useRouter();
+  
 
   const handleStartPlan = async (planId: string) => {
     if (!userId) {
@@ -94,7 +97,7 @@ export default function PlansClient({
             return (
               <div key={cat.id}>
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold">{cat.name}</h2>
+                  <h2 className="text-2xl font-bold">{(language === "id" && cat.name_id ? cat.name_id : cat.name)}</h2>
                   <button className="text-sm font-bold text-brand-muted flex items-center gap-1">
                     See all <span className="text-lg">›</span>
                   </button>
@@ -105,14 +108,14 @@ export default function PlansClient({
                     <div key={plan.id} className="min-w-[85%] sm:min-w-[300px] flex gap-4 snap-center">
                       <div className="relative h-28 w-28 rounded-2xl overflow-hidden shrink-0 bg-[#2a2d35]">
                         {plan.cover_image_url ? (
-                          <Image src={plan.cover_image_url} alt={plan.title} fill className="object-cover" />
+                          <Image src={plan.cover_image_url} alt={(language === "id" && plan.title_id ? plan.title_id : plan.title)} fill className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[#555] font-bold p-2 text-center text-xs">No Cover</div>
                         )}
                       </div>
                       <div className="flex flex-col justify-center flex-1">
                         <p className="text-brand-muted text-xs font-medium uppercase mb-1">{plan.duration_days} Days</p>
-                        <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{plan.title}</h3>
+                        <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{(language === "id" && plan.title_id ? plan.title_id : plan.title)}</h3>
                         <button 
                           onClick={() => handleStartPlan(plan.id)}
                           className="mt-3 bg-brand-gold text-brand-dark font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-[#2a2d35] transition-colors"
@@ -144,7 +147,7 @@ export default function PlansClient({
                   </div>
                   <div className="flex flex-col justify-center flex-1">
                     <p className="text-brand-muted text-xs font-medium uppercase mb-1">Day {prog.current_day} of {prog.plans?.duration_days}</p>
-                    <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{prog.plans?.title}</h3>
+                    <h3 className="font-bold text-[17px] leading-tight line-clamp-2">{(language === "id" && prog.plans?.title_id ? prog.plans.title_id : prog.plans?.title)}</h3>
                     <Link 
                       href={`/faith/devotions/plans/${prog.plan_id}/day/${prog.current_day}`}
                       className="mt-3 bg-brand-gold text-brand-dark font-bold text-xs px-5 py-2 rounded-full self-start hover:bg-brand-gold/80 transition-colors"
@@ -162,4 +165,6 @@ export default function PlansClient({
     </div>
   );
 }
+
+
 

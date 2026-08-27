@@ -1,10 +1,12 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import ReadClient from "./ReadClient";
+import { getLanguage } from "@/lib/lang";
 
 export default async function DevotionPlanReadPage({ params }: { params: Promise<{ id: string, dayNum: string }> }) {
   const resolvedParams = await params;
   const supabase = await createClient();
+  const language = await getLanguage();
   const dayNum = parseInt(resolvedParams.dayNum, 10);
   
   if (isNaN(dayNum)) return notFound();
@@ -45,10 +47,12 @@ export default async function DevotionPlanReadPage({ params }: { params: Promise
       plan={plan} 
       dayNum={dayNum} 
       dayData={dayData}
+      language={language}
       userId={userId}
     />
   );
 }
+
 
 
 

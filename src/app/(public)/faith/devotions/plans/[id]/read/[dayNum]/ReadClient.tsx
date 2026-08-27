@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/client";
 
 export default function ReadClient({ 
@@ -20,9 +21,10 @@ export default function ReadClient({
 }) {
   const router = useRouter();
   
+  
   // Array of pages: 1st is Devotional, rest are Verses
   const pages = [
-    { type: "devotional", title: "Devotional", content: dayData.devotional_content || "No devotional content provided." },
+    { type: "devotional", title: language === "id" ? "Renungan" : "Devotional", content: (language === "id" && dayData.devotional_content_id ? dayData.devotional_content_id : dayData.devotional_content) || "No devotional content provided." },
     ...(dayData.verses || []).map((v: any) => ({
       type: "verse",
       title: `${v.verse_reference} ${v.translation}`,
@@ -30,11 +32,11 @@ export default function ReadClient({
     }))
   ];
 
-  if (dayData.reflection) {
-    pages.push({ type: "reflection", title: "Reflection", content: dayData.reflection });
+  if ((language === "id" && dayData.reflection_id ? dayData.reflection_id : dayData.reflection)) {
+    pages.push({ type: "reflection", title: language === "id" ? "Refleksi" : "Reflection", content: (language === "id" && dayData.reflection_id ? dayData.reflection_id : dayData.reflection) });
   }
-  if (dayData.prayer) {
-    pages.push({ type: "prayer", title: "Prayer", content: dayData.prayer });
+  if ((language === "id" && dayData.prayer_id ? dayData.prayer_id : dayData.prayer)) {
+    pages.push({ type: "prayer", title: language === "id" ? "Doa" : "Prayer", content: (language === "id" && dayData.prayer_id ? dayData.prayer_id : dayData.prayer) });
   }
 
   const searchParams = useSearchParams();
@@ -120,7 +122,7 @@ export default function ReadClient({
       <div className="flex-1 overflow-y-auto p-6 text-[19px] leading-[1.8] text-brand-light">
         {current.type === "devotional" ? (
           <div>
-            <h1 className="text-3xl font-bold font-sans mb-6">{dayData.devotional_title || "Devotional"}</h1>
+            <h1 className="text-3xl font-bold font-sans mb-6">{(language === "id" && dayData.devotional_title_id ? dayData.devotional_title_id : dayData.devotional_title) || "Devotional"}</h1>
             <div className="whitespace-pre-wrap">{current.content}</div>
           </div>
         ) : (
@@ -147,7 +149,7 @@ export default function ReadClient({
               onClick={handleFinish}
               className="w-full h-12 bg-brand-gold text-brand-dark font-bold font-sans rounded-full hover:bg-brand-gold/80 transition-colors"
             >
-              Finish Day {dayNum}
+              {language === "id" ? "Selesai Hari" : "Finish Day"} {dayNum}
             </button>
           ) : (
             <button 
@@ -171,6 +173,9 @@ export default function ReadClient({
     </div>
   );
 }
+
+
+
 
 
 

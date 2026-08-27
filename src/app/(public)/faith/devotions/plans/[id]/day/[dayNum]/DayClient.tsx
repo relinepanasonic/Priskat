@@ -7,6 +7,7 @@ import { ChevronLeft, MoreVertical, CheckCircle2, Circle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format, addDays } from "date-fns";
 
+
 export default function DayClient({ 
   plan, 
   dayNum, 
@@ -19,6 +20,7 @@ export default function DayClient({
   dayData: any;
 }) {
   const router = useRouter();
+  
 
   // If user completed up to yesterday, they are on track
   const isOnTrack = true; // Mock for now
@@ -38,7 +40,7 @@ export default function DayClient({
         <button onClick={() => router.back()} className="p-2">
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="font-bold text-lg">{plan.title}</h1>
+        <h1 className="font-bold text-lg">{(language === "id" && plan.title_id ? plan.title_id : plan.title)}</h1>
         <button className="p-2">
           <MoreVertical className="h-5 w-5" />
         </button>
@@ -48,7 +50,7 @@ export default function DayClient({
       <div className="px-4 mb-6">
         <div className="relative w-full h-48 rounded-xl overflow-hidden bg-[#1a1d24]">
           {plan.cover_image_url ? (
-            <Image src={plan.cover_image_url} alt={plan.title} fill className="object-cover" />
+            <Image src={plan.cover_image_url} alt={(language === "id" && plan.title_id ? plan.title_id : plan.title)} fill className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center font-bold text-brand-muted">No Cover</div>
           )}
@@ -101,7 +103,7 @@ export default function DayClient({
         <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
           <div className="flex items-center gap-4">
             {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-            <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">Devotional</span>
+            <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Renungan" : "Devotional"}</span>
           </div>
           <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
         </Link>
@@ -122,7 +124,7 @@ export default function DayClient({
           <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">Reflection</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Refleksi" : "Reflection"}</span>
             </div>
             <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
           </Link>
@@ -133,7 +135,7 @@ export default function DayClient({
           <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + (dayData?.reflection ? 1 : 0) + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">Prayer</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Doa" : "Prayer"}</span>
             </div>
             <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
           </Link>
@@ -146,10 +148,13 @@ export default function DayClient({
           href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`}
           className="w-full mx-auto flex justify-center py-4 bg-brand-gold text-brand-dark rounded-full font-bold text-lg hover:bg-brand-gold/80 transition-colors shadow-lg"
         >
-          {isDayCompleted ? "Read Again" : "Start Reading"}
+          {isDayCompleted ? (language === "id" ? "Baca Lagi" : "Read Again") : (language === "id" ? "Mulai Membaca" : "Start Reading")}
         </Link>
       </div>
 
     </div>
   );
 }
+
+
+
