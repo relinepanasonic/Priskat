@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | PriskatCFM",
   },
   description:
-    "A community platform for Priskat CFM — stay updated on news, join events, and connect with fellow members.",
+    "A community platform for Alumni CFM — stay updated on news, join events, and connect with fellow members.",
   keywords: ["PriskatCFM", "community", "church", "events", "news"],
   manifest: "/manifest.json",
   appleWebApp: {

@@ -13,7 +13,7 @@ export default function Footer() {
               <span className="font-bold text-brand-gold">PriskatCFM</span>
             </div>
             <p className="text-sm text-brand-muted">
-              A community platform for Priskat CFM — stay connected, stay inspired.
+              A community platform for Alumni CFM — stay connected, stay inspired.
             </p>
           </div>
 

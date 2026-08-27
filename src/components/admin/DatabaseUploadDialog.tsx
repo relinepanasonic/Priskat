@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import Papa from "papaparse";
 import { UploadCloud, AlertCircle, X } from "lucide-react";
 
-const GROUP_OPTIONS = ["Jabodetabek", "Bandung"];
+const CABANG_OPTIONS = ["Jabodetabek", "Bandung"];
 const CAMP_OPTIONS = [
   "Pria Sejati",
   "Youngman",
@@ -23,7 +23,7 @@ export default function DatabaseUploadDialog({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [selectedGroup, setSelectedGroup] = useState(GROUP_OPTIONS[0]);
+  const [selectedCabang, setselectedCabang] = useState(CABANG_OPTIONS[0]);
   const [selectedCamp, setSelectedCamp] = useState(CAMP_OPTIONS[0]);
   
   const [headers, setHeaders] = useState<string[]>([]);
@@ -49,7 +49,7 @@ export default function DatabaseUploadDialog({
              obj[h] = row[i];
           });
           return {
-             group: obj["Group"],
+             Cabang: obj["Cabang"],
              camp: obj["Camp"],
              registration_no: obj["No Registrasi"],
              angkatan: obj["Angkatan Camp"],
@@ -61,7 +61,7 @@ export default function DatabaseUploadDialog({
              phone: obj["No Telephone"],
              mobile: obj["No Handphone 1"],
              religion: obj["Agama"],
-             parish_group: obj["Paroki (grouping)"],
+             parish_Cabang: obj["Paroki (Cabanging)"],
              parish: obj["Paroki"]
           };
        });
@@ -106,10 +106,10 @@ export default function DatabaseUploadDialog({
           }
           
           const originalHeaders = (results.meta.fields || []).filter((h: string) => h.trim().toUpperCase() !== "NO");
-          const newHeaders = ["Group", "Camp", ...originalHeaders];
+          const newHeaders = ["Cabang", "Camp", ...originalHeaders];
           
           const newRows = results.data.map((row: any) => {
-            const newRow = [selectedGroup, selectedCamp];
+            const newRow = [selectedCabang, selectedCamp];
             originalHeaders.forEach((col: string) => {
               newRow.push(row[col]);
             });
@@ -150,13 +150,13 @@ export default function DatabaseUploadDialog({
           <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-5 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Group</label>
+                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Cabang</label>
                 <select 
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  value={selectedCabang}
+                  onChange={(e) => setselectedCabang(e.target.value)}
                   className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold"
                 >
-                  {GROUP_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  {CABANG_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
               <div>
