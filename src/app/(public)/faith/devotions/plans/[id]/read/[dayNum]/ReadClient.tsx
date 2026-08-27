@@ -80,16 +80,16 @@ export default function ReadClient({
   const current = pages[currentPage];
 
   return (
-    <div className="w-full min-h-screen bg-white text-black font-serif flex flex-col relative">
+    <div className="w-full min-h-screen bg-brand-dark text-white font-serif flex flex-col relative">
       
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white sticky top-0 z-10 border-b border-gray-100">
+      <div className="flex items-center justify-between p-4 bg-brand-dark sticky top-0 z-10 border-b border-[#333]">
         <button onClick={() => router.back()} className="p-2">
           <ChevronLeft className="h-6 w-6" />
         </button>
         
         <div className="flex items-center gap-2 flex-1 justify-center">
-          <div className="h-8 w-8 relative rounded-md overflow-hidden bg-gray-200">
+          <div className="h-8 w-8 relative rounded-md overflow-hidden bg-[#1a1d24]">
             {plan.cover_image_url && <Image src={plan.cover_image_url} alt="Cover" fill className="object-cover" />}
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function ReadClient({
           <button className="p-2">
             <Play className="h-5 w-5" />
           </button>
-          <button className="p-2 flex items-center justify-center bg-gray-100 rounded-full h-8 w-8 text-xs font-bold font-sans">
+          <button className="p-2 flex items-center justify-center bg-[#2a2d35] rounded-full h-8 w-8 text-xs font-bold font-sans">
             AA
           </button>
           <button className="p-2">
@@ -108,7 +108,7 @@ export default function ReadClient({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 text-[19px] leading-[1.8] text-[#333]">
+      <div className="flex-1 overflow-y-auto p-6 text-[19px] leading-[1.8] text-brand-light">
         {current.type === "devotional" ? (
           <div>
             <h1 className="text-3xl font-bold font-sans mb-6">{dayData.devotional_title || "Devotional"}</h1>
@@ -116,18 +116,18 @@ export default function ReadClient({
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-bold font-sans text-gray-400 mb-4 uppercase tracking-wider">{current.title}</h2>
+            <h2 className="text-xl font-bold font-sans text-brand-gold mb-4 uppercase tracking-wider">{current.title}</h2>
             <div className="whitespace-pre-wrap">{current.content}</div>
           </div>
         )}
       </div>
 
       {/* Footer Navigation */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 pb-8 flex items-center justify-between">
+      <div className="sticky bottom-0 bg-white border-t border-[#333] p-4 pb-8 flex items-center justify-between">
         <button 
           onClick={handlePrev}
           disabled={currentPage === 0}
-          className={`h-12 w-12 flex items-center justify-center rounded-full bg-gray-100 ${currentPage === 0 ? "opacity-50" : "hover:bg-gray-200"}`}
+          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] ${currentPage === 0 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
         >
           <Play className="h-5 w-5 rotate-180" />
         </button>
@@ -136,14 +136,14 @@ export default function ReadClient({
           {currentPage === pages.length - 1 ? (
             <button 
               onClick={handleFinish}
-              className="w-full h-12 bg-black text-white font-bold font-sans rounded-full hover:bg-gray-800 transition-colors"
+              className="w-full h-12 bg-brand-gold text-brand-dark font-bold font-sans rounded-full hover:bg-brand-gold/80 transition-colors"
             >
               Finish Day {dayNum}
             </button>
           ) : (
             <button 
               onClick={handleNext}
-              className="w-full h-12 bg-gray-100 text-black font-bold font-sans rounded-full flex justify-center items-center gap-2 hover:bg-gray-200"
+              className="w-full h-12 bg-[#2a2d35] text-white font-bold font-sans rounded-full flex justify-center items-center gap-2 hover:bg-[#1a1d24]"
             >
               {pages[currentPage + 1].title} <ChevronRight className="h-5 w-5" />
             </button>
@@ -153,7 +153,7 @@ export default function ReadClient({
         <button 
           onClick={handleNext}
           disabled={currentPage === pages.length - 1}
-          className={`h-12 w-12 flex items-center justify-center rounded-full bg-gray-100 ${currentPage === pages.length - 1 ? "opacity-50" : "hover:bg-gray-200"}`}
+          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] ${currentPage === pages.length - 1 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
         >
           <Play className="h-5 w-5" />
         </button>
@@ -162,3 +162,4 @@ export default function ReadClient({
     </div>
   );
 }
+

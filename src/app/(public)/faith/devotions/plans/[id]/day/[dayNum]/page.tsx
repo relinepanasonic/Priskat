@@ -16,7 +16,7 @@ export default async function DevotionPlanDayPage({
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   // Fetch plan
@@ -62,3 +62,4 @@ export default async function DevotionPlanDayPage({
     />
   );
 }
+
