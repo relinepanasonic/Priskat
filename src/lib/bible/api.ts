@@ -1,4 +1,5 @@
 ﻿const BEEBLE_BOOK_IDS: Record<string, number> = {
+  // English
   "genesis": 1, "exodus": 2, "leviticus": 3, "numbers": 4, "deuteronomy": 5,
   "joshua": 6, "judges": 7, "ruth": 8, "1 samuel": 9, "2 samuel": 10,
   "1 kings": 11, "2 kings": 12, "1 chronicles": 13, "2 chronicles": 14,
@@ -16,9 +17,25 @@
   "philemon": 57, "hebrews": 58, "james": 59, "1 peter": 60, "2 peter": 61,
   "1 john": 62, "2 john": 63, "3 john": 64, "jude": 65, "revelation": 66,
   
-  "tobit": 67, "yudit": 68, "tambahan ester": 69, "kebijaksanaan salomo": 70,
-  "yesus bin sirakh": 71, "sirakh": 71, "barukh": 72, "tambahan daniel": 73,
-  "1 makabe": 74, "2 makabe": 75, "wisdom": 70, "sirach": 71, "baruch": 72, "judith": 68, "1 maccabees": 74, "2 maccabees": 75
+  "tobit": 67, "yudit": 68, "judith": 68, "tambahan ester": 69, "kebijaksanaan salomo": 70, "kebijaksanaan": 70, "wisdom": 70,
+  "yesus bin sirakh": 71, "sirakh": 71, "sirach": 71, "barukh": 72, "baruch": 72, "tambahan daniel": 73,
+  "1 makabe": 74, "1 maccabees": 74, "2 makabe": 75, "2 maccabees": 75,
+  
+  // Indonesian Aliases
+  "kejadian": 1, "keluaran": 2, "imamat": 3, "bilangan": 4, "ulangan": 5,
+  "yosua": 6, "hakim-hakim": 7, "rut": 8, "1 raja-raja": 11, "2 raja-raja": 12,
+  "1 tawarikh": 13, "2 tawarikh": 14, "nehemia": 16, "ester": 17, "ayub": 18,
+  "mazmur": 19, "amsal": 20, "pengkhotbah": 21, "kidung agung": 22,
+  "yesaya": 23, "yeremia": 24, "ratapan": 25, "yehezkiel": 26,
+  "yoel": 29, "obaja": 31, "yunus": 32, "mikha": 33,
+  "habakuk": 35, "zefanya": 36, "hagai": 37, "zakharia": 38, "maleakhi": 39,
+  
+  "matius": 40, "markus": 41, "lukas": 42, "yohanes": 43, "kisah para rasul": 44,
+  "roma": 45, "1 korintus": 46, "2 korintus": 47, "galatia": 48,
+  "efesus": 49, "filipi": 50, "kolose": 51, "1 tesalonika": 52,
+  "2 tesalonika": 53, "1 timotius": 54, "2 timotius": 55,
+  "filemon": 57, "ibrani": 58, "yakobus": 59, "1 petrus": 60, "2 petrus": 61,
+  "1 yohanes": 62, "2 yohanes": 63, "3 yohanes": 64, "yudas": 65, "wahyu": 66
 };
 
 export async function fetchBibleVerse(reference: string, language: "en" | "id"): Promise<string> {
@@ -78,4 +95,3 @@ export async function fetchBibleVerse(reference: string, language: "en" | "id"):
     return "Gagal mengambil teks Alkitab bahasa Indonesia.";
   }
 }
-
