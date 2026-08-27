@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import DevotionPlansAdminClient from "@/components/admin/DevotionPlansAdminClient";
+import DevotionCSVUploader from "@/components/admin/DevotionCSVUploader";
 
 export default async function DevotionPlansAdminPage() {
   const supabase = await createClient();
@@ -29,7 +30,15 @@ export default async function DevotionPlansAdminPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-full">
-      <div className="mb-8 flex justify-between items-center"><div className="flex-1"><h1 className="text-3xl font-bold text-white">Devotion Plans Admin</h1><p className="text-brand-muted mt-2">Manage devotion categories and plans.</p></div><button className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold shadow-md hover:bg-brand-gold/80 transition-colors">Import CSV (Coming Soon)</button></div>
+      <div className="mb-8 flex justify-between items-center">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-white">Devotion Plans Admin</h1>
+          <p className="text-brand-muted mt-2">Manage devotion categories and plans.</p>
+        </div>
+        <div>
+          <DevotionCSVUploader />
+        </div>
+      </div>
       <DevotionPlansAdminClient
         initialCategories={categories || []}
         initialPlans={plans || []}
@@ -37,6 +46,3 @@ export default async function DevotionPlansAdminPage() {
     </div>
   );
 }
-
-
-
