@@ -45,7 +45,7 @@ export default function LoginPage() {
     <div>
       <h2 className="mb-1 text-xl font-bold text-white">Log In</h2>
       <p className="mb-6 text-sm text-brand-muted">
-        Welcome back to PriskatCFM
+        Welcome back!
       </p>
 
       {error && (
@@ -124,9 +124,10 @@ export default function LoginPage() {
           href="/register"
           className="font-medium text-brand-gold hover:underline"
         >
-          Join PriskatCFM
+          Join Now
         </Link>
       </p>
     </div>
   );
 }
+

@@ -141,7 +141,7 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <h2 className="mb-1 text-xl font-bold text-white">Join PriskatCFM</h2>
+      <h2 className="mb-1 text-xl font-bold text-white">Join the Community</h2>
       <p className="mb-6 text-sm text-brand-muted">Create your community account</p>
 
       {error && (
@@ -301,4 +301,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
 

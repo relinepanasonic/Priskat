@@ -124,3 +124,4 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
     </section>
   );
 }
+
