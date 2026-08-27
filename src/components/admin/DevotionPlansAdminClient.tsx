@@ -57,7 +57,10 @@ export default function DevotionPlansAdminClient({
   
   const [dayVerses, setDayVerses] = useState<any[]>([]);
   
-  const [newVerseRef, setNewVerseRef] = useState("");
+  const [verseBook, setVerseBook] = useState("Genesis");
+  const [verseChapter, setVerseChapter] = useState("");
+  const [verseNumber, setVerseNumber] = useState("");
+  const BIBLE_BOOKS = ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Tobit", "Judith", "Esther", "1 Maccabees", "2 Maccabees", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Wisdom", "Sirach", "Isaiah", "Jeremiah", "Lamentations", "Baruch", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"];
   const [isSavingDay, setIsSavingDay] = useState(false);
 
   // UI state for dual columns
@@ -219,28 +222,28 @@ export default function DevotionPlansAdminClient({
 
   const handleAddVerse = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dayData || !newVerseRef) return;
+    if (!dayData || !verseBook || !verseChapter || !verseNumber) return;
     const { data } = await supabase.from("devotion_day_verses").insert({
       day_id: dayData.id,
-      verse_reference: newVerseRef,
+      verse_reference: `${verseBook} ${verseChapter}:${verseNumber}`,
       translation: "TB",
       order_index: dayVerses.length
     }).select().single();
 
     if (data) {
       setDayVerses([...dayVerses, data]);
-      setNewVerseRef("");
+      setVerseChapter(""); setVerseNumber("");
     }
   };
 
   return (
-    <div className="flex h-[85vh] w-full bg-white text-black border border-gray-300 rounded-xl overflow-hidden shadow-2xl">
+    <div className="flex h-[85vh] w-full bg-brand-surface text-white border border-[#333] rounded-xl overflow-hidden shadow-2xl">
       
       {/* COLUMN 1: CATEGORIES */}
-      <div className="w-1/4 border-r border-gray-300 bg-gray-50 flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center shrink-0">
+      <div className="w-1/4 border-r border-[#333] bg-[#14151a] flex flex-col">
+        <div className="p-3 bg-[#2a2d35] border-b border-[#333] font-bold text-xs uppercase tracking-wider text-brand-light flex justify-between items-center shrink-0">
           <span>1. Categories</span>
-          <button onClick={() => setShowIdCol1(!showIdCol1)} title="Toggle Indonesian Form" className="text-gray-500 hover:text-black">
+          <button onClick={() => setShowIdCol1(!showIdCol1)} title="Toggle Indonesian Form" className="text-brand-muted hover:text-white">
             <Globe2 className={`h-4 w-4 ${showIdCol1 ? "text-blue-500" : ""}`} />
           </button>
         </div>
@@ -249,37 +252,37 @@ export default function DevotionPlansAdminClient({
             <button
               key={cat.id}
               onClick={() => { setSelectedCategoryId(cat.id); setSelectedPlanId(null); setSelectedDayNum(null); }}
-              className={`w-full text-left px-4 py-3 border-b border-gray-200 flex justify-between items-center hover:bg-gray-100 transition-colors ${selectedCategoryId === cat.id ? "bg-blue-100 border-blue-200" : ""}`}
+              className={`w-full text-left px-4 py-3 border-b border-[#333] flex justify-between items-center hover:bg-[#2a2d35] transition-colors ${selectedCategoryId === cat.id ? "bg-blue-100 border-blue-200" : ""}`}
             >
               <div>
                 <span className="font-semibold text-sm block">{cat.name}</span>
-                {cat.name_id && <span className="text-xs text-gray-500 italic block">{cat.name_id}</span>}
+                {cat.name_id && <span className="text-xs text-brand-muted italic block">{cat.name_id}</span>}
               </div>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-gray-500" />
             </button>
           ))}
         </div>
-        <div className="p-3 border-t border-gray-300 bg-white shrink-0">
+        <div className="p-3 border-t border-[#333] bg-brand-surface shrink-0">
           <form onSubmit={handleAddCategory} className="flex flex-col gap-2">
-            <input type="text" placeholder="Category Name (EN)" required value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+            <input type="text" placeholder="Category Name (EN)" required value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
             {showIdCol1 && (
-              <input type="text" placeholder="Category Name (ID)" value={newCategoryNameId} onChange={e => setNewCategoryNameId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+              <input type="text" placeholder="Category Name (ID)" value={newCategoryNameId} onChange={e => setNewCategoryNameId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
             )}
-            <button type="submit" className="w-full bg-black text-white p-1.5 rounded flex items-center justify-center gap-1 text-xs font-bold"><Plus className="h-3 w-3" /> Add Category</button>
+            <button type="submit" className="w-full bg-brand-gold text-brand-dark p-1.5 rounded flex items-center justify-center gap-1 text-xs font-bold"><Plus className="h-3 w-3" /> Add Category</button>
           </form>
         </div>
       </div>
 
       {/* COLUMN 2: PLANS */}
-      <div className="w-1/4 border-r border-gray-300 bg-gray-50 flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center shrink-0">
+      <div className="w-1/4 border-r border-[#333] bg-[#14151a] flex flex-col">
+        <div className="p-3 bg-[#2a2d35] border-b border-[#333] font-bold text-xs uppercase tracking-wider text-brand-light flex justify-between items-center shrink-0">
           <span>2. Devotion Plans</span>
-          <button onClick={() => setShowIdCol2(!showIdCol2)} title="Toggle Indonesian Form" className="text-gray-500 hover:text-black">
+          <button onClick={() => setShowIdCol2(!showIdCol2)} title="Toggle Indonesian Form" className="text-brand-muted hover:text-white">
             <Globe2 className={`h-4 w-4 ${showIdCol2 ? "text-blue-500" : ""}`} />
           </button>
         </div>
         {!selectedCategoryId ? (
-          <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a category first</div>
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-500 p-4 text-center">Select a category first</div>
         ) : (
           <>
             <div className="flex-1 overflow-y-auto">
@@ -287,21 +290,21 @@ export default function DevotionPlansAdminClient({
                 <button
                   key={plan.id}
                   onClick={() => selectPlan(plan)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-200 flex flex-col hover:bg-gray-100 transition-colors ${selectedPlanId === plan.id ? "bg-blue-100 border-blue-200" : ""}`}
+                  className={`w-full text-left px-4 py-3 border-b border-[#333] flex flex-col hover:bg-[#2a2d35] transition-colors ${selectedPlanId === plan.id ? "bg-blue-100 border-blue-200" : ""}`}
                 >
                   <span className="font-semibold text-sm truncate">{plan.title}</span>
-                  {plan.title_id && <span className="text-xs text-gray-500 truncate italic">{plan.title_id}</span>}
-                  <span className="text-[10px] uppercase font-bold text-gray-400 mt-1">{plan.duration_days} Days</span>
+                  {plan.title_id && <span className="text-xs text-brand-muted truncate italic">{plan.title_id}</span>}
+                  <span className="text-[10px] uppercase font-bold text-gray-500 mt-1">{plan.duration_days} Days</span>
                 </button>
               ))}
             </div>
-            <div className="p-3 border-t border-gray-300 bg-white shrink-0">
+            <div className="p-3 border-t border-[#333] bg-brand-surface shrink-0">
               <form onSubmit={handleAddPlan} className="flex flex-col gap-2">
-                <input type="text" placeholder="Plan Title (EN)" required value={newPlanName} onChange={e => setNewPlanName(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+                <input type="text" placeholder="Plan Title (EN)" required value={newPlanName} onChange={e => setNewPlanName(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
                 {showIdCol2 && (
-                  <input type="text" placeholder="Plan Title (ID)" value={newPlanNameId} onChange={e => setNewPlanNameId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+                  <input type="text" placeholder="Plan Title (ID)" value={newPlanNameId} onChange={e => setNewPlanNameId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1 text-sm" />
                 )}
-                <button type="submit" className="w-full bg-black text-white p-1.5 rounded flex justify-center items-center gap-1 text-xs font-bold"><Plus className="h-3 w-3" /> Add Plan</button>
+                <button type="submit" className="w-full bg-brand-gold text-brand-dark p-1.5 rounded flex justify-center items-center gap-1 text-xs font-bold"><Plus className="h-3 w-3" /> Add Plan</button>
               </form>
             </div>
           </>
@@ -309,52 +312,52 @@ export default function DevotionPlansAdminClient({
       </div>
 
       {/* COLUMN 3: PLAN DETAILS & DAYS */}
-      <div className="w-1/4 border-r border-gray-300 bg-white flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 shrink-0">
+      <div className="w-1/4 border-r border-[#333] bg-brand-surface flex flex-col">
+        <div className="p-3 bg-[#2a2d35] border-b border-[#333] font-bold text-xs uppercase tracking-wider text-brand-light shrink-0">
           3. Plan Cover & Details
         </div>
         {!selectedPlan ? (
-          <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a plan first</div>
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-500 p-4 text-center">Select a plan first</div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             
-            <div className="space-y-3 pb-4 border-b border-gray-200">
+            <div className="space-y-3 pb-4 border-b border-[#333]">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Title (EN)</label>
-                  <input type="text" value={planTitle} onChange={e => setPlanTitle(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold" />
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Title (EN)</label>
+                  <input type="text" value={planTitle} onChange={e => setPlanTitle(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs font-semibold" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Title (ID)</label>
-                  <input type="text" value={planTitleId} onChange={e => setPlanTitleId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold bg-gray-50" />
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Title (ID)</label>
+                  <input type="text" value={planTitleId} onChange={e => setPlanTitleId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs font-semibold bg-[#14151a]" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Sub Title (EN)</label>
-                  <input type="text" value={planSubtitle} onChange={e => setPlanSubtitle(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs" />
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Sub Title (EN)</label>
+                  <input type="text" value={planSubtitle} onChange={e => setPlanSubtitle(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Sub Title (ID)</label>
-                  <input type="text" value={planSubtitleId} onChange={e => setPlanSubtitleId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs bg-gray-50" />
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Sub Title (ID)</label>
+                  <input type="text" value={planSubtitleId} onChange={e => setPlanSubtitleId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs bg-[#14151a]" />
                 </div>
               </div>
               
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Cover Image</label>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Cover Image</label>
                 <div className="flex gap-2 items-center">
                   {planCover ? (
-                    <div className="relative h-12 w-12 rounded overflow-hidden border border-gray-300 shrink-0">
+                    <div className="relative h-12 w-12 rounded overflow-hidden border border-[#333] shrink-0">
                       <Image src={planCover} alt="Cover" fill className="object-cover" />
                     </div>
                   ) : (
-                    <div className="h-12 w-12 rounded border border-gray-300 shrink-0 bg-gray-100 flex items-center justify-center text-gray-400">
+                    <div className="h-12 w-12 rounded border border-[#333] shrink-0 bg-[#2a2d35] flex items-center justify-center text-gray-500">
                       <ImageIcon className="h-4 w-4" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <label className={`w-full border border-gray-300 rounded px-2 py-2 text-xs flex justify-center items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <label className={`w-full border border-[#333] rounded px-2 py-2 text-xs flex justify-center items-center gap-2 cursor-pointer hover:bg-[#14151a] transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                       {isUploading ? 'Uploading...' : 'Upload Picture'}
                       <input type="file" accept="image/*" className="hidden" onChange={handleUploadCover} disabled={isUploading} />
@@ -364,32 +367,32 @@ export default function DevotionPlansAdminClient({
               </div>
               
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Summary (EN)</label>
-                <textarea rows={2} value={planSummary} onChange={e => setPlanSummary(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs"></textarea>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Summary (EN)</label>
+                <textarea rows={2} value={planSummary} onChange={e => setPlanSummary(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs"></textarea>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Summary (ID)</label>
-                <textarea rows={2} value={planSummaryId} onChange={e => setPlanSummaryId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs bg-gray-50"></textarea>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Summary (ID)</label>
+                <textarea rows={2} value={planSummaryId} onChange={e => setPlanSummaryId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs bg-[#14151a]"></textarea>
               </div>
               
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Duration (Days)</label>
-                <input type="number" min="1" max="365" value={planDuration} onChange={e => setPlanDuration(parseInt(e.target.value))} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Duration (Days)</label>
+                <input type="number" min="1" max="365" value={planDuration} onChange={e => setPlanDuration(parseInt(e.target.value))} className="w-full border border-[#333] rounded px-2 py-1.5 text-sm" />
               </div>
               
-              <button onClick={handleSavePlan} disabled={isSavingPlan} className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 hover:bg-blue-700">
+              <button onClick={handleSavePlan} disabled={isSavingPlan} className="w-full bg-brand-gold text-brand-dark font-bold text-xs py-2 rounded mt-2 hover:bg-brand-gold-500">
                 {isSavingPlan ? "Saving..." : "Save Plan Details"}
               </button>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-2">Edit Days (1 - {planDuration})</label>
+              <label className="block text-xs font-bold text-brand-light mb-2">Edit Days (1 - {planDuration})</label>
               <div className="grid grid-cols-4 gap-2">
                 {Array.from({ length: planDuration }).map((_, i) => (
                   <button
                     key={i}
                     onClick={() => selectDay(i + 1)}
-                    className={`aspect-square rounded flex items-center justify-center font-bold text-sm transition-colors border ${selectedDayNum === i + 1 ? "bg-black text-white border-black" : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"}`}
+                    className={`aspect-square rounded flex items-center justify-center font-bold text-sm transition-colors border ${selectedDayNum === i + 1 ? "bg-brand-gold text-brand-dark border-brand-gold" : "bg-[#2a2d35] text-brand-light border-[#333] hover:bg-[#2a2d35]"}`}
                   >
                     {i + 1}
                   </button>
@@ -402,69 +405,75 @@ export default function DevotionPlansAdminClient({
       </div>
 
       {/* COLUMN 4: DAY BODY */}
-      <div className="w-1/4 bg-white flex flex-col">
-        <div className="p-3 bg-gray-200 border-b border-gray-300 font-bold text-xs uppercase tracking-wider text-gray-600 flex justify-between items-center shrink-0">
+      <div className="w-1/4 bg-brand-surface flex flex-col">
+        <div className="p-3 bg-[#2a2d35] border-b border-[#333] font-bold text-xs uppercase tracking-wider text-brand-light flex justify-between items-center shrink-0">
           <span>4. The Body</span>
-          {selectedDayNum && <span className="text-black bg-white px-2 py-0.5 rounded text-[10px]">Day {selectedDayNum}</span>}
+          {selectedDayNum && <span className="text-white bg-brand-surface px-2 py-0.5 rounded text-[10px]">Day {selectedDayNum}</span>}
         </div>
         {!selectedDayNum ? (
-          <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">Select a day first</div>
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-500 p-4 text-center">Select a day first</div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
             
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Section Title (EN)</label>
-                <input type="text" value={dayTitle} onChange={e => setDayTitle(e.target.value)} placeholder="e.g. Intro" className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold" />
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Section Title (EN)</label>
+                <input type="text" value={dayTitle} onChange={e => setDayTitle(e.target.value)} placeholder="e.g. Intro" className="w-full border border-[#333] rounded px-2 py-1.5 text-xs font-semibold" />
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Section Title (ID)</label>
-                <input type="text" value={dayTitleId} onChange={e => setDayTitleId(e.target.value)} placeholder="e.g. Intro" className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-semibold bg-gray-50" />
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">Section Title (ID)</label>
+                <input type="text" value={dayTitleId} onChange={e => setDayTitleId(e.target.value)} placeholder="e.g. Intro" className="w-full border border-[#333] rounded px-2 py-1.5 text-xs font-semibold bg-[#14151a]" />
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Devotion (EN)</label>
-              <textarea rows={4} value={dayDevotion} onChange={e => setDayDevotion(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">The Devotion (EN)</label>
+              <textarea rows={4} value={dayDevotion} onChange={e => setDayDevotion(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
               
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mt-2 mb-1">The Devotion (ID)</label>
-              <textarea rows={4} value={dayDevotionId} onChange={e => setDayDevotionId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mt-2 mb-1">The Devotion (ID)</label>
+              <textarea rows={4} value={dayDevotionId} onChange={e => setDayDevotionId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs leading-relaxed bg-[#14151a]"></textarea>
             </div>
 
-            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">The Verses</label>
+            <div className="bg-[#14151a] p-3 rounded-lg border border-[#333]">
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mb-2">The Verses</label>
               <ul className="space-y-1.5 mb-3">
                 {dayVerses.map(v => (
-                  <li key={v.id} className="text-xs bg-white p-2 rounded flex justify-between items-center border border-gray-200">
+                  <li key={v.id} className="text-xs bg-brand-surface p-2 rounded flex justify-between items-center border border-[#333]">
                     <span className="font-semibold">{v.verse_reference}</span>
                   </li>
                 ))}
-                {dayVerses.length === 0 && <li className="text-[10px] text-gray-400 italic">No verses added.</li>}
+                {dayVerses.length === 0 && <li className="text-[10px] text-gray-500 italic">No verses added.</li>}
               </ul>
-              <form onSubmit={handleAddVerse} className="flex gap-2">
-                <input type="text" placeholder="e.g. Yehezkiel 20:8" value={newVerseRef} onChange={e => setNewVerseRef(e.target.value)} className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-xs" />
-                <button type="submit" className="bg-black text-white p-1.5 rounded"><Plus className="h-3 w-3" /></button>
+              <form onSubmit={handleAddVerse} className="flex flex-col gap-2">
+                <select value={verseBook} onChange={e => setVerseBook(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs bg-[#1a1d24] text-white">
+                  {BIBLE_BOOKS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+                <div className="flex gap-2">
+                  <input type="number" placeholder="Ch" value={verseChapter} onChange={e => setVerseChapter(e.target.value)} className="w-1/3 border border-[#333] rounded px-2 py-1.5 text-xs bg-[#1a1d24] text-white" />
+                  <input type="text" placeholder="Vs (e.g. 1-3)" value={verseNumber} onChange={e => setVerseNumber(e.target.value)} className="flex-1 border border-[#333] rounded px-2 py-1.5 text-xs bg-[#1a1d24] text-white" />
+                  <button type="submit" className="bg-brand-gold text-brand-dark p-1.5 rounded font-bold"><Plus className="h-4 w-4" /></button>
+                </div>
               </form>
               {!dayData && <p className="text-[10px] text-red-500 mt-1">Save content first before adding verses.</p>}
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Reflection (EN)</label>
-              <textarea rows={3} value={dayReflection} onChange={e => setDayReflection(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">The Reflection (EN)</label>
+              <textarea rows={3} value={dayReflection} onChange={e => setDayReflection(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
               
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mt-2 mb-1">The Reflection (ID)</label>
-              <textarea rows={3} value={dayReflectionId} onChange={e => setDayReflectionId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mt-2 mb-1">The Reflection (ID)</label>
+              <textarea rows={3} value={dayReflectionId} onChange={e => setDayReflectionId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs leading-relaxed bg-[#14151a]"></textarea>
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">The Prayer (EN)</label>
-              <textarea rows={3} value={dayPrayer} onChange={e => setDayPrayer(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1">The Prayer (EN)</label>
+              <textarea rows={3} value={dayPrayer} onChange={e => setDayPrayer(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs leading-relaxed"></textarea>
               
-              <label className="block text-[10px] uppercase font-bold text-gray-500 mt-2 mb-1">The Prayer (ID)</label>
-              <textarea rows={3} value={dayPrayerId} onChange={e => setDayPrayerId(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs leading-relaxed bg-gray-50"></textarea>
+              <label className="block text-[10px] uppercase font-bold text-brand-muted mt-2 mb-1">The Prayer (ID)</label>
+              <textarea rows={3} value={dayPrayerId} onChange={e => setDayPrayerId(e.target.value)} className="w-full border border-[#333] rounded px-2 py-1.5 text-xs leading-relaxed bg-[#14151a]"></textarea>
             </div>
             
-            <button onClick={handleSaveDay} disabled={isSavingDay} className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2">
+            <button onClick={handleSaveDay} disabled={isSavingDay} className="w-full bg-brand-gold text-brand-dark font-bold text-xs py-2 rounded hover:bg-brand-gold-500 flex items-center justify-center gap-2">
               <Save className="h-4 w-4" /> {isSavingDay ? "Saving..." : "Save Body Content"}
             </button>
             
@@ -475,3 +484,4 @@ export default function DevotionPlansAdminClient({
     </div>
   );
 }
+
