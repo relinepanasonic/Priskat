@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckSquare, Calendar, MessageSquare, Plus, Download, Send, Users } from "lucide-react";
+import { ArrowLeft, CheckSquare, Calendar, MessageSquare, Plus, Download, Send, Users, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export default function ProductivityDashboard({ params }: { params: Promise<{ camp_id: string }> }) {
@@ -19,6 +19,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   const [newCrewName, setNewCrewName] = useState("");
   const [newCrewPosition, setNewCrewPosition] = useState("");
   const [newCrewUserId, setNewCrewUserId] = useState("");
+  const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
   
   // Chat state
   const [chatMessage, setChatMessage] = useState("");
@@ -86,25 +87,42 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
       if (u) finalName = u.full_name;
     }
 
-    const { error } = await supabase.from("camp_crew").insert({
-      cohort_id: camp_id,
-      branch: camp.branch,
-      camp: camp.camp_name,
-      angkatan: camp.angkatan,
-      name: finalName,
-      position: newCrewPosition,
-      user_id: newCrewUserId || null,
-      profile_id: newCrewUserId || null
-    });
-    
-    if (error) {
-      alert("Error adding crew: " + error.message);
-      return;
+    if (editingCrewId) {
+      // Edit mode
+      const { error } = await supabase.from("camp_crew").update({
+        name: finalName,
+        position: newCrewPosition,
+        user_id: newCrewUserId || null,
+        profile_id: newCrewUserId || null
+      }).eq("id", editingCrewId);
+      if (error) { alert("Error updating crew: " + error.message); return; }
+      setEditingCrewId(null);
+    } else {
+      // Add mode
+      const { error } = await supabase.from("camp_crew").insert({
+        cohort_id: camp_id,
+        branch: camp.branch,
+        camp: camp.camp_name,
+        angkatan: camp.angkatan,
+        name: finalName,
+        position: newCrewPosition,
+        user_id: newCrewUserId || null,
+        profile_id: newCrewUserId || null
+      });
+      if (error) { alert("Error adding crew: " + error.message); return; }
     }
     
     setNewCrewName("");
     setNewCrewPosition("");
     setNewCrewUserId("");
+    fetchCrew(supabase);
+  };
+
+  const handleDeleteCrew = async (crewId: string) => {
+    if (!confirm("Delete this crew member?")) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("camp_crew").delete().eq("id", crewId);
+    if (error) { alert("Error deleting crew: " + error.message); return; }
     fetchCrew(supabase);
   };
 
@@ -226,68 +244,78 @@ END:VCALENDAR`;
         <p className="text-gray-400 text-sm">Productivity Dashboard for {camp.branch}</p>
       </div>
 
-      <div className="flex border-b border-[#333] bg-[#1a1d24]">
+      <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto">
         <button 
           onClick={() => setActiveTab("todo")}
-          className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-colors border-b-2 ${activeTab === "todo" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
+          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "todo" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
         >
-          <CheckSquare className="w-4 h-4" /> To Do
+          <CheckSquare className="w-4 h-4 flex-shrink-0" /> To Do
         </button>
         <button 
           onClick={() => setActiveTab("meeting")}
-          className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-colors border-b-2 ${activeTab === "meeting" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
+          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "meeting" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
         >
-          <Calendar className="w-4 h-4" /> Meetings
+          <Calendar className="w-4 h-4 flex-shrink-0" /> Meetings
         </button>
         <button 
           onClick={() => setActiveTab("chat")}
-          className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-colors border-b-2 ${activeTab === "chat" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
+          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "chat" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
         >
-          <MessageSquare className="w-4 h-4" /> Chat
+          <MessageSquare className="w-4 h-4 flex-shrink-0" /> Chat
         </button>
         <button 
           onClick={() => setActiveTab("crew")}
-          className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-colors border-b-2 ${activeTab === "crew" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
+          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "crew" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
         >
-          <Users className="w-4 h-4" /> Crew
+          <Users className="w-4 h-4 flex-shrink-0" /> Crew
         </button>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-6 overflow-y-auto flex flex-col">
         {activeTab === "crew" && (
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-bold text-white mb-4">Camp Crew Members</h2>
-              <div className="bg-[#1a1d24] border border-[#333] rounded-xl overflow-hidden">
-                <table className="w-full text-left text-sm text-gray-300">
-                  <thead className="text-xs uppercase bg-[#111] text-gray-400 border-b border-[#333]">
-                    <tr>
-                      <th className="px-4 py-3">Name</th>
-                      <th className="px-4 py-3">Position</th>
-                      <th className="px-4 py-3">Linked Account</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#333]">
-                    {crewMembers.length === 0 ? (
-                      <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-500">No crew members found.</td></tr>
-                    ) : (
-                      crewMembers.map(crew => (
-                        <tr key={crew.id} className="hover:bg-white/5 transition-colors">
-                          <td className="px-4 py-3 font-semibold text-white">{crew.name}</td>
-                          <td className="px-4 py-3 text-brand-gold">{crew.position}</td>
-                          <td className="px-4 py-3">
-                            {crew.profiles ? (
-                              <span className="bg-[#222] px-2 py-1 rounded text-xs border border-[#444]">@{crew.profiles.username}</span>
-                            ) : (
-                              <span className="text-gray-500 italic text-xs">Unlinked</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              {crewMembers.length === 0 ? (
+                <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-8 text-center text-gray-500">
+                  No crew members yet. Add one below!
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {crewMembers.map(crew => (
+                    <div key={crew.id} className="bg-[#1a1d24] border border-[#333] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-white text-sm truncate">{crew.name}</p>
+                        <p className="text-brand-gold text-xs font-medium mt-0.5">{crew.position}</p>
+                      </div>
+                      {crew.profiles && (
+                        <span className="bg-[#222] px-2 py-1 rounded text-xs border border-[#444] text-gray-300 whitespace-nowrap flex-shrink-0">@{crew.profiles.username}</span>
+                      )}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => {
+                            setNewCrewName(crew.name);
+                            setNewCrewPosition(crew.position);
+                            setNewCrewUserId(crew.user_id || "");
+                            setEditingCrewId(crew.id);
+                          }}
+                          className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] rounded transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCrew(crew.id)}
+                          className="p-1.5 text-[#555] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4">
@@ -315,9 +343,14 @@ END:VCALENDAR`;
                   </select>
                 </div>
               </div>
-              <div className="flex justify-end pt-2">
-                <button onClick={handleAddCrew} disabled={(!newCrewName && !newCrewUserId) || !newCrewPosition} className="bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
-                  Add Crew Member
+              <div className="flex justify-between pt-2">
+                {editingCrewId && (
+                  <button onClick={() => { setEditingCrewId(null); setNewCrewName(""); setNewCrewPosition(""); setNewCrewUserId(""); }} className="text-sm text-gray-400 hover:text-white px-4 py-2 rounded-lg border border-[#333] transition-colors">
+                    Cancel Edit
+                  </button>
+                )}
+                <button onClick={handleAddCrew} disabled={(!newCrewName && !newCrewUserId) || !newCrewPosition} className="ml-auto bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
+                  {editingCrewId ? "Save Changes" : "Add Crew Member"}
                 </button>
               </div>
             </div>
@@ -446,7 +479,7 @@ END:VCALENDAR`;
         )}
 
         {activeTab === "chat" && (
-          <div className="h-full flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-white">Crew Chat</h2>
               <select value={targetGroup} onChange={e => setTargetGroup(e.target.value)} className="bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-gold">
@@ -456,7 +489,7 @@ END:VCALENDAR`;
               </select>
             </div>
             
-            <div className="flex-1 bg-[#0b141a] border border-[#333] rounded-xl mb-4 p-4 overflow-y-auto space-y-3">
+            <div className="flex-1 min-h-0 bg-[#0b141a] border border-[#333] rounded-xl mb-3 p-4 overflow-y-auto space-y-3">
               {chats.length === 0 ? (
                 <p className="text-gray-500 italic text-center mt-10 bg-[#111] max-w-xs mx-auto py-2 rounded-lg text-xs">No messages yet. Start the conversation!</p>
               ) : (
