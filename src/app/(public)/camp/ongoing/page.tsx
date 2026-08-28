@@ -81,10 +81,10 @@ export default function MyOngoingCampPage() {
               </div>
               
               <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">
-                {camp.camp_name}
+                {camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name}
               </h3>
               <p className="text-brand-muted font-medium mb-6">
-                Angkatan {camp.angkatan}
+                {camp.camp_name !== "Other Event" ? `Angkatan ${camp.angkatan}` : "Custom Event"}
               </p>
               
               <div className="mt-auto pt-4 border-t border-[#222] flex items-center justify-between">

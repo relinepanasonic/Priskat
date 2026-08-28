@@ -53,3 +53,4 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
     </div>
   );
 }
+

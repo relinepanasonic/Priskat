@@ -82,3 +82,4 @@ export default function CollaboratorPage() {
     </div>
   );
 }
+

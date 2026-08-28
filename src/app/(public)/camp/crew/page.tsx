@@ -2,84 +2,59 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronUp, ChevronDown, ChevronsUpDown, Plus } from "lucide-react";
+import { Plus, Tent, Users, ArrowRight, Trash2 } from "lucide-react";
 import AddCampModal from "@/components/camp/AddCampModal";
+import Link from "next/link";
 
 export default function CampCrewPage() {
-  const [data, setData] = useState<any[]>([]);
+  const [camps, setCamps] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-        if (profile && (profile.role === "superadmin" || profile.role === "admin")) {
-          setIsSuperadmin(true);
-        }
-      }
-
-      const { data: crewData, error } = await supabase
-        .from("camp_crew")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error(error);
-      } else {
-        setData(crewData || []);
-      }
-      setIsLoading(false);
-    }
-    fetchData();
+    fetchCamps();
   }, []);
 
-  const handleSort = (key: string) => {
-    if (sortConfig && sortConfig.key === key) {
-      if (sortConfig.direction === 'asc') {
-        setSortConfig({ key, direction: 'desc' });
-      } else {
-        setSortConfig(null);
+  const fetchCamps = async () => {
+    setIsLoading(true);
+    const supabase = createClient();
+    
+    // Check role
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      if (profile && (profile.role === "superadmin" || profile.role === "admin")) {
+        setIsSuperadmin(true);
       }
-    } else {
-      setSortConfig({ key, direction: 'asc' });
     }
+
+    // Fetch all camp cohorts
+    const { data, error } = await supabase
+      .from("camp_cohorts")
+      .select("*, camp_crew(count)")
+      .order("created_at", { ascending: false });
+      
+    if (data) setCamps(data);
+    setIsLoading(false);
   };
 
-  const sortedData = [...data].sort((a, b) => {
-    if (!sortConfig) return 0;
+  const handleDeleteCamp = async (e: any, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this camp? This will also delete all tasks, meetings, chats, and crew assignments associated with it.")) return;
     
-    let valA = a[sortConfig.key] || "";
-    let valB = b[sortConfig.key] || "";
-
-    if (sortConfig.key === 'angkatan') {
-       const numA = Number(valA);
-       const numB = Number(valB);
-       if (!isNaN(numA) && !isNaN(numB)) {
-          return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
-       }
-    }
-
-    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const SortIcon = ({ columnKey }: { columnKey: string }) => {
-    if (sortConfig?.key !== columnKey) return <ChevronsUpDown className="w-3 h-3 text-gray-600" />;
-    return sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />;
+    const supabase = createClient();
+    await supabase.from("camp_cohorts").delete().eq("id", id);
+    fetchCamps();
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden p-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 pt-4">
+    <div className="p-5 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white">Camp Crew</h2>
-          <p className="text-sm text-brand-muted mt-1">Directory of all camp crew members.</p>
+          <h2 className="text-2xl font-bold text-white tracking-tight">Camp Directory</h2>
+          <p className="text-brand-muted mt-1">Directory of all camps and their crew members.</p>
         </div>
         {isSuperadmin && (
           <button onClick={() => setIsAddModalOpen(true)} className="bg-brand-gold text-brand-dark px-4 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap">
@@ -88,56 +63,68 @@ export default function CampCrewPage() {
         )}
       </div>
 
-      <div className="bg-[#1a1d24] border border-[#333] rounded-xl overflow-hidden mx-5 mb-5">
-        <div className="px-5 py-4 border-b border-[#333] bg-[#111]">
-          <h2 className="text-sm font-bold text-white">Records Found: {data.length}</h2>
+      {isLoading ? (
+        <div className="p-10 text-center text-gray-500">Loading camps...</div>
+      ) : camps.length === 0 ? (
+        <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-10 text-center flex flex-col items-center">
+          <Tent className="w-10 h-10 text-gray-500 mb-4" />
+          <h3 className="text-lg font-bold text-white mb-1">No Camps Found</h3>
+          <p className="text-sm text-gray-400 mb-6">There are currently no camps in the directory.</p>
+          {isSuperadmin && (
+            <button onClick={() => setIsAddModalOpen(true)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm">
+              Create the first Camp
+            </button>
+          )}
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-300">
-            <thead className="text-xs uppercase bg-[#111] text-gray-400 border-b border-[#333]">
-              <tr>
-                <th className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222]" onClick={() => handleSort('branch')}>
-                  <div className="flex items-center gap-1">Branch <SortIcon columnKey="branch" /></div>
-                </th>
-                <th className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222]" onClick={() => handleSort('camp')}>
-                  <div className="flex items-center gap-1">Camp <SortIcon columnKey="camp" /></div>
-                </th>
-                <th className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222]" onClick={() => handleSort('angkatan')}>
-                  <div className="flex items-center gap-1">Angkatan <SortIcon columnKey="angkatan" /></div>
-                </th>
-                <th className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222]" onClick={() => handleSort('name')}>
-                  <div className="flex items-center gap-1">Nama <SortIcon columnKey="name" /></div>
-                </th>
-                <th className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222]" onClick={() => handleSort('position')}>
-                  <div className="flex items-center gap-1">Posisi <SortIcon columnKey="position" /></div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#333]">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-500">Loading records...</td>
-                </tr>
-              ) : data.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-500">No records found.</td>
-                </tr>
-              ) : (
-                sortedData.map((row) => (
-                  <tr key={row.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-2.5 whitespace-nowrap font-bold text-brand-gold">{row.branch || "-"}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">{row.camp || "-"}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">{row.angkatan || "-"}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap font-semibold text-white">{row.name || "-"}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">{row.position || "-"}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {camps.map((camp) => (
+            <Link href={`/camp/ongoing/${camp.id}`} key={camp.id}>
+              <div className="bg-[#111] border border-[#333] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#15181e] group h-full flex flex-col cursor-pointer shadow-lg hover:shadow-brand-gold/10 relative">
+                
+                {isSuperadmin && (
+                  <button 
+                    onClick={(e) => handleDeleteCamp(e, camp.id)}
+                    className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+
+                <div className="flex justify-between items-start mb-4">
+                  <div className="bg-brand-gold/10 p-3 rounded-xl text-brand-gold">
+                    <Tent className="w-6 h-6" />
+                  </div>
+                  <span className="bg-[#222] text-xs font-bold px-3 py-1 rounded-full text-gray-300 border border-[#333]">
+                    {camp.branch}
+                  </span>
+                </div>
+                
+                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">
+                  {camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name}
+                </h3>
+                <p className="text-brand-muted font-medium mb-2">
+                  {camp.camp_name !== "Other Event" ? `Angkatan ${camp.angkatan}` : "Custom Event"}
+                </p>
+                <p className="text-xs text-gray-500 mb-6 flex items-center gap-1">
+                  Start Date: {camp.start_date ? new Date(camp.start_date).toLocaleDateString() : "Not set"}
+                </p>
+                
+                <div className="mt-auto pt-4 border-t border-[#222] flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <Users className="w-4 h-4" />
+                    <span>Crew: <span className="text-white font-semibold">{camp.camp_crew?.[0]?.count || 0} members</span></span>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-[#555] group-hover:text-brand-gold transition-colors" />
+                </div>
+
+              </div>
+            </Link>
+          ))}
         </div>
-      </div>
-      <AddCampModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => window.location.reload()} />
+      )}
+
+      <AddCampModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchCamps} />
     </div>
   );
 }

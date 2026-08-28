@@ -37,3 +37,4 @@ create policy "Allow all access for authenticated users on collaborators"
   to authenticated
   using (true)
   with check (true);
+

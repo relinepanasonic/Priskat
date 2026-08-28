@@ -28,3 +28,4 @@ CREATE POLICY "Allow authenticated delete from camp_crew"
   ON public.camp_crew FOR DELETE
   TO authenticated
   USING (true);
+
