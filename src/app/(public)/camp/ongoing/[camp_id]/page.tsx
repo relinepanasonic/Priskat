@@ -313,23 +313,25 @@ END:VCALENDAR`;
             {isAddingTask && (
               <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4 mb-6">
                 <h3 className="text-md font-bold text-white mb-2">New Task</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-400 mb-1.5">Task Title</label>
                     <input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} type="text" placeholder="Task Name" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Due Date</label>
-                    <input value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Assign To</label>
-                    <select value={newTaskAssignedTo} onChange={e => setNewTaskAssignedTo(e.target.value)} className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
-                      <option value="">-- Unassigned --</option>
-                      {crewMembers.filter(c => c.user_id).map(c => (
-                        <option key={c.user_id} value={c.user_id}>{c.name}</option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-1.5">Due Date</label>
+                      <input value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-1.5">Assign To</label>
+                      <select value={newTaskAssignedTo} onChange={e => setNewTaskAssignedTo(e.target.value)} className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
+                        <option value="">-- Unassigned --</option>
+                        {crewMembers.filter(c => c.user_id).map(c => (
+                          <option key={c.user_id} value={c.user_id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-end pt-2">
@@ -344,7 +346,7 @@ END:VCALENDAR`;
               <p className="text-gray-500 italic">No tasks found.</p>
             ) : (
               tasks.map(task => (
-                <div key={task.id} className="bg-[#1a1d24] border border-[#333] p-4 rounded-xl flex justify-between items-center">
+                <div key={task.id} className="bg-[#1a1d24] border border-[#333] p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
                   <div>
                     <h3 className="font-bold text-white text-base">{task.title}</h3>
                     <p className="text-sm text-gray-400 mt-1">Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No deadline"} • Assigned to: {task.profiles?.full_name || "Unassigned"}</p>
@@ -370,19 +372,21 @@ END:VCALENDAR`;
             {isAddingMeeting && (
               <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4 mb-6">
                 <h3 className="text-md font-bold text-white mb-2">New Meeting</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Meeting Title</label>
-                    <input value={newMeetingTitle} onChange={e => setNewMeetingTitle(e.target.value)} type="text" placeholder="e.g. Kickoff Meeting" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-1.5">Meeting Title</label>
+                      <input value={newMeetingTitle} onChange={e => setNewMeetingTitle(e.target.value)} type="text" placeholder="e.g. Kickoff Meeting" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-1.5">Date & Time</label>
+                      <input value={newMeetingDateTime} onChange={e => setNewMeetingDateTime(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Date & Time</label>
-                    <input value={newMeetingDateTime} onChange={e => setNewMeetingDateTime(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Minutes of Meeting (Optional)</label>
+                    <textarea value={newMeetingMom} onChange={e => setNewMeetingMom(e.target.value)} rows={3} placeholder="Notes and MoM..." className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"></textarea>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Minutes of Meeting (Optional)</label>
-                  <textarea value={newMeetingMom} onChange={e => setNewMeetingMom(e.target.value)} rows={3} placeholder="Notes and MoM..." className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"></textarea>
                 </div>
                 <div className="flex justify-end pt-2">
                   <button onClick={handleAddMeeting} disabled={!newMeetingTitle} className="bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
@@ -429,21 +433,32 @@ END:VCALENDAR`;
               </select>
             </div>
             
-            <div className="flex-1 bg-[#1a1d24] border border-[#333] rounded-xl mb-4 p-4 overflow-y-auto space-y-4">
+            <div className="flex-1 bg-[#0b141a] border border-[#333] rounded-xl mb-4 p-4 overflow-y-auto space-y-3">
               {chats.length === 0 ? (
-                <p className="text-gray-500 italic text-center mt-10">No messages yet. Start the conversation!</p>
+                <p className="text-gray-500 italic text-center mt-10 bg-[#111] max-w-xs mx-auto py-2 rounded-lg text-xs">No messages yet. Start the conversation!</p>
               ) : (
-                chats.map(chat => (
-                  <div key={chat.id} className={`flex flex-col ${chat.user_id === user?.id ? 'items-end' : 'items-start'}`}>
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-xs font-bold text-gray-400">{chat.profiles?.full_name || "Unknown"}</span>
-                      <span className="text-[10px] text-gray-600">{new Date(chat.created_at).toLocaleTimeString()}</span>
+                chats.map(chat => {
+                  const isMe = chat.user_id === user?.id;
+                  return (
+                    <div key={chat.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`relative flex flex-col max-w-[85%] md:max-w-[70%] rounded-2xl px-3 pt-2 pb-1.5 shadow-sm ${
+                        isMe 
+                          ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-none' 
+                          : 'bg-[#202c33] text-[#e9edef] rounded-tl-none border border-[#2a3942]'
+                      }`}>
+                        {!isMe && (
+                          <span className="text-[11px] font-bold text-brand-gold mb-0.5">
+                            {chat.profiles?.full_name || "Unknown"}
+                          </span>
+                        )}
+                        <span className="text-[14.5px] leading-snug">{chat.message}</span>
+                        <span className={`text-[10px] text-right mt-1 opacity-70 ${isMe ? 'text-[#8696a0]' : 'text-[#8696a0]'}`}>
+                          {new Date(chat.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-2xl max-w-[80%] text-sm ${chat.user_id === user?.id ? 'bg-brand-gold text-brand-dark rounded-br-none font-medium' : 'bg-[#222] text-white border border-[#333] rounded-bl-none'}`}>
-                      {chat.message}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
