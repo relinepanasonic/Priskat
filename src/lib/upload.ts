@@ -47,3 +47,25 @@ export function storagePath(userId: string, filename: string): string {
   return `${userId}/${timestamp}.${ext}`;
 }
 
+export async function uploadAudio(
+  file: File,
+  bucket: "profile-songs",
+  path: string
+): Promise<string> {
+  const supabase = createClient();
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, {
+      contentType: file.type || "audio/mpeg",
+      upsert: true,
+    });
+
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucket).getPublicUrl(path);
+
+  return publicUrl;
+}
+

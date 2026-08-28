@@ -7,7 +7,7 @@ import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X } from "lucide-rea
 import FeedClient from "@/components/social/FeedClient";
 import { formatDistanceToNow } from "date-fns";
 import { uploadImage, storagePath } from "@/lib/upload";
-import MiniPlayer from "./MiniPlayer";
+import VinylPlayer from "./VinylPlayer";
 import { createClient } from "@/lib/supabase/client";
 
 export default function HomeTabsClient({ 
@@ -124,8 +124,8 @@ export default function HomeTabsClient({
         </div>
       </div>
       
-      {/* Mini Player */}
-      <MiniPlayer />
+      {/* Vinyl Records & Mini Player */}
+      <VinylPlayer initialSongs={profile.favorite_songs || []} userId={userId} />
 
       <div className="px-6 mt-6">
         <div className="bg-[#1a1d24] rounded-3xl p-5 flex justify-evenly items-center shadow-sm border border-[#333]">
@@ -213,27 +213,27 @@ export default function HomeTabsClient({
                 </h3>
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
+              <div className="relative pl-6 space-y-5 before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-gradient-to-b before:from-brand-gold/50 before:to-[#333]">
                 {myServices.length > 0 ? myServices.map((svc: any, idx: number) => (
-                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex flex-col items-center text-center group hover:border-brand-gold/40 transition-colors relative overflow-hidden shadow-sm">
-                    {/* Subtle Gold Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div key={idx} className="relative">
+                    {/* Timeline Dot */}
+                    <div className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full bg-brand-gold ring-4 ring-brand-dark shadow-[0_0_10px_rgba(212,175,55,0.5)]"></div>
                     
-                    {/* Badge Icon */}
-                    <div className="h-10 w-10 mb-3 rounded-full bg-brand-dark border border-brand-gold/30 flex items-center justify-center text-brand-gold relative z-10 shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                      <Heart className="h-4 w-4 fill-brand-gold/20 group-hover:fill-brand-gold transition-all" />
+                    <div className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl group hover:border-brand-gold/30 transition-colors relative overflow-hidden shadow-sm">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-brand-gold/20 group-hover:bg-brand-gold transition-colors"></div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Heart className="h-3.5 w-3.5 text-brand-gold" />
+                        <h4 className="font-bold text-sm text-white">{svc.position}</h4>
+                      </div>
+                      <p className="text-xs text-gray-400">{svc.camp} <span className="mx-1 text-[#444]">•</span> Angkatan {svc.angkatan}</p>
                     </div>
-                    
-                    <h4 className="font-bold text-[11px] text-white uppercase tracking-wide relative z-10 leading-tight mb-1">{svc.position}</h4>
-                    <p className="text-[10px] text-brand-gold relative z-10 font-medium">{svc.camp}</p>
-                    <p className="text-[9px] text-gray-500 relative z-10 mt-0.5">Angkatan {svc.angkatan}</p>
                   </div>
                 )) : (
-                  <p className="text-sm text-brand-muted italic col-span-2">No services added yet.</p>
+                  <p className="text-sm text-brand-muted italic">No services added yet.</p>
                 )}
               </div>
               
-              <Link href="/profile/edit" className="mt-4 block text-center w-full py-2.5 border border-dashed border-[#444] rounded-xl text-xs font-bold text-gray-500 hover:text-brand-gold hover:border-brand-gold/50 transition-colors bg-[#1a1d24]/50 hover:bg-[#1a1d24]">
+              <Link href="/profile/edit" className="mt-5 block text-center w-full py-2.5 border border-dashed border-[#444] rounded-xl text-xs font-bold text-gray-500 hover:text-brand-gold hover:border-brand-gold/50 transition-colors bg-[#1a1d24]/50 hover:bg-[#1a1d24]">
                 Edit My Services
               </Link>
             </div>
