@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -202,26 +202,9 @@ export default function RegisterPage() {
                     ))}
                   </select>
                   {errors.camps?.[index]?.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.camp?.message}</p>}
-                  
-                  {fields.length > 1 && (
-                    <button 
-                      type="button" 
-                      onClick={() => remove(index)}
-                      className="absolute top-2 right-2 bg-red-900/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
                 </div>
               ))}
-
-              <button
-                type="button"
-                onClick={() => append({ camp: "" })}
-                className="mt-2 flex items-center gap-1 text-xs font-bold text-brand-gold hover:text-white transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" /> Add another camp...
-              </button>
+              
               {errors.camps && !Array.isArray(errors.camps) && <p className="mt-2 text-xs text-red-600">{errors.camps.message}</p>}
             </div>
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -144,7 +144,8 @@ export default function DatabasePage() {
           <table className="w-full text-left text-sm text-gray-300">
             <thead className="text-xs uppercase bg-[#111] text-gray-400 border-b border-[#333]">
               <tr>
-                <th className="px-4 py-3 whitespace-nowrap">Branch</th>`n                <th className="px-4 py-3 whitespace-nowrap">Group</th>
+                <th className="px-4 py-3 whitespace-nowrap">Branch</th>
+                <th className="px-4 py-3 whitespace-nowrap">Group</th>
                 <th className="px-4 py-3 whitespace-nowrap">Camp</th>
                 <th className="px-4 py-3 whitespace-nowrap">Angkatan</th>
                 <th className="px-4 py-3 whitespace-nowrap">Nama</th>
@@ -165,7 +166,8 @@ export default function DatabasePage() {
               ) : (
                 data.map((row) => (
                   <tr key={row.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-2.5 whitespace-nowrap font-bold text-brand-gold">{row.branch || row.cabang || row.Cabang || "Bandung"}</td>`n                    <td className="px-4 py-2.5 whitespace-nowrap">{row.group}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap font-bold text-brand-gold">{row.branch || row.cabang || row.Cabang || "Bandung"}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap">{row.group}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.camp}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.angkatan}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap font-semibold text-white">{row.name}</td>
