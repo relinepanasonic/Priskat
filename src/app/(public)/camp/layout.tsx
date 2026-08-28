@@ -47,9 +47,10 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-hidden min-h-[500px] flex-1 flex flex-col relative">
+      <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-x-hidden overflow-y-auto min-h-[500px] flex-1 flex flex-col relative">
         {children}
       </div>
     </div>
   );
 }
+
