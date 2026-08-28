@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -66,13 +66,8 @@ export default function DatabasePage() {
     <div className="space-y-6 max-w-full overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            <Database className="h-6 w-6 text-brand-gold" />
-            Database
-          </h1>
-          <p className="mt-1 text-sm text-brand-muted">
-            View and filter the alumni directory.
-          </p>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">Alumni Directory</h2>
+          
         </div>
         <button 
           onClick={() => setIsUploadOpen(true)}
@@ -193,5 +188,6 @@ export default function DatabasePage() {
     </div>
   );
 }
+
 
 
