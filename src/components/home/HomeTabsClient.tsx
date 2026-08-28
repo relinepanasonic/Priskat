@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -7,6 +7,7 @@ import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X } from "lucide-rea
 import FeedClient from "@/components/social/FeedClient";
 import { formatDistanceToNow } from "date-fns";
 import { uploadImage, storagePath } from "@/lib/upload";
+import MiniPlayer from "./MiniPlayer";
 import { createClient } from "@/lib/supabase/client";
 
 export default function HomeTabsClient({ 
@@ -20,7 +21,7 @@ export default function HomeTabsClient({
   userId: string,
   activeDevotion?: any
 }) {
-  const [activeTab, setActiveTab] = useState<"Profile" | "Though">("Profile");
+  const [activeTab, setActiveTab] = useState<"Profile" | "Community">("Profile");
 
   const angkatan = profile.angkatan || "-";
   const city = profile.kota || "-";
@@ -122,6 +123,9 @@ export default function HomeTabsClient({
           </div>
         </div>
       </div>
+      
+      {/* Mini Player */}
+      <MiniPlayer />
 
       <div className="px-6 mt-6">
         <div className="bg-[#1a1d24] rounded-3xl p-5 flex justify-evenly items-center shadow-sm border border-[#333]">
@@ -158,10 +162,10 @@ export default function HomeTabsClient({
             Profile
           </button>
           <button 
-            onClick={() => setActiveTab("Though")}
-            className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Though" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
+            onClick={() => setActiveTab("Community")}
+            className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Community" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
-            Though
+            Community
           </button>
         </div>
       </div>
@@ -173,62 +177,76 @@ export default function HomeTabsClient({
             
             {/* MY JOURNEY */}
             <div>
-              <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Tent className="h-4 w-4" /> My Journey
-              </h3>
-              <div className="space-y-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
+                  <Tent className="h-4 w-4" /> My Journey
+                </h3>
+              </div>
+              
+              <div className="relative pl-6 space-y-5 before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-gradient-to-b before:from-brand-gold/50 before:to-[#333]">
                 {myJourney.length > 0 ? myJourney.map((camp: any, idx: number) => (
-                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex items-center justify-between group">
-                    <div>
-                      <h4 className="font-bold text-sm text-brand-light group-hover:text-white transition-colors">{camp.camp}</h4>
-                      <p className="text-xs mt-1 text-gray-500">Angkatan {camp.angkatan} • {camp.kota}</p>
+                  <div key={idx} className="relative">
+                    {/* Timeline Dot */}
+                    <div className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full bg-brand-gold ring-4 ring-brand-dark shadow-[0_0_10px_rgba(212,175,55,0.5)]"></div>
+                    
+                    <div className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl group hover:border-brand-gold/30 transition-colors relative overflow-hidden shadow-sm">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-brand-gold/20 group-hover:bg-brand-gold transition-colors"></div>
+                      <h4 className="font-bold text-sm text-white">{camp.camp}</h4>
+                      <p className="text-xs mt-1 text-gray-400">Angkatan {camp.angkatan} <span className="mx-1 text-[#444]">•</span> {camp.kota}</p>
                     </div>
                   </div>
                 )) : (
                   <p className="text-sm text-brand-muted italic">No camps added yet.</p>
                 )}
-                
-                <Link href="/profile/edit" className="block text-center w-full py-3 border border-dashed border-[#333] rounded-2xl text-xs font-bold text-brand-muted hover:text-brand-gold hover:border-brand-gold/50 transition-colors">
-                  Edit My Journey
-                </Link>
               </div>
+              
+              <Link href="/profile/edit" className="mt-5 block text-center w-full py-2.5 border border-dashed border-[#444] rounded-xl text-xs font-bold text-gray-500 hover:text-brand-gold hover:border-brand-gold/50 transition-colors bg-[#1a1d24]/50 hover:bg-[#1a1d24]">
+                Edit My Journey
+              </Link>
             </div>
 
             {/* MY SERVICES */}
             <div>
-              <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Heart className="h-4 w-4" /> My Services
-              </h3>
-              <div className="space-y-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
+                  <Heart className="h-4 w-4" /> My Services
+                </h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
                 {myServices.length > 0 ? myServices.map((svc: any, idx: number) => (
-                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex items-center justify-between group">
-                    <div>
-                      <h4 className="font-bold text-sm text-brand-light group-hover:text-white transition-colors">{svc.position}</h4>
-                      <p className="text-xs mt-1 text-brand-gold">{svc.camp} (Angkatan {svc.angkatan} • {svc.kota})</p>
+                  <div key={idx} className="bg-[#1a1d24] border border-[#333] p-4 rounded-2xl flex flex-col items-center text-center group hover:border-brand-gold/40 transition-colors relative overflow-hidden shadow-sm">
+                    {/* Subtle Gold Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    {/* Badge Icon */}
+                    <div className="h-10 w-10 mb-3 rounded-full bg-brand-dark border border-brand-gold/30 flex items-center justify-center text-brand-gold relative z-10 shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
+                      <Heart className="h-4 w-4 fill-brand-gold/20 group-hover:fill-brand-gold transition-all" />
                     </div>
+                    
+                    <h4 className="font-bold text-[11px] text-white uppercase tracking-wide relative z-10 leading-tight mb-1">{svc.position}</h4>
+                    <p className="text-[10px] text-brand-gold relative z-10 font-medium">{svc.camp}</p>
+                    <p className="text-[9px] text-gray-500 relative z-10 mt-0.5">Angkatan {svc.angkatan}</p>
                   </div>
                 )) : (
-                  <p className="text-sm text-brand-muted italic">No services added yet.</p>
+                  <p className="text-sm text-brand-muted italic col-span-2">No services added yet.</p>
                 )}
-                
-                <Link href="/profile/edit" className="block text-center w-full py-3 border border-dashed border-[#333] rounded-2xl text-xs font-bold text-brand-muted hover:text-brand-gold hover:border-brand-gold/50 transition-colors">
-                  Edit My Services
-                </Link>
               </div>
+              
+              <Link href="/profile/edit" className="mt-4 block text-center w-full py-2.5 border border-dashed border-[#444] rounded-xl text-xs font-bold text-gray-500 hover:text-brand-gold hover:border-brand-gold/50 transition-colors bg-[#1a1d24]/50 hover:bg-[#1a1d24]">
+                Edit My Services
+              </Link>
             </div>
 
+          </div>
+        )}
+
+        {activeTab === "Community" && (
+          <div className="px-6 animate-in fade-in duration-300 pb-12">
+            <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} />
           </div>
         )}
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
