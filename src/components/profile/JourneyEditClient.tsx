@@ -107,7 +107,7 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
                         {...register(`camps.${index}.kota`, { required: true })}
                         className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-brand-dark text-white focus:border-brand-gold focus:outline-none"
                       >
-                        <option value="">City...</option>
+                        <option value="">Branch...</option>
                         {kotaOptions.map(kota => (
                           <option key={kota} value={kota}>{kota}</option>
                         ))}
@@ -135,5 +135,6 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
     </section>
   );
 }
+
 
 
