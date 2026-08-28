@@ -11,24 +11,33 @@ export default function DatabasePage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   // Filters
+  const [filterBranch, setFilterBranch] = useState("");
   const [filterGroup, setFilterGroup] = useState("");
   const [filterCamp, setFilterCamp] = useState("");
   const [filterAngkatan, setFilterAngkatan] = useState("");
   const [filterKota, setFilterKota] = useState("");
+  const [filterAgama, setFilterAgama] = useState("");
+  const [filterParoki, setFilterParoki] = useState("");
 
+  const [branchOptions, setBranchOptions] = useState<string[]>([]);
   const [groupOptions, setGroupOptions] = useState<string[]>([]);
   const [campOptions, setCampOptions] = useState<string[]>([]);
   const [angkatanOptions, setAngkatanOptions] = useState<string[]>([]);
   const [kotaOptions, setKotaOptions] = useState<string[]>([]);
+  const [agamaOptions, setAgamaOptions] = useState<string[]>([]);
+  const [parokiOptions, setParokiOptions] = useState<string[]>([]);
 
   const fetchFilterOptions = async () => {
     const supabase = await import("@/lib/supabase/client").then(m => m.createClient());
-    const { data } = await supabase.from("alumni_database").select("group, camp, angkatan, city");
+    const { data } = await supabase.from("alumni_database").select("branch, cabang, Cabang, group, camp, angkatan, city, agama, parish");
     if (data) {
+      setBranchOptions(Array.from(new Set(data.map(d => d.branch || d.cabang || d.Cabang || "Bandung").filter(Boolean))).sort());
       setGroupOptions(Array.from(new Set(data.map(d => d.group).filter(Boolean))).sort());
       setCampOptions(Array.from(new Set(data.map(d => d.camp).filter(Boolean))).sort());
       setAngkatanOptions(Array.from(new Set(data.map(d => String(d.angkatan)).filter(Boolean))).sort((a, b) => Number(a) - Number(b)));
       setKotaOptions(Array.from(new Set(data.map(d => d.city).filter(Boolean))).sort());
+      setAgamaOptions(Array.from(new Set(data.map(d => d.agama).filter(Boolean))).sort());
+      setParokiOptions(Array.from(new Set(data.map(d => d.parish).filter(Boolean))).sort());
     }
   };
 
@@ -41,10 +50,19 @@ export default function DatabasePage() {
     const supabase = createClient();
     let query = supabase.from("alumni_database").select("*");
 
+    if (filterBranch) {
+      if (filterBranch === "Bandung") {
+        query = query.or(`branch.ilike.%${filterBranch}%,cabang.ilike.%${filterBranch}%,Cabang.ilike.%${filterBranch}%,branch.is.null,cabang.is.null`);
+      } else {
+        query = query.or(`branch.ilike.%${filterBranch}%,cabang.ilike.%${filterBranch}%,Cabang.ilike.%${filterBranch}%`);
+      }
+    }
     if (filterGroup) query = query.ilike("group", `%${filterGroup}%`);
     if (filterCamp) query = query.ilike("camp", `%${filterCamp}%`);
     if (filterAngkatan) query = query.ilike("angkatan", `%${filterAngkatan}%`);
     if (filterKota) query = query.ilike("city", `%${filterKota}%`);
+    if (filterAgama) query = query.ilike("agama", `%${filterAgama}%`);
+    if (filterParoki) query = query.ilike("parish", `%${filterParoki}%`);
 
     query = query.order("created_at", { ascending: false }).limit(2000);
 
@@ -60,7 +78,7 @@ export default function DatabasePage() {
   useEffect(() => {
     fetchAlumni();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterGroup, filterCamp, filterAngkatan, filterKota]);
+  }, [filterBranch, filterGroup, filterCamp, filterAngkatan, filterKota, filterAgama, filterParoki]);
 
   return (
     <div className="space-y-6 max-w-full overflow-hidden">
@@ -78,58 +96,105 @@ export default function DatabasePage() {
         </button>
       </div>
 
-      <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-5 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Filter className="h-4 w-4 text-brand-gold" />
-          <h2 className="text-sm font-bold text-white">Filters</h2>
+        <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-5 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Filter className="h-4 w-4 text-brand-gold" />
+            <h2 className="text-sm font-bold text-white">Filters</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Branch</label>
+              <select 
+                value={filterBranch}
+                onChange={(e) => setFilterBranch(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Branches</option>
+                {branchOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Group</label>
+              <select 
+                value={filterGroup}
+                onChange={(e) => setFilterGroup(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Groups</option>
+                {groupOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp</label>
+              <select 
+                value={filterCamp}
+                onChange={(e) => setFilterCamp(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Camps</option>
+                {campOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Angkatan</label>
+              <select 
+                value={filterAngkatan}
+                onChange={(e) => setFilterAngkatan(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Angkatan</option>
+                {angkatanOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Kota</label>
+              <select 
+                value={filterKota}
+                onChange={(e) => setFilterKota(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Kota</option>
+                {kotaOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Agama</label>
+              <select 
+                value={filterAgama}
+                onChange={(e) => setFilterAgama(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Agama</option>
+                {agamaOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Paroki</label>
+              <select 
+                value={filterParoki}
+                onChange={(e) => setFilterParoki(e.target.value)}
+                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              >
+                <option value="">All Paroki</option>
+                {parokiOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Group</label>
-            <select 
-              value={filterGroup}
-              onChange={(e) => setFilterGroup(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-            >
-              <option value="">All Groups</option>
-              {groupOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp</label>
-            <select 
-              value={filterCamp}
-              onChange={(e) => setFilterCamp(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-            >
-              <option value="">All Camps</option>
-              {campOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Angkatan</label>
-            <select 
-              value={filterAngkatan}
-              onChange={(e) => setFilterAngkatan(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-            >
-              <option value="">All Angkatan</option>
-              {angkatanOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Branch</label>
-            <select 
-              value={filterKota}
-              onChange={(e) => setFilterKota(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-            >
-              <option value="">All Branches</option>
-              {kotaOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
 
       <div className="bg-[#1a1d24] border border-[#333] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-[#333] bg-[#111] flex justify-between items-center">
