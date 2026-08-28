@@ -185,16 +185,14 @@ export default function VinylPlayer({
                   <div className="w-4 h-4 border-2 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
                 ) : song ? (
                   <>
-                    {/* Vinyl Grooves Texture */}
-                    <div className="absolute inset-0 rounded-full border border-[#222] m-1"></div>
-                    <div className="absolute inset-0 rounded-full border border-[#222] m-2"></div>
-                    <div className="absolute inset-0 rounded-full border border-[#222] m-3 hidden sm:block"></div>
+                    {/* Thin Black Edge / Vinyl Texture */}
+                    <div className="absolute inset-0 rounded-full border border-[#222] m-0.5"></div>
                     
-                    {/* Center Label (Cover Image) */}
-                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full overflow-hidden relative z-10 border border-black shadow-inner bg-white">
+                    {/* Center Label (Cover Image) fills almost the entire vinyl */}
+                    <div className="absolute inset-1 rounded-full overflow-hidden z-10 border border-black shadow-inner bg-white">
                       <Image src={song.coverImage} alt="Cover" fill className="object-cover" />
                       {/* Center Hole */}
-                      <div className="absolute inset-0 m-auto w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black rounded-full"></div>
+                      <div className="absolute inset-0 m-auto w-2 h-2 sm:w-2.5 sm:h-2.5 bg-black rounded-full shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]"></div>
                     </div>
                   </>
                 ) : (
