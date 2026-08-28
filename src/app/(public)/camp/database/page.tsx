@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -46,7 +46,7 @@ export default function DatabasePage() {
     if (filterAngkatan) query = query.ilike("angkatan", `%${filterAngkatan}%`);
     if (filterKota) query = query.ilike("city", `%${filterKota}%`);
 
-    query = query.order("created_at", { ascending: false }).limit(200);
+    query = query.order("created_at", { ascending: false }).limit(2000);
 
     const { data: alumniData, error } = await query;
     if (error) {
@@ -138,13 +138,13 @@ export default function DatabasePage() {
 
       <div className="bg-[#1a1d24] border border-[#333] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-[#333] bg-[#111] flex justify-between items-center">
-          <h2 className="text-sm font-bold text-white">Records Found: {data.length} {data.length === 200 ? "(Max 200 shown)" : ""}</h2>
+          <h2 className="text-sm font-bold text-white">Records Found: {data.length} {data.length === 2000 ? "(Max 2000 shown)" : ""}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-300">
             <thead className="text-xs uppercase bg-[#111] text-gray-400 border-b border-[#333]">
               <tr>
-                <th className="px-4 py-3 whitespace-nowrap">Group</th>
+                <th className="px-4 py-3 whitespace-nowrap">Branch</th>`n                <th className="px-4 py-3 whitespace-nowrap">Group</th>
                 <th className="px-4 py-3 whitespace-nowrap">Camp</th>
                 <th className="px-4 py-3 whitespace-nowrap">Angkatan</th>
                 <th className="px-4 py-3 whitespace-nowrap">Nama</th>
@@ -156,16 +156,16 @@ export default function DatabasePage() {
             <tbody className="divide-y divide-[#333]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-500">Loading records...</td>
+                  <td colSpan={8} className="text-center py-10 text-gray-500">Loading records...</td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-500">No records found.</td>
+                  <td colSpan={8} className="text-center py-10 text-gray-500">No records found.</td>
                 </tr>
               ) : (
                 data.map((row) => (
                   <tr key={row.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-2.5 whitespace-nowrap">{row.group}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap font-bold text-brand-gold">{row.branch || row.cabang || row.Cabang || "Bandung"}</td>`n                    <td className="px-4 py-2.5 whitespace-nowrap">{row.group}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.camp}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.angkatan}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap font-semibold text-white">{row.name}</td>
@@ -191,3 +191,4 @@ export default function DatabasePage() {
     </div>
   );
 }
+
