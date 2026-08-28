@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -28,7 +28,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess }: { isOpen: b
 
   const fetchUsers = async () => {
     const supabase = createClient();
-    const { data } = await supabase.from("profiles").select("id, full_name, email").limit(100);
+    const { data } = await supabase.from("profiles").select("id, full_name, username").limit(100);
     if (data) setUsers(data);
   };
 
@@ -178,7 +178,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess }: { isOpen: b
                     >
                       <option value="">-- No Account Connected --</option>
                       {users.map(u => (
-                        <option key={u.id} value={u.id}>{u.full_name} ({u.email})</option>
+                        <option key={u.id} value={u.id}>{u.full_name} (@{u.username})</option>
                       ))}
                     </select>
                   </div>
