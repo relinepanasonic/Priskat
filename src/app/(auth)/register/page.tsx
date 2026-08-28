@@ -44,6 +44,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [branches, setBranches] = useState<string[]>([]);
   const supabase = createClient();
 
   const {
@@ -60,12 +61,18 @@ export default function RegisterPage() {
 
   // Extract invite data if present
   useEffect(() => {
+    async function fetchBranches() {
+      const { data } = await supabase.from("branches").select("kota");
+      if (data) setBranches(Array.from(new Set(data.map(d => d.kota).filter(Boolean))).sort());
+    }
+    fetchBranches();
+    
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const email = searchParams.get("email");
       if (email) setValue("email", email);
     }
-  }, [setValue]);
+  }, [setValue, supabase]);
 
   async function onSubmit(data: FormValues) {
     setError(null);
@@ -206,12 +213,15 @@ export default function RegisterPage() {
                     {errors.angkatan && <p className="mt-1 text-xs text-red-600">{errors.angkatan.message}</p>}
                   </div>
                   <div>
-                    <input
-                      type="text"
-                      placeholder="Branch (Bandung)"
+                    <select
                       {...register("branch")}
-                      className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
-                    />
+                      className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
+                    >
+                      <option value="">Select Branch...</option>
+                      {branches.map(b => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
                     {errors.branch && <p className="mt-1 text-xs text-red-600">{errors.branch.message}</p>}
                   </div>
                 </div>
