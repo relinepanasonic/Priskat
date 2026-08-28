@@ -35,12 +35,18 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   const [isAddingMeeting, setIsAddingMeeting] = useState(false);
   
   const [user, setUser] = useState<any>(null);
+  const [myProfile, setMyProfile] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("full_name, username").eq("id", user.id).single();
+        if (profile) setMyProfile(profile);
+      }
 
       // Fetch camp cohort
       const { data: cohort } = await supabase.from("camp_cohorts").select("*").eq("id", camp_id).single();
@@ -56,7 +62,12 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   }, [camp_id]);
 
   const fetchCrew = async (supabase: any) => {
-    const { data } = await supabase.from("camp_crew").select("*, profiles:user_id(full_name, username)").eq("cohort_id", camp_id).order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("camp_crew")
+      .select("*, profiles:profile_id(full_name, username)")
+      .eq("cohort_id", camp_id)
+      .order("created_at", { ascending: true });
+    if (error) console.error("fetchCrew error:", error.message);
     if (data) setCrewMembers(data);
   };
 
@@ -82,7 +93,8 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
       angkatan: camp.angkatan,
       name: finalName,
       position: newCrewPosition,
-      user_id: newCrewUserId || null
+      user_id: newCrewUserId || null,
+      profile_id: newCrewUserId || null
     });
     
     if (error) {
@@ -138,7 +150,12 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   };
 
   const fetchTasks = async (supabase: any) => {
-    const { data } = await supabase.from("camp_tasks").select("*, profiles:assigned_to(full_name)").eq("cohort_id", camp_id).order("due_date", { ascending: true });
+    const { data, error } = await supabase
+      .from("camp_tasks")
+      .select("*")
+      .eq("cohort_id", camp_id)
+      .order("due_date", { ascending: true });
+    if (error) console.error("fetchTasks error:", error.message);
     if (data) setTasks(data);
   };
 
@@ -148,7 +165,12 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   };
 
   const fetchChats = async (supabase: any) => {
-    const { data } = await supabase.from("camp_chats").select("*, profiles:user_id(full_name)").eq("cohort_id", camp_id).order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("camp_chats")
+      .select("*")
+      .eq("cohort_id", camp_id)
+      .order("created_at", { ascending: true });
+    if (error) console.error("fetchChats error:", error.message);
     if (data) setChats(data);
   };
 
@@ -180,6 +202,7 @@ END:VCALENDAR`;
     const { error } = await supabase.from("camp_chats").insert({
       cohort_id: camp_id,
       user_id: user.id,
+      sender_name: myProfile?.full_name || myProfile?.username || "Unknown",
       message: chatMessage,
       target_group: targetGroup
     });
@@ -349,7 +372,7 @@ END:VCALENDAR`;
                 <div key={task.id} className="bg-[#1a1d24] border border-[#333] p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
                   <div>
                     <h3 className="font-bold text-white text-base">{task.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No deadline"} • Assigned to: {task.profiles?.full_name || "Unassigned"}</p>
+                    <p className="text-sm text-gray-400 mt-1">Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No deadline"} • Assigned to: {crewMembers.find(c => c.user_id === task.assigned_to)?.name || "Unassigned"}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${task.status === 'done' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-[#222] text-gray-300 border border-[#444]'}`}>
                     {task.status.toUpperCase()}
@@ -448,7 +471,7 @@ END:VCALENDAR`;
                       }`}>
                         {!isMe && (
                           <span className="text-[11px] font-bold text-brand-gold mb-0.5">
-                            {chat.profiles?.full_name || "Unknown"}
+                            {chat.sender_name || "Unknown"}
                           </span>
                         )}
                         <span className="text-[14.5px] leading-snug">{chat.message}</span>

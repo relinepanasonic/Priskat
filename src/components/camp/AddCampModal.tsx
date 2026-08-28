@@ -94,7 +94,8 @@ export default function AddCampModal({ isOpen, onClose, onSuccess }: { isOpen: b
         angkatan: angkatan || "0",
         name: ketuaUser.full_name,
         position: "Ketua",
-        user_id: ketuaUserId
+        user_id: ketuaUserId,
+        profile_id: ketuaUserId
       });
       
       if (crewError) {
