@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -8,12 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
-import { Mail, Lock, User, Eye, EyeOff, Plus, Trash2, MapPin } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 
 const campSchema = z.object({
   camp: z.string().min(1, "Select a camp"),
-  angkatan: z.string().min(1, "Required"),
-  cabang: z.string().min(1, "Select a branch/cabang"),
 });
 
 const schema = z
@@ -21,7 +19,6 @@ const schema = z
     full_name: z.string().min(2, "Name must be at least 2 characters"),
     username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
     phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08 and contain only numbers"),
-    kota: z.string().min(1, "Select your current city"),
     email: z.string().email("Invalid email address"),
     camps: z.array(campSchema).min(1, "Please add at least one camp"),
     password: z.string().min(8, "Password must be at least 8 characters"),
@@ -49,8 +46,6 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [kotaOptions, setKotaOptions] = useState<string[]>([]);
-  const [cabangOptions, setCabangOptions] = useState<string[]>([]);
   const supabase = createClient();
 
   const {
@@ -62,9 +57,8 @@ export default function RegisterPage() {
   } = useForm<FormValues>({ 
     resolver: zodResolver(schema),
     defaultValues: { 
-      camps: [{ camp: "", angkatan: "", cabang: "" }],
-      role: "member",
-      kota: ""
+      camps: [{ camp: "" }],
+      role: "member"
     }
   });
 
@@ -82,29 +76,11 @@ export default function RegisterPage() {
       if (inviteName) setValue("full_name", inviteName);
       if (inviteRole) setValue("role", inviteRole);
     }
-
-    async function fetchData() {
-      // Fetch distinct cities
-      const { data: cityData } = await supabase.from("alumni_database").select("city");
-      if (cityData) {
-        const uniqueCities = Array.from(new Set(cityData.map(d => d.city).filter(Boolean))).sort();
-        setKotaOptions(uniqueCities);
-      }
-      
-      // Fetch distinct branches (Cabang)
-      const { data: cabangData } = await supabase.from("alumni_database").select("Cabang");
-      if (cabangData) {
-        const uniqueCabangs = Array.from(new Set(cabangData.map(d => (d as any).Cabang).filter(Boolean))).sort() as string[];
-        setCabangOptions(uniqueCabangs);
-      }
-    }
-    fetchData();
-  }, [setValue, supabase]);
+  }, [setValue]);
 
   async function onSubmit(data: FormValues) {
     setError(null);
     
-    const primaryCamp = data.camps[0];
     const completedModules = data.camps.map(c => c.camp);
 
     const { data: signUpData, error } = await supabase.auth.signUp({
@@ -116,9 +92,7 @@ export default function RegisterPage() {
           username: data.username,
           phone: data.phone,
           completed_modules: completedModules,
-          angkatan: primaryCamp.angkatan,
-          kota: data.kota, // Where they live
-          camp_history: data.camps, // Stores cabang
+          camp_history: data.camps,
           role: data.role || "member",
         },
         emailRedirectTo: `${location.origin}/auth/callback`,
@@ -211,88 +185,45 @@ export default function RegisterPage() {
                 {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
               </div>
             </div>
-
-            {/* Current City (Kota) */}
-            <div>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                </div>
-                <select
-                  {...register("kota")}
-                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 pl-10 pr-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
-                >
-                  <option value="">Current City (Domisili)...</option>
-                  {kotaOptions.map(kota => (
-                    <option key={kota} value={kota}>{kota}</option>
-                  ))}
-                </select>
-              </div>
-              {errors.kota && <p className="mt-1 text-xs text-red-600">{errors.kota.message}</p>}
-            </div>
             
             {/* Dynamic Camps Selection */}
             <div className="mt-4 pt-4 border-t border-brand-border/50">
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Camp History</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Which Camp are you alumni of?</label>
               
               {fields.map((field, index) => (
-                <div key={field.id} className="bg-[#1a1d24] rounded-lg p-3 border border-brand-border mb-3 relative group">
-                  <div className="grid grid-cols-12 gap-2">
-                    <div className="col-span-5">
-                      <select
-                        {...register(`camps.${index}.camp`)}
-                        className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                      >
-                        <option value="">Select Camp...</option>
-                        {ALUMNI_OPTIONS.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                      {errors.camps?.[index]?.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.camp?.message}</p>}
-                    </div>
-                    <div className="col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Angkatan..."
-                        {...register(`camps.${index}.angkatan`)}
-                        className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                      />
-                      {errors.camps?.[index]?.angkatan && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.angkatan?.message}</p>}
-                    </div>
-                    <div className="col-span-4">
-                      <select
-                        {...register(`camps.${index}.cabang`)}
-                        className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                      >
-                        <option value="">Branch / Cabang...</option>
-                        {cabangOptions.map(cabang => (
-                          <option key={cabang} value={cabang}>{cabang}</option>
-                        ))}
-                      </select>
-                      {errors.camps?.[index]?.cabang && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.cabang?.message}</p>}
-                    </div>
-                  </div>
+                <div key={field.id} className="relative group mb-3">
+                  <select
+                    {...register(`camps.${index}.camp`)}
+                    className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
+                  >
+                    <option value="">Select Camp...</option>
+                    {ALUMNI_OPTIONS.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  {errors.camps?.[index]?.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.camp?.message}</p>}
+                  
                   {fields.length > 1 && (
                     <button 
                       type="button" 
                       onClick={() => remove(index)}
-                      className="absolute -top-2 -right-2 bg-red-900/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-red-900/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               ))}
-            </div>
 
-            <button
-              type="button"
-              onClick={() => append({ camp: "", angkatan: "", cabang: "" })}
-              className="mt-3 flex items-center gap-1 text-xs font-bold text-brand-gold hover:text-white transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add new camp...
-            </button>
-            {errors.camps && !Array.isArray(errors.camps) && <p className="mt-2 text-xs text-red-600">{errors.camps.message}</p>}
+              <button
+                type="button"
+                onClick={() => append({ camp: "" })}
+                className="mt-2 flex items-center gap-1 text-xs font-bold text-brand-gold hover:text-white transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add another camp...
+              </button>
+              {errors.camps && !Array.isArray(errors.camps) && <p className="mt-2 text-xs text-red-600">{errors.camps.message}</p>}
+            </div>
 
             {/* Email */}
             <div className="pt-4 border-t border-brand-border/50">
