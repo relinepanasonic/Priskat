@@ -3,26 +3,24 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
-import { Mail, Lock, User, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-
-const campSchema = z.object({
-  camp: z.string().min(1, "Select a camp"),
-});
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
 const schema = z
   .object({
-    full_name: z.string().min(2, "Name must be at least 2 characters"),
-    username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
-    phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08 and contain only numbers"),
+    full_name: z.string().min(1, "Full name is required"),
+    username: z.string().min(3, "Username must be at least 3 characters"),
+    phone: z.string().min(5, "Phone number is required"),
     email: z.string().email("Invalid email address"),
-    camps: z.array(campSchema).min(1, "Please add at least one camp"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
     confirm_password: z.string(),
+    camp: z.string().min(1, "Please select a camp"),
+    angkatan: z.string().min(1, "Cohort (Angkatan) is required"),
+    branch: z.string().min(1, "Branch is required"),
     role: z.string().optional(),
   })
   .refine((d) => d.password === d.confirm_password, {
@@ -50,38 +48,29 @@ export default function RegisterPage() {
 
   const {
     register,
-    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue
   } = useForm<FormValues>({ 
     resolver: zodResolver(schema),
     defaultValues: { 
-      camps: [{ camp: "" }],
       role: "member"
     }
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "camps"
-  });
-  
+  // Extract invite data if present
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const inviteName = params.get("name");
-      const inviteRole = params.get("role");
-      
-      if (inviteName) setValue("full_name", inviteName);
-      if (inviteRole) setValue("role", inviteRole);
+      const searchParams = new URLSearchParams(window.location.search);
+      const email = searchParams.get("email");
+      if (email) setValue("email", email);
     }
   }, [setValue]);
 
   async function onSubmit(data: FormValues) {
     setError(null);
     
-    const completedModules = data.camps.map(c => c.camp);
+    const campHistory = [{ camp: data.camp, angkatan: data.angkatan, kota: data.branch }];
 
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
@@ -91,9 +80,11 @@ export default function RegisterPage() {
           full_name: data.full_name,
           username: data.username,
           phone: data.phone,
-          completed_modules: completedModules,
-          camp_history: data.camps,
+          completed_modules: [data.camp],
+          camp_history: campHistory,
           role: data.role || "member",
+          kota: data.branch,
+          angkatan: data.angkatan
         },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
@@ -129,7 +120,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#1a1d24] px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#1a1d24] p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-brand-gold font-serif">
@@ -147,7 +138,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <div className="space-y-4 rounded-xl bg-[#22252d] p-6 border border-[#333]">
+          <div className="space-y-4 rounded-xl bg-[#22252d] p-4 sm:p-6 border border-[#333]">
             {/* Full Name */}
             <div>
               <div className="relative">
@@ -169,7 +160,7 @@ export default function RegisterPage() {
               <div>
                 <input
                   type="text"
-                  placeholder="Username (e.g. jdoe123)"
+                  placeholder="Username"
                   {...register("username")}
                   className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
                 />
@@ -178,7 +169,7 @@ export default function RegisterPage() {
               <div>
                 <input
                   type="tel"
-                  placeholder="Phone (08...)"
+                  placeholder="Phone"
                   {...register("phone")}
                   className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
                 />
@@ -186,14 +177,14 @@ export default function RegisterPage() {
               </div>
             </div>
             
-            {/* Dynamic Camps Selection */}
+            {/* Alumni Information */}
             <div className="mt-4 pt-4 border-t border-brand-border/50">
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Which Camp are you alumni of?</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Alumni Details</label>
               
-              {fields.map((field, index) => (
-                <div key={field.id} className="relative group mb-3">
+              <div className="space-y-3">
+                <div>
                   <select
-                    {...register(`camps.${index}.camp`)}
+                    {...register("camp")}
                     className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
                   >
                     <option value="">Select Camp...</option>
@@ -201,11 +192,30 @@ export default function RegisterPage() {
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>
-                  {errors.camps?.[index]?.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.camp?.message}</p>}
+                  {errors.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camp.message}</p>}
                 </div>
-              ))}
-              
-              {errors.camps && !Array.isArray(errors.camps) && <p className="mt-2 text-xs text-red-600">{errors.camps.message}</p>}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Angkatan (e.g. 1)"
+                      {...register("angkatan")}
+                      className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                    />
+                    {errors.angkatan && <p className="mt-1 text-xs text-red-600">{errors.angkatan.message}</p>}
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Branch (Bandung)"
+                      {...register("branch")}
+                      className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                    />
+                    {errors.branch && <p className="mt-1 text-xs text-red-600">{errors.branch.message}</p>}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Email */}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,7 +10,7 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
     const tabs = [
     { name: "CFM Services", href: "/camp/map", icon: Map },
     { name: "My Ongoing Camp", href: "/camp/ongoing", icon: Tent },
-    { name: "Alumni Data", href: "/camp/alumni-data", icon: Database },
+    // { name: "Alumni Data", href: "/camp/alumni-data", icon: Database }, // Hidden for now as requested
     { name: "Schedule", href: "/camp/schedule", icon: Calendar },
     { name: "Dashboard", href: "/camp/dashboard", icon: LayoutDashboard },
   ];
