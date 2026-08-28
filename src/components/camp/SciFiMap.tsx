@@ -3,20 +3,33 @@
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from "react-simple-maps";
-import { Shield, Star, Zap, Heart, Users, Activity } from "lucide-react";
+import { Shield, Star, Zap, Heart, Users, Activity, Maximize2, X } from "lucide-react";
 
 // TopoJSON for Indonesia
 const geoUrl = "/indonesia.json";
 
+function getIsland(provinceName: string) {
+  const name = provinceName.toLowerCase();
+  if (name.includes('jawa') || name.includes('banten') || name.includes('jakarta') || name.includes('yogyakarta')) return 'Java';
+  if (name.includes('sumatera') || name.includes('sumatra') || name.includes('aceh') || name.includes('riau') || name.includes('jambi') || name.includes('bengkulu') || name.includes('lampung') || name.includes('bangka')) return 'Sumatra';
+  if (name.includes('kalimantan')) return 'Kalimantan';
+  if (name.includes('sulawesi') || name.includes('gorontalo')) return 'Sulawesi';
+  if (name.includes('bali') || name.includes('nusa')) return 'Bali & Nusa Tenggara';
+  if (name.includes('maluku') || name.includes('papua')) return 'Maluku & Papua';
+  if (name.includes('sabah') || name.includes('sarawak') || name.includes('malaysia') || name.includes('keningau')) return 'Malaysia';
+  if (name.includes('timor') || name.includes('atambua')) return 'Timor Leste';
+  return 'Other';
+}
+
 const BRANCHES = [
-  { id: 'jabodetabek', name: 'Jabodetabek', region: 'Jawa Barat', coordinates: [106.8229, -6.1944], p_sejati: 120, patriot: 45, ym: 80, waberkat: 95, yw: 60, bapa: 20 },
-  { id: 'bandung', name: 'Bandung', region: 'Jawa Barat', coordinates: [107.6191, -6.9175], p_sejati: 85, patriot: 30, ym: 55, waberkat: 70, yw: 40, bapa: 15 },
-  { id: 'semarang', name: 'Semarang', region: 'Jawa Tengah', coordinates: [110.4225, -6.9697], p_sejati: 40, patriot: 15, ym: 30, waberkat: 35, yw: 20, bapa: 5 },
-  { id: 'jogja', name: 'Jogja', region: 'Jawa Tengah', coordinates: [110.3695, -7.7956], p_sejati: 50, patriot: 20, ym: 45, waberkat: 40, yw: 30, bapa: 8 },
-  { id: 'solo', name: 'Solo', region: 'Jawa Tengah', coordinates: [110.8243, -7.5666], p_sejati: 30, patriot: 10, ym: 25, waberkat: 25, yw: 15, bapa: 4 },
-  { id: 'surabaya', name: 'Surabaya', region: 'Jawa Timur', coordinates: [112.7521, -7.2504], p_sejati: 90, patriot: 35, ym: 60, waberkat: 80, yw: 50, bapa: 25 },
-  { id: 'kediri', name: 'Kediri', region: 'Jawa Timur', coordinates: [112.0118, -7.8166], p_sejati: 25, patriot: 5, ym: 15, waberkat: 20, yw: 10, bapa: 2 },
-  { id: 'malang', name: 'Malang', region: 'Jawa Timur', coordinates: [112.6326, -7.9797], p_sejati: 40, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 6 },
+  { id: 'jabodetabek', name: 'Jabodetabek', region: 'Java', coordinates: [106.8229, -6.1944], p_sejati: 120, patriot: 45, ym: 80, waberkat: 95, yw: 60, bapa: 20 },
+  { id: 'bandung', name: 'Bandung', region: 'Java', coordinates: [107.6191, -6.9175], p_sejati: 85, patriot: 30, ym: 55, waberkat: 70, yw: 40, bapa: 15 },
+  { id: 'semarang', name: 'Semarang', region: 'Java', coordinates: [110.4225, -6.9697], p_sejati: 40, patriot: 15, ym: 30, waberkat: 35, yw: 20, bapa: 5 },
+  { id: 'jogja', name: 'Jogja', region: 'Java', coordinates: [110.3695, -7.7956], p_sejati: 50, patriot: 20, ym: 45, waberkat: 40, yw: 30, bapa: 8 },
+  { id: 'solo', name: 'Solo', region: 'Java', coordinates: [110.8243, -7.5666], p_sejati: 30, patriot: 10, ym: 25, waberkat: 25, yw: 15, bapa: 4 },
+  { id: 'surabaya', name: 'Surabaya', region: 'Java', coordinates: [112.7521, -7.2504], p_sejati: 90, patriot: 35, ym: 60, waberkat: 80, yw: 50, bapa: 25 },
+  { id: 'kediri', name: 'Kediri', region: 'Java', coordinates: [112.0118, -7.8166], p_sejati: 25, patriot: 5, ym: 15, waberkat: 20, yw: 10, bapa: 2 },
+  { id: 'malang', name: 'Malang', region: 'Java', coordinates: [112.6326, -7.9797], p_sejati: 40, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 6 },
   { id: 'palembang', name: 'Palembang', region: 'Sumatra', coordinates: [104.7566, -2.9909], p_sejati: 60, patriot: 20, ym: 40, waberkat: 55, yw: 35, bapa: 10 },
   { id: 'manado', name: 'Manado', region: 'Sulawesi', coordinates: [124.8421, 1.4931], p_sejati: 70, patriot: 25, ym: 45, waberkat: 60, yw: 40, bapa: 12 },
   { id: 'makasar', name: 'Makasar', region: 'Sulawesi', coordinates: [119.4327, -5.1476], p_sejati: 55, patriot: 15, ym: 35, waberkat: 45, yw: 25, bapa: 8 },
@@ -45,33 +58,61 @@ const CONNECTIONS = [
   ['sabah', 'keningau']
 ];
 
-// Replaced neon cyan with our brand gold palette
 const COLORS = ['#8b6b22', '#c9a96e', '#e8decd', '#614915', '#a3843e', '#d4be94'];
 
 export default function SciFiMap() {
-  const [selectedBranch, setSelectedBranch] = useState<typeof BRANCHES[0] | null>(null);
-  const [hoveredBranch, setHoveredBranch] = useState<typeof BRANCHES[0] | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const chartData = selectedBranch ? [
-    { name: 'Pria Sejati', value: selectedBranch.p_sejati, icon: Shield },
-    { name: 'Patriot', value: selectedBranch.patriot, icon: Star },
-    { name: 'Waberkat', value: selectedBranch.waberkat, icon: Heart },
-    { name: 'Young Man', value: selectedBranch.ym, icon: Zap },
-    { name: 'Young Woman', value: selectedBranch.yw, icon: Users },
-    { name: 'Bapa Sejati', value: selectedBranch.bapa, icon: Activity },
+  // Aggregate stats by region instead of by branch
+  let aggregatedStats = null;
+  if (selectedRegion) {
+    const regionBranches = BRANCHES.filter(b => b.region === selectedRegion);
+    if (regionBranches.length > 0) {
+      aggregatedStats = regionBranches.reduce((acc, curr) => ({
+        p_sejati: acc.p_sejati + curr.p_sejati,
+        patriot: acc.patriot + curr.patriot,
+        waberkat: acc.waberkat + curr.waberkat,
+        ym: acc.ym + curr.ym,
+        yw: acc.yw + curr.yw,
+        bapa: acc.bapa + curr.bapa,
+      }), { p_sejati: 0, patriot: 0, waberkat: 0, ym: 0, yw: 0, bapa: 0 });
+    }
+  }
+
+  const chartData = aggregatedStats ? [
+    { name: 'Pria Sejati', value: aggregatedStats.p_sejati, icon: Shield },
+    { name: 'Patriot', value: aggregatedStats.patriot, icon: Star },
+    { name: 'Waberkat', value: aggregatedStats.waberkat, icon: Heart },
+    { name: 'Young Man', value: aggregatedStats.ym, icon: Zap },
+    { name: 'Young Woman', value: aggregatedStats.yw, icon: Users },
+    { name: 'Bapa Sejati', value: aggregatedStats.bapa, icon: Activity },
   ] : [];
 
-  const totalAlumni = selectedBranch 
-    ? selectedBranch.p_sejati + selectedBranch.patriot + selectedBranch.waberkat + selectedBranch.ym + selectedBranch.yw + selectedBranch.bapa 
+  const totalAlumni = aggregatedStats 
+    ? aggregatedStats.p_sejati + aggregatedStats.patriot + aggregatedStats.waberkat + aggregatedStats.ym + aggregatedStats.yw + aggregatedStats.bapa 
     : 0;
 
+  const mapContainerClasses = isFullscreen 
+    ? "fixed inset-0 z-50 bg-[#050505] flex flex-col p-4" 
+    : "relative w-full h-[400px] md:h-[600px] bg-[#050505] rounded-2xl border border-[#222] shadow-inner-dark overflow-hidden flex items-center justify-center group";
+
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-0 md:p-2 w-full max-w-7xl mx-auto">
       
       {/* Map Container */}
-      <div className="relative w-full h-[400px] md:h-[600px] bg-[#1a1d24] rounded-2xl border border-[#333] shadow-inner-dark overflow-hidden flex items-center justify-center group">
+      <div className={mapContainerClasses}>
         
+        {/* Fullscreen Toggle Button */}
+        <button 
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="absolute top-4 right-4 z-[100] bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 text-brand-gold p-2 rounded-lg transition-all animate-pulse"
+        >
+          {isFullscreen ? <X className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+        </button>
+
         {/* Decorative Grid Background */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.676-5.115 5.115-4.49-4.49L46.68 0h7.947zM42.484 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM33.003 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM23.522 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM14.04 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM4.56 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM0 3.73l.83-.676 5.32 5.32-4.49 4.49L0 7.544V3.73zM0 13.21l4.49-4.49 5.32 5.32-4.49 4.49L0 14.04v-.83zM0 22.693l4.49-4.49 5.32 5.32-4.49 4.49L0 23.522v-.83zM0 32.174l4.49-4.49 5.32 5.32-4.49 4.49L0 33.003v-.83zM0 41.656l4.49-4.49 5.32 5.32-4.49 4.49L0 42.484v-.83zM0 51.137l4.49-4.49 5.32 5.32-4.49 4.49L0 51.966v-.83zM0 59.8l.83.676-5.115 5.115-4.49-4.49L-7.947 59.8H0z\' fill=\'%238b6b22\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
         
@@ -89,16 +130,12 @@ export default function SciFiMap() {
             setTooltipPos({ x: e.clientX, y: e.clientY });
           }}
         >
-          {/* 
-            On Mobile: Flat top-down map inside ZoomableGroup for pinch-to-zoom and panning.
-            On Desktop: Tilted 3D view, still zoomable/pannable.
-          */}
-          <div className="w-full h-full transform-style-3d md:rotate-x-[45deg] md:rotate-z-[-5deg] md:scale-125 origin-center transition-transform duration-1000 ease-out md:mt-12">
+          <div className={`w-full h-full ${isFullscreen ? 'transform-none' : 'transform-style-3d md:rotate-x-[45deg] md:rotate-z-[-5deg] md:scale-125 origin-center transition-transform duration-1000 ease-out md:mt-12'}`}>
             <ComposableMap
               projection="geoMercator"
               projectionConfig={{
-                scale: 1300, // Reduced from 1600 to prevent bottom clipping
-                center: [116, -2] // Focus tightly on Indonesia
+                scale: 1300,
+                center: [116, -2]
               }}
               style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
             >
@@ -108,27 +145,43 @@ export default function SciFiMap() {
                 maxZoom={6}
                 center={[116, -2]}
                 filterZoomEvent={(evt: any) => {
-                  // Only allow zooming with scroll/pinch, avoid double-click zoom if desired
                   if (evt.type === 'wheel') return true;
                   return true;
                 }}
               >
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
-                    geographies.map((geo) => (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill="rgba(42, 45, 54, 1)" // Solid dark gray for islands
-                        stroke="rgba(139, 107, 34, 0.4)" // Brand gold stroke
-                        strokeWidth={0.5}
-                        style={{
-                          default: { outline: "none" },
-                          hover: { fill: "rgba(139, 107, 34, 0.4)", outline: "none", stroke: "rgba(139, 107, 34, 0.8)", strokeWidth: 1 },
-                          pressed: { outline: "none" },
-                        }}
-                      />
-                    ))
+                    geographies.map((geo) => {
+                      const islandName = getIsland(geo.properties.name);
+                      const isHovered = hoveredRegion === islandName;
+                      const isSelected = selectedRegion === islandName;
+
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          onMouseEnter={() => setHoveredRegion(islandName)}
+                          onMouseLeave={() => setHoveredRegion(null)}
+                          onClick={() => setSelectedRegion(islandName)}
+                          className="cursor-pointer transition-colors duration-300"
+                          style={{
+                            default: { 
+                              fill: isSelected ? "rgba(139, 107, 34, 0.6)" : isHovered ? "rgba(139, 107, 34, 0.3)" : "rgba(30, 30, 30, 1)", 
+                              outline: "none",
+                              stroke: isSelected ? "rgba(139, 107, 34, 1)" : "rgba(139, 107, 34, 0.4)",
+                              strokeWidth: isSelected ? 1 : 0.5
+                            },
+                            hover: { 
+                              fill: "rgba(139, 107, 34, 0.4)", 
+                              outline: "none", 
+                              stroke: "rgba(139, 107, 34, 0.8)", 
+                              strokeWidth: 1 
+                            },
+                            pressed: { outline: "none" },
+                          }}
+                        />
+                      );
+                    })
                   }
                 </Geographies>
 
@@ -143,52 +196,33 @@ export default function SciFiMap() {
                       key={`${id1}-${id2}`}
                       from={b1.coordinates as [number, number]}
                       to={b2.coordinates as [number, number]}
-                      stroke="rgba(139, 107, 34, 0.3)"
-                      strokeWidth={1.5}
+                      stroke="rgba(139, 107, 34, 0.2)"
+                      strokeWidth={1}
                       strokeDasharray="4 4"
-                      className="animate-[pulse_2s_ease-in-out_infinite]"
                     />
                   );
                 })}
 
                 {/* Branch Markers */}
                 {BRANCHES.map((branch) => {
-                  const isSelected = selectedBranch?.id === branch.id;
+                  const isSelected = selectedRegion === branch.region;
                   return (
                     <Marker 
                       key={branch.id} 
                       coordinates={branch.coordinates as [number, number]}
-                      onMouseEnter={() => setHoveredBranch(branch)}
-                      onMouseLeave={() => setHoveredBranch(null)}
-                      onClick={() => setSelectedBranch(branch)}
+                      className="pointer-events-none" // Map click handles selection now
                     >
-                      <g className="cursor-pointer">
+                      <g>
                         <circle 
-                          r={isSelected ? 6 : 4} 
+                          r={isSelected ? 6 : 3} 
                           fill={isSelected ? "#e8decd" : "#8b6b22"} 
-                          stroke="#1a1d24" 
-                          strokeWidth={2}
-                          className="transition-colors hover:fill-[#e8decd]"
+                          stroke="#0a0a0a" 
+                          strokeWidth={1.5}
+                          className="transition-all duration-300"
                         />
                         {isSelected && (
                           <circle r={12} fill="none" stroke="#8b6b22" strokeWidth={1} className="animate-ping" />
                         )}
-                        
-                        {/* Name Label */}
-                        <text
-                          textAnchor="middle"
-                          y={15}
-                          style={{
-                            fontFamily: "serif",
-                            fontSize: "6px",
-                            fontWeight: "bold",
-                            fill: isSelected ? "#e8decd" : "rgba(232, 222, 205, 0.7)",
-                            textShadow: "0px 0px 4px rgba(0,0,0,1)",
-                            pointerEvents: "none"
-                          }}
-                        >
-                          {branch.name}
-                        </text>
                       </g>
                     </Marker>
                   )
@@ -198,44 +232,33 @@ export default function SciFiMap() {
           </div>
         </div>
 
-        {/* Floating Tooltip outside 3D space to prevent distortion */}
-        {hoveredBranch && (
+        {/* Hover Tooltip (Island Level) */}
+        {hoveredRegion && hoveredRegion !== 'Other' && !isFullscreen && (
           <div 
-            className="fixed w-48 bg-[#1a1d24]/95 backdrop-blur-md border border-brand-gold/30 rounded-lg p-3 shadow-[0_0_20px_rgba(139,107,34,0.15)] pointer-events-none z-[100]"
+            className="fixed bg-[#1a1d24]/95 backdrop-blur-md border border-brand-gold/30 rounded px-3 py-1.5 shadow-[0_0_20px_rgba(139,107,34,0.15)] pointer-events-none z-[100]"
             style={{ left: tooltipPos.x + 15, top: tooltipPos.y + 15 }}
           >
-            <h4 className="text-brand-gold font-bold mb-2 border-b border-[#333] pb-1">{hoveredBranch.name}</h4>
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
-              <div className="text-gray-400">Pria Sejati:</div><div className="text-right text-white font-mono">{hoveredBranch.p_sejati}</div>
-              <div className="text-gray-400">Patriot:</div><div className="text-right text-white font-mono">{hoveredBranch.patriot}</div>
-              <div className="text-gray-400">Waberkat:</div><div className="text-right text-white font-mono">{hoveredBranch.waberkat}</div>
-              <div className="text-gray-400">YM / YW:</div><div className="text-right text-white font-mono">{hoveredBranch.ym} / {hoveredBranch.yw}</div>
-            </div>
+            <h4 className="text-brand-gold font-bold font-serif text-sm">{hoveredRegion}</h4>
+            <p className="text-[9px] text-gray-400">Click to view region data</p>
           </div>
         )}
 
-        {/* Global Stats Overlay */}
-        <div className="absolute top-4 left-4 border border-brand-gold/20 bg-[#22252d]/80 backdrop-blur-md rounded-lg p-3 pointer-events-none z-20">
-          <div className="text-[10px] text-brand-gold font-bold uppercase tracking-wider mb-1">Total Branches</div>
-          <div className="text-2xl font-mono text-white font-bold">{BRANCHES.length}</div>
-        </div>
-        
         {/* Mobile Hint Overlay */}
-        <div className="absolute bottom-4 right-4 md:hidden text-[9px] text-brand-gold/60 uppercase tracking-widest bg-black/40 px-2 py-1 rounded-sm pointer-events-none">
-          Pinch to zoom / Pan
+        <div className="absolute bottom-4 left-4 md:hidden text-[9px] text-brand-gold/60 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-brand-gold/20 pointer-events-none">
+          Pinch to zoom / Tap region
         </div>
       </div>
 
-      {/* Dashboard Metrics for Selected Branch */}
-      {selectedBranch && (
+      {/* Dashboard Metrics for Selected Region (The bottom panels) */}
+      {selectedRegion && aggregatedStats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Key Metrics */}
           <div className="md:col-span-1 flex flex-col gap-4">
             <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark relative overflow-hidden h-full flex flex-col justify-center">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl"></div>
-              <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest mb-1">Branch Overview</h3>
-              <h2 className="text-2xl font-serif font-bold text-white mb-6">{selectedBranch.name}</h2>
+              <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest mb-1">Region Overview</h3>
+              <h2 className="text-2xl font-serif font-bold text-white mb-6">{selectedRegion}</h2>
               
               <div className="flex items-end gap-3 mb-8">
                 <div className="text-5xl font-mono font-bold text-white tracking-tighter">{totalAlumni}</div>
@@ -267,7 +290,7 @@ export default function SciFiMap() {
             <div className="flex justify-between items-center mb-6 relative z-10">
               <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest">Alumni Distribution</h3>
               <div className="px-3 py-1 bg-[#22252d] border border-[#333] rounded-full text-xs text-brand-light font-serif">
-                {selectedBranch.region}
+                {selectedRegion}
               </div>
             </div>
             
@@ -309,3 +332,4 @@ export default function SciFiMap() {
     </div>
   );
 }
+
