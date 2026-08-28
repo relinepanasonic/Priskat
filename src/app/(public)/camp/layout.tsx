@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Map, Calendar, LayoutDashboard, Database, Tent } from "lucide-react";
+import { Map, Calendar, LayoutDashboard, Database, Tent, Users } from "lucide-react";
 
 export default function CampLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -10,6 +10,7 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
     const tabs = [
     { name: "CFM Services", href: "/camp/map", icon: Map },
     { name: "My Ongoing Camp", href: "/camp/ongoing", icon: Tent },
+    { name: "Camp Crew", href: "/camp/crew", icon: Users },
     // { name: "Alumni Data", href: "/camp/alumni-data", icon: Database }, // Hidden for now as requested
     { name: "Schedule", href: "/camp/schedule", icon: Calendar },
     { name: "Dashboard", href: "/camp/dashboard", icon: LayoutDashboard },
@@ -18,9 +19,7 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="w-full h-full p-4 md:p-8 space-y-6 flex flex-col font-sans">
       
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Alumni CFM</h1>
-      </div>
+      
 
       {/* Tabs Navigation (Matches Faith Layout) */}
       <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -55,6 +54,7 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
     </div>
   );
 }
+
 
 
 
