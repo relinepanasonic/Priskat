@@ -6,7 +6,7 @@ import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } fr
 import { Shield, Star, Zap, Heart, Users, Activity, Maximize2, X } from "lucide-react";
 
 // TopoJSON for Indonesia
-const geoUrl = "/indonesia.json";
+const geoUrl = "/indonesia-combined.json";
 
 function getIsland(provinceName: string | undefined) {
   if (!provinceName) return 'Other';
@@ -333,6 +333,7 @@ export default function SciFiMap() {
     </div>
   );
 }
+
 
 
 
