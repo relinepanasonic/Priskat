@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -144,7 +144,7 @@ export default function DatabasePage() {
                 <th className="px-4 py-3 whitespace-nowrap">Camp</th>
                 <th className="px-4 py-3 whitespace-nowrap">Angkatan</th>
                 <th className="px-4 py-3 whitespace-nowrap">Nama</th>
-                <th className="px-4 py-3 whitespace-nowrap">Branch</th>
+                <th className="px-4 py-3 whitespace-nowrap">City / Kota</th>
                 <th className="px-4 py-3 whitespace-nowrap">No Handphone</th>
                 <th className="px-4 py-3 whitespace-nowrap">Paroki</th>
               </tr>
