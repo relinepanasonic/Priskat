@@ -24,6 +24,16 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   const [chatMessage, setChatMessage] = useState("");
   const [targetGroup, setTargetGroup] = useState("all");
   
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [newTaskAssignedTo, setNewTaskAssignedTo] = useState("");
+  
+  const [newMeetingTitle, setNewMeetingTitle] = useState("");
+  const [newMeetingDateTime, setNewMeetingDateTime] = useState("");
+  const [newMeetingMom, setNewMeetingMom] = useState("");
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [isAddingMeeting, setIsAddingMeeting] = useState(false);
+  
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -65,7 +75,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
       if (u) finalName = u.full_name;
     }
 
-    await supabase.from("camp_crew").insert({
+    const { error } = await supabase.from("camp_crew").insert({
       cohort_id: camp_id,
       branch: camp.branch,
       camp: camp.camp_name,
@@ -75,10 +85,56 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
       user_id: newCrewUserId || null
     });
     
+    if (error) {
+      alert("Error adding crew: " + error.message);
+      return;
+    }
+    
     setNewCrewName("");
     setNewCrewPosition("");
     setNewCrewUserId("");
     fetchCrew(supabase);
+  };
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("camp_tasks").insert({
+      cohort_id: camp_id,
+      title: newTaskTitle,
+      due_date: newTaskDueDate || null,
+      assigned_to: newTaskAssignedTo || null,
+      status: "todo"
+    });
+    if (error) {
+      alert("Error adding task: " + error.message);
+      return;
+    }
+    setNewTaskTitle("");
+    setNewTaskDueDate("");
+    setNewTaskAssignedTo("");
+    setIsAddingTask(false);
+    fetchTasks(supabase);
+  };
+
+  const handleAddMeeting = async () => {
+    if (!newMeetingTitle) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("camp_meetings").insert({
+      cohort_id: camp_id,
+      title: newMeetingTitle,
+      date_time: newMeetingDateTime || null,
+      mom_text: newMeetingMom || null
+    });
+    if (error) {
+      alert("Error adding meeting: " + error.message);
+      return;
+    }
+    setNewMeetingTitle("");
+    setNewMeetingDateTime("");
+    setNewMeetingMom("");
+    setIsAddingMeeting(false);
+    fetchMeetings(supabase);
   };
 
   const fetchTasks = async (supabase: any) => {
@@ -121,12 +177,16 @@ END:VCALENDAR`;
   const sendChat = async () => {
     if (!chatMessage.trim() || !user) return;
     const supabase = createClient();
-    await supabase.from("camp_chats").insert({
+    const { error } = await supabase.from("camp_chats").insert({
       cohort_id: camp_id,
       user_id: user.id,
       message: chatMessage,
       target_group: targetGroup
     });
+    if (error) {
+      alert("Error sending chat: " + error.message);
+      return;
+    }
     setChatMessage("");
     fetchChats(supabase);
   };
@@ -245,10 +305,41 @@ END:VCALENDAR`;
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold text-white">Tasks & Deadlines</h2>
-              <button className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+              <button onClick={() => setIsAddingTask(!isAddingTask)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
                 <Plus className="w-4 h-4" /> Add Task
               </button>
             </div>
+
+            {isAddingTask && (
+              <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4 mb-6">
+                <h3 className="text-md font-bold text-white mb-2">New Task</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Task Title</label>
+                    <input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} type="text" placeholder="Task Name" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Due Date</label>
+                    <input value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Assign To</label>
+                    <select value={newTaskAssignedTo} onChange={e => setNewTaskAssignedTo(e.target.value)} className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
+                      <option value="">-- Unassigned --</option>
+                      {crewMembers.filter(c => c.user_id).map(c => (
+                        <option key={c.user_id} value={c.user_id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button onClick={handleAddTask} disabled={!newTaskTitle} className="bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
+                    Save Task
+                  </button>
+                </div>
+              </div>
+            )}
+
             {tasks.length === 0 ? (
               <p className="text-gray-500 italic">No tasks found.</p>
             ) : (
@@ -271,10 +362,36 @@ END:VCALENDAR`;
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold text-white">Meetings & MoM</h2>
-              <button className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+              <button onClick={() => setIsAddingMeeting(!isAddingMeeting)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
                 <Plus className="w-4 h-4" /> Schedule Meeting
               </button>
             </div>
+
+            {isAddingMeeting && (
+              <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4 mb-6">
+                <h3 className="text-md font-bold text-white mb-2">New Meeting</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Meeting Title</label>
+                    <input value={newMeetingTitle} onChange={e => setNewMeetingTitle(e.target.value)} type="text" placeholder="e.g. Kickoff Meeting" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Date & Time</label>
+                    <input value={newMeetingDateTime} onChange={e => setNewMeetingDateTime(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Minutes of Meeting (Optional)</label>
+                  <textarea value={newMeetingMom} onChange={e => setNewMeetingMom(e.target.value)} rows={3} placeholder="Notes and MoM..." className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"></textarea>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button onClick={handleAddMeeting} disabled={!newMeetingTitle} className="bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
+                    Save Meeting
+                  </button>
+                </div>
+              </div>
+            )}
+
             {meetings.length === 0 ? (
               <p className="text-gray-500 italic">No meetings found.</p>
             ) : (
