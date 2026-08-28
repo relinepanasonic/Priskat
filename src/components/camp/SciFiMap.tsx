@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import {
   PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer,
-  Legend, XAxis, YAxis, CartesianGrid, Area, AreaChart,
+  Legend, XAxis, YAxis, CartesianGrid, LineChart, Line
 } from "recharts";
 import {
   ComposableMap, Geographies, Geography, Marker,
@@ -48,22 +48,13 @@ const BRANCHES = [
   { id: "sabah", name: "Sabah", province: "Malaysia", coordinates: [116.0753, 5.9749] as [number, number], p_sejati: 35, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 5 },
 ];
 
-/* Jabodetabek REAL camp history (pilot project) */
+/* Jabodetabek REAL camp history (multi-line) */
 const JABODETABEK_HISTORY = [
-  { name: "PS 1", alumni: 35 },
-  { name: "PS 2", alumni: 52 },
-  { name: "PS 3", alumni: 78 },
-  { name: "PS 4", alumni: 95 },
-  { name: "PS 5", alumni: 120 },
-  { name: "Patriot 1", alumni: 145 },
-  { name: "Patriot 2", alumni: 165 },
-  { name: "YM 1", alumni: 195 },
-  { name: "YM 2", alumni: 245 },
-  { name: "Waberkat 1", alumni: 290 },
-  { name: "Waberkat 2", alumni: 340 },
-  { name: "YW 1", alumni: 380 },
-  { name: "Bapa 1", alumni: 400 },
-  { name: "Bapa 2", alumni: 420 },
+  { name: "Camp 1", p_sejati: 15, patriot: 5, waberkat: 10, ym: 8, yw: 5, bapa: 2 },
+  { name: "Camp 2", p_sejati: 35, patriot: 12, waberkat: 25, ym: 18, yw: 15, bapa: 5 },
+  { name: "Camp 3", p_sejati: 60, patriot: 22, waberkat: 45, ym: 35, yw: 28, bapa: 8 },
+  { name: "Camp 4", p_sejati: 85, patriot: 30, waberkat: 65, ym: 55, yw: 40, bapa: 12 },
+  { name: "Camp 5", p_sejati: 120, patriot: 45, waberkat: 95, ym: 80, yw: 60, bapa: 20 },
 ];
 
 const CONNECTIONS = [
@@ -128,38 +119,35 @@ export default function SciFiMap() {
 
   const historyData = useMemo(() => {
     if (selectedBranch?.id === "jabodetabek") return JABODETABEK_HISTORY;
-    if (!totalAlumni) return [];
+    if (!statsTarget) return [];
+    // Generic growth for other branches
     return [
-      { name: "Camp 1", alumni: Math.floor(totalAlumni * 0.08) },
-      { name: "Camp 2", alumni: Math.floor(totalAlumni * 0.18) },
-      { name: "Camp 3", alumni: Math.floor(totalAlumni * 0.32) },
-      { name: "Camp 4", alumni: Math.floor(totalAlumni * 0.5) },
-      { name: "Camp 5", alumni: Math.floor(totalAlumni * 0.7) },
-      { name: "Camp 6", alumni: Math.floor(totalAlumni * 0.85) },
-      { name: "Camp 7", alumni: totalAlumni },
+      { name: "Camp 1", p_sejati: Math.floor(statsTarget.p_sejati * 0.1), patriot: Math.floor(statsTarget.patriot * 0.1), waberkat: Math.floor(statsTarget.waberkat * 0.1), ym: Math.floor(statsTarget.ym * 0.1), yw: Math.floor(statsTarget.yw * 0.1), bapa: Math.floor(statsTarget.bapa * 0.1) },
+      { name: "Camp 2", p_sejati: Math.floor(statsTarget.p_sejati * 0.3), patriot: Math.floor(statsTarget.patriot * 0.3), waberkat: Math.floor(statsTarget.waberkat * 0.3), ym: Math.floor(statsTarget.ym * 0.3), yw: Math.floor(statsTarget.yw * 0.3), bapa: Math.floor(statsTarget.bapa * 0.3) },
+      { name: "Camp 3", p_sejati: Math.floor(statsTarget.p_sejati * 0.5), patriot: Math.floor(statsTarget.patriot * 0.5), waberkat: Math.floor(statsTarget.waberkat * 0.5), ym: Math.floor(statsTarget.ym * 0.5), yw: Math.floor(statsTarget.yw * 0.5), bapa: Math.floor(statsTarget.bapa * 0.5) },
+      { name: "Camp 4", p_sejati: Math.floor(statsTarget.p_sejati * 0.8), patriot: Math.floor(statsTarget.patriot * 0.8), waberkat: Math.floor(statsTarget.waberkat * 0.8), ym: Math.floor(statsTarget.ym * 0.8), yw: Math.floor(statsTarget.yw * 0.8), bapa: Math.floor(statsTarget.bapa * 0.8) },
+      { name: "Camp 5", p_sejati: statsTarget.p_sejati, patriot: statsTarget.patriot, waberkat: statsTarget.waberkat, ym: statsTarget.ym, yw: statsTarget.yw, bapa: statsTarget.bapa },
     ];
-  }, [selectedBranch, totalAlumni]);
+  }, [selectedBranch, statsTarget]);
 
   const statsTitle = selectedBranch ? "Branch Dashboard" : "Island Overview";
   const statsSubtitle = selectedBranch ? selectedBranch.name : selectedProvince ? getIsland(selectedProvince) : "";
 
   /* province-level detail map helpers */
-  const branchesInProvince = selectedProvince ? BRANCHES.filter((b) => b.province === selectedProvince) : [];
-  const detailProvinces = selectedBranch
-    ? [selectedBranch.province]
+  const activeIsland = selectedBranch
+    ? getIsland(selectedBranch.province)
     : selectedProvince
-      ? BRANCHES.filter((b) => getIsland(b.province) === getIsland(selectedProvince)).map((b) => b.province).filter((v, i, a) => a.indexOf(v) === i)
-      : [];
-  const detailCenter: [number, number] = selectedBranch
-    ? selectedBranch.coordinates
-    : branchesInProvince.length > 0
-      ? branchesInProvince[0].coordinates
+      ? getIsland(selectedProvince)
+      : null;
+
+  const detailBranches = activeIsland
+    ? BRANCHES.filter((b) => getIsland(b.province) === activeIsland)
+    : [];
+    
+  // Center detail map on the island's first branch to keep it mostly visible
+  const detailCenter: [number, number] = detailBranches.length > 0
+      ? detailBranches[0].coordinates
       : [116, -2];
-  const detailBranches = selectedBranch
-    ? BRANCHES.filter((b) => b.province === selectedBranch.province)
-    : selectedProvince
-      ? BRANCHES.filter((b) => getIsland(b.province) === getIsland(selectedProvince))
-      : [];
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -181,7 +169,7 @@ export default function SciFiMap() {
           </div>
         </div>
 
-        <div className="w-full h-full relative z-10" onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}>
+        <div className="w-full h-full relative z-10 cursor-grab active:cursor-grabbing" onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}>
           <div
             className="w-full h-full transition-transform duration-1000 ease-out"
             style={
@@ -271,7 +259,7 @@ export default function SciFiMap() {
         <div className="flex flex-col gap-4 p-4 md:p-6 bg-[#15181e] border-t border-[#333] flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
           {/* ── DETAIL MAP (full width, like the reference) ── */}
-          <div className="relative w-full h-[280px] md:h-[350px] bg-[#1a1d24] border border-[#333] rounded-2xl overflow-hidden">
+          <div className="relative w-full h-[280px] md:h-[350px] bg-[#1a1d24] border border-[#333] rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing">
             {/* header overlay */}
             <div className="absolute top-4 left-5 z-20 pointer-events-none">
               <h3 className="text-brand-gold text-xs font-bold uppercase tracking-widest">{statsTitle}</h3>
@@ -294,52 +282,54 @@ export default function SciFiMap() {
               >
                 <ComposableMap
                   projection="geoMercator"
-                  projectionConfig={{ scale: 4000, center: detailCenter }}
+                  projectionConfig={{ scale: 3000, center: detailCenter }}
                   style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
                 >
-                  <Geographies geography={geoUrl}>
-                    {({ geographies }) =>
-                      geographies
-                        .filter((geo) => {
-                          const nm = geo.properties?.name || geo.properties?.NAME;
-                          return detailProvinces.includes(nm);
-                        })
-                        .map((geo) => (
-                          <Geography
-                            key={geo.rsmKey}
-                            geography={geo}
-                            fill="rgba(139,107,34,0.35)"
-                            stroke="rgba(232,222,205,0.6)"
-                            strokeWidth={1.5}
-                            style={{ default: { outline: "none" }, hover: { fill: "rgba(180,140,50,0.5)", outline: "none" }, pressed: { outline: "none" } }}
-                          />
-                        ))
-                    }
-                  </Geographies>
+                  <ZoomableGroup zoom={1} minZoom={0.5} maxZoom={4} center={detailCenter}>
+                    <Geographies geography={geoUrl}>
+                      {({ geographies }) =>
+                        geographies
+                          .filter((geo) => {
+                            const nm = geo.properties?.name || geo.properties?.NAME;
+                            return getIsland(nm) === activeIsland;
+                          })
+                          .map((geo) => (
+                            <Geography
+                              key={geo.rsmKey}
+                              geography={geo}
+                              fill="rgba(139,107,34,0.35)"
+                              stroke="rgba(232,222,205,0.6)"
+                              strokeWidth={1.5}
+                              style={{ default: { outline: "none" }, hover: { fill: "rgba(180,140,50,0.5)", outline: "none" }, pressed: { outline: "none" } }}
+                            />
+                          ))
+                      }
+                    </Geographies>
 
-                  {/* markers on the detail map */}
-                  {detailBranches.map((br) => {
-                    const sel = selectedBranch?.id === br.id;
-                    const total = br.p_sejati + br.patriot + br.waberkat + br.ym + br.yw + br.bapa;
-                    return (
-                      <Marker
-                        key={`d-${br.id}`}
-                        coordinates={br.coordinates}
-                        onClick={() => { setSelectedBranch(br); setSelectedProvince(br.province); }}
-                      >
-                        <g style={sel ? { filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" } : {}} className="cursor-pointer">
-                          <BranchMarker isSelected={sel} isHovered={false} />
-                        </g>
-                        {/* number badge like the reference */}
-                        <text textAnchor="middle" y={-16} style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: "bold", fill: sel ? "#fff" : "#e8decd", textShadow: "0 0 6px rgba(0,0,0,1)", pointerEvents: "none" }}>
-                          {total}
-                        </text>
-                        <text textAnchor="middle" y={18} style={{ fontFamily: "serif", fontSize: "7px", fontWeight: "bold", fill: sel ? "#fff" : "rgba(232,222,205,0.9)", textShadow: "0 0 4px #000", pointerEvents: "none" }}>
-                          {br.name}
-                        </text>
-                      </Marker>
-                    );
-                  })}
+                    {/* markers on the detail map */}
+                    {detailBranches.map((br) => {
+                      const sel = selectedBranch?.id === br.id;
+                      const total = br.p_sejati + br.patriot + br.waberkat + br.ym + br.yw + br.bapa;
+                      return (
+                        <Marker
+                          key={`d-${br.id}`}
+                          coordinates={br.coordinates}
+                          onClick={() => { setSelectedBranch(br); setSelectedProvince(br.province); }}
+                        >
+                          <g style={sel ? { filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" } : {}} className="cursor-pointer">
+                            <BranchMarker isSelected={sel} isHovered={false} />
+                          </g>
+                          {/* number badge like the reference */}
+                          <text textAnchor="middle" y={-16} style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: "bold", fill: sel ? "#fff" : "#e8decd", textShadow: "0 0 6px rgba(0,0,0,1)", pointerEvents: "none" }}>
+                            {total}
+                          </text>
+                          <text textAnchor="middle" y={18} style={{ fontFamily: "serif", fontSize: "7px", fontWeight: "bold", fill: sel ? "#fff" : "rgba(232,222,205,0.9)", textShadow: "0 0 4px #000", pointerEvents: "none" }}>
+                            {br.name}
+                          </text>
+                        </Marker>
+                      );
+                    })}
+                  </ZoomableGroup>
                 </ComposableMap>
               </div>
             </div>
@@ -374,29 +364,29 @@ export default function SciFiMap() {
               </div>
             </div>
 
-            {/* Camp History Line/Area Chart */}
+            {/* Camp History Multi-Line Chart */}
             <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 flex flex-col relative overflow-hidden min-h-[280px]">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-brand-gold text-xs font-bold uppercase tracking-widest">
                   {selectedBranch?.id === "jabodetabek" ? "Jabodetabek Camp History" : "Camp History"}
                 </h3>
-                <div className="px-2 py-0.5 bg-[#22252d] border border-[#333] rounded text-[10px] text-brand-light font-serif">Growth</div>
+                <div className="px-2 py-0.5 bg-[#22252d] border border-[#333] rounded text-[10px] text-brand-light font-serif">Growth by Program</div>
               </div>
               <div className="flex-1 relative w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={historyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gAlumni" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b6b22" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#8b6b22" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
+                  <LineChart data={historyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                    <XAxis dataKey="name" stroke="#666" fontSize={9} tickLine={false} axisLine={false} angle={-30} textAnchor="end" height={50} />
+                    <XAxis dataKey="name" stroke="#666" fontSize={9} tickLine={false} axisLine={false} />
                     <YAxis stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
                     <RechartsTooltip contentStyle={{ backgroundColor: "#1a1d24", borderColor: "#333", borderRadius: "8px", color: "#e8decd" }} itemStyle={{ color: "#e8decd" }} />
-                    <Area type="monotone" dataKey="alumni" stroke="#e8decd" strokeWidth={2} fillOpacity={1} fill="url(#gAlumni)" dot={{ r: 3, fill: "#e8decd", stroke: "#1a1d24" }} activeDot={{ r: 5, fill: "#fff", stroke: "#8b6b22" }} />
-                  </AreaChart>
+                    <Legend verticalAlign="bottom" height={36} iconType="plainline" wrapperStyle={{ fontSize: "10px" }} />
+                    <Line type="monotone" dataKey="p_sejati" name="Pria Sejati" stroke={COLORS[0]} strokeWidth={2} dot={{ r: 2, fill: COLORS[0], stroke: "#1a1d24" }} activeDot={{ r: 4, fill: "#fff", stroke: COLORS[0] }} />
+                    <Line type="monotone" dataKey="patriot" name="Patriot" stroke={COLORS[1]} strokeWidth={2} dot={{ r: 2, fill: COLORS[1], stroke: "#1a1d24" }} activeDot={{ r: 4, fill: "#fff", stroke: COLORS[1] }} />
+                    <Line type="monotone" dataKey="waberkat" name="Waberkat" stroke={COLORS[2]} strokeWidth={2} dot={{ r: 2, fill: COLORS[2], stroke: "#1a1d24" }} activeDot={{ r: 4, fill: "#fff", stroke: COLORS[2] }} />
+                    <Line type="monotone" dataKey="ym" name="Young Man" stroke={COLORS[3]} strokeWidth={2} dot={{ r: 2, fill: COLORS[3], stroke: "#1a1d24" }} activeDot={{ r: 4, fill: "#fff", stroke: COLORS[3] }} />
+                    <Line type="monotone" dataKey="yw" name="Young Woman" stroke={COLORS[4]} strokeWidth={2} dot={{ r: 2, fill: COLORS[4], stroke: "#1a1d24" }} activeDot={{ r: 4, fill: "#fff", stroke: COLORS[4] }} />
+                    <Line type="monotone" dataKey="bapa" name="Bapa Sejati" stroke={COLORS[5]} strokeWidth={2} dot={{ r: 2, fill: COLORS[5], stroke: "#1a1d24" }} activeDot={{ r: 4, fill: "#fff", stroke: COLORS[5] }} />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
