@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -57,7 +57,7 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
           {/* Elegant Obi Band for Indonesian Translation */}
           {isId && !imgFailed && (
             <div className="absolute bottom-3 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-1.5 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
-              <span className="text-[9px] md:text-[10px] font-serif font-bold text-[#e8decd] tracking-widest uppercase truncate w-full text-center drop-shadow-md">
+              <span className="text-[9px] md:text-[10px] font-serif font-bold text-[#e8decd] tracking-widest uppercase line-clamp-2 leading-tight w-full text-center drop-shadow-md">
                 {book.name}
               </span>
             </div>
