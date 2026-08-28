@@ -1,8 +1,8 @@
 ﻿"use client";
 
-import { useState } from "react";
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
-import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from "react-simple-maps";
+import { useState, useMemo } from "react";
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, Area, AreaChart } from "recharts";
+import { ComposableMap, Geographies, Geography, Marker, Line as RsmLine, ZoomableGroup } from "react-simple-maps";
 import { Shield, Star, Zap, Heart, Users, Activity, Maximize2, X } from "lucide-react";
 
 const geoUrl = "/indonesia-combined.json";
@@ -60,6 +60,22 @@ const CONNECTIONS = [
 
 const COLORS = ['#8b6b22', '#c9a96e', '#e8decd', '#614915', '#a3843e', '#d4be94'];
 
+// Custom SVG marker component
+const CustomMarker = ({ isSelected, isHovered }: { isSelected: boolean, isHovered: boolean }) => {
+  const color = isSelected ? "#ffffff" : isHovered ? "#e8decd" : "#8b6b22";
+  return (
+    <g className="cursor-pointer transition-all duration-500" transform="translate(-12, -12)">
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1" strokeDasharray="2 2" opacity={isSelected ? 1 : 0.6} className="transition-all duration-300" />
+      <circle cx="12" cy="7" r="2.5" stroke={color} strokeWidth="1" fill={isSelected ? color : "none"} className="transition-all" />
+      <path d="M12 10V20 M7 10C7 10 10 10 12 10C14 10 17 10 17 10 M9 13.5L12 10L15 13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-all" />
+      
+      {isSelected && (
+        <circle cx="12" cy="12" r="14" fill="none" stroke="#ffffff" strokeWidth="1" className="animate-ping" opacity="0.5" />
+      )}
+    </g>
+  );
+};
+
 export default function SciFiMap() {
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<typeof BRANCHES[0] | null>(null);
@@ -75,7 +91,7 @@ export default function SciFiMap() {
 
   if (selectedBranch) {
     statsTarget = selectedBranch;
-    statsTitle = "Branch Overview";
+    statsTitle = "Branch Dashboard";
     statsSubtitle = selectedBranch.name;
   } else if (selectedProvince) {
     const island = getIsland(selectedProvince);
@@ -89,7 +105,7 @@ export default function SciFiMap() {
         yw: acc.yw + curr.yw,
         bapa: acc.bapa + curr.bapa,
       }), { p_sejati: 0, patriot: 0, waberkat: 0, ym: 0, yw: 0, bapa: 0 });
-      statsTitle = "Region Overview";
+      statsTitle = "Island Overview";
       statsSubtitle = island;
     }
   }
@@ -107,14 +123,23 @@ export default function SciFiMap() {
     ? statsTarget.p_sejati + statsTarget.patriot + statsTarget.waberkat + statsTarget.ym + statsTarget.yw + statsTarget.bapa 
     : 0;
 
-  // Clean container styling to blend into layout
-  const mapContainerClasses = isFullscreen 
-    ? "fixed inset-0 z-50 bg-[#1a1d24] flex flex-col p-4" 
-    : "relative w-full h-[400px] md:h-[500px] bg-transparent overflow-hidden flex items-center justify-center group flex-shrink-0";
+  const historyData = useMemo(() => {
+    if (!totalAlumni) return [];
+    return [
+      { name: 'Camp 1', alumni: Math.floor(totalAlumni * 0.1) },
+      { name: 'Camp 2', alumni: Math.floor(totalAlumni * 0.25) },
+      { name: 'Camp 3', alumni: Math.floor(totalAlumni * 0.5) },
+      { name: 'Camp 4', alumni: Math.floor(totalAlumni * 0.75) },
+      { name: 'Camp 5', alumni: totalAlumni },
+    ];
+  }, [totalAlumni]);
+
+  const branchesInProvince = selectedProvince ? BRANCHES.filter(b => b.province === selectedProvince) : [];
+  const detailCenter = selectedBranch ? selectedBranch.coordinates : (branchesInProvince.length > 0 ? branchesInProvince[0].coordinates : [116, -2]);
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className={mapContainerClasses}>
+    <div className="flex flex-col h-full w-full gap-4">
+      <div className="relative w-full h-[350px] md:h-[450px] bg-transparent overflow-hidden flex items-center justify-center group flex-shrink-0">
         <button 
           onClick={() => setIsFullscreen(!isFullscreen)}
           className="absolute top-4 right-4 z-[100] bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 text-brand-gold p-2 rounded-lg transition-all animate-pulse"
@@ -122,10 +147,8 @@ export default function SciFiMap() {
           {isFullscreen ? <X className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
 
-        {/* Decorative Grid Background matching spiritual UI */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.676-5.115 5.115-4.49-4.49L46.68 0h7.947zM42.484 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM33.003 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM23.522 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM14.04 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM4.56 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM0 3.73l.83-.676 5.32 5.32-4.49 4.49L0 7.544V3.73zM0 13.21l4.49-4.49 5.32 5.32-4.49 4.49L0 14.04v-.83zM0 22.693l4.49-4.49 5.32 5.32-4.49 4.49L0 23.522v-.83zM0 32.174l4.49-4.49 5.32 5.32-4.49 4.49L0 33.003v-.83zM0 41.656l4.49-4.49 5.32 5.32-4.49 4.49L0 42.484v-.83zM0 51.137l4.49-4.49 5.32 5.32-4.49 4.49L0 51.966v-.83zM0 59.8l.83.676-5.115 5.115-4.49-4.49L-7.947 59.8H0z\' fill=\'%238b6b22\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
         
-        {/* Radar lines */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
           <div className="w-[300px] md:w-[600px] h-[300px] md:h-[600px] rounded-full border border-brand-gold/10 relative">
             <div className="absolute inset-0 rounded-full border border-brand-gold/5 scale-75"></div>
@@ -135,7 +158,7 @@ export default function SciFiMap() {
         </div>
 
         <div className="w-full h-full relative z-10" onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}>
-          <div className={`w-full h-full ${isFullscreen ? 'transform-none' : 'transform-style-3d md:rotate-x-[45deg] md:rotate-z-[-5deg] md:scale-125 origin-center transition-transform duration-1000 ease-out md:mt-12'}`}>
+          <div className="w-full h-full transition-transform duration-1000 ease-out" style={isFullscreen ? { position: 'fixed', inset: 0, zIndex: 50, backgroundColor: '#1a1d24' } : { transformStyle: "preserve-3d", transform: "rotateX(45deg) rotateZ(-5deg) scale(1.25)", marginTop: "3rem", filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.8))" }}>
             <ComposableMap
               projection="geoMercator"
               projectionConfig={{ scale: 1300, center: [116, -2] }}
@@ -155,19 +178,17 @@ export default function SciFiMap() {
                         ? getIsland(selectedBranch.province) === islandName
                         : selectedProvince && getIsland(selectedProvince) === islandName;
 
-                      let fillColor = "rgba(30, 30, 30, 1)"; // Grey default
+                      let fillColor = "rgba(63, 63, 70, 0.7)"; 
                       let strokeColor = "rgba(139, 107, 34, 0.2)";
                       
                       if (isActiveBranchProvince || isClickedProvince) {
-                        // The specific province they clicked (or branch province) is Bright Gold
-                        fillColor = "rgba(180, 140, 50, 0.7)"; 
+                        fillColor = "rgba(180, 140, 50, 0.8)";
                         strokeColor = "rgba(232, 222, 205, 1)";
                       } else if (isActiveIsland) {
-                        // Rest of the island is Darker Gold
-                        fillColor = "rgba(139, 107, 34, 0.3)";
-                        strokeColor = "rgba(139, 107, 34, 0.6)";
+                        fillColor = "rgba(139, 107, 34, 0.4)";
+                        strokeColor = "rgba(139, 107, 34, 0.8)";
                       } else if (hoveredRegion === islandName) {
-                        fillColor = "rgba(139, 107, 34, 0.15)";
+                        fillColor = "rgba(139, 107, 34, 0.2)";
                       }
 
                       return (
@@ -183,7 +204,7 @@ export default function SciFiMap() {
                           className="cursor-pointer transition-colors duration-300"
                           style={{
                             default: { fill: fillColor, outline: "none", stroke: strokeColor, strokeWidth: 0.5 },
-                            hover: { fill: "rgba(180, 140, 50, 0.5)", outline: "none", stroke: "rgba(232, 222, 205, 1)", strokeWidth: 1 },
+                            hover: { fill: "rgba(180, 140, 50, 0.6)", outline: "none", stroke: "rgba(232, 222, 205, 1)", strokeWidth: 1 },
                             pressed: { outline: "none" },
                           }}
                         />
@@ -197,7 +218,7 @@ export default function SciFiMap() {
                   const b2 = BRANCHES.find(b => b.id === id2);
                   if (!b1 || !b2) return null;
                   return (
-                    <Line
+                    <RsmLine
                       key={`${id1}-${id2}`}
                       from={b1.coordinates as [number, number]}
                       to={b2.coordinates as [number, number]}
@@ -211,9 +232,7 @@ export default function SciFiMap() {
 
                 {BRANCHES.map((branch) => {
                   const isBranchSelected = selectedBranch?.id === branch.id;
-                  const isRegionSelected = !selectedBranch && selectedProvince && getIsland(selectedProvince) === getIsland(branch.province);
-                  
-                  let markerFill = isBranchSelected ? "#e8decd" : isRegionSelected ? "#c9a96e" : "#8b6b22";
+                  const isHovered = hoveredBranch?.id === branch.id;
 
                   return (
                     <Marker 
@@ -221,23 +240,15 @@ export default function SciFiMap() {
                       coordinates={branch.coordinates as [number, number]}
                       onMouseEnter={() => setHoveredBranch(branch)}
                       onMouseLeave={() => setHoveredBranch(null)}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedBranch(branch);
                         setSelectedProvince(branch.province);
                       }}
                     >
-                      <g className="cursor-pointer" transform="translate(-12, -12)">
-                        {/* Custom SVG Icon based on Pic 2 (Spiritual Cross/Person design) */}
-                        <circle cx="12" cy="12" r="10" stroke={markerFill} strokeWidth="1" strokeDasharray="2 2" opacity={isBranchSelected ? 1 : 0.5} className="transition-all duration-300" />
-                        <circle cx="12" cy="8" r="2.5" stroke={markerFill} strokeWidth="1" fill={isBranchSelected ? markerFill : "none"} className="transition-all" />
-                        {/* Abstract cross/person arms */}
-                        <path d="M12 11V20 M7 11C7 11 10 11 12 11C14 11 17 11 17 11 M9 14.5L12 11L15 14.5" stroke={markerFill} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-all" />
-                        
-                        {isBranchSelected && (
-                          <circle cx="12" cy="12" r="14" fill="none" stroke="#e8decd" strokeWidth={1} className="animate-ping" />
-                        )}
+                      <g style={isBranchSelected ? { filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.8))' } : {}}>
+                        <CustomMarker isSelected={isBranchSelected} isHovered={isHovered} />
                       </g>
-                      
                       <text
                         textAnchor="middle"
                         y={15}
@@ -245,8 +256,8 @@ export default function SciFiMap() {
                           fontFamily: "serif",
                           fontSize: "6px",
                           fontWeight: "bold",
-                          fill: isBranchSelected ? "#ffffff" : isRegionSelected ? "#e8decd" : "rgba(232, 222, 205, 0.7)",
-                          textShadow: "0px 0px 4px rgba(0,0,0,1)",
+                          fill: isBranchSelected ? "#ffffff" : "rgba(232, 222, 205, 0.8)",
+                          textShadow: isBranchSelected ? "0px 0px 6px rgba(255,255,255,0.8)" : "0px 0px 4px rgba(0,0,0,1)",
                           pointerEvents: "none",
                           transition: "all 0.3s ease"
                         }}
@@ -282,66 +293,87 @@ export default function SciFiMap() {
             <h4 className="text-brand-gold font-bold font-serif text-sm">{hoveredRegion}</h4>
           </div>
         ) : null}
-
-        <div className="absolute bottom-4 left-4 md:hidden text-[9px] text-brand-gold/60 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-brand-gold/20 pointer-events-none z-50">
-          Pinch to zoom
-        </div>
       </div>
 
       {statsTarget && (
-        <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-[#15181e] border-t border-[#333]">
+        <div className="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-[#15181e] border-t border-[#333] flex-1">
           
-          <div className="md:col-span-1 flex flex-col gap-4">
-            <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark relative overflow-hidden h-full flex flex-col justify-center">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl"></div>
-              <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest mb-1">{statsTitle}</h3>
-              <h2 className="text-2xl font-serif font-bold text-white mb-6">{statsSubtitle}</h2>
-              
-              <div className="flex items-end gap-3 mb-8">
-                <div className="text-5xl font-mono font-bold text-white tracking-tighter">{totalAlumni}</div>
-                <div className="text-brand-muted text-sm pb-1 font-serif italic">Total Alumni</div>
+          {/* Detail Map (Col 1) */}
+          <div className="flex flex-col gap-4">
+            <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-0 shadow-inner-dark relative overflow-hidden h-full min-h-[300px] flex flex-col group">
+              <div className="p-4 relative z-20 pointer-events-none">
+                <h3 className="text-brand-gold text-xs font-bold uppercase tracking-widest mb-1">{statsTitle}</h3>
+                <h2 className="text-xl font-serif font-bold text-white mb-2">{statsSubtitle}</h2>
+                <div className="flex items-end gap-2">
+                  <div className="text-4xl font-mono font-bold text-white tracking-tighter drop-shadow-md">{totalAlumni}</div>
+                  <div className="text-brand-muted text-xs pb-1 font-serif italic">Total Alumni</div>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                {chartData.map((d, i) => {
-                  const Icon = d.icon;
-                  return (
-                    <div key={d.name} className="flex items-center justify-between bg-[#22252d] border border-[#333] rounded-lg p-2.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-md bg-[#1a1d24] flex items-center justify-center border border-[#333]" style={{ color: COLORS[i % COLORS.length] }}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-bold text-gray-300">{d.name}</span>
-                      </div>
-                      <span className="text-sm font-mono font-bold text-brand-gold">{d.value}</span>
-                    </div>
-                  )
-                })}
+              {/* 3D Detail Province Map */}
+              <div className="absolute inset-0 w-full h-full pt-16 opacity-80 group-hover:opacity-100 transition-opacity" style={{ perspective: "800px" }}>
+                <div className="w-full h-full" style={{ transformStyle: "preserve-3d", transform: "rotateX(45deg) rotateZ(-10deg) scale(1.5)", filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.8))" }}>
+                  <ComposableMap
+                    projection="geoMercator"
+                    projectionConfig={{ scale: 3000, center: detailCenter as [number, number] }}
+                    style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
+                  >
+                    <Geographies geography={geoUrl}>
+                      {({ geographies }) =>
+                        geographies
+                          .filter((geo) => {
+                            const name = geo.properties?.name || geo.properties?.NAME;
+                            if (selectedBranch) return name === selectedBranch.province;
+                            if (selectedProvince) return name === selectedProvince;
+                            return false;
+                          })
+                          .map((geo) => (
+                            <Geography
+                              key={geo.rsmKey}
+                              geography={geo}
+                              fill="rgba(180, 140, 50, 0.4)"
+                              stroke="rgba(232, 222, 205, 0.8)"
+                              strokeWidth={2}
+                              style={{ default: { outline: "none" } }}
+                            />
+                          ))
+                      }
+                    </Geographies>
+                    {branchesInProvince.map((branch) => {
+                      const isBranchSelected = selectedBranch?.id === branch.id;
+                      return (
+                        <Marker key={`detail-${branch.id}`} coordinates={branch.coordinates as [number, number]}>
+                           <g style={isBranchSelected ? { filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.8))' } : {}}>
+                            <CustomMarker isSelected={isBranchSelected} isHovered={false} />
+                          </g>
+                        </Marker>
+                      );
+                    })}
+                  </ComposableMap>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark flex flex-col relative overflow-hidden">
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl"></div>
-            <div className="flex justify-between items-center mb-6 relative z-10">
-              <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest">Alumni Distribution</h3>
-              <div className="px-3 py-1 bg-[#22252d] border border-[#333] rounded-full text-xs text-brand-light font-serif">
-                {statsSubtitle}
-              </div>
+          {/* 3D-styled Pie Chart (Col 2) */}
+          <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark flex flex-col relative overflow-hidden min-h-[300px]">
+            <div className="flex justify-between items-center mb-2 relative z-10">
+              <h3 className="text-brand-gold text-xs font-bold uppercase tracking-widest">Alumni Distribution</h3>
             </div>
             
-            <div className="flex-1 min-h-[300px] relative z-10 w-full">
+            <div className="flex-1 relative z-10 w-full" style={{ filter: 'drop-shadow(0 15px 15px rgba(0,0,0,0.6))' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={80}
-                    outerRadius={120}
-                    paddingAngle={5}
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={3}
                     dataKey="value"
-                    stroke="rgba(0,0,0,0)"
+                    stroke="rgba(0,0,0,0.2)"
+                    strokeWidth={2}
                   >
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -351,14 +383,44 @@ export default function SciFiMap() {
                     contentStyle={{ backgroundColor: '#1a1d24', borderColor: '#333', borderRadius: '8px', color: '#e8decd' }}
                     itemStyle={{ color: '#e8decd' }}
                   />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
                 </PieChart>
               </ResponsiveContainer>
               
-              <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                <div className="text-3xl font-mono font-bold text-white">{totalAlumni}</div>
-                <div className="text-[10px] text-brand-gold uppercase tracking-widest">Alumni</div>
+              <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none drop-shadow-md">
+                <div className="text-2xl font-mono font-bold text-white">{totalAlumni}</div>
               </div>
+            </div>
+          </div>
+
+          {/* Line Chart History (Col 3) */}
+          <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark flex flex-col relative overflow-hidden min-h-[300px]">
+            <div className="flex justify-between items-center mb-4 relative z-10">
+              <h3 className="text-brand-gold text-xs font-bold uppercase tracking-widest">Camp History</h3>
+              <div className="px-2 py-0.5 bg-[#22252d] border border-[#333] rounded text-[10px] text-brand-light font-serif">
+                Growth Trend
+              </div>
+            </div>
+            
+            <div className="flex-1 relative z-10 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={historyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorAlumni" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b6b22" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8b6b22" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                  <XAxis dataKey="name" stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#1a1d24', borderColor: '#333', borderRadius: '8px', color: '#e8decd' }}
+                    itemStyle={{ color: '#e8decd' }}
+                  />
+                  <Area type="monotone" dataKey="alumni" stroke="#e8decd" strokeWidth={2} fillOpacity={1} fill="url(#colorAlumni)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
