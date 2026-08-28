@@ -39,9 +39,9 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
 
   useEffect(() => {
     async function fetchKota() {
-      const { data } = await supabase.from("alumni_database").select("city");
+      const { data } = await supabase.from("branches").select("branch, kota");
       if (data) {
-        setKotaOptions(Array.from(new Set(data.map(d => d.city).filter(Boolean))).sort());
+        setKotaOptions(Array.from(new Set(data.map(d => d.branch || d.kota).filter(Boolean))).sort());
       }
     }
     fetchKota();
@@ -144,6 +144,7 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
     </section>
   );
 }
+
 
 
 

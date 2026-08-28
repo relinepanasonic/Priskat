@@ -62,8 +62,8 @@ export default function RegisterPage() {
   // Extract invite data if present
   useEffect(() => {
     async function fetchBranches() {
-      const { data } = await supabase.from("branches").select("kota");
-      if (data) setBranches(Array.from(new Set(data.map(d => d.kota).filter(Boolean))).sort());
+      const { data } = await supabase.from("branches").select("branch");
+      if (data) setBranches(Array.from(new Set(data.map(d => d.branch || d.kota).filter(Boolean))).sort());
     }
     fetchBranches();
     

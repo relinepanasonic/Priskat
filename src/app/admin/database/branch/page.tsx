@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
+import AddBranchModal from "@/components/admin/AddBranchModal";
 
 export default function BranchPage() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   useEffect(() => {
     fetchBranches();
@@ -31,7 +33,7 @@ export default function BranchPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">Branch Data</h2>
-        <button className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-yellow-400">
+        <button onClick={() => setIsAddOpen(true)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-yellow-400">
           <Plus className="h-4 w-4" /> Add Branch
         </button>
       </div>
@@ -79,6 +81,7 @@ export default function BranchPage() {
           </table>
         </div>
       )}
+      <AddBranchModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSuccess={() => window.location.reload()} />
     </div>
   );
 }
