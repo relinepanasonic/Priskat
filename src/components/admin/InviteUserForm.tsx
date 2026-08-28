@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -6,6 +6,7 @@ import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function InviteUserForm() {
   const [email, setEmail] = useState("");
+  const [branch, setBranch] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -21,6 +22,7 @@ export default function InviteUserForm() {
       email: email,
       options: {
         shouldCreateUser: true,
+        data: { kota: branch },
       },
     });
 
@@ -56,6 +58,19 @@ export default function InviteUserForm() {
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-brand-light mb-1">
+            Branch
+          </label>
+          <input
+            type="text"
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+            className="w-full bg-brand-bg border border-[#333] rounded-xl px-4 py-3 text-brand-light placeholder-brand-muted/50 focus:outline-none focus:border-brand-gold transition-colors"
+            placeholder="e.g. Bandung"
+          />
+        </div>
+
         <button
           type="submit"
           disabled={status === "loading" || !email}
@@ -82,4 +97,6 @@ export default function InviteUserForm() {
     </div>
   );
 }
+
+
 

@@ -10,7 +10,7 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
     const tabs = [
     { name: "CFM Services", href: "/camp/map", icon: Map },
     { name: "My Ongoing Camp", href: "/camp/ongoing", icon: Tent },
-    { name: "Database", href: "/camp/database", icon: Database },
+    { name: "Alumni Data", href: "/camp/alumni-data", icon: Database },
     { name: "Schedule", href: "/camp/schedule", icon: Calendar },
     { name: "Dashboard", href: "/camp/dashboard", icon: LayoutDashboard },
   ];
@@ -55,5 +55,6 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
     </div>
   );
 }
+
 
 

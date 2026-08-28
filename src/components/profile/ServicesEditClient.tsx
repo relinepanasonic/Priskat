@@ -111,7 +111,7 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-brand-light mb-1">Kota</label>
+                      <label className="block text-xs font-medium text-brand-light mb-1">Branch</label>
                       <select
                         {...register(`services.${index}.kota`, { required: true })}
                         className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-brand-dark text-white focus:border-brand-gold focus:outline-none"
@@ -144,4 +144,5 @@ export default function ServicesEditClient({ userId, initialServices }: Props) {
     </section>
   );
 }
+
 

@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Database, Filter, Plus } from "lucide-react";
-import DatabaseUploadDialog from "@/components/admin/DatabaseUploadDialog";
 
-export default function DatabasePage() {
+export default function AlumniDataPage() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  
 
   // Filters
   const [filterGroup, setFilterGroup] = useState("");
@@ -74,13 +73,7 @@ export default function DatabasePage() {
             View and filter the alumni directory.
           </p>
         </div>
-        <button 
-          onClick={() => setIsUploadOpen(true)}
-          className="bg-brand-gold text-brand-dark px-4 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus className="h-4 w-4" />
-          Add New Database
-        </button>
+
       </div>
 
       <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-5 space-y-4">
@@ -123,13 +116,13 @@ export default function DatabasePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Kota</label>
+            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Branch</label>
             <select 
               value={filterKota}
               onChange={(e) => setFilterKota(e.target.value)}
               className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
             >
-              <option value="">All Kota</option>
+              <option value="">All Branches</option>
               {kotaOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </div>
@@ -148,7 +141,7 @@ export default function DatabasePage() {
                 <th className="px-4 py-3 whitespace-nowrap">Camp</th>
                 <th className="px-4 py-3 whitespace-nowrap">Angkatan</th>
                 <th className="px-4 py-3 whitespace-nowrap">Nama</th>
-                <th className="px-4 py-3 whitespace-nowrap">Kota</th>
+                <th className="px-4 py-3 whitespace-nowrap">Branch</th>
                 <th className="px-4 py-3 whitespace-nowrap">No Handphone</th>
                 <th className="px-4 py-3 whitespace-nowrap">Paroki</th>
               </tr>
@@ -180,15 +173,9 @@ export default function DatabasePage() {
         </div>
       </div>
 
-      <DatabaseUploadDialog 
-        isOpen={isUploadOpen} 
-        onClose={() => setIsUploadOpen(false)} 
-        onSuccess={() => {
-           // Optionally refresh data when upload succeeds
-           fetchAlumni();
-        }}
-      />
     </div>
   );
 }
+
+
 
