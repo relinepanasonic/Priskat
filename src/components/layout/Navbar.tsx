@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -100,7 +100,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
             </a>
             
             <a
-                href="/admin/database"
+                href="/camp/database"
                 className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
               >
                 <Database className="h-4 w-4" />
@@ -209,6 +209,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     </>
   );
 }
+
+
 
 
 

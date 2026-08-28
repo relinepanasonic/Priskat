@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Map, Calendar, LayoutDashboard } from "lucide-react";
+import { Map, Calendar, LayoutDashboard, Database, Tent } from "lucide-react";
 
 export default function CampLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const tabs = [
+    const tabs = [
     { name: "CFM Services", href: "/camp/map", icon: Map },
+    { name: "My Ongoing Camp", href: "/camp/ongoing", icon: Tent },
+    { name: "Database", href: "/camp/database", icon: Database },
     { name: "Schedule", href: "/camp/schedule", icon: Calendar },
     { name: "Dashboard", href: "/camp/dashboard", icon: LayoutDashboard },
   ];
@@ -53,4 +55,5 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
     </div>
   );
 }
+
 
