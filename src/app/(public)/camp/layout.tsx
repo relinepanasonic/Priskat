@@ -14,16 +14,15 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <div className="w-full min-h-[100dvh] bg-[#1a1d24] text-white flex flex-col font-sans">
-      {/* Glow effect at top */}
-      <div className="absolute top-0 left-0 right-0 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none z-0"></div>
+    <div className="w-full h-full p-4 md:p-8 space-y-6 flex flex-col font-sans">
+      
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Alumni CFM</h1>
+      </div>
 
-      {/* Navigation Tabs */}
-      <div className="w-full max-w-7xl mx-auto px-4 pt-8 pb-4 relative z-20">
-        <h1 className="text-3xl font-bold font-serif mb-6 text-brand-gold">
-          Alumni CFM
-        </h1>
-        <div className="flex gap-4 border-b border-[#333] pb-2 overflow-x-auto no-scrollbar">
+      {/* Tabs Navigation (Matches Faith Layout) */}
+      <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <nav className="flex space-x-2 min-w-max" aria-label="Tabs">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
             const Icon = tab.icon;
@@ -31,22 +30,24 @@ export default function CampLayout({ children }: { children: React.ReactNode }) 
               <Link
                 key={tab.name}
                 href={tab.href}
-                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-all border-b-2 font-semibold whitespace-nowrap ${
-                  isActive
-                    ? "border-brand-gold text-brand-gold bg-brand-gold/10"
-                    : "border-transparent text-gray-400 hover:text-brand-light hover:bg-[#22252d]"
-                }`}
+                className={`
+                  flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all
+                  ${isActive 
+                    ? "bg-brand-gold text-brand-dark shadow-md" 
+                    : "text-brand-muted hover:text-white hover:bg-[#1a1d24] border border-transparent hover:border-[#333]"}
+                `}
+                aria-current={isActive ? "page" : undefined}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-brand-muted"}`} />
                 {tab.name}
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 pb-24">
+      <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-hidden min-h-[500px] flex-1 flex flex-col relative">
         {children}
       </div>
     </div>

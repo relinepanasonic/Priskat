@@ -22,22 +22,22 @@ function getIsland(provinceName?: string) {
 }
 
 const BRANCHES = [
-  { id: 'jabodetabek', name: 'Jabodetabek', region: 'Java', coordinates: [106.8229, -6.1944], p_sejati: 120, patriot: 45, ym: 80, waberkat: 95, yw: 60, bapa: 20 },
-  { id: 'bandung', name: 'Bandung', region: 'Java', coordinates: [107.6191, -6.9175], p_sejati: 85, patriot: 30, ym: 55, waberkat: 70, yw: 40, bapa: 15 },
-  { id: 'semarang', name: 'Semarang', region: 'Java', coordinates: [110.4225, -6.9697], p_sejati: 40, patriot: 15, ym: 30, waberkat: 35, yw: 20, bapa: 5 },
-  { id: 'jogja', name: 'Jogja', region: 'Java', coordinates: [110.3695, -7.7956], p_sejati: 50, patriot: 20, ym: 45, waberkat: 40, yw: 30, bapa: 8 },
-  { id: 'solo', name: 'Solo', region: 'Java', coordinates: [110.8243, -7.5666], p_sejati: 30, patriot: 10, ym: 25, waberkat: 25, yw: 15, bapa: 4 },
-  { id: 'surabaya', name: 'Surabaya', region: 'Java', coordinates: [112.7521, -7.2504], p_sejati: 90, patriot: 35, ym: 60, waberkat: 80, yw: 50, bapa: 25 },
-  { id: 'kediri', name: 'Kediri', region: 'Java', coordinates: [112.0118, -7.8166], p_sejati: 25, patriot: 5, ym: 15, waberkat: 20, yw: 10, bapa: 2 },
-  { id: 'malang', name: 'Malang', region: 'Java', coordinates: [112.6326, -7.9797], p_sejati: 40, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 6 },
-  { id: 'palembang', name: 'Palembang', region: 'Sumatra', coordinates: [104.7566, -2.9909], p_sejati: 60, patriot: 20, ym: 40, waberkat: 55, yw: 35, bapa: 10 },
-  { id: 'manado', name: 'Manado', region: 'Sulawesi', coordinates: [124.8421, 1.4931], p_sejati: 70, patriot: 25, ym: 45, waberkat: 60, yw: 40, bapa: 12 },
-  { id: 'makasar', name: 'Makasar', region: 'Sulawesi', coordinates: [119.4327, -5.1476], p_sejati: 55, patriot: 15, ym: 35, waberkat: 45, yw: 25, bapa: 8 },
-  { id: 'banjarmasin', name: 'Banjarmasin', region: 'Kalimantan', coordinates: [114.5901, -3.3194], p_sejati: 45, patriot: 15, ym: 30, waberkat: 40, yw: 20, bapa: 5 },
-  { id: 'kasri', name: 'Kasri', region: 'Kalimantan', coordinates: [114.0, -2.0], p_sejati: 20, patriot: 5, ym: 15, waberkat: 15, yw: 10, bapa: 2 },
-  { id: 'atambua', name: 'Atambua', region: 'Timor Leste', coordinates: [124.8923, -9.1061], p_sejati: 30, patriot: 10, ym: 20, waberkat: 25, yw: 15, bapa: 3 },
-  { id: 'keningau', name: 'Keningau', region: 'Malaysia', coordinates: [116.1601, 5.3377], p_sejati: 25, patriot: 8, ym: 15, waberkat: 20, yw: 10, bapa: 4 },
-  { id: 'sabah', name: 'Sabah', region: 'Malaysia', coordinates: [116.0753, 5.9749], p_sejati: 35, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 5 },
+  { id: 'jabodetabek', name: 'Jabodetabek', province: 'Jakarta Raya', coordinates: [106.8229, -6.1944], p_sejati: 120, patriot: 45, ym: 80, waberkat: 95, yw: 60, bapa: 20 },
+  { id: 'bandung', name: 'Bandung', province: 'Jawa Barat', coordinates: [107.6191, -6.9175], p_sejati: 85, patriot: 30, ym: 55, waberkat: 70, yw: 40, bapa: 15 },
+  { id: 'semarang', name: 'Semarang', province: 'Jawa Tengah', coordinates: [110.4225, -6.9697], p_sejati: 40, patriot: 15, ym: 30, waberkat: 35, yw: 20, bapa: 5 },
+  { id: 'jogja', name: 'Jogja', province: 'Yogyakarta', coordinates: [110.3695, -7.7956], p_sejati: 50, patriot: 20, ym: 45, waberkat: 40, yw: 30, bapa: 8 },
+  { id: 'solo', name: 'Solo', province: 'Jawa Tengah', coordinates: [110.8243, -7.5666], p_sejati: 30, patriot: 10, ym: 25, waberkat: 25, yw: 15, bapa: 4 },
+  { id: 'surabaya', name: 'Surabaya', province: 'Jawa Timur', coordinates: [112.7521, -7.2504], p_sejati: 90, patriot: 35, ym: 60, waberkat: 80, yw: 50, bapa: 25 },
+  { id: 'kediri', name: 'Kediri', province: 'Jawa Timur', coordinates: [112.0118, -7.8166], p_sejati: 25, patriot: 5, ym: 15, waberkat: 20, yw: 10, bapa: 2 },
+  { id: 'malang', name: 'Malang', province: 'Jawa Timur', coordinates: [112.6326, -7.9797], p_sejati: 40, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 6 },
+  { id: 'palembang', name: 'Palembang', province: 'Sumatera Selatan', coordinates: [104.7566, -2.9909], p_sejati: 60, patriot: 20, ym: 40, waberkat: 55, yw: 35, bapa: 10 },
+  { id: 'manado', name: 'Manado', province: 'Sulawesi Utara', coordinates: [124.8421, 1.4931], p_sejati: 70, patriot: 25, ym: 45, waberkat: 60, yw: 40, bapa: 12 },
+  { id: 'makasar', name: 'Makasar', province: 'Sulawesi Selatan', coordinates: [119.4327, -5.1476], p_sejati: 55, patriot: 15, ym: 35, waberkat: 45, yw: 25, bapa: 8 },
+  { id: 'banjarmasin', name: 'Banjarmasin', province: 'Kalimantan Selatan', coordinates: [114.5901, -3.3194], p_sejati: 45, patriot: 15, ym: 30, waberkat: 40, yw: 20, bapa: 5 },
+  { id: 'kasri', name: 'Kasri', province: 'Kalimantan Selatan', coordinates: [114.0, -2.0], p_sejati: 20, patriot: 5, ym: 15, waberkat: 15, yw: 10, bapa: 2 },
+  { id: 'atambua', name: 'Atambua', province: 'Nusa Tenggara Timur', coordinates: [124.8923, -9.1061], p_sejati: 30, patriot: 10, ym: 20, waberkat: 25, yw: 15, bapa: 3 },
+  { id: 'keningau', name: 'Keningau', province: 'Malaysia', coordinates: [116.1601, 5.3377], p_sejati: 25, patriot: 8, ym: 15, waberkat: 20, yw: 10, bapa: 4 },
+  { id: 'sabah', name: 'Sabah', province: 'Malaysia', coordinates: [116.0753, 5.9749], p_sejati: 35, patriot: 12, ym: 25, waberkat: 30, yw: 15, bapa: 5 },
 ];
 
 const CONNECTIONS = [
@@ -61,7 +61,7 @@ const CONNECTIONS = [
 const COLORS = ['#8b6b22', '#c9a96e', '#e8decd', '#614915', '#a3843e', '#d4be94'];
 
 export default function SciFiMap() {
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<typeof BRANCHES[0] | null>(null);
   
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
@@ -69,7 +69,6 @@ export default function SciFiMap() {
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // If a branch is selected, use its stats. Otherwise, if a region is selected, aggregate its stats.
   let statsTarget = null;
   let statsTitle = "";
   let statsSubtitle = "";
@@ -78,8 +77,9 @@ export default function SciFiMap() {
     statsTarget = selectedBranch;
     statsTitle = "Branch Overview";
     statsSubtitle = selectedBranch.name;
-  } else if (selectedRegion) {
-    const regionBranches = BRANCHES.filter(b => b.region === selectedRegion);
+  } else if (selectedProvince) {
+    const island = getIsland(selectedProvince);
+    const regionBranches = BRANCHES.filter(b => getIsland(b.province) === island);
     if (regionBranches.length > 0) {
       statsTarget = regionBranches.reduce((acc, curr) => ({
         p_sejati: acc.p_sejati + curr.p_sejati,
@@ -90,7 +90,7 @@ export default function SciFiMap() {
         bapa: acc.bapa + curr.bapa,
       }), { p_sejati: 0, patriot: 0, waberkat: 0, ym: 0, yw: 0, bapa: 0 });
       statsTitle = "Region Overview";
-      statsSubtitle = selectedRegion;
+      statsSubtitle = island;
     }
   }
 
@@ -107,12 +107,13 @@ export default function SciFiMap() {
     ? statsTarget.p_sejati + statsTarget.patriot + statsTarget.waberkat + statsTarget.ym + statsTarget.yw + statsTarget.bapa 
     : 0;
 
+  // Clean container styling to blend into layout
   const mapContainerClasses = isFullscreen 
-    ? "fixed inset-0 z-50 bg-[#050505] flex flex-col p-4" 
-    : "relative w-full h-[400px] md:h-[600px] bg-[#050505] rounded-2xl border border-[#222] shadow-inner-dark overflow-hidden flex items-center justify-center group";
+    ? "fixed inset-0 z-50 bg-[#1a1d24] flex flex-col p-4" 
+    : "relative w-full h-[400px] md:h-[500px] bg-transparent overflow-hidden flex items-center justify-center group flex-shrink-0";
 
   return (
-    <div className="flex flex-col gap-6 p-0 md:p-2 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col h-full w-full">
       <div className={mapContainerClasses}>
         <button 
           onClick={() => setIsFullscreen(!isFullscreen)}
@@ -121,16 +122,19 @@ export default function SciFiMap() {
           {isFullscreen ? <X className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
 
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.676-5.115 5.115-4.49-4.49L46.68 0h7.947zM42.484 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM33.003 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM23.522 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM14.04 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM4.56 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM0 3.73l.83-.676 5.32 5.32-4.49 4.49L0 7.544V3.73zM0 13.21l4.49-4.49 5.32 5.32-4.49 4.49L0 14.04v-.83zM0 22.693l4.49-4.49 5.32 5.32-4.49 4.49L0 23.522v-.83zM0 32.174l4.49-4.49 5.32 5.32-4.49 4.49L0 33.003v-.83zM0 41.656l4.49-4.49 5.32 5.32-4.49 4.49L0 42.484v-.83zM0 51.137l4.49-4.49 5.32 5.32-4.49 4.49L0 51.966v-.83zM0 59.8l.83.676-5.115 5.115-4.49-4.49L-7.947 59.8H0z\' fill=\'%238b6b22\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 md:opacity-30">
+        {/* Decorative Grid Background matching spiritual UI */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.676-5.115 5.115-4.49-4.49L46.68 0h7.947zM42.484 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM33.003 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM23.522 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM14.04 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM4.56 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM0 3.73l.83-.676 5.32 5.32-4.49 4.49L0 7.544V3.73zM0 13.21l4.49-4.49 5.32 5.32-4.49 4.49L0 14.04v-.83zM0 22.693l4.49-4.49 5.32 5.32-4.49 4.49L0 23.522v-.83zM0 32.174l4.49-4.49 5.32 5.32-4.49 4.49L0 33.003v-.83zM0 41.656l4.49-4.49 5.32 5.32-4.49 4.49L0 42.484v-.83zM0 51.137l4.49-4.49 5.32 5.32-4.49 4.49L0 51.966v-.83zM0 59.8l.83.676-5.115 5.115-4.49-4.49L-7.947 59.8H0z\' fill=\'%238b6b22\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
+        
+        {/* Radar lines */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
           <div className="w-[300px] md:w-[600px] h-[300px] md:h-[600px] rounded-full border border-brand-gold/10 relative">
             <div className="absolute inset-0 rounded-full border border-brand-gold/5 scale-75"></div>
             <div className="absolute inset-0 rounded-full border border-brand-gold/5 scale-50"></div>
-            <div className="absolute top-1/2 left-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent to-brand-gold/50 origin-left animate-[spin_4s_linear_infinite]"></div>
+            <div className="absolute top-1/2 left-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent to-brand-gold/50 origin-left animate-[spin_6s_linear_infinite]"></div>
           </div>
         </div>
 
-        <div className="w-full h-full relative" onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}>
+        <div className="w-full h-full relative z-10" onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}>
           <div className={`w-full h-full ${isFullscreen ? 'transform-none' : 'transform-style-3d md:rotate-x-[45deg] md:rotate-z-[-5deg] md:scale-125 origin-center transition-transform duration-1000 ease-out md:mt-12'}`}>
             <ComposableMap
               projection="geoMercator"
@@ -141,26 +145,29 @@ export default function SciFiMap() {
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
-                      const islandName = getIsland(geo.properties?.name || geo.properties?.NAME);
-                      const isHovered = hoveredRegion === islandName;
+                      const provinceName = geo.properties?.name || geo.properties?.NAME;
+                      const islandName = getIsland(provinceName);
                       
-                      // 1. If branch selected -> island of branch is Bright Gold (#e8decd)
-                      // 2. If region selected -> island is Darker Gold (rgba(139, 107, 34, 0.6))
-                      let fillColor = "rgba(30, 30, 30, 1)";
-                      let strokeColor = "rgba(139, 107, 34, 0.4)";
-                      let strokeW = 0.5;
+                      const isActiveBranchProvince = selectedBranch && selectedBranch.province === provinceName;
+                      const isClickedProvince = !selectedBranch && selectedProvince === provinceName;
+                      
+                      const isActiveIsland = selectedBranch 
+                        ? getIsland(selectedBranch.province) === islandName
+                        : selectedProvince && getIsland(selectedProvince) === islandName;
 
-                      if (selectedBranch && selectedBranch.region === islandName) {
-                        fillColor = "rgba(232, 222, 205, 0.6)"; // Bright Gold (opacity 0.6 so markers show)
+                      let fillColor = "rgba(30, 30, 30, 1)"; // Grey default
+                      let strokeColor = "rgba(139, 107, 34, 0.2)";
+                      
+                      if (isActiveBranchProvince || isClickedProvince) {
+                        // The specific province they clicked (or branch province) is Bright Gold
+                        fillColor = "rgba(180, 140, 50, 0.7)"; 
                         strokeColor = "rgba(232, 222, 205, 1)";
-                        strokeW = 1;
-                      } else if (!selectedBranch && selectedRegion === islandName) {
-                        fillColor = "rgba(139, 107, 34, 0.6)"; // Darker Gold
-                        strokeColor = "rgba(139, 107, 34, 1)";
-                        strokeW = 1;
-                      } else if (isHovered) {
+                      } else if (isActiveIsland) {
+                        // Rest of the island is Darker Gold
                         fillColor = "rgba(139, 107, 34, 0.3)";
-                        strokeColor = "rgba(139, 107, 34, 0.8)";
+                        strokeColor = "rgba(139, 107, 34, 0.6)";
+                      } else if (hoveredRegion === islandName) {
+                        fillColor = "rgba(139, 107, 34, 0.15)";
                       }
 
                       return (
@@ -170,13 +177,13 @@ export default function SciFiMap() {
                           onMouseEnter={() => setHoveredRegion(islandName)}
                           onMouseLeave={() => setHoveredRegion(null)}
                           onClick={() => {
-                            setSelectedRegion(islandName);
-                            setSelectedBranch(null); // Clear branch selection if user clicks the general island
+                            setSelectedProvince(provinceName);
+                            setSelectedBranch(null);
                           }}
                           className="cursor-pointer transition-colors duration-300"
                           style={{
-                            default: { fill: fillColor, outline: "none", stroke: strokeColor, strokeWidth: strokeW },
-                            hover: { fill: "rgba(139, 107, 34, 0.4)", outline: "none", stroke: "rgba(139, 107, 34, 0.8)", strokeWidth: 1 },
+                            default: { fill: fillColor, outline: "none", stroke: strokeColor, strokeWidth: 0.5 },
+                            hover: { fill: "rgba(180, 140, 50, 0.5)", outline: "none", stroke: "rgba(232, 222, 205, 1)", strokeWidth: 1 },
                             pressed: { outline: "none" },
                           }}
                         />
@@ -204,17 +211,9 @@ export default function SciFiMap() {
 
                 {BRANCHES.map((branch) => {
                   const isBranchSelected = selectedBranch?.id === branch.id;
-                  const isRegionSelected = !selectedBranch && selectedRegion === branch.region;
+                  const isRegionSelected = !selectedBranch && selectedProvince && getIsland(selectedProvince) === getIsland(branch.province);
                   
-                  // Swapping colors as requested:
-                  // Branch selected -> marker is Darker Gold (#8b6b22)
-                  // Region selected -> marker is Bright Gold (#e8decd)
-                  let markerFill = "#8b6b22"; // default
-                  if (isBranchSelected) {
-                    markerFill = "#8b6b22"; // Darker Gold when branch is explicitly selected
-                  } else if (isRegionSelected) {
-                    markerFill = "#e8decd"; // Bright Gold when just island is selected
-                  }
+                  let markerFill = isBranchSelected ? "#e8decd" : isRegionSelected ? "#c9a96e" : "#8b6b22";
 
                   return (
                     <Marker 
@@ -224,38 +223,36 @@ export default function SciFiMap() {
                       onMouseLeave={() => setHoveredBranch(null)}
                       onClick={() => {
                         setSelectedBranch(branch);
-                        setSelectedRegion(branch.region);
+                        setSelectedProvince(branch.province);
                       }}
                     >
-                      <g className="cursor-pointer">
-                        <circle 
-                          r={isBranchSelected || isRegionSelected ? 7 : 4} 
-                          fill={markerFill} 
-                          stroke="#0a0a0a" 
-                          strokeWidth={2}
-                          className="transition-all duration-300 hover:scale-125"
-                        />
-                        {isBranchSelected && (
-                          <circle r={14} fill="none" stroke="#8b6b22" strokeWidth={1} className="animate-ping" />
-                        )}
+                      <g className="cursor-pointer" transform="translate(-12, -12)">
+                        {/* Custom SVG Icon based on Pic 2 (Spiritual Cross/Person design) */}
+                        <circle cx="12" cy="12" r="10" stroke={markerFill} strokeWidth="1" strokeDasharray="2 2" opacity={isBranchSelected ? 1 : 0.5} className="transition-all duration-300" />
+                        <circle cx="12" cy="8" r="2.5" stroke={markerFill} strokeWidth="1" fill={isBranchSelected ? markerFill : "none"} className="transition-all" />
+                        {/* Abstract cross/person arms */}
+                        <path d="M12 11V20 M7 11C7 11 10 11 12 11C14 11 17 11 17 11 M9 14.5L12 11L15 14.5" stroke={markerFill} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-all" />
                         
-                        {/* Always show names prominently as requested */}
-                        <text
-                          textAnchor="middle"
-                          y={15}
-                          style={{
-                            fontFamily: "serif",
-                            fontSize: "6px",
-                            fontWeight: "bold",
-                            fill: isBranchSelected || isRegionSelected ? "#e8decd" : "rgba(232, 222, 205, 0.7)",
-                            textShadow: "0px 0px 4px rgba(0,0,0,1)",
-                            pointerEvents: "none",
-                            transition: "all 0.3s ease"
-                          }}
-                        >
-                          {branch.name}
-                        </text>
+                        {isBranchSelected && (
+                          <circle cx="12" cy="12" r="14" fill="none" stroke="#e8decd" strokeWidth={1} className="animate-ping" />
+                        )}
                       </g>
+                      
+                      <text
+                        textAnchor="middle"
+                        y={15}
+                        style={{
+                          fontFamily: "serif",
+                          fontSize: "6px",
+                          fontWeight: "bold",
+                          fill: isBranchSelected ? "#ffffff" : isRegionSelected ? "#e8decd" : "rgba(232, 222, 205, 0.7)",
+                          textShadow: "0px 0px 4px rgba(0,0,0,1)",
+                          pointerEvents: "none",
+                          transition: "all 0.3s ease"
+                        }}
+                      >
+                        {branch.name}
+                      </text>
                     </Marker>
                   )
                 })}
@@ -264,7 +261,6 @@ export default function SciFiMap() {
           </div>
         </div>
 
-        {/* Hover Tooltip (Branch Level takes precedence, then Island) */}
         {!isFullscreen && hoveredBranch ? (
           <div 
             className="fixed w-48 bg-[#1a1d24]/95 backdrop-blur-md border border-brand-gold/30 rounded-lg p-3 shadow-[0_0_20px_rgba(139,107,34,0.15)] pointer-events-none z-[100]"
@@ -277,7 +273,6 @@ export default function SciFiMap() {
                 {hoveredBranch.p_sejati + hoveredBranch.patriot + hoveredBranch.waberkat + hoveredBranch.ym + hoveredBranch.yw + hoveredBranch.bapa}
               </div>
             </div>
-            <p className="text-[8px] text-gray-500 mt-2 text-right italic">Click to view branch data</p>
           </div>
         ) : !isFullscreen && hoveredRegion && hoveredRegion !== 'Other' ? (
           <div 
@@ -285,18 +280,16 @@ export default function SciFiMap() {
             style={{ left: tooltipPos.x + 15, top: tooltipPos.y + 15 }}
           >
             <h4 className="text-brand-gold font-bold font-serif text-sm">{hoveredRegion}</h4>
-            <p className="text-[9px] text-gray-400">Click to view region data</p>
           </div>
         ) : null}
 
-        <div className="absolute bottom-4 left-4 md:hidden text-[9px] text-brand-gold/60 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-brand-gold/20 pointer-events-none">
-          Pinch to zoom / Tap region
+        <div className="absolute bottom-4 left-4 md:hidden text-[9px] text-brand-gold/60 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-brand-gold/20 pointer-events-none z-50">
+          Pinch to zoom
         </div>
       </div>
 
-      {/* Dashboard Metrics */}
       {statsTarget && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-[#15181e] border-t border-[#333]">
           
           <div className="md:col-span-1 flex flex-col gap-4">
             <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark relative overflow-hidden h-full flex flex-col justify-center">
