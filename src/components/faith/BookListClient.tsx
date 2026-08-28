@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BookOpen, X } from "lucide-react";
 
@@ -11,10 +11,10 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
 
   return (
     <>
-      <div className="relative flex flex-col items-center shrink-0 snap-center w-[110px] md:w-[130px]">
+      <div className="relative flex flex-col items-center shrink-0 snap-center w-[110px] md:w-[130px] group">
         {/* Golden Aura for the 4 Gospels */}
         {isGospel && (
-          <div className="absolute inset-0 bg-[#ffc837] rounded-md blur-xl opacity-40 animate-pulse pointer-events-none z-0"></div>
+          <div className="absolute -inset-1 md:-inset-2 bg-[#ffc837] rounded-md blur-md md:blur-xl opacity-0 group-hover:opacity-50 group-hover:animate-pulse transition-opacity duration-500 pointer-events-none z-0"></div>
         )}
 
         <div 
@@ -22,31 +22,34 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
           className={`
             w-full aspect-[2/3] rounded-r-md rounded-l-[2px] border-l-[4px] border-[#8b6b22] z-10
             shadow-[-3px_0_8px_rgba(0,0,0,0.5),5px_5px_10px_rgba(0,0,0,0.5)] bg-[#1a1d24]
-            transition-all duration-300 transform-style-3d cursor-pointer group flex flex-col relative overflow-hidden
+            transition-all duration-300 transform-style-3d cursor-pointer flex flex-col relative overflow-hidden
             hover:-translate-y-3 hover:shadow-[-3px_0_8px_rgba(0,0,0,0.5),8px_10px_20px_rgba(0,0,0,0.7)]
           `}
           style={{ transformOrigin: "left center" }}
         >
-          {!imgFailed && (
-            <img 
-              src={imagePath} 
-              alt={book.name_en} 
-              onError={() => setImgFailed(true)}
-              className="absolute inset-0 w-full h-full object-cover z-0"
-            />
-          )}
+          {/* We always render the img, just hide it if it fails. This is more reliable across browsers. */}
+          <img 
+            src={imagePath} 
+            alt={book.name_en} 
+            onError={(e) => {
+              setImgFailed(true);
+              e.currentTarget.style.display = 'none';
+            }}
+            className="absolute inset-0 w-full h-full object-cover z-0"
+            style={{ display: imgFailed ? 'none' : 'block' }}
+          />
 
           {imgFailed && (
             <div className="absolute inset-0 bg-gradient-to-br from-[#333742] to-[#1a1d24] flex flex-col justify-between p-2 z-0">
               <div className="text-brand-gold/80 font-serif text-[8px] md:text-[10px] tracking-wider uppercase">#{book.no}</div>
               <div className="text-center font-serif mt-1 mb-auto flex-1 flex items-center justify-center">
-                <h3 className="font-bold leading-tight text-[11px] md:text-sm text-brand-light group-hover:text-brand-gold transition-colors">
+                <h3 className="font-bold leading-tight text-[11px] md:text-sm text-brand-light transition-colors">
                   {book.name}
                 </h3>
               </div>
               <div className="flex items-center justify-between border-t border-white/10 pt-1.5 mt-1.5">
                 <span className="text-[8px] md:text-[9px] text-gray-400">{book.chapter} {isId ? 'Psl' : 'Ch'}</span>
-                <BookOpen className="h-2.5 w-2.5 text-brand-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+                <BookOpen className="h-2.5 w-2.5 text-brand-gold opacity-100" />
               </div>
             </div>
           )}
@@ -68,7 +71,7 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
 
       {/* Magnified Open Book Overlay */}
       {isExpanded && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 md:p-12 perspective-[2000px]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 md:p-12 perspective-[2000px] overscroll-none">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
@@ -128,7 +131,7 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
               <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/40 to-transparent pointer-events-none z-10"></div>
               
               {/* Content Container */}
-              <div className="relative z-20 p-6 md:p-10 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="relative z-20 p-6 md:p-10 flex-1 overflow-y-auto custom-scrollbar overscroll-contain">
                 
                 <div className="text-center mb-8 border-b border-[#2a2520]/20 pb-4">
                   <span className="text-[#2a2520] font-serif font-bold text-sm tracking-widest uppercase opacity-60 block mb-1">
@@ -174,6 +177,25 @@ export default function BookListClient({
   categoryFolder: string
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (expandedId !== null) {
+      document.body.style.overflow = 'hidden';
+      // Prevent mobile body scroll issues
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [expandedId]);
 
   return (
     <div className="relative z-10 pb-6">

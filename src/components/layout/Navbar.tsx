@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -179,28 +179,28 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     {/* Mobile Bottom Navigation (Visible only on mobile) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
       <div className="flex justify-around items-center h-16 px-2">
-        <Link href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link prefetch={true} href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Book className="h-5 w-5" />
           <span className="text-[10px] font-medium">Spiritual</span>
         </Link>
-        <Link href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link prefetch={true} href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Newspaper className="h-5 w-5" />
           <span className="text-[10px] font-medium">News</span>
         </Link>
         
         {/* Center Home Button */}
-        <Link href="/" className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/' ? 'text-brand-gold' : 'text-gray-400'}`}>
+        <Link prefetch={true} href="/" className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === '/' ? 'text-brand-gold' : 'text-gray-400'}`}>
           <div className={`absolute -top-3 flex items-center justify-center h-12 w-12 rounded-full border-4 border-[#1e1e1e] ${pathname === '/' ? 'bg-brand-gold text-brand-dark' : 'bg-brand-surface text-brand-light'}`}>
             <Home className="h-5 w-5" />
           </div>
           <span className="text-[10px] font-medium pt-8">Home</span>
         </Link>
 
-        <Link href="/friends" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/friends') ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link prefetch={true} href="/friends" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/friends') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Users className="h-5 w-5" />
           <span className="text-[10px] font-medium">Friends</span>
         </Link>
-        <Link href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link prefetch={true} href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Tent className="h-5 w-5" />
           <span className="text-[10px] font-medium">Camp</span>
         </Link>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -8,12 +8,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
-import { Mail, Lock, User, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Plus, Trash2, MapPin } from "lucide-react";
 
 const campSchema = z.object({
   camp: z.string().min(1, "Select a camp"),
   angkatan: z.string().min(1, "Required"),
-  kota: z.string().min(1, "Select a kota"),
+  cabang: z.string().min(1, "Select a branch/cabang"),
 });
 
 const schema = z
@@ -21,6 +21,7 @@ const schema = z
     full_name: z.string().min(2, "Name must be at least 2 characters"),
     username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
     phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08 and contain only numbers"),
+    kota: z.string().min(1, "Select your current city"),
     email: z.string().email("Invalid email address"),
     camps: z.array(campSchema).min(1, "Please add at least one camp"),
     password: z.string().min(8, "Password must be at least 8 characters"),
@@ -49,6 +50,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [kotaOptions, setKotaOptions] = useState<string[]>([]);
+  const [cabangOptions, setCabangOptions] = useState<string[]>([]);
   const supabase = createClient();
 
   const {
@@ -60,8 +62,9 @@ export default function RegisterPage() {
   } = useForm<FormValues>({ 
     resolver: zodResolver(schema),
     defaultValues: { 
-      camps: [{ camp: "", angkatan: "", kota: "" }],
-      role: "member"
+      camps: [{ camp: "", angkatan: "", cabang: "" }],
+      role: "member",
+      kota: ""
     }
   });
 
@@ -80,21 +83,27 @@ export default function RegisterPage() {
       if (inviteRole) setValue("role", inviteRole);
     }
 
-    async function fetchKota() {
-      const { data } = await supabase.from("alumni_database").select("city");
-      if (data) {
-        const uniqueCities = Array.from(new Set(data.map(d => d.city).filter(Boolean))).sort();
+    async function fetchData() {
+      // Fetch distinct cities
+      const { data: cityData } = await supabase.from("alumni_database").select("city");
+      if (cityData) {
+        const uniqueCities = Array.from(new Set(cityData.map(d => d.city).filter(Boolean))).sort();
         setKotaOptions(uniqueCities);
       }
+      
+      // Fetch distinct branches (Cabang)
+      const { data: cabangData } = await supabase.from("alumni_database").select("Cabang");
+      if (cabangData) {
+        const uniqueCabangs = Array.from(new Set(cabangData.map(d => (d as any).Cabang).filter(Boolean))).sort() as string[];
+        setCabangOptions(uniqueCabangs);
+      }
     }
-    fetchKota();
+    fetchData();
   }, [setValue, supabase]);
 
   async function onSubmit(data: FormValues) {
     setError(null);
     
-    // We store the first camp's info in the legacy fields for backward compatibility,
-    // and the full history in camp_history.
     const primaryCamp = data.camps[0];
     const completedModules = data.camps.map(c => c.camp);
 
@@ -108,198 +117,255 @@ export default function RegisterPage() {
           phone: data.phone,
           completed_modules: completedModules,
           angkatan: primaryCamp.angkatan,
-          kota: primaryCamp.kota,
-          camp_history: data.camps, // Store full array of objects
+          kota: data.kota, // Where they live
+          camp_history: data.camps, // Stores cabang
           role: data.role || "member",
         },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
-    if (error) { setError(error.message); return; } if (signUpData?.session) { router.push("/"); router.refresh(); return; } setSuccess(true);
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    if (signUpData.user && signUpData.user.identities && signUpData.user.identities.length === 0) {
+      setError("This email is already registered.");
+      return;
+    }
+
+    setSuccess(true);
   }
 
   if (success) {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-          <Mail className="h-7 w-7 text-green-600" />
-        </div>
-        <h2 className="text-xl font-bold text-white">Verify your email</h2>
-        <p className="mt-2 text-sm text-brand-muted">
-          We&apos;ve sent a confirmation link to your email. Click it to
-          activate your account.
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#1a1d24] px-4 py-12 text-center sm:px-6 lg:px-8">
+        <h2 className="mt-6 text-3xl font-bold tracking-tight text-white font-serif">Check your email</h2>
+        <p className="mt-2 text-sm text-gray-400">
+          We sent a confirmation link to your email. Please verify your account to continue.
         </p>
-        <Link
-          href="/login"
-          className="mt-4 inline-block text-sm text-brand-gold hover:underline"
-        >
-          Back to Sign In
-        </Link>
+        <div className="mt-6">
+          <Link href="/login" className="text-brand-gold hover:text-white font-semibold">
+            Return to Login
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <h2 className="mb-1 text-xl font-bold text-white">Join the Community</h2>
-      <p className="mb-6 text-sm text-brand-muted">Create your community account</p>
-
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Nama</label>
-          <input
-            {...register("full_name")}
-            placeholder="Your full name"
-            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
-          />
-          {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
+    <div className="flex min-h-screen items-center justify-center bg-[#1a1d24] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-brand-gold font-serif">
+            Create an Account
+          </h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Join the Alumni CFM community
+          </p>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Username</label>
-          <input
-            {...register("username")}
-            placeholder="johndoe"
-            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
-          />
-          {errors.username && <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>}
-        </div>
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+          {error && (
+            <div className="rounded-md bg-red-900/50 border border-red-500 p-4">
+              <div className="text-sm text-red-200">{error}</div>
+            </div>
+          )}
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">No HP (WhatsApp)</label>
-          <input
-            {...register("phone")}
-            placeholder="08xxxxxxxxxx"
-            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
-          />
-          {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Email</label>
-          <input
-            {...register("email")}
-            type="email"
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-brand-border py-2.5 px-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
-          />
-          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-        </div>
-        
-        <div className="bg-[#111] p-3 rounded-xl border border-brand-border">
-          <label className="mb-2 block text-sm font-bold text-white">Alumni / Camp (Required)</label>
-          <p className="text-xs text-brand-muted mb-3">Please fill out the camps you have completed.</p>
-          
-          <div className="space-y-3">
-            {fields.map((item, index) => (
-              <div key={item.id} className="flex items-center gap-2">
-                <div className="flex-1 grid grid-cols-3 gap-2">
-                  <div>
-                    <select
-                      {...register(`camps.${index}.camp`)}
-                      className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                    >
-                      <option value="">Camp...</option>
-                      {ALUMNI_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                    {errors.camps?.[index]?.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.camp?.message}</p>}
-                  </div>
-                  <div>
-                    <input
-                      {...register(`camps.${index}.angkatan`)}
-                      placeholder="Angk..."
-                      className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                    />
-                    {errors.camps?.[index]?.angkatan && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.angkatan?.message}</p>}
-                  </div>
-                  <div>
-                    <select
-                      {...register(`camps.${index}.kota`)}
-                      className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                    >
-                      <option value="">Kota...</option>
-                      {kotaOptions.map(kota => (
-                        <option key={kota} value={kota}>{kota}</option>
-                      ))}
-                    </select>
-                    {errors.camps?.[index]?.kota && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.kota?.message}</p>}
-                  </div>
+          <div className="space-y-4 rounded-xl bg-[#22252d] p-6 border border-[#333]">
+            {/* Full Name */}
+            <div>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <User className="h-4 w-4 text-gray-500" />
                 </div>
-                {fields.length > 1 && (
-                  <button 
-                    type="button" 
-                    onClick={() => remove(index)}
-                    className="p-2 bg-red-900/30 text-red-500 rounded-lg hover:bg-red-900/50 flex-shrink-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  {...register("full_name")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 pl-10 pr-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                />
               </div>
-            ))}
-          </div>
+              {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
+            </div>
 
-          <button
-            type="button"
-            onClick={() => append({ camp: "", angkatan: "", kota: "" })}
-            className="mt-3 flex items-center gap-1 text-xs font-bold text-brand-gold hover:text-white transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add new camp...
-          </button>
-          {errors.camps && !Array.isArray(errors.camps) && <p className="mt-2 text-xs text-red-600">{errors.camps.message}</p>}
-        </div>
+            {/* Username & Phone Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Username (e.g. jdoe123)"
+                  {...register("username")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                />
+                {errors.username && <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>}
+              </div>
+              <div>
+                <input
+                  type="tel"
+                  placeholder="Phone (08...)"
+                  {...register("phone")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 px-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                />
+                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
+              </div>
+            </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Password</label>
-          <div className="relative">
-            <input
-              {...register("password")}
-              type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 characters"
-              className="w-full rounded-lg border border-brand-border py-2.5 pl-4 pr-10 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
-            />
+            {/* Current City (Kota) */}
+            <div>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                </div>
+                <select
+                  {...register("kota")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 pl-10 pr-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                >
+                  <option value="">Current City (Domisili)...</option>
+                  {kotaOptions.map(kota => (
+                    <option key={kota} value={kota}>{kota}</option>
+                  ))}
+                </select>
+              </div>
+              {errors.kota && <p className="mt-1 text-xs text-red-600">{errors.kota.message}</p>}
+            </div>
+            
+            {/* Dynamic Camps Selection */}
+            <div className="mt-4 pt-4 border-t border-brand-border/50">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Camp History</label>
+              
+              {fields.map((field, index) => (
+                <div key={field.id} className="bg-[#1a1d24] rounded-lg p-3 border border-brand-border mb-3 relative group">
+                  <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-5">
+                      <select
+                        {...register(`camps.${index}.camp`)}
+                        className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
+                      >
+                        <option value="">Select Camp...</option>
+                        {ALUMNI_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                      {errors.camps?.[index]?.camp && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.camp?.message}</p>}
+                    </div>
+                    <div className="col-span-3">
+                      <input
+                        type="text"
+                        placeholder="Angkatan..."
+                        {...register(`camps.${index}.angkatan`)}
+                        className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
+                      />
+                      {errors.camps?.[index]?.angkatan && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.angkatan?.message}</p>}
+                    </div>
+                    <div className="col-span-4">
+                      <select
+                        {...register(`camps.${index}.cabang`)}
+                        className="w-full rounded-lg border border-brand-border py-2 px-2 text-xs bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
+                      >
+                        <option value="">Branch / Cabang...</option>
+                        {cabangOptions.map(cabang => (
+                          <option key={cabang} value={cabang}>{cabang}</option>
+                        ))}
+                      </select>
+                      {errors.camps?.[index]?.cabang && <p className="text-[10px] text-red-500 mt-1">{errors.camps[index]?.cabang?.message}</p>}
+                    </div>
+                  </div>
+                  {fields.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => remove(index)}
+                      className="absolute -top-2 -right-2 bg-red-900/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-light"
+              onClick={() => append({ camp: "", angkatan: "", cabang: "" })}
+              className="mt-3 flex items-center gap-1 text-xs font-bold text-brand-gold hover:text-white transition-colors"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <Plus className="h-3.5 w-3.5" /> Add new camp...
             </button>
+            {errors.camps && !Array.isArray(errors.camps) && <p className="mt-2 text-xs text-red-600">{errors.camps.message}</p>}
+
+            {/* Email */}
+            <div className="pt-4 border-t border-brand-border/50">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  {...register("email")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 pl-10 pr-3 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                />
+              </div>
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+            </div>
+
+            {/* Password */}
+            <div>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Lock className="h-4 w-4 text-gray-500" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  {...register("password")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 pl-10 pr-10 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500 hover:text-gray-300" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500 hover:text-gray-300" />
+                  )}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Lock className="h-4 w-4 text-gray-500" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  {...register("confirm_password")}
+                  className="block w-full rounded-lg border border-brand-border bg-[#1a1d24] py-2.5 pl-10 pr-10 text-sm text-white focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                />
+              </div>
+              {errors.confirm_password && <p className="mt-1 text-xs text-red-600">{errors.confirm_password.message}</p>}
+            </div>
           </div>
-          {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
-        </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Confirm Password</label>
-          <div className="relative">
-            <input
-              {...register("confirm_password")}
-              type={showPassword ? "text" : "password"}
-              placeholder="Repeat your password"
-              className="w-full rounded-lg border border-brand-border py-2.5 pl-4 pr-10 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
-            />
-          </div>
-          {errors.confirm_password && <p className="mt-1 text-xs text-red-600">{errors.confirm_password.message}</p>}
-        </div>
+          <Button type="submit" className="w-full" loading={isSubmitting}>
+            Create Account
+          </Button>
 
-        <Button type="submit" className="w-full mt-2" loading={isSubmitting}>
-          Create Account
-        </Button>
-      </form>
-
-      <p className="mt-6 text-center text-sm text-brand-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="font-medium text-brand-gold hover:underline">
-          Sign In
-        </Link>
-      </p>
+          <p className="text-center text-sm text-gray-400">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-brand-gold hover:text-white">
+              Sign in
+            </Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
-
-
