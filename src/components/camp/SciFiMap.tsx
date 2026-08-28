@@ -8,7 +8,8 @@ import { Shield, Star, Zap, Heart, Users, Activity, Maximize2, X } from "lucide-
 // TopoJSON for Indonesia
 const geoUrl = "/indonesia.json";
 
-function getIsland(provinceName: string) {
+function getIsland(provinceName: string | undefined) {
+  if (!provinceName) return 'Other';
   const name = provinceName.toLowerCase();
   if (name.includes('jawa') || name.includes('banten') || name.includes('jakarta') || name.includes('yogyakarta')) return 'Java';
   if (name.includes('sumatera') || name.includes('sumatra') || name.includes('aceh') || name.includes('riau') || name.includes('jambi') || name.includes('bengkulu') || name.includes('lampung') || name.includes('bangka')) return 'Sumatra';
@@ -152,7 +153,7 @@ export default function SciFiMap() {
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
-                      const islandName = getIsland(geo.properties.name);
+                      const islandName = getIsland(geo.properties?.name || geo.properties?.NAME);
                       const isHovered = hoveredRegion === islandName;
                       const isSelected = selectedRegion === islandName;
 
@@ -332,4 +333,6 @@ export default function SciFiMap() {
     </div>
   );
 }
+
+
 
