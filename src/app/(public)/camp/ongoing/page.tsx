@@ -1,17 +1,104 @@
 "use client";
 
-import { Tent } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Tent, Calendar, Users, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
-export default function OngoingCampPage() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[500px] text-center px-4">
-      <div className="bg-[#22252d] p-6 rounded-full border border-[#333] mb-6">
-        <Tent className="w-16 h-16 text-brand-gold opacity-80" />
+export default function MyOngoingCampPage() {
+  const [camps, setCamps] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMyCamps() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch crew assignments for this user, joining with cohort data
+      const { data, error } = await supabase
+        .from("camp_crew")
+        .select("*, camp_cohorts(*)")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        // Group by cohort in case they have multiple roles in the same camp
+        const uniqueCohorts = new Map();
+        for (const item of data) {
+          if (item.camp_cohorts && !uniqueCohorts.has(item.cohort_id)) {
+            uniqueCohorts.set(item.cohort_id, {
+              ...item.camp_cohorts,
+              myRole: item.position
+            });
+          }
+        }
+        setCamps(Array.from(uniqueCohorts.values()));
+      }
+      setIsLoading(false);
+    }
+    
+    fetchMyCamps();
+  }, []);
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading your camps...</div>;
+  }
+
+  if (camps.length === 0) {
+    return (
+      <div className="p-8 text-center flex flex-col items-center justify-center min-h-[400px]">
+        <div className="w-16 h-16 bg-[#222] rounded-full flex items-center justify-center mb-4">
+          <Tent className="w-8 h-8 text-gray-500" />
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">No Ongoing Camps</h2>
+        <p className="text-gray-400">You are not currently assigned to any active camps.</p>
       </div>
-      <h2 className="text-3xl font-serif font-bold text-white mb-3">My Ongoing Camp</h2>
-      <p className="text-gray-400 max-w-md">
-        You are not currently enrolled in any active camps. When you join a camp, your progress, schedule, and materials will appear here.
-      </p>
+    );
+  }
+
+  return (
+    <div className="p-5 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div>
+        <h2 className="text-2xl font-bold text-white tracking-tight">My Ongoing Camps</h2>
+        <p className="text-brand-muted mt-1">Select a camp to view its productivity dashboard.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {camps.map((camp) => (
+          <Link href={`/camp/ongoing/${camp.id}`} key={camp.id}>
+            <div className="bg-[#111] border border-[#333] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#15181e] group h-full flex flex-col cursor-pointer shadow-lg hover:shadow-brand-gold/10">
+              
+              <div className="flex justify-between items-start mb-4">
+                <div className="bg-brand-gold/10 p-3 rounded-xl text-brand-gold">
+                  <Tent className="w-6 h-6" />
+                </div>
+                <span className="bg-[#222] text-xs font-bold px-3 py-1 rounded-full text-gray-300 border border-[#333]">
+                  {camp.branch}
+                </span>
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">
+                {camp.camp_name}
+              </h3>
+              <p className="text-brand-muted font-medium mb-6">
+                Angkatan {camp.angkatan}
+              </p>
+              
+              <div className="mt-auto pt-4 border-t border-[#222] flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Users className="w-4 h-4" />
+                  <span>Role: <span className="text-white font-semibold">{camp.myRole}</span></span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-[#555] group-hover:text-brand-gold transition-colors" />
+              </div>
+
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

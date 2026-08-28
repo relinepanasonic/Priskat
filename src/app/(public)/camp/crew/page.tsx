@@ -1,17 +1,28 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, Plus } from "lucide-react";
+import AddCampModal from "@/components/camp/AddCampModal";
 
 export default function CampCrewPage() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+        if (profile && (profile.role === "superadmin" || profile.role === "admin")) {
+          setIsSuperadmin(true);
+        }
+      }
+
       const { data: crewData, error } = await supabase
         .from("camp_crew")
         .select("*")
@@ -70,6 +81,11 @@ export default function CampCrewPage() {
           <h2 className="text-xl font-bold text-white">Camp Crew</h2>
           <p className="text-sm text-brand-muted mt-1">Directory of all camp crew members.</p>
         </div>
+        {isSuperadmin && (
+          <button onClick={() => setIsAddModalOpen(true)} className="bg-brand-gold text-brand-dark px-4 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap">
+            <Plus className="h-4 w-4" /> Add New Camp
+          </button>
+        )}
       </div>
 
       <div className="bg-[#1a1d24] border border-[#333] rounded-xl overflow-hidden mx-5 mb-5">
@@ -121,6 +137,7 @@ export default function CampCrewPage() {
           </table>
         </div>
       </div>
+      <AddCampModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => window.location.reload()} />
     </div>
   );
 }
