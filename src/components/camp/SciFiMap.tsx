@@ -5,18 +5,17 @@ import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, L
 import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from "react-simple-maps";
 import { Shield, Star, Zap, Heart, Users, Activity, Maximize2, X } from "lucide-react";
 
-// TopoJSON for Indonesia
 const geoUrl = "/indonesia-combined.json";
 
-function getIsland(provinceName: string | undefined) {
+function getIsland(provinceName?: string) {
   if (!provinceName) return 'Other';
-  const name = provinceName.toLowerCase();
+  const name = String(provinceName).toLowerCase();
   if (name.includes('jawa') || name.includes('banten') || name.includes('jakarta') || name.includes('yogyakarta')) return 'Java';
   if (name.includes('sumatera') || name.includes('sumatra') || name.includes('aceh') || name.includes('riau') || name.includes('jambi') || name.includes('bengkulu') || name.includes('lampung') || name.includes('bangka')) return 'Sumatra';
   if (name.includes('kalimantan')) return 'Kalimantan';
   if (name.includes('sulawesi') || name.includes('gorontalo')) return 'Sulawesi';
   if (name.includes('bali') || name.includes('nusa')) return 'Bali & Nusa Tenggara';
-  if (name.includes('maluku') || name.includes('papua')) return 'Maluku & Papua';
+  if (name.includes('maluku') || name.includes('papua') || name.includes('irian')) return 'Maluku & Papua';
   if (name.includes('sabah') || name.includes('sarawak') || name.includes('malaysia') || name.includes('keningau')) return 'Malaysia';
   if (name.includes('timor') || name.includes('atambua')) return 'Timor Leste';
   return 'Other';
@@ -63,16 +62,26 @@ const COLORS = ['#8b6b22', '#c9a96e', '#e8decd', '#614915', '#a3843e', '#d4be94'
 
 export default function SciFiMap() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<typeof BRANCHES[0] | null>(null);
+  
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [hoveredBranch, setHoveredBranch] = useState<typeof BRANCHES[0] | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Aggregate stats by region instead of by branch
-  let aggregatedStats = null;
-  if (selectedRegion) {
+  // If a branch is selected, use its stats. Otherwise, if a region is selected, aggregate its stats.
+  let statsTarget = null;
+  let statsTitle = "";
+  let statsSubtitle = "";
+
+  if (selectedBranch) {
+    statsTarget = selectedBranch;
+    statsTitle = "Branch Overview";
+    statsSubtitle = selectedBranch.name;
+  } else if (selectedRegion) {
     const regionBranches = BRANCHES.filter(b => b.region === selectedRegion);
     if (regionBranches.length > 0) {
-      aggregatedStats = regionBranches.reduce((acc, curr) => ({
+      statsTarget = regionBranches.reduce((acc, curr) => ({
         p_sejati: acc.p_sejati + curr.p_sejati,
         patriot: acc.patriot + curr.patriot,
         waberkat: acc.waberkat + curr.waberkat,
@@ -80,20 +89,22 @@ export default function SciFiMap() {
         yw: acc.yw + curr.yw,
         bapa: acc.bapa + curr.bapa,
       }), { p_sejati: 0, patriot: 0, waberkat: 0, ym: 0, yw: 0, bapa: 0 });
+      statsTitle = "Region Overview";
+      statsSubtitle = selectedRegion;
     }
   }
 
-  const chartData = aggregatedStats ? [
-    { name: 'Pria Sejati', value: aggregatedStats.p_sejati, icon: Shield },
-    { name: 'Patriot', value: aggregatedStats.patriot, icon: Star },
-    { name: 'Waberkat', value: aggregatedStats.waberkat, icon: Heart },
-    { name: 'Young Man', value: aggregatedStats.ym, icon: Zap },
-    { name: 'Young Woman', value: aggregatedStats.yw, icon: Users },
-    { name: 'Bapa Sejati', value: aggregatedStats.bapa, icon: Activity },
+  const chartData = statsTarget ? [
+    { name: 'Pria Sejati', value: statsTarget.p_sejati, icon: Shield },
+    { name: 'Patriot', value: statsTarget.patriot, icon: Star },
+    { name: 'Waberkat', value: statsTarget.waberkat, icon: Heart },
+    { name: 'Young Man', value: statsTarget.ym, icon: Zap },
+    { name: 'Young Woman', value: statsTarget.yw, icon: Users },
+    { name: 'Bapa Sejati', value: statsTarget.bapa, icon: Activity },
   ] : [];
 
-  const totalAlumni = aggregatedStats 
-    ? aggregatedStats.p_sejati + aggregatedStats.patriot + aggregatedStats.waberkat + aggregatedStats.ym + aggregatedStats.yw + aggregatedStats.bapa 
+  const totalAlumni = statsTarget 
+    ? statsTarget.p_sejati + statsTarget.patriot + statsTarget.waberkat + statsTarget.ym + statsTarget.yw + statsTarget.bapa 
     : 0;
 
   const mapContainerClasses = isFullscreen 
@@ -102,11 +113,7 @@ export default function SciFiMap() {
 
   return (
     <div className="flex flex-col gap-6 p-0 md:p-2 w-full max-w-7xl mx-auto">
-      
-      {/* Map Container */}
       <div className={mapContainerClasses}>
-        
-        {/* Fullscreen Toggle Button */}
         <button 
           onClick={() => setIsFullscreen(!isFullscreen)}
           className="absolute top-4 right-4 z-[100] bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 text-brand-gold p-2 rounded-lg transition-all animate-pulse"
@@ -114,10 +121,7 @@ export default function SciFiMap() {
           {isFullscreen ? <X className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
 
-        {/* Decorative Grid Background */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.676-5.115 5.115-4.49-4.49L46.68 0h7.947zM42.484 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM33.003 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM23.522 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM14.04 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM4.56 0l4.49 4.49-5.32 5.32-4.49-4.49 5.32-5.32zM0 3.73l.83-.676 5.32 5.32-4.49 4.49L0 7.544V3.73zM0 13.21l4.49-4.49 5.32 5.32-4.49 4.49L0 14.04v-.83zM0 22.693l4.49-4.49 5.32 5.32-4.49 4.49L0 23.522v-.83zM0 32.174l4.49-4.49 5.32 5.32-4.49 4.49L0 33.003v-.83zM0 41.656l4.49-4.49 5.32 5.32-4.49 4.49L0 42.484v-.83zM0 51.137l4.49-4.49 5.32 5.32-4.49 4.49L0 51.966v-.83zM0 59.8l.83.676-5.115 5.115-4.49-4.49L-7.947 59.8H0z\' fill=\'%238b6b22\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
-        
-        {/* Circular Radar Sweep */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 md:opacity-30">
           <div className="w-[300px] md:w-[600px] h-[300px] md:h-[600px] rounded-full border border-brand-gold/10 relative">
             <div className="absolute inset-0 rounded-full border border-brand-gold/5 scale-75"></div>
@@ -126,36 +130,38 @@ export default function SciFiMap() {
           </div>
         </div>
 
-        <div className="w-full h-full relative" 
-          onMouseMove={(e) => {
-            setTooltipPos({ x: e.clientX, y: e.clientY });
-          }}
-        >
+        <div className="w-full h-full relative" onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}>
           <div className={`w-full h-full ${isFullscreen ? 'transform-none' : 'transform-style-3d md:rotate-x-[45deg] md:rotate-z-[-5deg] md:scale-125 origin-center transition-transform duration-1000 ease-out md:mt-12'}`}>
             <ComposableMap
               projection="geoMercator"
-              projectionConfig={{
-                scale: 1300,
-                center: [116, -2]
-              }}
+              projectionConfig={{ scale: 1300, center: [116, -2] }}
               style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
             >
-              <ZoomableGroup 
-                zoom={1} 
-                minZoom={1} 
-                maxZoom={6}
-                center={[116, -2]}
-                filterZoomEvent={(evt: any) => {
-                  if (evt.type === 'wheel') return true;
-                  return true;
-                }}
-              >
+              <ZoomableGroup zoom={1} minZoom={1} maxZoom={6} center={[116, -2]}>
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
                       const islandName = getIsland(geo.properties?.name || geo.properties?.NAME);
                       const isHovered = hoveredRegion === islandName;
-                      const isSelected = selectedRegion === islandName;
+                      
+                      // 1. If branch selected -> island of branch is Bright Gold (#e8decd)
+                      // 2. If region selected -> island is Darker Gold (rgba(139, 107, 34, 0.6))
+                      let fillColor = "rgba(30, 30, 30, 1)";
+                      let strokeColor = "rgba(139, 107, 34, 0.4)";
+                      let strokeW = 0.5;
+
+                      if (selectedBranch && selectedBranch.region === islandName) {
+                        fillColor = "rgba(232, 222, 205, 0.6)"; // Bright Gold (opacity 0.6 so markers show)
+                        strokeColor = "rgba(232, 222, 205, 1)";
+                        strokeW = 1;
+                      } else if (!selectedBranch && selectedRegion === islandName) {
+                        fillColor = "rgba(139, 107, 34, 0.6)"; // Darker Gold
+                        strokeColor = "rgba(139, 107, 34, 1)";
+                        strokeW = 1;
+                      } else if (isHovered) {
+                        fillColor = "rgba(139, 107, 34, 0.3)";
+                        strokeColor = "rgba(139, 107, 34, 0.8)";
+                      }
 
                       return (
                         <Geography
@@ -163,21 +169,14 @@ export default function SciFiMap() {
                           geography={geo}
                           onMouseEnter={() => setHoveredRegion(islandName)}
                           onMouseLeave={() => setHoveredRegion(null)}
-                          onClick={() => setSelectedRegion(islandName)}
+                          onClick={() => {
+                            setSelectedRegion(islandName);
+                            setSelectedBranch(null); // Clear branch selection if user clicks the general island
+                          }}
                           className="cursor-pointer transition-colors duration-300"
                           style={{
-                            default: { 
-                              fill: isSelected ? "rgba(139, 107, 34, 0.6)" : isHovered ? "rgba(139, 107, 34, 0.3)" : "rgba(30, 30, 30, 1)", 
-                              outline: "none",
-                              stroke: isSelected ? "rgba(139, 107, 34, 1)" : "rgba(139, 107, 34, 0.4)",
-                              strokeWidth: isSelected ? 1 : 0.5
-                            },
-                            hover: { 
-                              fill: "rgba(139, 107, 34, 0.4)", 
-                              outline: "none", 
-                              stroke: "rgba(139, 107, 34, 0.8)", 
-                              strokeWidth: 1 
-                            },
+                            default: { fill: fillColor, outline: "none", stroke: strokeColor, strokeWidth: strokeW },
+                            hover: { fill: "rgba(139, 107, 34, 0.4)", outline: "none", stroke: "rgba(139, 107, 34, 0.8)", strokeWidth: 1 },
                             pressed: { outline: "none" },
                           }}
                         />
@@ -186,12 +185,10 @@ export default function SciFiMap() {
                   }
                 </Geographies>
 
-                {/* Connection Lines */}
                 {CONNECTIONS.map(([id1, id2]) => {
                   const b1 = BRANCHES.find(b => b.id === id1);
                   const b2 = BRANCHES.find(b => b.id === id2);
                   if (!b1 || !b2) return null;
-                  
                   return (
                     <Line
                       key={`${id1}-${id2}`}
@@ -200,30 +197,64 @@ export default function SciFiMap() {
                       stroke="rgba(139, 107, 34, 0.2)"
                       strokeWidth={1}
                       strokeDasharray="4 4"
+                      className="pointer-events-none"
                     />
                   );
                 })}
 
-                {/* Branch Markers */}
                 {BRANCHES.map((branch) => {
-                  const isSelected = selectedRegion === branch.region;
+                  const isBranchSelected = selectedBranch?.id === branch.id;
+                  const isRegionSelected = !selectedBranch && selectedRegion === branch.region;
+                  
+                  // Swapping colors as requested:
+                  // Branch selected -> marker is Darker Gold (#8b6b22)
+                  // Region selected -> marker is Bright Gold (#e8decd)
+                  let markerFill = "#8b6b22"; // default
+                  if (isBranchSelected) {
+                    markerFill = "#8b6b22"; // Darker Gold when branch is explicitly selected
+                  } else if (isRegionSelected) {
+                    markerFill = "#e8decd"; // Bright Gold when just island is selected
+                  }
+
                   return (
                     <Marker 
                       key={branch.id} 
                       coordinates={branch.coordinates as [number, number]}
-                      className="pointer-events-none" // Map click handles selection now
+                      onMouseEnter={() => setHoveredBranch(branch)}
+                      onMouseLeave={() => setHoveredBranch(null)}
+                      onClick={() => {
+                        setSelectedBranch(branch);
+                        setSelectedRegion(branch.region);
+                      }}
                     >
-                      <g>
+                      <g className="cursor-pointer">
                         <circle 
-                          r={isSelected ? 6 : 3} 
-                          fill={isSelected ? "#e8decd" : "#8b6b22"} 
+                          r={isBranchSelected || isRegionSelected ? 7 : 4} 
+                          fill={markerFill} 
                           stroke="#0a0a0a" 
-                          strokeWidth={1.5}
-                          className="transition-all duration-300"
+                          strokeWidth={2}
+                          className="transition-all duration-300 hover:scale-125"
                         />
-                        {isSelected && (
-                          <circle r={12} fill="none" stroke="#8b6b22" strokeWidth={1} className="animate-ping" />
+                        {isBranchSelected && (
+                          <circle r={14} fill="none" stroke="#8b6b22" strokeWidth={1} className="animate-ping" />
                         )}
+                        
+                        {/* Always show names prominently as requested */}
+                        <text
+                          textAnchor="middle"
+                          y={15}
+                          style={{
+                            fontFamily: "serif",
+                            fontSize: "6px",
+                            fontWeight: "bold",
+                            fill: isBranchSelected || isRegionSelected ? "#e8decd" : "rgba(232, 222, 205, 0.7)",
+                            textShadow: "0px 0px 4px rgba(0,0,0,1)",
+                            pointerEvents: "none",
+                            transition: "all 0.3s ease"
+                          }}
+                        >
+                          {branch.name}
+                        </text>
                       </g>
                     </Marker>
                   )
@@ -233,8 +264,22 @@ export default function SciFiMap() {
           </div>
         </div>
 
-        {/* Hover Tooltip (Island Level) */}
-        {hoveredRegion && hoveredRegion !== 'Other' && !isFullscreen && (
+        {/* Hover Tooltip (Branch Level takes precedence, then Island) */}
+        {!isFullscreen && hoveredBranch ? (
+          <div 
+            className="fixed w-48 bg-[#1a1d24]/95 backdrop-blur-md border border-brand-gold/30 rounded-lg p-3 shadow-[0_0_20px_rgba(139,107,34,0.15)] pointer-events-none z-[100]"
+            style={{ left: tooltipPos.x + 15, top: tooltipPos.y + 15 }}
+          >
+            <h4 className="text-brand-gold font-bold mb-2 border-b border-[#333] pb-1">{hoveredBranch.name}</h4>
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+              <div className="text-gray-400">Total:</div>
+              <div className="text-right text-white font-mono">
+                {hoveredBranch.p_sejati + hoveredBranch.patriot + hoveredBranch.waberkat + hoveredBranch.ym + hoveredBranch.yw + hoveredBranch.bapa}
+              </div>
+            </div>
+            <p className="text-[8px] text-gray-500 mt-2 text-right italic">Click to view branch data</p>
+          </div>
+        ) : !isFullscreen && hoveredRegion && hoveredRegion !== 'Other' ? (
           <div 
             className="fixed bg-[#1a1d24]/95 backdrop-blur-md border border-brand-gold/30 rounded px-3 py-1.5 shadow-[0_0_20px_rgba(139,107,34,0.15)] pointer-events-none z-[100]"
             style={{ left: tooltipPos.x + 15, top: tooltipPos.y + 15 }}
@@ -242,24 +287,22 @@ export default function SciFiMap() {
             <h4 className="text-brand-gold font-bold font-serif text-sm">{hoveredRegion}</h4>
             <p className="text-[9px] text-gray-400">Click to view region data</p>
           </div>
-        )}
+        ) : null}
 
-        {/* Mobile Hint Overlay */}
         <div className="absolute bottom-4 left-4 md:hidden text-[9px] text-brand-gold/60 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-brand-gold/20 pointer-events-none">
           Pinch to zoom / Tap region
         </div>
       </div>
 
-      {/* Dashboard Metrics for Selected Region (The bottom panels) */}
-      {selectedRegion && aggregatedStats && (
+      {/* Dashboard Metrics */}
+      {statsTarget && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
-          {/* Key Metrics */}
           <div className="md:col-span-1 flex flex-col gap-4">
             <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark relative overflow-hidden h-full flex flex-col justify-center">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl"></div>
-              <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest mb-1">Region Overview</h3>
-              <h2 className="text-2xl font-serif font-bold text-white mb-6">{selectedRegion}</h2>
+              <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest mb-1">{statsTitle}</h3>
+              <h2 className="text-2xl font-serif font-bold text-white mb-6">{statsSubtitle}</h2>
               
               <div className="flex items-end gap-3 mb-8">
                 <div className="text-5xl font-mono font-bold text-white tracking-tighter">{totalAlumni}</div>
@@ -285,13 +328,12 @@ export default function SciFiMap() {
             </div>
           </div>
 
-          {/* Pie Chart */}
           <div className="md:col-span-2 bg-[#1a1d24] border border-[#333] rounded-2xl p-5 shadow-inner-dark flex flex-col relative overflow-hidden">
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl"></div>
             <div className="flex justify-between items-center mb-6 relative z-10">
               <h3 className="text-brand-gold text-sm font-bold uppercase tracking-widest">Alumni Distribution</h3>
               <div className="px-3 py-1 bg-[#22252d] border border-[#333] rounded-full text-xs text-brand-light font-serif">
-                {selectedRegion}
+                {statsSubtitle}
               </div>
             </div>
             
@@ -320,7 +362,6 @@ export default function SciFiMap() {
                 </PieChart>
               </ResponsiveContainer>
               
-              {/* Center Label for Donut Chart */}
               <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                 <div className="text-3xl font-mono font-bold text-white">{totalAlumni}</div>
                 <div className="text-[10px] text-brand-gold uppercase tracking-widest">Alumni</div>
@@ -333,7 +374,3 @@ export default function SciFiMap() {
     </div>
   );
 }
-
-
-
-
