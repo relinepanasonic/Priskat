@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo } from "react";
 import {
@@ -67,19 +67,6 @@ const CONNECTIONS = [
 
 const COLORS = ["#8b6b22", "#c9a96e", "#e8decd", "#614915", "#a3843e", "#d4be94"];
 
-/* ─── SVG Marker ─── */
-const BranchMarker = ({ isSelected, isHovered }: { isSelected: boolean; isHovered: boolean }) => {
-  const color = isSelected ? "#ffffff" : isHovered ? "#e8decd" : "#8b6b22";
-  return (
-    <g className="cursor-pointer" transform="translate(-12,-12)">
-      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1" strokeDasharray="2 2" opacity={isSelected ? 1 : 0.5} />
-      <circle cx="12" cy="7" r="2.5" stroke={color} strokeWidth="1" fill={isSelected ? color : "none"} />
-      <path d="M12 10V20 M7 10H17 M9 13.5L12 10L15 13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      {isSelected && <circle cx="12" cy="12" r="14" fill="none" stroke="#fff" strokeWidth="1" className="animate-ping" opacity="0.4" />}
-    </g>
-  );
-};
-
 /* ================================================================ */
 export default function SciFiMap() {
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -120,7 +107,6 @@ export default function SciFiMap() {
   const historyData = useMemo(() => {
     if (selectedBranch?.id === "jabodetabek") return JABODETABEK_HISTORY;
     if (!statsTarget) return [];
-    // Generic growth for other branches
     return [
       { name: "Camp 1", p_sejati: Math.floor(statsTarget.p_sejati * 0.1), patriot: Math.floor(statsTarget.patriot * 0.1), waberkat: Math.floor(statsTarget.waberkat * 0.1), ym: Math.floor(statsTarget.ym * 0.1), yw: Math.floor(statsTarget.yw * 0.1), bapa: Math.floor(statsTarget.bapa * 0.1) },
       { name: "Camp 2", p_sejati: Math.floor(statsTarget.p_sejati * 0.3), patriot: Math.floor(statsTarget.patriot * 0.3), waberkat: Math.floor(statsTarget.waberkat * 0.3), ym: Math.floor(statsTarget.ym * 0.3), yw: Math.floor(statsTarget.yw * 0.3), bapa: Math.floor(statsTarget.bapa * 0.3) },
@@ -143,11 +129,13 @@ export default function SciFiMap() {
   const detailBranches = activeIsland
     ? BRANCHES.filter((b) => getIsland(b.province) === activeIsland)
     : [];
-    
-  // Center detail map on the island's first branch to keep it mostly visible
+
   const detailCenter: [number, number] = detailBranches.length > 0
       ? detailBranches[0].coordinates
       : [116, -2];
+
+  /* 3D depth offset for extrusion effect (pixels to shift the "shadow" copy down) */
+  const DEPTH_PX = 8;
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -227,9 +215,10 @@ export default function SciFiMap() {
                   return (
                     <Marker key={br.id} coordinates={br.coordinates} onMouseEnter={() => setHoveredBranch(br)} onMouseLeave={() => setHoveredBranch(null)} onClick={(e) => { e.stopPropagation(); setSelectedBranch(br); setSelectedProvince(br.province); }}>
                       <g style={sel ? { filter: "drop-shadow(0 0 10px rgba(255,255,255,0.9))" } : {}}>
-                        <BranchMarker isSelected={sel} isHovered={hov} />
+                        <image href="/cfm-marker.png" x={-12} y={-14} width={24} height={28} className="cursor-pointer" opacity={sel ? 1 : hov ? 0.9 : 0.7} />
+                        {sel && <circle cx="0" cy="0" r="16" fill="none" stroke="#fff" strokeWidth="1" className="animate-ping" opacity="0.4" />}
                       </g>
-                      <text textAnchor="middle" y={15} style={{ fontFamily: "serif", fontSize: "6px", fontWeight: "bold", fill: sel ? "#fff" : "rgba(232,222,205,0.8)", textShadow: sel ? "0 0 6px #fff" : "0 0 4px #000", pointerEvents: "none" }}>
+                      <text textAnchor="middle" y={18} style={{ fontFamily: "serif", fontSize: "6px", fontWeight: "bold", fill: sel ? "#fff" : "rgba(232,222,205,0.8)", textShadow: sel ? "0 0 6px #fff" : "0 0 4px #000", pointerEvents: "none" }}>
                         {br.name}
                       </text>
                     </Marker>
@@ -258,7 +247,7 @@ export default function SciFiMap() {
       {statsTarget && (
         <div className="flex flex-col gap-4 p-4 md:p-6 bg-[#15181e] border-t border-[#333] flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-          {/* ── DETAIL MAP (full width, like the reference) ── */}
+          {/* ── DETAIL MAP (full width, 3D extruded) ── */}
           <div className="relative w-full h-[280px] md:h-[350px] bg-[#1a1d24] border border-[#333] rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing">
             {/* header overlay */}
             <div className="absolute top-4 left-5 z-20 pointer-events-none">
@@ -270,7 +259,7 @@ export default function SciFiMap() {
               </div>
             </div>
 
-            {/* the 3D tilted province map */}
+            {/* the 3D tilted province map with extrusion depth */}
             <div className="absolute inset-0" style={{ perspective: "800px" }}>
               <div
                 className="w-full h-full"
@@ -286,6 +275,39 @@ export default function SciFiMap() {
                   style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
                 >
                   <ZoomableGroup zoom={1} minZoom={0.5} maxZoom={4} center={detailCenter}>
+                    {/* ── Extrusion shadow layers (rendered BELOW the main polygons) ── */}
+                    <Geographies geography={geoUrl}>
+                      {({ geographies }) =>
+                        geographies
+                          .filter((geo) => {
+                            const nm = geo.properties?.name || geo.properties?.NAME;
+                            return getIsland(nm) === activeIsland;
+                          })
+                          .map((geo) => {
+                            // Render multiple shifted copies to create depth/extrusion
+                            const layers = [];
+                            for (let i = DEPTH_PX; i > 0; i -= 2) {
+                              layers.push(
+                                <Geography
+                                  key={`extrude-${geo.rsmKey}-${i}`}
+                                  geography={geo}
+                                  fill={`rgba(40, 32, 10, ${0.6 - i * 0.05})`}
+                                  stroke="rgba(60, 48, 16, 0.3)"
+                                  strokeWidth={0.5}
+                                  style={{
+                                    default: { outline: "none", transform: `translateY(${i}px)` },
+                                    hover: { outline: "none", transform: `translateY(${i}px)` },
+                                    pressed: { outline: "none" },
+                                  }}
+                                />
+                              );
+                            }
+                            return layers;
+                          })
+                      }
+                    </Geographies>
+
+                    {/* ── Top surface (the main bright polygons) ── */}
                     <Geographies geography={geoUrl}>
                       {({ geographies }) =>
                         geographies
@@ -306,7 +328,7 @@ export default function SciFiMap() {
                       }
                     </Geographies>
 
-                    {/* markers on the detail map */}
+                    {/* ── Markers with counter-rotation so icons stand upright ── */}
                     {detailBranches.map((br) => {
                       const sel = selectedBranch?.id === br.id;
                       const total = br.p_sejati + br.patriot + br.waberkat + br.ym + br.yw + br.bapa;
@@ -316,16 +338,31 @@ export default function SciFiMap() {
                           coordinates={br.coordinates}
                           onClick={() => { setSelectedBranch(br); setSelectedProvince(br.province); }}
                         >
-                          <g style={sel ? { filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" } : {}} className="cursor-pointer">
-                            <BranchMarker isSelected={sel} isHovered={false} />
+                          {/* Counter-rotate so icons stand upright against the 3D tilt */}
+                          <g
+                            className="cursor-pointer"
+                            style={{
+                              transform: "rotateZ(8deg) rotateX(-50deg)",
+                              transformOrigin: "center",
+                              ...(sel ? { filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" } : {}),
+                            }}
+                          >
+                            {/* Vertical pin line from surface to icon */}
+                            <line x1="0" y1="0" x2="0" y2="-30" stroke={sel ? "#ffffff" : "rgba(232,222,205,0.5)"} strokeWidth="1" strokeDasharray="2 2" />
+                            <circle cx="0" cy="0" r="3" fill={sel ? "#ffffff" : "rgba(232,222,205,0.6)"} />
+                            
+                            {/* CFM marker icon (PNG) */}
+                            <image href="/cfm-marker.png" x={-14} y={-58} width={28} height={32} opacity={sel ? 1 : 0.8} />
+                            {sel && <circle cx="0" cy="-42" r="18" fill="none" stroke="#fff" strokeWidth="1" className="animate-ping" opacity="0.3" />}
+
+                            {/* number badge */}
+                            <text textAnchor="middle" y={-62} style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: "bold", fill: sel ? "#fff" : "#e8decd", textShadow: "0 0 6px rgba(0,0,0,1)", pointerEvents: "none" }}>
+                              {total}
+                            </text>
+                            <text textAnchor="middle" y={12} style={{ fontFamily: "serif", fontSize: "7px", fontWeight: "bold", fill: sel ? "#fff" : "rgba(232,222,205,0.9)", textShadow: "0 0 4px #000", pointerEvents: "none" }}>
+                              {br.name}
+                            </text>
                           </g>
-                          {/* number badge like the reference */}
-                          <text textAnchor="middle" y={-16} style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: "bold", fill: sel ? "#fff" : "#e8decd", textShadow: "0 0 6px rgba(0,0,0,1)", pointerEvents: "none" }}>
-                            {total}
-                          </text>
-                          <text textAnchor="middle" y={18} style={{ fontFamily: "serif", fontSize: "7px", fontWeight: "bold", fill: sel ? "#fff" : "rgba(232,222,205,0.9)", textShadow: "0 0 4px #000", pointerEvents: "none" }}>
-                            {br.name}
-                          </text>
                         </Marker>
                       );
                     })}
@@ -336,7 +373,7 @@ export default function SciFiMap() {
 
             {/* radar ring decoration */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
-              <div className="w-[400px] h-[400px] rounded-full border border-brand-gold/20">
+              <div className="w-[400px] h-[400px] rounded-full border border-brand-gold/20 relative">
                 <div className="absolute inset-0 rounded-full border border-brand-gold/10 scale-75" />
               </div>
             </div>
