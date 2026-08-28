@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { storagePath, uploadAudio } from "@/lib/upload";
 import Image from "next/image";
 
-// Placeholder cover images (User can swap these later)
-const COVER_OPTIONS = Array.from({ length: 20 }).map((_, i) => `https://picsum.photos/seed/${i + 100}/200/200`);
+// Compressed cover images from public/images/vinyl
+const COVER_OPTIONS = Array.from({ length: 19 }).map((_, i) => `/images/vinyl/vinyl_${i + 1}.jpg`);
 
 type Song = {
   id: string;
@@ -298,3 +298,4 @@ export default function VinylPlayer({
     </div>
   );
 }
+
