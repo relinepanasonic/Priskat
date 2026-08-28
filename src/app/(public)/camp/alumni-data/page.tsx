@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Database, Filter, Plus } from "lucide-react";
+import { Database, Filter, Plus, ChevronUp, ChevronDown, ChevronsUpDown, Download } from "lucide-react";
 
 
 export default function DatabasePage() {
   const [data, setData] = useState<any[]>([]);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
 
@@ -59,7 +60,7 @@ export default function DatabasePage() {
     }
     if (filterGroup) query = query.ilike("group", `%${filterGroup}%`);
     if (filterCamp) query = query.ilike("camp", `%${filterCamp}%`);
-    if (filterAngkatan) query = query.ilike("angkatan", `%${filterAngkatan}%`);
+    if (filterAngkatan) query = query.eq("angkatan", filterAngkatan);
     if (filterKota) query = query.ilike("city", `%${filterKota}%`);
     if (filterAgama) query = query.ilike("agama", `%${filterAgama}%`);
     if (filterParoki) query = query.ilike("parish", `%${filterParoki}%`);
@@ -79,6 +80,86 @@ export default function DatabasePage() {
     fetchAlumni();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterBranch, filterGroup, filterCamp, filterAngkatan, filterKota, filterAgama, filterParoki]);
+
+  
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedData = () => {
+    let sortableData = [...data];
+    if (sortConfig !== null) {
+      sortableData.sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+        
+        // Special case for branch fallback
+        if (sortConfig.key === 'branch') {
+           valA = a.branch || a.cabang || a.Cabang || "Bandung";
+           valB = b.branch || b.cabang || b.Cabang || "Bandung";
+        }
+
+        if (valA === null || valA === undefined) valA = '';
+        if (valB === null || valB === undefined) valB = '';
+        
+        // Number comparison for angkatan if possible
+        if (sortConfig.key === 'angkatan') {
+           const numA = Number(valA);
+           const numB = Number(valB);
+           if (!isNaN(numA) && !isNaN(numB)) {
+              return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+           }
+        }
+        
+        if (valA < valB) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableData;
+  };
+
+  const sortedData = getSortedData();
+
+  const handleExportCSV = () => {
+    if (sortedData.length === 0) return;
+    
+    const headers = ["Branch", "Group", "Camp", "Angkatan", "Nama", "City / Kota", "No Handphone", "Paroki", "Agama"];
+    const csvRows = [headers.join(",")];
+    
+    for (const row of sortedData) {
+      const branch = row.branch || row.cabang || row.Cabang || "Bandung";
+      const values = [
+        `"${branch}"`,
+        `"${row.group || ''}"`,
+        `"${row.camp || ''}"`,
+        `"${row.angkatan || ''}"`,
+        `"${row.name || ''}"`,
+        `"${row.city || ''}"`,
+        `"${row.mobile || row.phone || ''}"`,
+        `"${row.parish || ''}"`,
+        `"${row.agama || ''}"`
+      ];
+      csvRows.push(values.join(","));
+    }
+    
+    const csvData = new Blob([csvRows.join("\n")], { type: 'text/csv' });
+    const csvUrl = URL.createObjectURL(csvData);
+    const link = document.createElement('a');
+    link.href = csvUrl;
+    link.download = `alumni_data_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6 max-w-full overflow-hidden">
@@ -198,14 +279,110 @@ export default function DatabasePage() {
           <table className="w-full text-left text-sm text-gray-300">
             <thead className="text-xs uppercase bg-[#111] text-gray-400 border-b border-[#333]">
               <tr>
-                <th className="px-4 py-3 whitespace-nowrap">Branch</th>
-                <th className="px-4 py-3 whitespace-nowrap">Group</th>
-                <th className="px-4 py-3 whitespace-nowrap">Camp</th>
-                <th className="px-4 py-3 whitespace-nowrap">Angkatan</th>
-                <th className="px-4 py-3 whitespace-nowrap">Nama</th>
-                <th className="px-4 py-3 whitespace-nowrap">City / Kota</th>
-                <th className="px-4 py-3 whitespace-nowrap">No Handphone</th>
-                <th className="px-4 py-3 whitespace-nowrap">Paroki</th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('branch')}
+                >
+                  <div className="flex items-center gap-1">
+                    Branch
+                    {sortConfig?.key === 'branch' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('group')}
+                >
+                  <div className="flex items-center gap-1">
+                    Group
+                    {sortConfig?.key === 'group' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('camp')}
+                >
+                  <div className="flex items-center gap-1">
+                    Camp
+                    {sortConfig?.key === 'camp' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('angkatan')}
+                >
+                  <div className="flex items-center gap-1">
+                    Angkatan
+                    {sortConfig?.key === 'angkatan' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-1">
+                    Nama
+                    {sortConfig?.key === 'name' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('city')}
+                >
+                  <div className="flex items-center gap-1">
+                    City / Kota
+                    {sortConfig?.key === 'city' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('mobile')}
+                >
+                  <div className="flex items-center gap-1">
+                    No Handphone
+                    {sortConfig?.key === 'mobile' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('parish')}
+                >
+                  <div className="flex items-center gap-1">
+                    Paroki
+                    {sortConfig?.key === 'parish' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#333]">
@@ -218,7 +395,7 @@ export default function DatabasePage() {
                   <td colSpan={8} className="text-center py-10 text-gray-500">No records found.</td>
                 </tr>
               ) : (
-                data.map((row) => (
+                sortedData.map((row) => (
                   <tr key={row.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-2.5 whitespace-nowrap font-bold text-brand-gold">{row.branch || row.cabang || row.Cabang || "Bandung"}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.group}</td>
