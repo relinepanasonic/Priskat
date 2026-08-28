@@ -42,3 +42,4 @@ async function run() {
   console.log("Seeding complete!");
 }
 run();
+

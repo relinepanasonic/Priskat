@@ -50,7 +50,7 @@ export default function CampCrewPage() {
   };
 
   return (
-    <div className="p-5 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+    <div className="p-5 md:p-8 space-y-6 w-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white tracking-tight">Camp Directory</h2>
@@ -81,15 +81,6 @@ export default function CampCrewPage() {
           {camps.map((camp) => (
             <Link href={`/camp/ongoing/${camp.id}`} key={camp.id}>
               <div className="bg-[#111] border border-[#333] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#15181e] group h-full flex flex-col cursor-pointer shadow-lg hover:shadow-brand-gold/10 relative">
-                
-                {isSuperadmin && (
-                  <button 
-                    onClick={(e) => handleDeleteCamp(e, camp.id)}
-                    className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
 
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-brand-gold/10 p-3 rounded-xl text-brand-gold">
@@ -115,7 +106,18 @@ export default function CampCrewPage() {
                     <Users className="w-4 h-4" />
                     <span>Crew: <span className="text-white font-semibold">{camp.camp_crew?.[0]?.count || 0} members</span></span>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-[#555] group-hover:text-brand-gold transition-colors" />
+                  <div className="flex items-center gap-2">
+                    {isSuperadmin && (
+                      <button 
+                        onClick={(e) => handleDeleteCamp(e, camp.id)}
+                        className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] transition-colors rounded"
+                        title="Delete Camp"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    <ArrowRight className="w-5 h-5 text-[#555] group-hover:text-brand-gold transition-colors" />
+                  </div>
                 </div>
 
               </div>

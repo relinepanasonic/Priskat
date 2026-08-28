@@ -60,7 +60,7 @@ export default function MyOngoingCampPage() {
   }
 
   return (
-    <div className="p-5 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+    <div className="p-5 md:p-8 space-y-6 w-full">
       <div>
         <h2 className="text-2xl font-bold text-white tracking-tight">My Ongoing Camps</h2>
         <p className="text-brand-muted mt-1">Select a camp to view its productivity dashboard.</p>
