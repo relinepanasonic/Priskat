@@ -61,7 +61,7 @@ export default function DatabaseUploadDialog({
              phone: obj["No Telephone"],
              mobile: obj["No Handphone 1"],
              religion: obj["Agama"],
-             parish_Cabang: obj["Paroki (Cabanging)"],
+             parish_grouping: obj["Paroki (Grouping)"] || obj["Paroki (Cabanging)"],
              parish: obj["Paroki"]
           };
        });

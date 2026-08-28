@@ -85,11 +85,15 @@ export default function DatabasePage() {
 
   
   const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    if (sortConfig && sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') {
+        setSortConfig({ key, direction: 'desc' });
+      } else {
+        setSortConfig(null);
+      }
+    } else {
+      setSortConfig({ key, direction: 'asc' });
     }
-    setSortConfig({ key, direction });
   };
 
   const getSortedData = () => {
@@ -134,7 +138,7 @@ export default function DatabasePage() {
   const handleExportCSV = () => {
     if (sortedData.length === 0) return;
     
-    const headers = ["Branch", "Group", "Camp", "Angkatan", "Nama", "City / Kota", "No Handphone", "Paroki", "Agama"];
+    const headers = ["Branch", "Group", "Camp", "Angkatan", "Nama", "Nama Panggilan", "City / Kota", "No Handphone", "Paroki", "Agama"];
     const csvRows = [headers.join(",")];
     
     for (const row of sortedData) {
@@ -145,9 +149,10 @@ export default function DatabasePage() {
         `"${row.camp || ''}"`,
         `"${row.angkatan || ''}"`,
         `"${row.name || ''}"`,
+        `"${row.nickname || ''}"`,
         `"${row.city || ''}"`,
         `"${row.mobile || row.phone || ''}"`,
-        `"${row.parish || ''}"`,
+        `"${row.parish_grouping || row.parish_Cabang || row.parish || ''}"`,
         `"${row.agama || ''}"`
       ];
       csvRows.push(values.join(","));
@@ -348,6 +353,19 @@ export default function DatabasePage() {
                 </th>
                 <th 
                   className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
+                  onClick={() => handleSort('nickname')}
+                >
+                  <div className="flex items-center gap-1">
+                    Nama Panggilan
+                    {sortConfig?.key === 'nickname' ? (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-brand-gold" /> : <ChevronDown className="w-3 h-3 text-brand-gold" />
+                    ) : (
+                      <ChevronsUpDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 whitespace-nowrap cursor-pointer hover:bg-[#222] transition-colors"
                   onClick={() => handleSort('city')}
                 >
                   <div className="flex items-center gap-1">
@@ -390,11 +408,11 @@ export default function DatabasePage() {
             <tbody className="divide-y divide-[#333]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-500">Loading records...</td>
+                  <td colSpan={9} className="text-center py-10 text-gray-500">Loading records...</td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-500">No records found.</td>
+                  <td colSpan={9} className="text-center py-10 text-gray-500">No records found.</td>
                 </tr>
               ) : (
                 sortedData.map((row) => (
@@ -404,9 +422,10 @@ export default function DatabasePage() {
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.camp}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.angkatan}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap font-semibold text-white">{row.name}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap">{row.nickname}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.city}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap">{row.mobile || row.phone}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">{row.parish}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap">{row.parish_grouping || row.parish_Cabang || row.parish}</td>
                   </tr>
                 ))
               )}
