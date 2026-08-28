@@ -155,7 +155,7 @@ export default function VinylPlayer({
   return (
     <div className="w-full">
       {/* Vinyl Records Row */}
-      <div className="flex justify-center items-center gap-3 py-4 px-6 overflow-x-auto min-h-[90px]">
+      <div className="flex justify-center items-center gap-2 sm:gap-4 py-4 px-2 sm:px-6 overflow-x-auto hide-scrollbar min-h-[100px]">
         {Array.from({ length: 5 }).map((_, idx) => {
           const song = songs[idx];
           const isThisPlaying = playingIdx === idx && isPlaying;
@@ -175,7 +175,7 @@ export default function VinylPlayer({
                 onClick={() => handleVinylClick(idx)}
                 disabled={isUploading}
                 className={`
-                  w-14 h-14 rounded-full relative flex items-center justify-center 
+                  w-16 h-16 sm:w-20 sm:h-20 rounded-full relative flex items-center justify-center 
                   transition-all duration-300 shadow-xl border-4 
                   ${song ? "border-[#111] bg-[#111]" : "border-[#333] border-dashed bg-[#1a1d24] hover:border-brand-gold"}
                   ${isThisPlaying ? "animate-[spin_4s_linear_infinite] shadow-[0_0_15px_rgba(212,175,55,0.4)]" : ""}
@@ -188,12 +188,13 @@ export default function VinylPlayer({
                     {/* Vinyl Grooves Texture */}
                     <div className="absolute inset-0 rounded-full border border-[#222] m-1"></div>
                     <div className="absolute inset-0 rounded-full border border-[#222] m-2"></div>
+                    <div className="absolute inset-0 rounded-full border border-[#222] m-3 hidden sm:block"></div>
                     
                     {/* Center Label (Cover Image) */}
-                    <div className="w-6 h-6 rounded-full overflow-hidden relative z-10 border border-black shadow-inner bg-white">
+                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full overflow-hidden relative z-10 border border-black shadow-inner bg-white">
                       <Image src={song.coverImage} alt="Cover" fill className="object-cover" />
                       {/* Center Hole */}
-                      <div className="absolute inset-0 m-auto w-1.5 h-1.5 bg-black rounded-full"></div>
+                      <div className="absolute inset-0 m-auto w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black rounded-full"></div>
                     </div>
                   </>
                 ) : (
