@@ -18,10 +18,10 @@ interface NavbarProps {
 
 const DESKTOP_NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/news", label: "News" },
-  { href: "/community", label: "Community" },
+  { href: "/community", label: "Connect" },
+  { href: "/camp", label: "Community" },
   { href: "/faith", label: "Spiritual" },
-  { href: "/camp", label: "Camp" },
+  { href: "/news", label: "News" },
   { href: "/profile", label: "Profile" },
 ];
 
@@ -79,8 +79,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                 {label === "Home" && <Home className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Spiritual" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "News" && <Newspaper className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Community" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Camp" && <Tent className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Connect" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Community" && <Tent className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Profile" && <User className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 <span>{label}</span>
               </Link>
@@ -179,13 +179,16 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     {/* Mobile Bottom Navigation (Visible only on mobile) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
       <div className="flex justify-around items-center h-16 px-2">
+        {/* Spiritual */}
         <Link prefetch={true} href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Book className="h-5 w-5" />
           <span className="text-[10px] font-medium">Spiritual</span>
         </Link>
-        <Link prefetch={true} href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Newspaper className="h-5 w-5" />
-          <span className="text-[10px] font-medium">News</span>
+        
+        {/* Community (formerly Camp) */}
+        <Link prefetch={true} href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Tent className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Community</span>
         </Link>
         
         {/* Center Home Button */}
@@ -196,13 +199,16 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           <span className="text-[10px] font-medium pt-8">Home</span>
         </Link>
 
+        {/* Connect (formerly Community) */}
         <Link prefetch={true} href="/community" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/community') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Users className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Community</span>
+          <span className="text-[10px] font-medium">Connect</span>
         </Link>
-        <Link prefetch={true} href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Tent className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Camp</span>
+
+        {/* News */}
+        <Link prefetch={true} href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
+          <Newspaper className="h-5 w-5" />
+          <span className="text-[10px] font-medium">News</span>
         </Link>
       </div>
     </nav>
