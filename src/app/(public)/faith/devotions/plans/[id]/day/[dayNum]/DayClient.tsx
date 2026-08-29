@@ -101,12 +101,14 @@ export default function DayClient({
 
                   {/* Checklist */}
       <div className="px-6 space-y-6">
-        {/* Devotional Item */}
-        {(dayData?.devotional_content_id || dayData?.devotional_content) && (
+        {/* Devotional Item — always show if title or content exists */}
+        {(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id) && (
           <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Renungan" : "Devotional"}</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">
+                {dayData?.devotional_title || (language === "id" ? "Renungan" : "Devotional")}
+              </span>
             </div>
             <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
           </Link>
@@ -114,7 +116,8 @@ export default function DayClient({
 
         {/* Verses Items */}
         {dayData?.verses?.map((verse: any, idx: number) => {
-          const pageIndex = (dayData?.devotional_content_id || dayData?.devotional_content) ? idx + 1 : idx;
+          const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
+          const pageIndex = hasDevotional ? idx + 1 : idx;
           return (
             <Link key={idx} href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${pageIndex}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
               <div className="flex items-center gap-4">
@@ -126,27 +129,36 @@ export default function DayClient({
           );
         })}
 
-        {/* Reflection Item */}
-        {dayData?.reflection && (
-          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + ((dayData?.devotional_content_id || dayData?.devotional_content) ? 1 : 0)}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
-            <div className="flex items-center gap-4">
-              {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Refleksi" : "Reflection"}</span>
-            </div>
-            <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
-          </Link>
-        )}
+        {/* Reflection Item — show if column has data */}
+        {(dayData?.reflection || dayData?.reflection_id) && (() => {
+          const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
+          const page = (dayData?.verses?.length || 0) + (hasDevotional ? 1 : 0);
+          return (
+            <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${page}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+              <div className="flex items-center gap-4">
+                {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
+                <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Refleksi" : "Reflection"}</span>
+              </div>
+              <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+            </Link>
+          );
+        })()}
 
-        {/* Prayer Item */}
-        {dayData?.prayer && (
-          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + (dayData?.reflection ? 1 : 0) + ((dayData?.devotional_content_id || dayData?.devotional_content) ? 1 : 0)}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
-            <div className="flex items-center gap-4">
-              {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Doa" : "Prayer"}</span>
-            </div>
-            <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
-          </Link>
-        )}
+        {/* Prayer Item — show if column has data */}
+        {(dayData?.prayer || dayData?.prayer_id) && (() => {
+          const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
+          const hasReflection = !!(dayData?.reflection || dayData?.reflection_id);
+          const page = (dayData?.verses?.length || 0) + (hasDevotional ? 1 : 0) + (hasReflection ? 1 : 0);
+          return (
+            <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${page}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+              <div className="flex items-center gap-4">
+                {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
+                <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Doa" : "Prayer"}</span>
+              </div>
+              <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+            </Link>
+          );
+        })()}
       </div>
 
       {/* Static Start Button */}
