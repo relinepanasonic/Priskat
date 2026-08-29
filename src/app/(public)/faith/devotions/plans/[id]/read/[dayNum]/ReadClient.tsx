@@ -25,15 +25,22 @@ export default function ReadClient({
   const router = useRouter();
   
   
-  // Array of pages: 1st is Devotional, rest are Verses
-  const pages = [
-    { type: "devotional", title: language === "id" ? "Renungan" : "Devotional", content: (language === "id" && dayData.devotional_content_id ? dayData.devotional_content_id : dayData.devotional_content) || "No devotional content provided." },
-    ...(dayData.verses || []).map((v: any) => ({
-      type: "verse",
-      title: `${v.verse_reference} ${v.translation}`,
-      content: <BibleVerseDisplay reference={`${v.verse_reference} ${v.translation || "TB"}`} language={language} />
-    }))
-  ];
+  // Array of pages
+  const pages: any[] = [];
+  
+  if (dayData.devotional_content_id || dayData.devotional_content) {
+    pages.push({ 
+      type: "devotional", 
+      title: language === "id" ? "Renungan" : "Devotional", 
+      content: (language === "id" && dayData.devotional_content_id ? dayData.devotional_content_id : dayData.devotional_content) 
+    });
+  }
+
+  pages.push(...(dayData.verses || []).map((v: any) => ({
+    type: "verse",
+    title: `${v.verse_reference} ${v.translation}`,
+    content: <BibleVerseDisplay reference={`${v.verse_reference} ${v.translation || "TB"}`} language={language} />
+  })));
 
   if ((language === "id" && dayData.reflection_id ? dayData.reflection_id : dayData.reflection)) {
     pages.push({ type: "reflection", title: language === "id" ? "Refleksi" : "Reflection", content: (language === "id" && dayData.reflection_id ? dayData.reflection_id : dayData.reflection) });
@@ -121,20 +128,32 @@ export default function ReadClient({
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 text-[19px] leading-[1.8] text-brand-light">
-        {current.type === "devotional" ? (
-          <div>
-            <h1 className="text-3xl font-bold font-sans mb-6">{(language === "id" && dayData.devotional_title_id ? dayData.devotional_title_id : dayData.devotional_title) || "Devotional"}</h1>
-            <div className="whitespace-pre-wrap">{current.content}</div>
-          </div>
-        ) : (
-          <div>
-            <h2 className="text-xl font-bold font-sans text-brand-gold mb-4 uppercase tracking-wider">{current.title}</h2>
-            <div className="whitespace-pre-wrap">{current.content}</div>
-          </div>
-        )}
-      </div>
+      {pages.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <h2 className="text-xl font-bold font-sans text-brand-muted mb-2">
+            {language === "id" ? "Konten Belum Tersedia" : "Content Not Available"}
+          </h2>
+          <p className="text-brand-muted/70 text-sm font-sans">
+            {language === "id" 
+              ? "Hari ini belum memiliki konten renungan, ayat, refleksi, atau doa." 
+              : "This day does not have any devotional, verses, reflection, or prayer content yet."}
+          </p>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto p-6 text-[19px] leading-[1.8] text-brand-light">
+          {current?.type === "devotional" ? (
+            <div>
+              <h1 className="text-3xl font-bold font-sans mb-6">{(language === "id" && dayData.devotional_title_id ? dayData.devotional_title_id : dayData.devotional_title) || "Devotional"}</h1>
+              <div className="whitespace-pre-wrap">{current.content}</div>
+            </div>
+          ) : (
+            <div>
+              <h2 className="text-xl font-bold font-sans text-brand-gold mb-4 uppercase tracking-wider">{current?.title}</h2>
+              <div className="whitespace-pre-wrap">{current?.content}</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer Navigation */}
       <div className="sticky bottom-0 bg-brand-dark border-t border-[#333] p-4 pb-24 flex items-center justify-between z-20">
@@ -147,7 +166,7 @@ export default function ReadClient({
         </button>
         
         <div className="flex-1 mx-4">
-          {currentPage === pages.length - 1 ? (
+          {currentPage >= pages.length - 1 ? (
             <button 
               onClick={handleFinish}
               className="w-full h-12 bg-brand-gold text-brand-dark font-bold font-sans rounded-full hover:bg-brand-gold/80 transition-colors"
@@ -159,15 +178,15 @@ export default function ReadClient({
               onClick={handleNext}
               className="w-full h-12 bg-[#2a2d35] text-white font-bold font-sans rounded-full flex justify-center items-center gap-2 hover:bg-[#1a1d24]"
             >
-              {pages[currentPage + 1].title} <ChevronRight className="h-5 w-5" />
+              {pages[currentPage + 1]?.title} <ChevronRight className="h-5 w-5" />
             </button>
           )}
         </div>
         
         <button 
           onClick={handleNext}
-          disabled={currentPage === pages.length - 1}
-          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] text-white ${currentPage === pages.length - 1 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
+          disabled={currentPage >= pages.length - 1}
+          className={`h-12 w-12 flex items-center justify-center rounded-full bg-[#2a2d35] text-white ${currentPage >= pages.length - 1 ? "opacity-50" : "hover:bg-[#1a1d24]"}`}
         >
           <Play className="h-5 w-5" />
         </button>

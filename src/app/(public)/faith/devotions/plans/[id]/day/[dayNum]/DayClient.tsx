@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -102,28 +102,33 @@ export default function DayClient({
                   {/* Checklist */}
       <div className="px-6 space-y-6">
         {/* Devotional Item */}
-        <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
-          <div className="flex items-center gap-4">
-            {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-            <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Renungan" : "Devotional"}</span>
-          </div>
-          <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
-        </Link>
-
-        {/* Verses Items */}
-        {dayData?.verses?.map((verse: any, idx: number) => (
-          <Link key={idx} href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${idx + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+        {(dayData?.devotional_content_id || dayData?.devotional_content) && (
+          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{verse.verse_reference} {verse.translation}</span>
+              <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Renungan" : "Devotional"}</span>
             </div>
             <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
           </Link>
-        ))}
+        )}
+
+        {/* Verses Items */}
+        {dayData?.verses?.map((verse: any, idx: number) => {
+          const pageIndex = (dayData?.devotional_content_id || dayData?.devotional_content) ? idx + 1 : idx;
+          return (
+            <Link key={idx} href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${pageIndex}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+              <div className="flex items-center gap-4">
+                {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
+                <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{verse.verse_reference} {verse.translation}</span>
+              </div>
+              <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+            </Link>
+          );
+        })}
 
         {/* Reflection Item */}
         {dayData?.reflection && (
-          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + ((dayData?.devotional_content_id || dayData?.devotional_content) ? 1 : 0)}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
               <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Refleksi" : "Reflection"}</span>
@@ -134,7 +139,7 @@ export default function DayClient({
 
         {/* Prayer Item */}
         {dayData?.prayer && (
-          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + (dayData?.reflection ? 1 : 0) + 1}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+          <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${(dayData?.verses?.length || 0) + (dayData?.reflection ? 1 : 0) + ((dayData?.devotional_content_id || dayData?.devotional_content) ? 1 : 0)}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
             <div className="flex items-center gap-4">
               {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
               <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Doa" : "Prayer"}</span>

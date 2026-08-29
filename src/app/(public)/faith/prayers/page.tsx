@@ -29,7 +29,7 @@ export default async function PrayerPage() {
   const prayers = (prayersData ?? []) as unknown as Prayer[];
 
   return (
-    <main className="w-full h-full p-4 md:p-6">
+    <main className="w-full h-full p-4 md:p-6 pb-32">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white mb-1">

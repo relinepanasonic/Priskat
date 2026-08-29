@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
   ];
 
   return (
-    <div className="w-full h-full p-4 md:p-8 space-y-6">
+    <div className="w-full h-full p-4 md:p-8 pb-32 space-y-6">
       
       {!isReadingChapter && (
       <>

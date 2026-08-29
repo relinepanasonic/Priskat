@@ -71,7 +71,7 @@ export async function GET(request: Request, context: any) {
       .eq('translation', 'TB')
       .order('verse', { ascending: true });
     
-    finalData = fallbackData;
+    finalData = fallbackData || [];
   }
 
   return NextResponse.json(finalData || []);
