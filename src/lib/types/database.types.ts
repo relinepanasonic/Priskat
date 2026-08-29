@@ -33,6 +33,11 @@ export interface Profile {
   updated_at: string;
   community_id?: string | null;
   community?: { id: string; name: string; slug: string; logo_url?: string | null } | null;
+  nama_baptis?: string | null;
+  nama_panggilan?: string | null;
+  relationship_status?: string | null;
+  partner_id?: string | null;
+  favorite_verse?: string | null;
 }
 
 export interface DevotionCategory {

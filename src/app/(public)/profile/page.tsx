@@ -16,11 +16,12 @@ export default async function HomePage() {
   }
 
   // Fetch user profile
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
-    .select("*")
+    .select("*, community:communities(name)")
     .eq("id", user.id).single();
     
+  const profile = profileData as any;
 
   if (!profile) {
     redirect("/login");
@@ -75,11 +76,19 @@ export default async function HomePage() {
           </div>
 
           <h1 className="mt-4 text-2xl font-bold text-white text-center">
-            {profile.full_name || "User"}
+            {profile.nama_panggilan || profile.full_name || "User"}
           </h1>
-          <p className="text-sm text-brand-gold mt-1 font-medium text-center">
-            {city} • Angkatan {angkatan}
+          
+          <p className="text-sm text-brand-gold mt-1 font-semibold text-center flex items-center gap-1.5">
+            <Tent className="w-4 h-4" />
+            {profile.community?.name || "Ruang Iman"}
           </p>
+
+          {profile.favorite_verse && (
+            <div className="mt-3 px-4 py-2 bg-brand-surface border border-brand-gold/20 rounded-lg text-center max-w-sm">
+              <p className="text-xs text-brand-light italic">"{profile.favorite_verse}"</p>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 mt-6">
