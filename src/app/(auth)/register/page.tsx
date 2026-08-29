@@ -135,12 +135,10 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#1a1d24] p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-brand-gold font-serif">
-            Create an Account
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            Join the Alumni CFM community
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-bold text-brand-gold">Create an Account</h2>
+          <p className="mt-2 text-sm text-brand-muted">
+            Join Ruang Iman
           </p>
         </div>
 
