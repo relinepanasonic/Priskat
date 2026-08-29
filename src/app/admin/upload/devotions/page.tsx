@@ -1,6 +1,8 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import DevotionPlansAdminClient from "@/components/admin/DevotionPlansAdminClient";
 import DevotionCSVUploader from "@/components/admin/DevotionCSVUploader";
+
+export const dynamic = "force-dynamic";
 
 export default async function DevotionPlansAdminPage() {
   const supabase = await createClient();

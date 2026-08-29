@@ -1,10 +1,12 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import PlansClient from "./PlansClient";
 import { getLanguage } from "@/lib/lang";
 
 export const metadata = {
   title: "Devotion Plans",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function DevotionPlansPage() {
   const supabase = await createClient();
