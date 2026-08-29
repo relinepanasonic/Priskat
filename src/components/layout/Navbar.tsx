@@ -17,19 +17,20 @@ interface NavbarProps {
   isCommunityAdmin?: boolean;
 }
 
-const DESKTOP_NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/community", label: "Connect" },
-  { href: "/camp", label: "Community" },
-  { href: "/faith", label: "Spiritual" },
-  { href: "/news", label: "News" },
-  { href: "/profile", label: "Profile" },
-];
-
 export default function Navbar({ profile, lang = "id", isCommunityAdmin = false }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useSession();
+  const isEn = lang === "en";
+
+  const DESKTOP_NAV_LINKS = [
+    { href: "/", label: isEn ? "Home" : "Beranda", icon: Home },
+    { href: "/community", label: isEn ? "Connect" : "Koneksi", icon: Users },
+    { href: "/camp", label: isEn ? "Community" : "Komunitas", icon: Tent },
+    { href: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: Book },
+    { href: "/news", label: isEn ? "News" : "Berita", icon: Newspaper },
+    { href: "/profile", label: isEn ? "Profile" : "Profil", icon: User },
+  ];
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -74,7 +75,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
 
         {/* Desktop nav */}
         <nav className="flex-1 space-y-1">
-          {DESKTOP_NAV_LINKS.map(({ href, label }) => {
+          {DESKTOP_NAV_LINKS.map(({ href, label, icon: Icon }) => {
             const isActive = pathname.startsWith(href) && (href !== "/" || pathname === "/");
             return (
               <Link
@@ -87,12 +88,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                     : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent",
                 ].join(" ")}
               >
-                {label === "Home" && <Home className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Spiritual" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "News" && <Newspaper className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Connect" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Community" && <Tent className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Profile" && <User className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                <Icon className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />
                 <span>{label}</span>
               </Link>
             );
@@ -107,7 +103,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
             >
               <Users className="h-4 w-4" />
-              <span>Manage Users</span>
+              <span>{isEn ? "Manage Users" : "Kelola Pengguna"}</span>
             </a>
             
             {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder") && (
@@ -117,7 +113,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
                 >
                   <Tent className="h-4 w-4" />
-                  <span>Community Center</span>
+                  <span>{isEn ? "Community Center" : "Pusat Komunitas"}</span>
                 </a>
                 
                 <a
@@ -142,7 +138,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
         {/* Bottom Section (Lang & User) */}
         <div className="mt-auto space-y-3 pt-4 border-t border-[#333]">
           <div className="px-3 flex justify-between items-center">
-            <span className="text-[11px] text-gray-500 font-medium">Language</span>
+            <span className="text-[11px] text-gray-500 font-medium">{isEn ? "Language" : "Bahasa"}</span>
             <LanguageToggle currentLang={lang} />
           </div>
           
@@ -176,7 +172,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                 className="flex items-center gap-3 w-full px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
+                <span>{isEn ? "Sign Out" : "Keluar"}</span>
               </button>
             </div>
           ) : (
@@ -185,13 +181,13 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                 href="/login"
                 className="w-full text-center py-2 text-xs font-medium text-brand-light hover:text-brand-gold border border-[#333] rounded-lg hover:bg-white/5 transition-colors"
               >
-                Sign In
+                {isEn ? "Sign In" : "Masuk"}
               </Link>
               <Link
                 href="/register"
                 className="w-full text-center rounded-lg bg-brand-gold text-brand-dark px-4 py-2 text-xs font-bold hover:bg-yellow-400 transition-colors shadow-glow-gold"
               >
-                Join
+                {isEn ? "Join" : "Daftar"}
               </Link>
             </div>
           )}
@@ -205,13 +201,13 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
         {/* Spiritual */}
         <Link prefetch={true} href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Book className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Spiritual</span>
+          <span className="text-[10px] font-medium">{isEn ? "Spiritual" : "Spiritual"}</span>
         </Link>
         
         {/* Community (formerly Camp) */}
         <Link prefetch={true} href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Tent className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Community</span>
+          <span className="text-[10px] font-medium">{isEn ? "Community" : "Komunitas"}</span>
         </Link>
         
         {/* Center Home Button */}
@@ -219,19 +215,19 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
           <div className={`absolute -top-3 flex items-center justify-center h-12 w-12 rounded-full border-4 border-[#1e1e1e] ${pathname === '/' ? 'bg-brand-gold text-brand-dark' : 'bg-brand-surface text-brand-light'}`}>
             <Home className="h-5 w-5" />
           </div>
-          <span className="text-[10px] font-medium pt-8">Home</span>
+          <span className="text-[10px] font-medium pt-8">{isEn ? "Home" : "Beranda"}</span>
         </Link>
 
         {/* Connect (formerly Community) */}
         <Link prefetch={true} href="/community" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/community') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Users className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Connect</span>
+          <span className="text-[10px] font-medium">{isEn ? "Connect" : "Koneksi"}</span>
         </Link>
 
         {/* News */}
         <Link prefetch={true} href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Newspaper className="h-5 w-5" />
-          <span className="text-[10px] font-medium">News</span>
+          <span className="text-[10px] font-medium">{isEn ? "News" : "Berita"}</span>
         </Link>
       </div>
     </nav>

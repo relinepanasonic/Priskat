@@ -14,12 +14,14 @@ export default function HomeTabsClient({
   profile, 
   posts, 
   userId,
-  activeDevotion
+  activeDevotion,
+  lang = "id"
 }: { 
   profile: any, 
   posts: any[], 
   userId: string,
-  activeDevotion?: any
+  activeDevotion?: any,
+  lang?: "id" | "en"
 }) {
   const [activeTab, setActiveTab] = useState<"Thought" | "Profile">("Thought");
 
@@ -35,11 +37,14 @@ export default function HomeTabsClient({
   const [activeImage, setActiveImage] = useState(defaultImage);
   const [uploading, setUploading] = useState(false);
 
-  const myServices = profile.services_history || []; const myJourney = profile.camp_history || []; const handleDeleteImage = async (indexToDelete: number) => {
+  const myServices = profile.services_history || []; 
+  const myJourney = profile.camp_history || []; 
+
+  const handleDeleteImage = async (indexToDelete: number) => {
     const newGallery = userGallery.filter((_, idx) => idx !== indexToDelete);
     setUserGallery(newGallery);
     try {
-      try { const supabase = createClient(); await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId); } catch (e) {}
+      const supabase = createClient(); await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId); 
     } catch (err) {}
   };
 
@@ -53,14 +58,16 @@ export default function HomeTabsClient({
       setUserGallery(newGallery);
       setActiveImage(url);
       
-      try { const supabase = createClient(); await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId); } catch (e) {}
+      const supabase = createClient(); await supabase.from("profiles").update({ gallery_urls: newGallery } as any).eq("id", userId); 
     } catch (err) {
       console.error("Upload failed", err);
-      alert("Upload failed");
+      alert(lang === "en" ? "Upload failed" : "Gagal mengunggah");
     } finally {
       setUploading(false);
     }
   };
+
+  const isEn = lang === "en";
 
   return (
     <div className="w-full max-w-md mx-auto bg-brand-dark min-h-screen relative font-sans text-white pb-24 md:pb-12">
@@ -104,7 +111,7 @@ export default function HomeTabsClient({
                   onClick={() => setActiveImage(img)}
                   className={`relative h-full w-full rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? "border-brand-gold scale-105 shadow-[0_0_15px_rgba(212,175,55,0.3)]" : "border-transparent opacity-70 hover:opacity-100"}`}
                 >
-                  {img ? <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" /> : <div className="w-full h-full bg-black flex items-center justify-center text-[10px] text-gray-500">Empty</div>}
+                  {img ? <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" /> : <div className="w-full h-full bg-black flex items-center justify-center text-[10px] text-gray-500">{isEn ? "Empty" : "Kosong"}</div>}
                 </button>
                 {idx > 0 && activeImage === img && (
                   <button 
@@ -145,9 +152,9 @@ export default function HomeTabsClient({
             <span className="text-2xl font-bold text-white">{myServices.length}</span>
           </div>
           <div>
-            <p className="text-xs font-semibold text-white">My Services</p>
+            <p className="text-xs font-semibold text-white">{isEn ? "My Services" : "Pelayanan Saya"}</p>
             <p className="text-[10px] text-brand-muted mt-0.5">
-              {myServices.length > 0 ? `Last: ${myServices[myServices.length - 1]?.position || "—"}` : "None yet"}
+              {myServices.length > 0 ? `${isEn ? "Last:" : "Terakhir:"} ${myServices[myServices.length - 1]?.position || "—"}` : (isEn ? "None yet" : "Belum ada")}
             </p>
           </div>
         </div>
@@ -159,18 +166,18 @@ export default function HomeTabsClient({
               <Heart className="h-4.5 w-4.5 text-brand-gold" style={{width:"18px",height:"18px"}} />
             </div>
             {activeDevotion ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30">Active</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30">{isEn ? "Active" : "Aktif"}</span>
             ) : (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#333] text-brand-muted">None</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#333] text-brand-muted">{isEn ? "None" : "Tidak ada"}</span>
             )}
           </div>
           {activeDevotion ? (
             <div>
-              <p className="text-xs font-semibold text-white truncate">{activeDevotion.plan?.title_en || "Devotional"}</p>
+              <p className="text-xs font-semibold text-white truncate">{activeDevotion.plan?.[isEn ? "title_en" : "title_id"] || (isEn ? "Devotional" : "Renungan")}</p>
               <div className="mt-1.5">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] text-brand-muted">Day {activeDevotion.current_day}</span>
-                  <span className="text-[10px] text-brand-muted">{activeDevotion.plan?.total_days || "—"} days</span>
+                  <span className="text-[10px] text-brand-muted">{isEn ? "Day" : "Hari"} {activeDevotion.current_day}</span>
+                  <span className="text-[10px] text-brand-muted">{activeDevotion.plan?.total_days || "—"} {isEn ? "days" : "hari"}</span>
                 </div>
                 <div className="h-1 rounded-full bg-[#333] overflow-hidden">
                   <div
@@ -182,8 +189,8 @@ export default function HomeTabsClient({
             </div>
           ) : (
             <div>
-              <p className="text-xs font-semibold text-white">Devotional</p>
-              <p className="text-[10px] text-brand-muted mt-0.5">Tap to start one</p>
+              <p className="text-xs font-semibold text-white">{isEn ? "Devotional" : "Renungan"}</p>
+              <p className="text-[10px] text-brand-muted mt-0.5">{isEn ? "Tap to start one" : "Ketuk untuk memulai"}</p>
             </div>
           )}
         </Link>
@@ -195,13 +202,13 @@ export default function HomeTabsClient({
             onClick={() => setActiveTab("Thought")}
             className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Thought" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
-            My Thought
+            {isEn ? "My Thought" : "Pikiran Saya"}
           </button>
           <button 
             onClick={() => setActiveTab("Profile")}
             className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Profile" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
-            Profile
+            {isEn ? "Profile" : "Profil"}
           </button>
         </div>
       </div>
@@ -215,7 +222,7 @@ export default function HomeTabsClient({
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
-                  <Tent className="h-4 w-4" /> My Journey
+                  <Tent className="h-4 w-4" /> {isEn ? "My Journey" : "Perjalanan Saya"}
                 </h3>
                 <Link href="/profile/edit" className="text-gray-500 hover:text-brand-gold transition-colors p-1">
                   <Pencil className="h-4 w-4" />
@@ -235,7 +242,7 @@ export default function HomeTabsClient({
                     </div>
                   </div>
                 )) : (
-                  <p className="text-sm text-brand-muted italic">No camps added yet.</p>
+                  <p className="text-sm text-brand-muted italic">{isEn ? "No camps added yet." : "Belum ada camp."}</p>
                 )}
               </div>
             </div>
@@ -244,7 +251,7 @@ export default function HomeTabsClient({
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
-                  <Heart className="h-4 w-4" /> My Services
+                  <Heart className="h-4 w-4" /> {isEn ? "My Services" : "Pelayanan Saya"}
                 </h3>
                 <Link href="/profile/edit" className="text-gray-500 hover:text-brand-gold transition-colors p-1">
                   <Pencil className="h-4 w-4" />
@@ -267,7 +274,7 @@ export default function HomeTabsClient({
                     </div>
                   </div>
                 )) : (
-                  <p className="text-sm text-brand-muted italic">No services added yet.</p>
+                  <p className="text-sm text-brand-muted italic">{isEn ? "No services added yet." : "Belum ada pelayanan."}</p>
                 )}
               </div>
             </div>
@@ -277,7 +284,7 @@ export default function HomeTabsClient({
 
         {activeTab === "Thought" && (
           <div className="px-6 animate-in fade-in duration-300 pb-12">
-            <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} posts={posts} />
+            <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} posts={posts} lang={lang} />
           </div>
         )}
       </div>

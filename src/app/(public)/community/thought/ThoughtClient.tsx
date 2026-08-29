@@ -30,13 +30,14 @@ function CommentItem({ comment }: { comment: any }) {
   );
 }
 
-function CommentSection({ postId, userId, initialCount }: { postId: string; userId?: string; initialCount: number }) {
+function CommentSection({ postId, userId, initialCount, lang = "id" }: { postId: string; userId?: string; initialCount: number; lang?: "id" | "en" }) {
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, startSubmit] = useTransition();
   const supabase = createClient();
+  const isEn = lang === "en";
 
   const loadComments = async () => {
     const { data } = await supabase
@@ -69,11 +70,11 @@ function CommentSection({ postId, userId, initialCount }: { postId: string; user
     <div>
       <button onClick={toggle} className="flex items-center gap-1.5 text-[13px] text-brand-muted hover:text-white transition-colors">
         <MessageCircle className="h-4 w-4" />
-        <span>{initialCount > 0 ? initialCount : "Comment"}</span>
+        <span>{initialCount > 0 ? initialCount : (isEn ? "Comment" : "Komentar")}</span>
       </button>
       {open && (
         <div className="mt-3 border-t border-[#2a2d35] pt-3">
-          {loading && <p className="text-xs text-brand-muted">Loading...</p>}
+          {loading && <p className="text-xs text-brand-muted">{isEn ? "Loading..." : "Memuat..."}</p>}
           {comments.map(c => <CommentItem key={c.id} comment={c} />)}
           {userId && (
             <div className="flex gap-2 mt-3">
@@ -82,7 +83,7 @@ function CommentSection({ postId, userId, initialCount }: { postId: string; user
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && !e.shiftKey && submit()}
-                  placeholder="Write a comment..."
+                  placeholder={isEn ? "Write a comment..." : "Tulis komentar..."}
                   className="flex-1 bg-transparent py-2 text-[13px] text-white placeholder-gray-500 focus:outline-none"
                 />
                 <button onClick={submit} disabled={!input.trim() || submitting} className="text-brand-gold disabled:opacity-30">
@@ -97,11 +98,12 @@ function CommentSection({ postId, userId, initialCount }: { postId: string; user
   );
 }
 
-function ThoughtCard({ post, userId, isLiked: initialLiked }: { post: any; userId?: string; isLiked: boolean }) {
+function ThoughtCard({ post, userId, isLiked: initialLiked, lang = "id" }: { post: any; userId?: string; isLiked: boolean; lang?: "id" | "en" }) {
   const [liked, setLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [isPending, startTransition] = useTransition();
   const supabase = createClient();
+  const isEn = lang === "en";
 
   const toggleLike = () => {
     if (!userId) return;
@@ -154,10 +156,10 @@ function ThoughtCard({ post, userId, isLiked: initialLiked }: { post: any; userI
               className={`flex items-center gap-1.5 text-[13px] transition-colors ${liked ? "text-red-500" : "text-brand-muted hover:text-red-400"}`}
             >
               <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
-              <span>{likesCount > 0 ? likesCount : "Like"}</span>
+              <span>{likesCount > 0 ? likesCount : (isEn ? "Like" : "Suka")}</span>
             </button>
 
-            <CommentSection postId={post.id} userId={userId} initialCount={post.comments_count || 0} />
+            <CommentSection postId={post.id} userId={userId} initialCount={post.comments_count || 0} lang={lang} />
           </div>
         </div>
       </div>
@@ -165,27 +167,27 @@ function ThoughtCard({ post, userId, isLiked: initialLiked }: { post: any; userI
   );
 }
 
-
-
-export default function ThoughtClient({ posts: initialPosts, myProfile, userId, likedPostIds }: {
+export default function ThoughtClient({ posts: initialPosts, myProfile, userId, likedPostIds, lang = "id" }: {
   posts: any[];
   myProfile: any;
   userId?: string;
   likedPostIds: string[];
+  lang?: "id" | "en";
 }) {
   const [posts, setPosts] = useState(initialPosts);
   const likedSet = new Set(likedPostIds);
+  const isEn = lang === "en";
 
   return (
     <div className="pb-32 max-w-lg mx-auto">
       {posts.length === 0 ? (
         <div className="text-center text-brand-muted py-16">
           <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p>No thoughts yet. Be the first!</p>
+          <p>{isEn ? "No thoughts yet. Be the first!" : "Belum ada pikiran. Jadilah yang pertama!"}</p>
         </div>
       ) : (
         posts.map(post => (
-          <ThoughtCard key={post.id} post={post} userId={userId} isLiked={likedSet.has(post.id)} />
+          <ThoughtCard key={post.id} post={post} userId={userId} isLiked={likedSet.has(post.id)} lang={lang} />
         ))
       )}
     </div>

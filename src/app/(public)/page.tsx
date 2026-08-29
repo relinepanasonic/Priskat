@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import HomeTabsClient from "@/components/home/HomeTabsClient";
+import { getLanguage } from "@/lib/lang";
 
 export const revalidate = 0;
 
 export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const lang = await getLanguage();
 
   if (!user) {
     redirect("/login");
@@ -41,34 +43,40 @@ export default async function HomePage() {
       .limit(50);
     
     if (data) {
-      posts = data;
+      posts = data.map((p: any) => ({
+        id: p.id,
+        content: p.content,
+        created_at: p.created_at,
+        author_id: p.author_id,
+        author: p.profiles
+      }));
     }
   } catch (err) {
-    console.error("Posts table might not exist yet.");
+    console.error(err);
   }
 
-  // Fetch Active Devotion Plan
-  let activeDevotion: any = null;
-  try {
-    const { data } = await supabase
-      .from("user_devotion_progress")
-      .select("*, plans:devotion_plans(*)")
-      .eq("user_id", user.id)
-      .eq("is_finished", false)
-      .order("last_completed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    activeDevotion = data;
-  } catch (err) {}
+  // Check for active devotional
+  let activeDevotion = null;
+  const { data: devotionData } = await supabase
+    .from("user_devotion_progress")
+    .select("*, plan:devotion_plans(id, title_id, title_en, total_days)")
+    .eq("user_id", user.id)
+    .eq("is_finished", false)
+    .single();
+  
+  if (devotionData) {
+    activeDevotion = devotionData;
+  }
 
   return (
-    <HomeTabsClient 
-      profile={profile} 
-      posts={posts} 
-      userId={user.id} 
-      activeDevotion={activeDevotion}
-    />
+    <div className="md:p-6 md:h-full md:overflow-y-auto">
+      <HomeTabsClient 
+        profile={profile} 
+        posts={posts} 
+        userId={user.id} 
+        activeDevotion={activeDevotion}
+        lang={lang}
+      />
+    </div>
   );
 }
-
-

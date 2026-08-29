@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import ThoughtClient from "./ThoughtClient";
+import { getLanguage } from "@/lib/lang";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Thought" };
@@ -7,6 +8,8 @@ export const metadata = { title: "Thought" };
 export default async function ThoughtPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  const lang = await getLanguage();
 
   const { data: myProfile } = user
     ? await supabase.from("profiles").select("id, full_name, avatar_url").eq("id", user.id).single()
@@ -38,7 +41,7 @@ export default async function ThoughtPage() {
       myProfile={myProfile}
       userId={user?.id}
       likedPostIds={likedPostIds}
+      lang={lang}
     />
   );
 }
-

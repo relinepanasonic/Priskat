@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import FriendsClient from "./FriendsClient";
+import { getLanguage } from "@/lib/lang";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Friends" };
@@ -9,11 +11,7 @@ export default async function FriendsPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-brand-muted text-sm">
-        <p>Please <a href="/login" className="text-brand-gold underline">sign in</a> to see friends.</p>
-      </div>
-    );
+    redirect("/login");
   }
 
   // Get my profile for matching
@@ -134,6 +132,8 @@ export default async function FriendsPage() {
     requesterId: p.requester_id 
   }));
 
+  const lang = await getLanguage();
+
   return (
     <FriendsClient
       userId={user.id}
@@ -141,6 +141,7 @@ export default async function FriendsPage() {
       pendingIncoming={formattedPending}
       recommendations={cleanRecommendations}
       mutuals={formattedMutuals}
+      lang={lang}
     />
   );
 }
