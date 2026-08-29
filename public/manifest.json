@@ -1,22 +1,22 @@
 {
-  "name": "PriskatCFM",
-  "short_name": "PriskatCFM",
-  "description": "Catholic Family Ministry — Komunitas Priskat CFM Indonesia",
+  "name": "Ruang Iman",
+  "short_name": "Ruang Iman",
+  "description": "Ruang Iman — Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#272A30",
-  "theme_color": "#272A30",
+  "background_color": "#0a0d1a",
+  "theme_color": "#0a0d1a",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
@@ -24,10 +24,9 @@
   ],
   "screenshots": [
     {
-      "src": "/icons/icon-512.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
-

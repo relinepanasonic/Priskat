@@ -85,7 +85,7 @@ export default function HomeTabsClient({
 
         <div className="absolute bottom-[100px] left-6 text-white max-w-[65%] z-10">
           <h1 className="text-3xl font-bold leading-tight drop-shadow-md">{profile.full_name}</h1>
-          <p className="text-sm text-brand-light mt-1 font-medium drop-shadow-md">Alumni Priskat {city}</p>
+          <p className="text-sm text-brand-light mt-1 font-medium drop-shadow-md">Ruang Iman – {city}</p>
           <p className="text-xs text-brand-muted drop-shadow-md">Angkatan {angkatan}</p>
         </div>
 

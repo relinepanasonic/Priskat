@@ -2,7 +2,7 @@ import { getLanguage } from "@/lib/lang";
 import BibleIndexClient from "@/components/faith/BibleIndexClient";
 
 export const metadata = {
-  title: "Bible - Priskat",
+  title: "Bible - Ruang Iman",
   description: "Read the Holy Bible",
 };
 

@@ -5,17 +5,17 @@ import SupabaseProvider from "@/components/providers/SupabaseProvider";
 
 export const metadata: Metadata = {
   title: {
-    default: "PriskatCFM",
-    template: "%s | PriskatCFM",
+    default: "Ruang Iman",
+    template: "%s | Ruang Iman",
   },
   description:
-    "A community platform for Alumni CFM — stay updated on news, join events, and connect with fellow members.",
-  keywords: ["PriskatCFM", "community", "church", "events", "news"],
+    "Ruang Iman — Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.",
+  keywords: ["Ruang Iman", "community", "church", "catholic", "events", "news"],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "PriskatCFM",
+    title: "Ruang Iman",
     startupImage: "/apple-touch-icon.png",
   },
   icons: {

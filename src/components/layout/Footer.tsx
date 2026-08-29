@@ -7,13 +7,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-sm">
-                P
-              </div>
-              <span className="font-bold text-brand-gold">PriskatCFM</span>
+              <img src="/logo.png" alt="Ruang Iman" className="h-8 w-8 rounded-lg object-cover" />
+              <span className="font-bold text-brand-gold">Ruang Iman</span>
             </div>
             <p className="text-sm text-brand-muted">
-              A community platform for Alumni CFM — stay connected, stay inspired.
+              Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.
             </p>
           </div>
 
@@ -37,7 +35,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 border-t border-brand-border pt-6 text-center text-xs text-brand-muted">
-          © {new Date().getFullYear()} PriskatCFM. All rights reserved.
+          © {new Date().getFullYear()} Ruang Iman. All rights reserved.
         </div>
       </div>
     </footer>

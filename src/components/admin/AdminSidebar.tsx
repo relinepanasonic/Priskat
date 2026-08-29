@@ -53,10 +53,8 @@ export default function AdminSidebar({ role, fullName }: Props) {
     <aside className="hidden md:flex w-56 flex-col border-r border-[#333] bg-[#1a1d24]">
       <div className="px-3 py-5 border-b border-[#333]">
         <Link href="/" className="flex items-center gap-2.5 px-2">
-          <div className="h-8 w-8 rounded-lg bg-brand-gold text-brand-dark text-white font-bold text-base flex items-center justify-center shadow-glow-gold">
-            P
-          </div>
-          <span className="font-bold text-white text-base tracking-wide">PriskatCFM</span>
+          <img src="/logo.png" alt="Ruang Iman" className="h-8 w-8 rounded-lg object-cover" />
+          <span className="font-bold text-white text-base tracking-wide">Ruang Iman</span>
         </Link>
         <p className="mt-1 text-[11px] text-gray-500 pl-11 font-medium capitalize">{role} panel</p>
       </div>
