@@ -180,7 +180,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
           </div>
           <div>
             <label className="block text-sm text-brand-light mb-1">URL Slug</label>
-            <input required value={slug} onChange={e => setSlug(e.target.value)} className="w-full input-3d text-sm" placeholder="e.g. legiomaria" />
+            <input required value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))} className="w-full input-3d text-sm" placeholder="e.g. legiomaria" />
           </div>
           <div>
             <label className="block text-sm text-brand-light mb-1">Logo</label>

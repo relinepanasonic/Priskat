@@ -1,5 +1,7 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { Map, Calendar, LayoutDashboard, Tent, Users, ChevronLeft } from "lucide-react";
@@ -8,6 +10,16 @@ export default function CommunitySlugLayout({ children }: { children: React.Reac
   const pathname = usePathname();
   const params = useParams();
   const slug = params.slug as string;
+  const [communityName, setCommunityName] = useState(slug.toUpperCase());
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function fetchName() {
+      const { data } = await supabase.from("communities").select("name").eq("slug", slug).single();
+      if (data) setCommunityName(data.name);
+    }
+    fetchName();
+  }, [slug, supabase]);
 
   const tabs = [
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
@@ -29,7 +41,7 @@ export default function CommunitySlugLayout({ children }: { children: React.Reac
           Back
         </Link>
         <span className="text-[#333]">|</span>
-        <h1 className="text-lg font-bold text-white uppercase tracking-wider">{slug.toUpperCase()}</h1>
+        <h1 className="text-lg font-bold text-white tracking-wider">{communityName}</h1>
       </div>
 
       {/* Tabs Navigation */}
