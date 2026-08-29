@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,7 +19,7 @@ interface NavbarProps {
 const DESKTOP_NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/news", label: "News" },
-  { href: "/friends", label: "Friends" },
+  { href: "/community", label: "Community" },
   { href: "/faith", label: "Spiritual" },
   { href: "/camp", label: "Camp" },
   { href: "/profile", label: "Profile" },
@@ -79,7 +79,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
                 {label === "Home" && <Home className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Spiritual" && <Book className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "News" && <Newspaper className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
-                {label === "Friends" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
+                {label === "Community" && <Users className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Camp" && <Tent className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 {label === "Profile" && <User className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />}
                 <span>{label}</span>
@@ -196,9 +196,9 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
           <span className="text-[10px] font-medium pt-8">Home</span>
         </Link>
 
-        <Link prefetch={true} href="/friends" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/friends') ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link prefetch={true} href="/community" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/community') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Users className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Friends</span>
+          <span className="text-[10px] font-medium">Community</span>
         </Link>
         <Link prefetch={true} href="/camp" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/camp') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Tent className="h-5 w-5" />
