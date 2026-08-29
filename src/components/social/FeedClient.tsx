@@ -52,7 +52,7 @@ export default function FeedClient({ userAvatar, userName, userId }: { userAvata
           <button className="text-brand-light hover:text-white transition-colors">
             <X className="h-6 w-6" />
           </button>
-          <h2 className="text-xl font-bold text-white tracking-tight">New though</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">New thought</h2>
         </div>
         <button 
           onClick={handleSubmit}
@@ -91,14 +91,35 @@ export default function FeedClient({ userAvatar, userName, userId }: { userAvata
           />
           
           <div className="flex items-center gap-4 mt-3">
-            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2">
+            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2" title="Upload Image (Coming Soon)">
               <ImageIcon className="h-5 w-5" />
             </button>
-            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2">
+            <button 
+              type="button" 
+              onClick={() => window.location.href = '/faith/bible'}
+              className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2"
+              title="Open Bible"
+            >
               <BookOpen className="h-5 w-5" />
             </button>
-            <button type="button" className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2">
+            <button 
+              type="button" 
+              onClick={() => window.location.href = '/faith/prayers'}
+              className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2"
+              title="Open Prayers"
+            >
               <HeartHandshake className="h-5 w-5" />
+            </button>
+            <button 
+              type="button" 
+              onClick={() => {
+                setContent("Saya berkomitmen untuk melakukan devotional '...' selama ... hari. Mari ikuti devotional yang sama!");
+                textareaRef.current?.focus();
+              }}
+              className="text-gray-400 hover:text-brand-gold transition-colors flex items-center gap-2 ml-auto"
+              title="Share Devotional Commitment"
+            >
+              <span className="text-xs font-medium border border-gray-500 rounded px-2 py-0.5 hover:border-brand-gold">Share Devotional</span>
             </button>
           </div>
         </div>
