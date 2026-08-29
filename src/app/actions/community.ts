@@ -25,6 +25,8 @@ export async function createCommunity(formData: FormData) {
   const logo_url = formData.get("logo_url") as string;
   const vision = formData.get("vision") as string;
   const mission = formData.get("mission") as string;
+  const motto = formData.get("motto") as string;
+  const tagline = formData.get("tagline") as string;
 
   if (!name || !slug) return { error: "Name and Slug are required." };
 
@@ -34,7 +36,9 @@ export async function createCommunity(formData: FormData) {
     description,
     logo_url,
     vision,
-    mission
+    mission,
+    motto,
+    tagline
   });
 
   if (error) return { error: error.message };
@@ -53,6 +57,8 @@ export async function updateCommunity(id: string, formData: FormData) {
   const logo_url = formData.get("logo_url") as string;
   const vision = formData.get("vision") as string;
   const mission = formData.get("mission") as string;
+  const motto = formData.get("motto") as string;
+  const tagline = formData.get("tagline") as string;
 
   const { error } = await supabase.from("communities").update({
     name,
@@ -60,7 +66,9 @@ export async function updateCommunity(id: string, formData: FormData) {
     description,
     logo_url,
     vision,
-    mission
+    mission,
+    motto,
+    tagline
   }).eq("id", id);
 
   if (error) return { error: error.message };

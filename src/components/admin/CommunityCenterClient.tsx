@@ -5,10 +5,13 @@ import Button from "@/components/ui/Button";
 import { createCommunity, updateCommunity, deleteCommunity, addCommunityAdmin, removeCommunityAdmin } from "@/app/actions/community";
 import { Plus, Trash2, Edit2, UserPlus, Shield } from "lucide-react";
 import Modal from "@/components/ui/Modal";
+import { createClient } from "@/lib/supabase/client";
 
 export default function CommunityCenterClient({ initialCommunities, initialAdmins, allUsers }: { initialCommunities: any[], initialAdmins: any[], allUsers: any[] }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const supabase = createClient();
   
   // State for forms
   const [name, setName] = useState("");
@@ -17,6 +20,8 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
   const [logoUrl, setLogoUrl] = useState("");
   const [vision, setVision] = useState("");
   const [mission, setMission] = useState("");
+  const [motto, setMotto] = useState("");
+  const [tagline, setTagline] = useState("");
 
   const [adminCommunityId, setAdminCommunityId] = useState<string | null>(null);
   const [adminUserId, setAdminUserId] = useState("");
@@ -30,11 +35,37 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
     setLogoUrl(community.logo_url || "");
     setVision(community.vision || "");
     setMission(community.mission || "");
+    setMotto(community.motto || "");
+    setTagline(community.tagline || "");
   }
 
   function openAdd() {
     setIsAdding(true);
-    setName(""); setSlug(""); setDescription(""); setLogoUrl(""); setVision(""); setMission("");
+    setName(""); setSlug(""); setDescription(""); setLogoUrl(""); setVision(""); setMission(""); setMotto(""); setTagline("");
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `logos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('communities')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      alert("Error uploading file: " + uploadError.message);
+      setIsUploading(false);
+      return;
+    }
+
+    const { data } = supabase.storage.from('communities').getPublicUrl(filePath);
+    setLogoUrl(data.publicUrl);
+    setIsUploading(false);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -46,6 +77,8 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
     formData.append("logo_url", logoUrl);
     formData.append("vision", vision);
     formData.append("mission", mission);
+    formData.append("motto", motto);
+    formData.append("tagline", tagline);
     
     if (editingCommunity) {
       const res = await updateCommunity(editingCommunity.id, formData);
@@ -140,7 +173,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
       </div>
 
       <Modal open={isAdding || !!editingCommunity} onClose={() => { setIsAdding(false); setEditingCommunity(null); }} title={editingCommunity ? "Edit Community" : "Create Community"}>
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <div>
             <label className="block text-sm text-brand-light mb-1">Name</label>
             <input required value={name} onChange={e => setName(e.target.value)} className="w-full input-3d text-sm" placeholder="e.g. Legio Maria" />
@@ -150,8 +183,23 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
             <input required value={slug} onChange={e => setSlug(e.target.value)} className="w-full input-3d text-sm" placeholder="e.g. legiomaria" />
           </div>
           <div>
-            <label className="block text-sm text-brand-light mb-1">Logo URL</label>
-            <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} className="w-full input-3d text-sm" placeholder="e.g. https://..." />
+            <label className="block text-sm text-brand-light mb-1">Logo</label>
+            <div className="flex gap-2 mb-2">
+              <input type="file" accept="image/*" onChange={handleFileUpload} disabled={isUploading} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold/10 file:text-brand-gold hover:file:bg-brand-gold/20" />
+              {isUploading && <span className="text-xs text-gray-400 self-center">Uploading...</span>}
+            </div>
+            <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} className="w-full input-3d text-sm" placeholder="Or paste logo URL directly" />
+            {logoUrl && (
+              <img src={logoUrl} alt="Preview" className="h-10 mt-2 object-contain" />
+            )}
+          </div>
+          <div>
+            <label className="block text-sm text-brand-light mb-1">Tagline</label>
+            <input value={tagline} onChange={e => setTagline(e.target.value)} className="w-full input-3d text-sm" placeholder="e.g. Empowering Catholic Families" />
+          </div>
+          <div>
+            <label className="block text-sm text-brand-light mb-1">Motto</label>
+            <input value={motto} onChange={e => setMotto(e.target.value)} className="w-full input-3d text-sm" placeholder="e.g. Faith, Hope, Love" />
           </div>
           <div>
             <label className="block text-sm text-brand-light mb-1">Description (Short)</label>
