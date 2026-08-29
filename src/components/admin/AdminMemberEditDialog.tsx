@@ -14,11 +14,13 @@ interface Props {
     role: UserRole;
     gender: UserGender | null;
     completed_modules: string[];
+    community_id?: string | null;
   };
   callerRole: UserRole;
+  communities: { id: string; name: string }[];
 }
 
-export default function AdminMemberEditDialog({ member, callerRole }: Props) {
+export default function AdminMemberEditDialog({ member, callerRole, communities }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -60,11 +62,21 @@ export default function AdminMemberEditDialog({ member, callerRole }: Props) {
         <form onSubmit={onSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-brand-light mb-1">Role</label>
-            <select name="role" defaultValue={member.role} className="w-full input-3d text-sm">
+            <select name="role" defaultValue={member.role} className="w-full input-3d text-sm" disabled={member.role === 'founder'}>
               {callerRole === "founder" && <option value="superadmin">Superadmin</option>}
               <option value="admin">Admin</option>
               <option value="moderator">Moderator</option>
               <option value="member">Member</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-light mb-1">Community</label>
+            <select name="community_id" defaultValue={member.community_id || ""} className="w-full input-3d text-sm" disabled={member.role === 'founder'}>
+              <option value="">-- No Community --</option>
+              {communities.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
             </select>
           </div>
 

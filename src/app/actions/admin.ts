@@ -19,6 +19,7 @@ export async function adminUpdateMember(
 
   const role = formData.get("role") as string;
   const gender = formData.get("gender") as string;
+  const community_id = formData.get("community_id") as string;
   const modules = formData.getAll("modules") as string[];
 
   // Only founder can assign superadmin role
@@ -37,6 +38,7 @@ export async function adminUpdateMember(
     .update({
       role: role || "member",
       gender: gender || null,
+      community_id: community_id || null,
       completed_modules: modules,
     } as any)
     .eq("id", memberId);

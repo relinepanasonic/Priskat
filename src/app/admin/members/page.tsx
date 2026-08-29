@@ -15,12 +15,14 @@ export default async function AdminMembersPage() {
   const { data: callerProfile } = await supabase.from("profiles").select("role").eq("id", user?.id ?? "").single();
   const callerRole = (callerProfile?.role ?? "admin") as UserRole;
 
+  const { data: communities } = await supabase.from("communities").select("id, name").order("name");
+
   const { data } = await supabase
     .from("profiles")
-    .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history")
+    .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities(id, name, slug)")
     .order("created_at", { ascending: false });
 
-  const members = data as Pick<Profile, "id" | "username" | "full_name" | "avatar_url" | "role" | "gender" | "completed_modules" | "created_at" | "camp_history">[] | null;
+  const members = data as (Pick<Profile, "id" | "username" | "full_name" | "avatar_url" | "role" | "gender" | "completed_modules" | "created_at" | "camp_history" | "community_id"> & { community?: { id: string; name: string; slug: string } | null })[] | null;
 
   const roleVariant = (role: UserRole) =>
     (role === "founder" || role === "superadmin") ? "gold" : role === "admin" ? "gold" : role === "moderator" ? "blue" : "gray";
@@ -39,6 +41,7 @@ export default async function AdminMembersPage() {
           <thead className="border-b border-brand-border bg-brand-surface-hover">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Member</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Community</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Camp</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase hidden md:table-cell">Joined</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Role</th>
@@ -64,6 +67,11 @@ export default async function AdminMembersPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
+                  <span className="text-sm font-medium text-gray-300">
+                    {member.role === "founder" ? "All" : member.community?.name || "-"}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
                   <span className="text-sm font-semibold text-brand-gold">{member.camp_history?.[0]?.camp || "-"}</span>
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell text-sm text-brand-muted">
@@ -73,7 +81,7 @@ export default async function AdminMembersPage() {
                   <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
                 </td>
                 <td className="px-4 py-3 flex justify-end items-center gap-2">
-                  <AdminMemberEditDialog member={member} callerRole={callerRole} />
+                  <AdminMemberEditDialog member={member} callerRole={callerRole} communities={communities || []} />
                   <AdminMemberDeleteButton memberId={member.id} memberName={member.full_name || member.username || "User"} />
                 </td>
               </tr>

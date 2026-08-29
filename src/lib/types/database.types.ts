@@ -31,6 +31,8 @@ export interface Profile {
   completed_modules: string[];
   created_at: string;
   updated_at: string;
+  community_id?: string | null;
+  community?: { id: string; name: string; slug: string } | null;
 }
 
 export interface DevotionCategory {
