@@ -93,6 +93,12 @@ export default function ProfileEditForm({ profile }: Props) {
   async function onSubmit(data: FormValues) {
     setError(null);
     setSuccess(false);
+
+    if (!avatarUrl) {
+      setError("Profile picture is required. Please upload one.");
+      return;
+    }
+
     const supabase = createClient();
 
     const skillsArr = data.skills
