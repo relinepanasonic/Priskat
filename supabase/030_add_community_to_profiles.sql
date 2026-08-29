@@ -12,3 +12,4 @@ BEGIN
     UPDATE public.profiles SET community_id = cfm_id WHERE community_id IS NULL AND role != 'founder';
   END IF;
 END $$;
+

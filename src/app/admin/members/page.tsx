@@ -41,10 +41,10 @@ export default async function AdminMembersPage() {
           <thead className="border-b border-brand-border bg-brand-surface-hover">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Member</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Community</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Camp</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase hidden md:table-cell">Joined</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Role</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">Main Community</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase">CFM Community</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase hidden md:table-cell">Joined</th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-brand-muted uppercase">Actions</th>
             </tr>
           </thead>
@@ -67,6 +67,9 @@ export default async function AdminMembersPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
+                  <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
+                </td>
+                <td className="px-4 py-3">
                   <span className="text-sm font-medium text-gray-300">
                     {member.role === "founder" ? "All" : member.community?.name || "-"}
                   </span>
@@ -76,9 +79,6 @@ export default async function AdminMembersPage() {
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell text-sm text-brand-muted">
                   {formatDate(member.created_at)}
-                </td>
-                <td className="px-4 py-3">
-                  <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
                 </td>
                 <td className="px-4 py-3 flex justify-end items-center gap-2">
                   <AdminMemberEditDialog member={member} callerRole={callerRole} communities={communities || []} />

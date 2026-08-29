@@ -71,7 +71,7 @@ export default function AdminMemberEditDialog({ member, callerRole, communities 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-light mb-1">Community</label>
+            <label className="block text-sm font-medium text-brand-light mb-1">Main Community</label>
             <select name="community_id" defaultValue={member.community_id || ""} className="w-full input-3d text-sm" disabled={member.role === 'founder'}>
               <option value="">-- No Community --</option>
               {communities.map((c) => (
@@ -90,7 +90,7 @@ export default function AdminMemberEditDialog({ member, callerRole, communities 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-light mb-2">Alumni (Completed Modules)</label>
+            <label className="block text-sm font-medium text-brand-light mb-2">CFM Community (Formerly Alumni)</label>
             <div className="grid grid-cols-2 gap-2">
               {["Pria Sejati", "Youngman", "Bapa Sejati", "Patriot", "Wanita Berhikmat", "Young Woman"].map((opt) => (
                 <label key={opt} className="flex items-center gap-2 text-sm text-brand-light bg-[#1a1d24] p-2 rounded-lg border border-[#333]">
