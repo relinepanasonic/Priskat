@@ -166,7 +166,7 @@ export default function HomeTabsClient({
             onClick={() => setActiveTab("Thought")}
             className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Thought" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
-            Thought
+            My Thought
           </button>
           <button 
             onClick={() => setActiveTab("Profile")}
@@ -248,7 +248,7 @@ export default function HomeTabsClient({
 
         {activeTab === "Thought" && (
           <div className="px-6 animate-in fade-in duration-300 pb-12">
-            <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} />
+            <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} posts={posts} />
           </div>
         )}
       </div>

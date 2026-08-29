@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Image as ImageIcon, BookOpen, HeartHandshake, X } from "lucide-react";
 import Image from "next/image";
 
-export default function FeedClient({ userAvatar, userName, userId }: { userAvatar: string | null, userName: string, userId: string }) {
+export default function FeedClient({ userAvatar, userName, userId, posts }: { userAvatar: string | null, userName: string, userId: string, posts?: any[] }) {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -124,6 +124,37 @@ export default function FeedClient({ userAvatar, userName, userId }: { userAvata
           </div>
         </div>
       </div>
+
+      {/* Render My Posts */}
+      {posts && posts.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">My Thoughts</h3>
+          <div className="space-y-6">
+            {posts.map((post: any) => (
+              <div key={post.id} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="relative h-10 w-10 rounded-full border border-[#333] bg-brand-bg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    {userAvatar ? (
+                      <Image src={userAvatar} alt={userName} fill className="object-cover" />
+                    ) : (
+                      <span className="text-brand-gold font-bold">{userName[0]?.toUpperCase()}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col pt-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-white text-[15px]">{userName}</span>
+                    <span className="text-brand-muted text-xs">
+                      {new Date(post.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-[15px] text-brand-light leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -36,6 +36,7 @@ export default async function HomePage() {
           avatar_url
         )
       `)
+      .eq('author_id', user.id)
       .order("created_at", { ascending: false })
       .limit(50);
     

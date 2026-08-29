@@ -165,63 +165,7 @@ function ThoughtCard({ post, userId, isLiked: initialLiked }: { post: any; userI
   );
 }
 
-function Composer({ myProfile, onPost }: { myProfile: any; onPost: (post: any) => void }) {
-  const [content, setContent] = useState("");
-  const [submitting, startSubmit] = useTransition();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const supabase = createClient();
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [content]);
-
-  const submit = () => {
-    if (!content.trim()) return;
-    startSubmit(async () => {
-      const { data, error } = await supabase
-        .from("community_posts")
-        .insert({ author_id: myProfile.id, content: content.trim() })
-        .select("id, content, image_url, likes_count, comments_count, created_at, author:profiles!community_posts_author_id_fkey(id, full_name, avatar_url)")
-        .single();
-      if (!error && data) {
-        onPost(data);
-        setContent("");
-      }
-    });
-  };
-
-  if (!myProfile) return null;
-
-  return (
-    <div className="border-b border-[#2a2d35] px-4 py-4">
-      <div className="flex gap-3">
-        <Avatar url={myProfile.avatar_url} name={myProfile.full_name} size={40} />
-        <div className="flex-1">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Share a thought..."
-            rows={1}
-            className="w-full bg-transparent text-[15px] text-white placeholder-gray-500 focus:outline-none resize-none overflow-hidden"
-          />
-          <div className="flex justify-end mt-2">
-            <button
-              onClick={submit}
-              disabled={submitting || !content.trim()}
-              className="px-5 py-1.5 rounded-full bg-brand-gold text-brand-dark text-sm font-bold disabled:opacity-40 hover:bg-yellow-400 transition-colors"
-            >
-              {submitting ? "Posting..." : "Post"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function ThoughtClient({ posts: initialPosts, myProfile, userId, likedPostIds }: {
   posts: any[];
@@ -232,14 +176,8 @@ export default function ThoughtClient({ posts: initialPosts, myProfile, userId, 
   const [posts, setPosts] = useState(initialPosts);
   const likedSet = new Set(likedPostIds);
 
-  const handleNewPost = (post: any) => {
-    setPosts(prev => [post, ...prev]);
-  };
-
   return (
     <div className="pb-32 max-w-lg mx-auto">
-      {myProfile && <Composer myProfile={myProfile} onPost={handleNewPost} />}
-
       {posts.length === 0 ? (
         <div className="text-center text-brand-muted py-16">
           <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-30" />
