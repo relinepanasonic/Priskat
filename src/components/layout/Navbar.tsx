@@ -42,8 +42,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
     {/* Mobile Top Header (Settings & Lang) */}
     <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
-        <Image src="/logo.jpg" alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
-        <span className="font-bold text-brand-gold text-xs truncate">Catholic Family Ministry</span>
+        <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
+        <span className="font-bold text-brand-gold text-xs truncate">Ruang Iman</span>
       </Link>
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
@@ -57,8 +57,8 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
       <div className="flex flex-col h-full px-3 py-5">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 mb-8 px-2">
-          <Image src="/logo.jpg" alt="Logo" width={36} height={36} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
-          <span className="font-bold text-white text-[13px] leading-tight tracking-wide">Catholic Family<br/>Ministry</span>
+          <Image src="/logo.png" alt="Logo" width={36} height={36} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
+          <span className="font-bold text-white text-[15px] leading-tight tracking-wide">Ruang Iman</span>
         </Link>
 
         {/* Desktop nav */}
