@@ -134,30 +134,59 @@ export default function HomeTabsClient({
       {/* Vinyl Records & Mini Player */}
       <VinylPlayer initialSongs={profile.favorite_songs || []} userId={userId} />
 
-      <div className="px-6 mt-6">
-        <div className="bg-[#1a1d24] rounded-3xl p-5 flex justify-evenly items-center shadow-sm border border-[#333]">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-12 w-12 rounded-full bg-brand-dark flex items-center justify-center text-brand-gold border border-[#333]">
-              <Tent className="h-5 w-5" />
+      {/* Stats: My Services + Ongoing Devotion */}
+      <div className="px-6 mt-6 grid grid-cols-2 gap-3">
+        {/* My Services card */}
+        <div className="bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-4 flex flex-col gap-2 hover:border-brand-gold/30 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-9 rounded-xl bg-brand-gold/10 flex items-center justify-center">
+              <Tent className="h-4.5 w-4.5 text-brand-gold" style={{width:"18px",height:"18px"}} />
             </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-brand-gold">{myServices.length}</p>
-              <p className="text-[10px] text-brand-muted font-medium uppercase tracking-wider">My Services</p>
-            </div>
+            <span className="text-2xl font-bold text-white">{myServices.length}</span>
           </div>
-          
-          <div className="w-px h-12 bg-[#2a2d35]"></div>
-          
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-12 w-12 rounded-full bg-brand-dark flex items-center justify-center text-brand-gold border border-[#333]">
-              <Heart className="h-5 w-5" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-brand-gold">1</p>
-              <p className="text-[10px] text-brand-muted font-medium uppercase tracking-wider">Ongoing Devotion</p>
-            </div>
+          <div>
+            <p className="text-xs font-semibold text-white">My Services</p>
+            <p className="text-[10px] text-brand-muted mt-0.5">
+              {myServices.length > 0 ? `Last: ${myServices[myServices.length - 1]?.position || "—"}` : "None yet"}
+            </p>
           </div>
         </div>
+
+        {/* Ongoing Devotion card */}
+        <Link href="/faith/devotions/plans" className="bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-4 flex flex-col gap-2 hover:border-brand-gold/30 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-9 rounded-xl bg-brand-gold/10 flex items-center justify-center">
+              <Heart className="h-4.5 w-4.5 text-brand-gold" style={{width:"18px",height:"18px"}} />
+            </div>
+            {activeDevotion ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30">Active</span>
+            ) : (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#333] text-brand-muted">None</span>
+            )}
+          </div>
+          {activeDevotion ? (
+            <div>
+              <p className="text-xs font-semibold text-white truncate">{activeDevotion.plan?.title_en || "Devotional"}</p>
+              <div className="mt-1.5">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[10px] text-brand-muted">Day {activeDevotion.current_day}</span>
+                  <span className="text-[10px] text-brand-muted">{activeDevotion.plan?.total_days || "—"} days</span>
+                </div>
+                <div className="h-1 rounded-full bg-[#333] overflow-hidden">
+                  <div
+                    className="h-full bg-brand-gold rounded-full transition-all"
+                    style={{width: `${Math.min(100, Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.total_days || 1)) * 100))}%`}}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs font-semibold text-white">Devotional</p>
+              <p className="text-[10px] text-brand-muted mt-0.5">Tap to start one</p>
+            </div>
+          )}
+        </Link>
       </div>
 
       <div className="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur-md pt-6 pb-4 px-6 mt-2 border-b border-[#333]">
