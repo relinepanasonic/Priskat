@@ -1,5 +1,5 @@
--- Add 'founder' to the user_role enum
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'founder';
+-- Note: We assume ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'founder'; 
+-- was already run successfully in the previous step.
 
 -- Update the is_admin_or_mod helper function
 create or replace function public.is_admin_or_mod()
@@ -13,45 +13,45 @@ $$;
 -- Fix the Profiles Update Policy
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own"
-  ON public.profiles FOR UPDATE
+  ON public.profiles FOR UPDATE TO authenticated
   USING (id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin', 'founder'))
   WITH CHECK (id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Fix the Profiles Delete Policy
 DROP POLICY IF EXISTS "profiles_delete_admin" ON public.profiles;
 CREATE POLICY "profiles_delete_admin"
-  ON public.profiles FOR DELETE
+  ON public.profiles FOR DELETE TO authenticated
   USING (public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Fix the Events Delete Policy
 DROP POLICY IF EXISTS "events_delete_admin" ON public.events;
 CREATE POLICY "events_delete_admin"
-  ON public.events FOR DELETE
+  ON public.events FOR DELETE TO authenticated
   USING (public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Fix the News Delete Policy
 DROP POLICY IF EXISTS "news_posts_delete_admin" ON public.news_posts;
 CREATE POLICY "news_posts_delete_admin"
-  ON public.news_posts FOR DELETE
+  ON public.news_posts FOR DELETE TO authenticated
   USING (public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Fix the News Comments Delete Policy
 DROP POLICY IF EXISTS "news_comments_delete" ON public.news_comments;
 CREATE POLICY "news_comments_delete"
-  ON public.news_comments FOR DELETE
+  ON public.news_comments FOR DELETE TO authenticated
   USING (author_id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Fix the Event RSVPs Update Policy
 DROP POLICY IF EXISTS "event_rsvps_update" ON public.event_rsvps;
 CREATE POLICY "event_rsvps_update"
-  ON public.event_rsvps FOR UPDATE
+  ON public.event_rsvps FOR UPDATE TO authenticated
   USING (user_id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin', 'founder'))
   WITH CHECK (user_id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Fix the Event RSVPs Delete Policy
 DROP POLICY IF EXISTS "event_rsvps_delete" ON public.event_rsvps;
 CREATE POLICY "event_rsvps_delete"
-  ON public.event_rsvps FOR DELETE
+  ON public.event_rsvps FOR DELETE TO authenticated
   USING (user_id = auth.uid() OR public.get_my_role() IN ('admin', 'superadmin', 'founder'));
 
 -- Ensure nicojapar@gmail.com becomes a founder
@@ -69,4 +69,3 @@ BEGIN
     WHERE id = target_user_id;
   END IF;
 END $$;
-
