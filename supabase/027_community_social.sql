@@ -1,10 +1,8 @@
--- =============================================
--- 027: Community Social Layer
--- Friends, Thoughts (with likes/comments), Groups
--- =============================================
+-- Run this AFTER 026_add_founder_role.sql (which adds 'founder' to user_role enum)
+-- This script safely drops and recreates policies that may have partially executed
 
 -- -----------------------------------------------
--- 1. Friendships
+-- 1. Friendships (safe to re-run)
 -- -----------------------------------------------
 CREATE TABLE IF NOT EXISTS public.friendships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -18,20 +16,22 @@ CREATE TABLE IF NOT EXISTS public.friendships (
 
 ALTER TABLE public.friendships ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "friendships_select" ON public.friendships;
+DROP POLICY IF EXISTS "friendships_insert" ON public.friendships;
+DROP POLICY IF EXISTS "friendships_update" ON public.friendships;
+DROP POLICY IF EXISTS "friendships_delete" ON public.friendships;
+
 CREATE POLICY "friendships_select" ON public.friendships FOR SELECT TO authenticated
   USING (auth.uid() = requester_id OR auth.uid() = receiver_id);
-
 CREATE POLICY "friendships_insert" ON public.friendships FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = requester_id);
-
 CREATE POLICY "friendships_update" ON public.friendships FOR UPDATE TO authenticated
   USING (auth.uid() = receiver_id OR auth.uid() = requester_id);
-
 CREATE POLICY "friendships_delete" ON public.friendships FOR DELETE TO authenticated
   USING (auth.uid() = requester_id OR auth.uid() = receiver_id);
 
 -- -----------------------------------------------
--- 2. Extend community_posts (Thoughts)
+-- 2. Extend community_posts
 -- -----------------------------------------------
 ALTER TABLE public.community_posts
   ADD COLUMN IF NOT EXISTS image_url TEXT,
@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS public.community_post_likes (
 
 ALTER TABLE public.community_post_likes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "likes_select" ON public.community_post_likes;
+DROP POLICY IF EXISTS "likes_insert" ON public.community_post_likes;
+DROP POLICY IF EXISTS "likes_delete" ON public.community_post_likes;
+
 CREATE POLICY "likes_select" ON public.community_post_likes FOR SELECT TO authenticated USING (true);
 CREATE POLICY "likes_insert" ON public.community_post_likes FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "likes_delete" ON public.community_post_likes FOR DELETE TO authenticated USING (auth.uid() = user_id);
@@ -69,10 +73,15 @@ CREATE TABLE IF NOT EXISTS public.community_post_comments (
 
 ALTER TABLE public.community_post_comments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "comments_select" ON public.community_post_comments;
+DROP POLICY IF EXISTS "comments_insert" ON public.community_post_comments;
+DROP POLICY IF EXISTS "comments_delete" ON public.community_post_comments;
+
 CREATE POLICY "comments_select" ON public.community_post_comments FOR SELECT TO authenticated USING (true);
 CREATE POLICY "comments_insert" ON public.community_post_comments FOR INSERT TO authenticated WITH CHECK (auth.uid() = author_id);
+-- Use ::text cast to avoid enum issues
 CREATE POLICY "comments_delete" ON public.community_post_comments FOR DELETE TO authenticated
-  USING (auth.uid() = author_id OR public.get_my_role() IN ('admin', 'superadmin', 'founder'));
+  USING (auth.uid() = author_id OR public.get_my_role()::text IN ('admin', 'superadmin', 'founder'));
 
 -- -----------------------------------------------
 -- 5. Groups
@@ -89,6 +98,11 @@ CREATE TABLE IF NOT EXISTS public.groups (
 );
 
 ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "groups_select" ON public.groups;
+DROP POLICY IF EXISTS "groups_insert" ON public.groups;
+DROP POLICY IF EXISTS "groups_update" ON public.groups;
+DROP POLICY IF EXISTS "groups_delete" ON public.groups;
 
 CREATE POLICY "groups_select" ON public.groups FOR SELECT TO authenticated USING (
   NOT is_private OR
@@ -115,6 +129,11 @@ CREATE TABLE IF NOT EXISTS public.group_members (
 
 ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "group_members_select" ON public.group_members;
+DROP POLICY IF EXISTS "group_members_insert" ON public.group_members;
+DROP POLICY IF EXISTS "group_members_update" ON public.group_members;
+DROP POLICY IF EXISTS "group_members_delete" ON public.group_members;
+
 CREATE POLICY "group_members_select" ON public.group_members FOR SELECT TO authenticated USING (
   user_id = auth.uid() OR
   EXISTS (SELECT 1 FROM public.groups g WHERE g.id = group_id AND g.owner_id = auth.uid())
@@ -133,7 +152,7 @@ CREATE POLICY "group_members_delete" ON public.group_members FOR DELETE TO authe
 );
 
 -- -----------------------------------------------
--- 7. Group Subgroups (Channels)
+-- 7. Group Subgroups
 -- -----------------------------------------------
 CREATE TABLE IF NOT EXISTS public.group_subgroups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -144,6 +163,10 @@ CREATE TABLE IF NOT EXISTS public.group_subgroups (
 );
 
 ALTER TABLE public.group_subgroups ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "subgroups_select" ON public.group_subgroups;
+DROP POLICY IF EXISTS "subgroups_insert" ON public.group_subgroups;
+DROP POLICY IF EXISTS "subgroups_delete" ON public.group_subgroups;
 
 CREATE POLICY "subgroups_select" ON public.group_subgroups FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = group_id AND gm.user_id = auth.uid() AND gm.status = 'accepted')
@@ -157,7 +180,7 @@ CREATE POLICY "subgroups_delete" ON public.group_subgroups FOR DELETE TO authent
 );
 
 -- -----------------------------------------------
--- 8. Group Messages (Chat)
+-- 8. Group Messages
 -- -----------------------------------------------
 CREATE TABLE IF NOT EXISTS public.group_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -168,6 +191,10 @@ CREATE TABLE IF NOT EXISTS public.group_messages (
 );
 
 ALTER TABLE public.group_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "messages_select" ON public.group_messages;
+DROP POLICY IF EXISTS "messages_insert" ON public.group_messages;
+DROP POLICY IF EXISTS "messages_delete" ON public.group_messages;
 
 CREATE POLICY "messages_select" ON public.group_messages FOR SELECT TO authenticated USING (
   EXISTS (
