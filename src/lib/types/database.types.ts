@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -37,6 +37,7 @@ export interface DevotionCategory {
   id: string;
   name: string;
   name_id?: string | null;
+  parent_id?: string | null;
   created_at: string;
 }
 
