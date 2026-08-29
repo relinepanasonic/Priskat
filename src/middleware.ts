@@ -46,7 +46,20 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["founder", "superadmin", "admin", "moderator"].includes(String(profile.role).toLowerCase())) {
+    const isGlobalAdmin = profile && ["founder", "superadmin", "admin", "moderator"].includes(String(profile.role).toLowerCase());
+    
+    let isCommunityAdmin = false;
+    if (!isGlobalAdmin) {
+      const { data: commAdmin } = await supabase
+        .from("community_admins")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (commAdmin) isCommunityAdmin = true;
+    }
+
+    if (!isGlobalAdmin && !isCommunityAdmin) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }

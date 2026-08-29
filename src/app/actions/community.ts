@@ -22,13 +22,19 @@ export async function createCommunity(formData: FormData) {
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
+  const logo_url = formData.get("logo_url") as string;
+  const vision = formData.get("vision") as string;
+  const mission = formData.get("mission") as string;
 
   if (!name || !slug) return { error: "Name and Slug are required." };
 
   const { error } = await supabase.from("communities").insert({
     name,
     slug,
-    description
+    description,
+    logo_url,
+    vision,
+    mission
   });
 
   if (error) return { error: error.message };
@@ -44,11 +50,17 @@ export async function updateCommunity(id: string, formData: FormData) {
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
+  const logo_url = formData.get("logo_url") as string;
+  const vision = formData.get("vision") as string;
+  const mission = formData.get("mission") as string;
 
   const { error } = await supabase.from("communities").update({
     name,
     slug,
-    description
+    description,
+    logo_url,
+    vision,
+    mission
   }).eq("id", id);
 
   if (error) return { error: error.message };

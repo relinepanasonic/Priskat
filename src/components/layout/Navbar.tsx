@@ -14,6 +14,7 @@ import LanguageToggle from "@/components/ui/LanguageToggle";
 interface NavbarProps {
   profile?: Profile | null;
   lang?: "id" | "en";
+  isCommunityAdmin?: boolean;
 }
 
 const DESKTOP_NAV_LINKS = [
@@ -25,7 +26,7 @@ const DESKTOP_NAV_LINKS = [
   { href: "/profile", label: "Profile" },
 ];
 
-export default function Navbar({ profile, lang = "id" }: NavbarProps) {
+export default function Navbar({ profile, lang = "id", isCommunityAdmin = false }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useSession();
@@ -89,7 +90,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
         </nav>
 
         {/* Superadmin Invite & Database Buttons */}
-        {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder") && (
+        {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder" || isCommunityAdmin) && (
           <div className="mt-3 space-y-1">
             <a
               href="/admin/members"
@@ -99,28 +100,32 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
               <span>Manage Users</span>
             </a>
             
-            <a
-              href="/admin/communities"
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-            >
-              <Tent className="h-4 w-4" />
-              <span>Community Center</span>
-            </a>
-            
-            <a
-                href="/admin/database"
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-              >
-                <Database className="h-4 w-4" />
-                <span>Database</span>
-              </a>
-              <a
-                href="/admin/upload"
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-              >
-                <Upload className="h-4 w-4" />
-                <span>Upload</span>
-              </a>
+            {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder") && (
+              <>
+                <a
+                  href="/admin/communities"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+                >
+                  <Tent className="h-4 w-4" />
+                  <span>Community Center</span>
+                </a>
+                
+                <a
+                  href="/admin/database"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+                >
+                  <Database className="h-4 w-4" />
+                  <span>Database</span>
+                </a>
+                <a
+                  href="/admin/upload"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Upload</span>
+                </a>
+              </>
+            )}
           </div>
         )}
 

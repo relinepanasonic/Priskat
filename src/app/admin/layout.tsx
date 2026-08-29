@@ -22,7 +22,20 @@ export default async function AdminLayout({
 
   const profile = data as Profile | null;
 
-  if (!profile || !["founder", "superadmin", "admin", "moderator"].includes(String(profile.role).toLowerCase())) {
+  const isGlobalAdmin = profile && ["founder", "superadmin", "admin", "moderator"].includes(String(profile.role).toLowerCase());
+  
+  let isCommunityAdmin = false;
+  if (!isGlobalAdmin && user) {
+    const { data: commAdmin } = await supabase
+      .from("community_admins")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    if (commAdmin) isCommunityAdmin = true;
+  }
+
+  if (!isGlobalAdmin && !isCommunityAdmin) {
     redirect("/");
   }
 

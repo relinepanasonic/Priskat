@@ -14,13 +14,27 @@ export default async function AdminMembersPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const { data: callerProfile } = await supabase.from("profiles").select("role").eq("id", user?.id ?? "").single();
   const callerRole = (callerProfile?.role ?? "admin") as UserRole;
+  const isGlobalAdmin = ["founder", "superadmin", "admin", "moderator"].includes(callerRole);
 
   const { data: communities } = await supabase.from("communities").select("id, name").order("name");
 
-  const { data } = await supabase
+  let query = supabase
     .from("profiles")
     .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities(id, name, slug)")
     .order("created_at", { ascending: false });
+
+  if (!isGlobalAdmin && user) {
+    const { data: myAdminRoles } = await supabase.from("community_admins").select("community_id").eq("user_id", user.id);
+    const myCommunityIds = myAdminRoles?.map(r => r.community_id) || [];
+    if (myCommunityIds.length > 0) {
+      query = query.in("community_id", myCommunityIds);
+    } else {
+      // should not happen due to layout protection, but just in case
+      query = query.eq("id", "00000000-0000-0000-0000-000000000000"); 
+    }
+  }
+
+  const { data } = await query;
 
   const members = data as (Pick<Profile, "id" | "username" | "full_name" | "avatar_url" | "role" | "gender" | "completed_modules" | "created_at" | "camp_history" | "community_id"> & { community?: { id: string; name: string; slug: string } | null })[] | null;
 
