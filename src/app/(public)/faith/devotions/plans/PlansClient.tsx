@@ -125,7 +125,7 @@ export default function PlansClient({
                 
                 {/* BookShelf Container */}
                 <div className="relative">
-                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-2 px-2 snap-x z-10 relative">
+                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-8 px-2 snap-x z-10 relative">
                     {catPlans.map(plan => {
                       const title = language === "id" && plan.title_id ? plan.title_id : plan.title;
                       return (
@@ -167,7 +167,7 @@ export default function PlansClient({
                   </div>
                   
                   {/* The Physical Shelf Line */}
-                  <div className="absolute bottom-5 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#444] z-0"></div>
+                  <div className="absolute bottom-4 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#555] z-20 pointer-events-none"></div>
                 </div>
               </div>
             );
@@ -181,7 +181,7 @@ export default function PlansClient({
               <p className="text-brand-muted text-sm py-8">No active devotions.</p>
             ) : (
               <div className="relative">
-                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-2 px-2 snap-x z-10 relative">
+                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-8 px-2 snap-x z-10 relative">
                   {userProgress.filter(p => !p.is_finished).map(prog => {
                     const title = language === "id" && prog.plans?.title_id ? prog.plans.title_id : prog.plans?.title;
                     return (
@@ -218,7 +218,7 @@ export default function PlansClient({
                     )
                   })}
                   </div>
-                  <div className="absolute bottom-5 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#444] z-0"></div>
+                  <div className="absolute bottom-4 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#555] z-20 pointer-events-none"></div>
               </div>
             )}
           </div>
@@ -231,7 +231,7 @@ export default function PlansClient({
               <p className="text-brand-muted text-sm py-8">No finished devotions yet.</p>
             ) : (
               <div className="relative">
-                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-2 px-2 snap-x z-10 relative">
+                  <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 pt-8 px-2 snap-x z-10 relative">
                   {userProgress.filter(p => p.is_finished).map(prog => {
                     const title = language === "id" && prog.plans?.title_id ? prog.plans.title_id : prog.plans?.title;
                     return (
@@ -266,7 +266,7 @@ export default function PlansClient({
                     )
                   })}
                   </div>
-                  <div className="absolute bottom-5 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#444] z-0"></div>
+                  <div className="absolute bottom-4 left-0 right-0 h-4 bg-gradient-to-b from-[#3a3d45] to-[#1a1d24] shadow-[0_5px_15px_rgba(0,0,0,0.6)] rounded-sm border-t border-[#555] z-20 pointer-events-none"></div>
               </div>
             )}
           </div>
