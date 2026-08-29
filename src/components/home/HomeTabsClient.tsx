@@ -84,9 +84,16 @@ export default function HomeTabsClient({
         </div>
 
         <div className="absolute bottom-[100px] left-6 text-white max-w-[65%] z-10">
-          <h1 className="text-3xl font-bold leading-tight drop-shadow-md">{profile.full_name}</h1>
-          <p className="text-sm text-brand-light mt-1 font-medium drop-shadow-md">Ruang Iman – {city}</p>
-          <p className="text-xs text-brand-muted drop-shadow-md">Angkatan {angkatan}</p>
+          <h1 className="text-3xl font-bold leading-tight drop-shadow-md">{profile.nama_panggilan || profile.full_name}</h1>
+          <p className="text-sm text-brand-light mt-1 font-medium drop-shadow-md flex items-center gap-1.5">
+            <Tent className="w-4 h-4" />
+            {profile.community?.name || "Ruang Iman"}
+          </p>
+          {profile.favorite_verse && (
+            <p className="text-xs text-brand-gold mt-1 italic drop-shadow-md">
+              "{profile.favorite_verse}"
+            </p>
+          )}
         </div>
 
         <div className="absolute bottom-4 left-0 right-0 px-4 z-20">

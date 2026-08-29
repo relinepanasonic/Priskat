@@ -26,7 +26,7 @@ export default async function FriendsPage() {
   // Get my friendships
   const { data: friendships } = await supabase
     .from("friendships")
-    .select("id, requester_id, receiver_id, status, profiles!friendships_receiver_id_fkey(id, full_name, avatar_url, angkatan, kota, interests, skills, services_history, camp_history)")
+    .select("id, requester_id, receiver_id, status, receiver:profiles!friendships_receiver_id_fkey(id, full_name, avatar_url, angkatan, kota, interests, skills, services_history, camp_history), requester:profiles!friendships_requester_id_fkey(id, full_name, avatar_url, angkatan, kota, interests, skills, services_history, camp_history)")
     .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
     .eq("status", "accepted");
 
@@ -58,7 +58,7 @@ export default async function FriendsPage() {
     .not("id", "in", `(${Array.from(friendIds).join(",")})`)
     .limit(100);
 
-  // Score each user
+  // Score each user for the 'Browsing' / 'Recommendations' tab
   const scored = (allUsers || []).map((u: any) => {
     let score = 0;
     const badges: string[] = [];
@@ -80,27 +80,67 @@ export default async function FriendsPage() {
     // shared interests
     const myInterests = (myProfile?.interests as string[] || []);
     const theirInterests = (u.interests as string[] || []);
-    const sharedInterests = myInterests.filter((i: string) => theirInterests.includes(i));
+    const sharedInterests = myInterests.filter((s: string) => theirInterests.includes(s));
     score += sharedInterests.length;
     if (sharedInterests.length > 0) badges.push(`${sharedInterests.length} common interest(s)`);
 
-    return { ...u, score, badges, isPending: pendingOutIds.has(u.id) };
-  }).sort((a: any, b: any) => b.score - a.score).slice(0, 30);
+    return { ...u, score, badges };
+  });
+
+  scored.sort((a: any, b: any) => b.score - a.score);
+
+  // Filter out any recommendations that are already pending incoming or outgoing
+  const incomingIds = new Set((pendingIncoming || []).map((p: any) => p.requester_id));
+  const cleanRecommendations = scored.filter((u: any) => !incomingIds.has(u.id) && !pendingOutIds.has(u.id));
+
+  // Get Mutual Friends
+  const { data: mutualsData } = await supabase.rpc("get_mutual_friends", { p_user_id: user.id });
+  let formattedMutuals: any[] = [];
+  
+  if (mutualsData && mutualsData.length > 0) {
+    const mutualIds = mutualsData.map((m: any) => m.mutual_user_id);
+    
+    // Fetch profiles for these mutual friends
+    const { data: mutualProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, angkatan, kota")
+      .in("id", mutualIds);
+      
+    if (mutualProfiles) {
+      // Filter out people who already sent us a request or we sent a request to
+      const cleanMutualProfiles = mutualProfiles.filter((m: any) => !incomingIds.has(m.id) && !pendingOutIds.has(m.id));
+      
+      formattedMutuals = cleanMutualProfiles.map((m: any) => {
+        const count = mutualsData.find((md: any) => md.mutual_user_id === m.id)?.mutual_count || 0;
+        return {
+          ...m,
+          mutual_count: count,
+          badges: [`${count} Mutual Friend${count > 1 ? 's' : ''}`]
+        };
+      }).sort((a: any, b: any) => b.mutual_count - a.mutual_count);
+    }
+  }
 
   // Format accepted friends
-  const acceptedFriends = (friendships || []).map((f: any) => {
-    const friend = f.requester_id === user.id
-      ? f.profiles  // receiver is the friend
-      : f.profiles;
+  const formattedFriends = (friendships || []).map((f: any) => {
+    const friend = f.requester_id === user.id ? f.receiver : f.requester;
     return { ...friend, friendshipId: f.id };
   });
+
+  // Format pending incoming
+  const formattedPending = (pendingIncoming || []).map((p: any) => ({ 
+    ...p.profiles, 
+    friendshipId: p.id, 
+    requesterId: p.requester_id 
+  }));
 
   return (
     <FriendsClient
       userId={user.id}
-      friends={acceptedFriends}
-      pendingIncoming={(pendingIncoming || []).map((p: any) => ({ ...p.profiles, friendshipId: p.id, requesterId: p.requester_id }))}
-      recommendations={scored}
+      friends={formattedFriends}
+      pendingIncoming={formattedPending}
+      recommendations={cleanRecommendations}
+      mutuals={formattedMutuals}
     />
   );
 }

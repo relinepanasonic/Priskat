@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import HomeTabsClient from "@/components/home/HomeTabsClient";
 
@@ -15,7 +15,7 @@ export default async function HomePage() {
   // Fetch current user profile with complete details for the Profile tab
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("*, community:communities(name)")
     .eq("id", user.id)
     .single();
 
