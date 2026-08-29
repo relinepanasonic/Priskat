@@ -38,6 +38,7 @@ export interface Profile {
   relationship_status?: string | null;
   partner_id?: string | null;
   favorite_verse?: string | null;
+  birthdate?: string | null;
 }
 
 export interface DevotionCategory {

@@ -19,6 +19,7 @@ const schema = z.object({
   relationship_status: z.string().optional(),
   partner_id: z.string().optional(),
   favorite_verse: z.string().optional(),
+  birthdate: z.string().optional(),
   phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08").optional().or(z.literal("")),
   bio: z.string().max(300).optional(),
   skills: z.string().optional(),
@@ -50,6 +51,7 @@ export default function ProfileEditForm({ profile }: Props) {
       relationship_status: profile.relationship_status ?? "Single",
       partner_id: profile.partner_id ?? "",
       favorite_verse: profile.favorite_verse ?? "",
+      birthdate: profile.birthdate ?? "",
       phone: profile.phone ?? "",
       bio: profile.bio ?? "",
       skills: profile.skills?.join(", ") ?? "",
@@ -109,6 +111,7 @@ export default function ProfileEditForm({ profile }: Props) {
         relationship_status: data.relationship_status,
         partner_id: (data.relationship_status === "Couple" || data.relationship_status === "Marriage") ? (data.partner_id || null) : null,
         favorite_verse: data.favorite_verse,
+        birthdate: data.birthdate || null,
         phone: data.phone ?? "",
         bio: data.bio ?? "",
         skills: skillsArr,
@@ -203,6 +206,11 @@ export default function ProfileEditForm({ profile }: Props) {
       <div>
         <label className="mb-1 block text-sm font-medium text-brand-light">Favourite Verse (Ayat Favorit)</label>
         <input {...register("favorite_verse")} placeholder="e.g. Yohanes 3:16" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-brand-light">Birthdate</label>
+        <input type="date" {...register("birthdate")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none bg-[#1a1d24] text-white [color-scheme:dark]" />
       </div>
 
       <div>
