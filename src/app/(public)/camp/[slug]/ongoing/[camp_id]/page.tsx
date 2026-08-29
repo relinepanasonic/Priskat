@@ -5,9 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, CheckSquare, Calendar, MessageSquare, Plus, Download, Send, Users, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-export default function ProductivityDashboard({ params }: { params: Promise<{ camp_id: string }> }) {
+export default function ProductivityDashboard({ params }: { params: Promise<{ slug: string; camp_id: string }> }) {
   const unwrappedParams = use(params);
   const camp_id = unwrappedParams.camp_id;
+  const slug = unwrappedParams.slug;
 
   const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew">("crew");
   const [camp, setCamp] = useState<any>(null);
@@ -193,8 +194,8 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ ca
   };
 
   const generateICS = (meeting: any) => {
-    const dtStart = new Date(meeting.date_time).toISOString().replace(/-|:|\.\\d+/g, "");
-    const dtEnd = new Date(new Date(meeting.date_time).getTime() + 60 * 60 * 1000).toISOString().replace(/-|:|\.\\d+/g, "");
+    const dtStart = new Date(meeting.date_time).toISOString().replace(/-|:|\.\d+/g, "");
+    const dtEnd = new Date(new Date(meeting.date_time).getTime() + 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, "");
     
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -237,7 +238,7 @@ END:VCALENDAR`;
   return (
     <div className="flex flex-col h-full bg-[#111]">
       <div className="p-6 border-b border-[#333] bg-[#1a1d24]">
-        <Link href="/camp/ongoing" className="inline-flex items-center gap-2 text-brand-muted hover:text-brand-gold text-sm font-semibold mb-4 transition-colors">
+        <Link href={`/camp/${slug}/ongoing`} className="inline-flex items-center gap-2 text-brand-muted hover:text-brand-gold text-sm font-semibold mb-4 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to My Camps
         </Link>
         <h1 className="text-2xl font-bold text-white mb-2">{camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name} {camp.camp_name !== "Other Event" && <span className="text-brand-gold">Angkatan {camp.angkatan}</span>}</h1>

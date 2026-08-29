@@ -5,7 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Tent, Calendar, Users, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-export default function MyOngoingCampPage() {
+import { use } from "react";
+
+export default function MyOngoingCampPage({ params }: { params: Promise<{ slug: string }> }) {
+  const unwrappedParams = use(params);
+  const slug = unwrappedParams.slug;
   const [camps, setCamps] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,7 +72,7 @@ export default function MyOngoingCampPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {camps.map((camp) => (
-          <Link href={`/camp/ongoing/${camp.id}`} key={camp.id}>
+          <Link href={`/camp/${slug}/ongoing/${camp.id}`} key={camp.id}>
             <div className="bg-[#111] border border-[#333] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#15181e] group h-full flex flex-col cursor-pointer shadow-lg hover:shadow-brand-gold/10">
               
               <div className="flex justify-between items-start mb-4">
