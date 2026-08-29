@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -12,14 +12,25 @@ export async function adminUpdateMember(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["superadmin", "admin", "moderator"].includes(profile.role)) {
+  const { data: callerProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!callerProfile || !["founder", "superadmin", "admin", "moderator"].includes(callerProfile.role)) {
     return { error: "Forbidden" };
   }
 
   const role = formData.get("role") as string;
   const gender = formData.get("gender") as string;
   const modules = formData.getAll("modules") as string[];
+
+  // Only founder can assign superadmin role
+  if (role === "superadmin" && callerProfile.role !== "founder") {
+    return { error: "Only the Founder can assign the Superadmin role." };
+  }
+
+  // Nobody can change a founder's role
+  const { data: targetProfile } = await supabase.from("profiles").select("role").eq("id", memberId).single();
+  if (targetProfile?.role === "founder") {
+    return { error: "The Founder's role cannot be changed." };
+  }
 
   const { error } = await supabase
     .from("profiles")
@@ -41,9 +52,18 @@ export async function adminDeleteMember(memberId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["superadmin", "admin"].includes(profile.role)) {
+  const { data: callerProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!callerProfile || !["founder", "superadmin", "admin"].includes(callerProfile.role)) {
     return { error: "Forbidden" };
+  }
+
+  // Check the target's role — only founder can delete superadmin or founder accounts
+  const { data: targetProfile } = await supabase.from("profiles").select("role").eq("id", memberId).single();
+  if (targetProfile?.role === "founder") {
+    return { error: "The Founder account cannot be deleted." };
+  }
+  if (targetProfile?.role === "superadmin" && callerProfile.role !== "founder") {
+    return { error: "Only the Founder can delete a Superadmin account." };
   }
 
   // To truly delete the user, we need the Service Role Key.
@@ -64,3 +84,4 @@ export async function adminDeleteMember(memberId: string) {
   revalidatePath("/admin/members");
   return { success: true };
 }
+

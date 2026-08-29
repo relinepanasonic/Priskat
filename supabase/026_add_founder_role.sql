@@ -69,3 +69,4 @@ BEGIN
     WHERE id = target_user_id;
   END IF;
 END $$;
+

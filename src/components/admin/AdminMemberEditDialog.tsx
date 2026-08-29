@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
@@ -15,9 +15,10 @@ interface Props {
     gender: UserGender | null;
     completed_modules: string[];
   };
+  callerRole: UserRole;
 }
 
-export default function AdminMemberEditDialog({ member }: Props) {
+export default function AdminMemberEditDialog({ member, callerRole }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -60,8 +61,9 @@ export default function AdminMemberEditDialog({ member }: Props) {
           <div>
             <label className="block text-sm font-medium text-brand-light mb-1">Role</label>
             <select name="role" defaultValue={member.role} className="w-full input-3d text-sm">
-              <option value="superadmin">Superadmin</option>
+              {callerRole === "founder" && <option value="superadmin">Superadmin</option>}
               <option value="admin">Admin</option>
+              <option value="moderator">Moderator</option>
               <option value="member">Member</option>
             </select>
           </div>

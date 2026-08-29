@@ -10,6 +10,11 @@ import type { UserRole, Profile, UserGender } from "@/lib/types/database.types";
 export default async function AdminMembersPage() {
   const supabase = await createClient();
 
+  // Get caller's own role
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: callerProfile } = await supabase.from("profiles").select("role").eq("id", user?.id ?? "").single();
+  const callerRole = (callerProfile?.role ?? "admin") as UserRole;
+
   const { data } = await supabase
     .from("profiles")
     .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history")
@@ -19,7 +24,6 @@ export default async function AdminMembersPage() {
 
   const roleVariant = (role: UserRole) =>
     (role === "founder" || role === "superadmin") ? "gold" : role === "admin" ? "gold" : role === "moderator" ? "blue" : "gray";
-
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -69,7 +73,7 @@ export default async function AdminMembersPage() {
                   <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
                 </td>
                 <td className="px-4 py-3 flex justify-end items-center gap-2">
-                  <AdminMemberEditDialog member={member} />
+                  <AdminMemberEditDialog member={member} callerRole={callerRole} />
                   <AdminMemberDeleteButton memberId={member.id} memberName={member.full_name || member.username || "User"} />
                 </td>
               </tr>
