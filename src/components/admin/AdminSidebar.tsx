@@ -12,6 +12,7 @@ import {
   BookOpen,
   HandHeart,
   Database,
+  Network
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,7 @@ const NAV = [
   { href: "/admin/members", label: "Members", icon: Users, adminOnly: true },
   { href: "/admin/devotions", label: "Devotions", icon: BookOpen },
   { href: "/admin/prayers", label: "Prayers / Doa", icon: HandHeart },
+  { href: "/admin/communities", label: "Community Center", icon: Network, superAdminOnly: true },
   { href: "/admin/database", label: "Database", icon: Database, superAdminOnly: true },
   { href: "/admin/invite", label: "Invite Users", icon: HandHeart, superAdminOnly: true },
 ];
