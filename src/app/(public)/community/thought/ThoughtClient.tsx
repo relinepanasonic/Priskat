@@ -59,7 +59,7 @@ function CommentSection({ postId, userId, initialCount }: { postId: string; user
     startSubmit(async () => {
       await supabase.from("community_post_comments").insert({ post_id: postId, author_id: userId, content: input.trim() });
       // Increment cached count
-      await supabase.rpc("increment_comments_count", { post_id: postId }).catch(() => {});
+      await supabase.rpc("increment_comments_count", { post_id: postId });
       setInput("");
       await loadComments();
     });
