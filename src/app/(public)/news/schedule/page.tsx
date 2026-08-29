@@ -20,7 +20,7 @@ export default function ChurchSchedulePage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const { data } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
-    if (data?.role?.toLowerCase() === "superadmin") {
+    if (data?.role?.toLowerCase() === "superadmin" || data?.role?.toLowerCase() === "founder") {
       setIsAdmin(true);
     }
   };

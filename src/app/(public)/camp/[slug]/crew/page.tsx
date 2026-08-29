@@ -24,7 +24,7 @@ export default function CampCrewPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-      if (profile && (profile.role === "superadmin" || profile.role === "admin")) {
+      if (profile && (profile.role === "founder" || profile.role === "superadmin" || profile.role === "admin")) {
         setIsSuperadmin(true);
       }
     }

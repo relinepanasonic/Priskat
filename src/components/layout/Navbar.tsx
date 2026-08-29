@@ -89,7 +89,7 @@ export default function Navbar({ profile, lang = "id" }: NavbarProps) {
         </nav>
 
         {/* Superadmin Invite & Database Buttons */}
-        {String(profile?.role).toLowerCase() === "superadmin" && (
+        {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder") && (
           <div className="mt-3 space-y-1">
             <a
               href="/admin/members"
