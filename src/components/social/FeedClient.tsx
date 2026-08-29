@@ -40,7 +40,7 @@ function BiblePickerModal({ onInsert, onClose, lang = "id" }: { onInsert: (text:
     setBook(b);
     const bookId = BOOK_ID[b];
     setLoading(true);
-    const res = await fetch(`/api/bible/${bookId}/1`);
+    const res = await fetch(`/api/bible/${bookId}/1?lang=${lang}`);
     const data = await res.json();
     setChapters(Array.from({length: 50}, (_,i) => i+1));
     setLoading(false);
@@ -51,7 +51,7 @@ function BiblePickerModal({ onInsert, onClose, lang = "id" }: { onInsert: (text:
     setChapter(ch);
     const bookId = BOOK_ID[book];
     setLoading(true);
-    const res = await fetch(`/api/bible/${bookId}/${ch}`);
+    const res = await fetch(`/api/bible/${bookId}/${ch}?lang=${lang}`);
     const data = await res.json();
     setVerses((data || []).map((v: any) => ({ verse: v.verse, text: v.text || v.content || "" })));
     setLoading(false);
