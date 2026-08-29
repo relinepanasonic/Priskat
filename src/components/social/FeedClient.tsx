@@ -68,9 +68,9 @@ function BiblePickerModal({ onInsert, onClose }: { onInsert: (text: string) => v
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-lg bg-[#111] border border-[#333] rounded-t-3xl overflow-hidden" style={{maxHeight:"80vh"}} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] border border-[#333] rounded-t-3xl flex flex-col" style={{maxHeight:"85dvh"}} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#222]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#222] flex-shrink-0">
           <button onClick={step === "book" ? onClose : () => setStep(step === "chapter" ? "book" : "chapter")} className="flex items-center gap-1 text-brand-muted hover:text-white text-sm">
             {step !== "book" && <ChevronLeft className="h-4 w-4" />}
             {step === "book" ? "Cancel" : step === "chapter" ? book : `${book} ${chapter}`}
@@ -81,7 +81,7 @@ function BiblePickerModal({ onInsert, onClose }: { onInsert: (text: string) => v
           <button onClick={onClose} className="text-brand-muted hover:text-white"><X className="h-4 w-4" /></button>
         </div>
 
-        <div className="overflow-y-auto" style={{maxHeight:"calc(80vh - 56px)"}}>
+        <div className="overflow-y-auto flex-1 pb-safe" style={{WebkitOverflowScrolling:"touch"} as React.CSSProperties}>
           {loading && <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 text-brand-gold animate-spin" /></div>}
 
           {/* Book Step */}
@@ -158,21 +158,24 @@ function PrayerPickerModal({ onInsert, onClose }: { onInsert: (text: string) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-lg bg-[#111] border border-[#333] rounded-t-3xl overflow-hidden" style={{maxHeight:"80vh"}} onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#222]">
+      <div className="w-full max-w-lg bg-[#111] border border-[#333] rounded-t-3xl flex flex-col" style={{maxHeight:"85dvh"}} onClick={e => e.stopPropagation()}>
+        {/* Fixed header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#222] flex-shrink-0">
           <button onClick={onClose} className="text-brand-muted hover:text-white text-sm">Cancel</button>
           <h2 className="font-bold text-white text-sm">Choose a Prayer</h2>
           <button onClick={onClose} className="text-brand-muted hover:text-white"><X className="h-4 w-4" /></button>
         </div>
-        <div className="overflow-y-auto" style={{maxHeight:"calc(80vh - 56px)"}}>
-          <div className="p-4">
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search prayer..."
-              className="w-full bg-[#1a1d24] border border-[#333] rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold mb-3"
-            />
-          </div>
+        {/* Fixed search bar */}
+        <div className="px-4 pt-3 pb-2 flex-shrink-0 border-b border-[#1a1d24]">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search prayer..."
+            className="w-full bg-[#1a1d24] border border-[#333] rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold"
+          />
+        </div>
+        {/* Scrollable list */}
+        <div className="overflow-y-auto flex-1 pb-8" style={{WebkitOverflowScrolling:"touch"} as React.CSSProperties}>
           {loading && <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 text-brand-gold animate-spin" /></div>}
           <div className="divide-y divide-[#222]">
             {filtered.map(p => (
