@@ -43,8 +43,13 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     {/* Mobile Top Header (Settings & Lang) */}
     <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
-        <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
-        <span className="font-bold text-brand-gold text-xs truncate">Ruang Iman</span>
+        <Image src={profile?.community?.logo_url || "/logo.png"} alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
+        <div className="flex flex-col">
+          <span className="font-bold text-brand-gold text-xs truncate max-w-[150px]">{profile?.community?.name || "Ruang Iman"}</span>
+          {profile?.community?.name && (
+            <span className="text-[9px] text-gray-400 leading-none mt-0.5">by Ruang Iman</span>
+          )}
+        </div>
       </Link>
       <div className="flex items-center gap-3">
         <LanguageToggle currentLang={lang} />
@@ -58,8 +63,13 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
       <div className="flex flex-col h-full px-3 py-5">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 mb-8 px-2">
-          <Image src="/logo.png" alt="Logo" width={36} height={36} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
-          <span className="font-bold text-white text-[15px] leading-tight tracking-wide">Ruang Iman</span>
+          <Image src={profile?.community?.logo_url || "/logo.png"} alt="Logo" width={36} height={36} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
+          <div className="flex flex-col">
+            <span className="font-bold text-white text-[15px] leading-tight tracking-wide truncate max-w-[140px]">{profile?.community?.name || "Ruang Iman"}</span>
+            {profile?.community?.name && (
+              <span className="text-[10px] text-gray-400 leading-none mt-0.5">by Ruang Iman</span>
+            )}
+          </div>
         </Link>
 
         {/* Desktop nav */}

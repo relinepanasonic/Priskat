@@ -32,7 +32,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   community_id?: string | null;
-  community?: { id: string; name: string; slug: string } | null;
+  community?: { id: string; name: string; slug: string; logo_url?: string | null } | null;
 }
 
 export interface DevotionCategory {

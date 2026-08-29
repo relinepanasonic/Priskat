@@ -18,6 +18,7 @@ const schema = z
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirm_password: z.string(),
+    community_id: z.string().min(1, "Please select a community"),
     camp: z.string().min(1, "Please select a camp"),
     angkatan: z.string().min(1, "Cohort (Angkatan) is required"),
     branch: z.string().min(1, "Branch is required"),
@@ -45,6 +46,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [branches, setBranches] = useState<string[]>([]);
+  const [communities, setCommunities] = useState<{id: string, name: string}[]>([]);
   const supabase = createClient();
 
   const {
@@ -61,11 +63,14 @@ export default function RegisterPage() {
 
   // Extract invite data if present
   useEffect(() => {
-    async function fetchBranches() {
-      const { data } = await supabase.from("branches").select("branch");
-      if (data) setBranches(Array.from(new Set(data.map(d => d.branch || d.kota).filter(Boolean))).sort());
+    async function fetchData() {
+      const { data: bData } = await supabase.from("branches").select("branch");
+      if (bData) setBranches(Array.from(new Set(bData.map(d => d.branch || d.kota).filter(Boolean))).sort());
+
+      const { data: cData } = await supabase.from("communities").select("id, name").order("name");
+      if (cData) setCommunities(cData);
     }
-    fetchBranches();
+    fetchData();
     
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
@@ -87,6 +92,7 @@ export default function RegisterPage() {
           full_name: data.full_name,
           username: data.username,
           phone: data.phone,
+          community_id: data.community_id,
           completed_modules: [data.camp],
           camp_history: campHistory,
           role: data.role || "member",
@@ -182,13 +188,30 @@ export default function RegisterPage() {
                 />
                 {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
               </div>
-            </div>
-            
-            {/* Alumni Information */}
-            <div className="mt-4 pt-4 border-t border-brand-border/50">
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Alumni Details</label>
+              </div>
+
+              {/* Community Information */}
+              <div className="mt-4 pt-4 border-t border-brand-border/50">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Community Details</label>
+                <div>
+                  <select
+                    {...register("community_id")}
+                    className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
+                  >
+                    <option value="">Select Main Community...</option>
+                    {communities.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  {errors.community_id && <p className="text-[10px] text-red-500 mt-1">{errors.community_id.message}</p>}
+                </div>
+              </div>
               
-              <div className="space-y-3">
+              {/* Alumni Information */}
+              <div className="mt-4 pt-4 border-t border-brand-border/50">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">CFM Community (Formerly Alumni)</label>
+                
+                <div className="space-y-3">
                 <div>
                   <select
                     {...register("camp")}

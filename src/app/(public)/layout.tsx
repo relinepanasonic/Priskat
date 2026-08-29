@@ -19,7 +19,7 @@ export default async function PublicLayout({
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, community:communities(*)")
       .eq("id", user.id)
       .single();
     profile = data;

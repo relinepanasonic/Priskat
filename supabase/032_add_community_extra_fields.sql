@@ -37,3 +37,4 @@ USING (
   bucket_id = 'communities' 
   AND auth.role() = 'authenticated'
 );
+
