@@ -69,7 +69,11 @@ export default function ImportDevotionsPage() {
           .insert({
             category_id: subCat!.id,
             title: plan.title,
-            description: plan.description,
+            title_id: plan.title_id,
+            subtitle: plan.subtitle,
+            subtitle_id: plan.subtitle_id,
+            summary: plan.summary,
+            summary_id: plan.summary_id,
             duration_days: plan.duration_days
           })
           .select("id")
@@ -84,8 +88,14 @@ export default function ImportDevotionsPage() {
             .insert({
               plan_id: pData.id,
               day_number: day.day_number,
-              devotional_title: day.title,
-              devotional_content: day.content
+              devotional_title: day.devotional_title,
+              devotional_title_id: day.devotional_title_id,
+              devotional_content: day.devotional_content,
+              devotional_content_id: day.devotional_content_id,
+              reflection: day.reflection,
+              reflection_id: day.reflection_id,
+              prayer: day.prayer,
+              prayer_id: day.prayer_id
             })
             .select("id")
             .single();

@@ -1,0 +1,21 @@
+<USER_REQUEST>
+i try to make all the 26 devotional to 1 csv like this, can you read it and make it works become 26 books? or i need to upload one by one? 
+
+make it can happen, so i can inject the devotional in 1 csv 
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-29T12:14:21+07:00.
+
+The user's current state is as follows:
+Active Document: c:\000. Cloude AI\PriskatCFM\supabase\024_fix_duplicate_love_category.sql (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 1
+Other open documents:
+- c:\000. Cloude AI\PriskatCFM\supabase\023_devotion_category_hierarchy.sql (LANGUAGE_UNSPECIFIED)
+- c:\000. Cloude AI\PriskatCFM\src\components\faith\BookListClient.tsx (LANGUAGE_UNSPECIFIED)
+- c:\000. Cloude AI\PriskatCFM\src\components\faith\BookReader.tsx (LANGUAGE_UNSPECIFIED)
+- c:\000. Cloude AI\PriskatCFM\src\components\home\HomeTabsClient.tsx (LANGUAGE_UNSPECIFIED)
+- c:\000. Cloude AI\PriskatCFM\src\app\(public)\faith\devotions\plans\page.tsx (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Claude Sonnet 4.6 (Thinking) to Gemini 3.1 Pro (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

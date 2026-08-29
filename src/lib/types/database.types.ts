@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "member" | "moderator" | "admin" | "superadmin";
+export type UserRole = "member" | "moderator" | "admin" | "superadmin" | "founder";
 export type UserGender = "male" | "female";
 export type PostStatus = "draft" | "scheduled" | "published";
 export type EventStatus = "draft" | "published" | "cancelled";

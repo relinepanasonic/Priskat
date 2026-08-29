@@ -32,7 +32,7 @@ export default function MemberCard({ member }: Props) {
       <p className="text-xs text-brand-muted mb-2">@{member.username}</p>
 
       {member.role !== "member" && (
-        <Badge variant={member.role === "admin" ? "gold" : "blue"} className="mb-2">
+        <Badge variant={(member.role === "admin" || member.role === "superadmin" || member.role === "founder") ? "gold" : "blue"} className="mb-2">
           {member.role}
         </Badge>
       )}

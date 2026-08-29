@@ -51,3 +51,4 @@ export default function NewsLayoutClient({ children }: { children: React.ReactNo
     </div>
   );
 }
+

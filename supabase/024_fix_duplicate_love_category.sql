@@ -44,3 +44,4 @@ BEGIN
     DELETE FROM public.devotion_categories WHERE id = v_old_love_id;
   END IF;
 END $$;
+

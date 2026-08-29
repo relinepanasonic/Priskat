@@ -18,7 +18,7 @@ export default async function AdminMembersPage() {
   const members = data as Pick<Profile, "id" | "username" | "full_name" | "avatar_url" | "role" | "gender" | "completed_modules" | "created_at" | "camp_history">[] | null;
 
   const roleVariant = (role: UserRole) =>
-    role === "admin" ? "gold" : role === "moderator" ? "blue" : "gray";
+    (role === "founder" || role === "superadmin") ? "gold" : role === "admin" ? "gold" : role === "moderator" ? "blue" : "gray";
 
   return (
     <div>

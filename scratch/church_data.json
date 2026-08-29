@@ -1,0 +1,2276 @@
+{
+  "data": [
+    {
+      "id": 16,
+      "image": {
+        "file": "gereja-hati-kudus-paroki-kramat-2023_08_18_07_14.webp",
+        "size": {
+          "width": 374,
+          "height": 231
+        }
+      },
+      "name": "Gereja Hati Kudus - Paroki Kramat",
+      "address": "Jl. Kramat Raya No.134, RT.1/RW.9, Kramat, Kec. Senen, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10430",
+      "maps_url": "https://goo.gl/maps/5bsEQWcNehsS9SrX6",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Harian (Senin, Rabu, Kamis, Jumat)",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "13:00"
+            },
+            {
+              "start": "16:00"
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Novena St Antonius Padua (Selasa)",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "09:00"
+            }
+          ],
+          "title": "Jalan Salib (Jumat Agung)",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            },
+            {
+              "start": "20:00"
+            }
+          ],
+          "title": "Kamis Putih",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "15:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Jumat Agung",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            },
+            {
+              "start": "20:30"
+            }
+          ],
+          "title": "Sabtu Vigili",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00 "
+            },
+            {
+              "start": "09:00 "
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Hari Raya Kenaikan Yesus",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Gereja Hati Kudus - Paroki Kramat",
+      "seoDesc": "Jadwal Misa Gereja Hati Kudus - Paroki Kramat: Misa Harian (Senin, Rabu, Kamis, Jumat) - 18:00 WIB | Novena St Antonius Padua (Selasa) - 13:00 WIB | 16:00 WIB | 19:00 WIB | Misa Sabtu - 17:00 WIB | Misa Minggu - 07:00 WIB | 09:00 WIB | 17:00 WIB ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-hati-kudus-paroki-kramat",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [
+        {
+          "id": 16,
+          "userId": "clmdkp35g000blsy8ms5k17sv",
+          "churchId": 16,
+          "__typename": "ChurchUsersDetail"
+        },
+        {
+          "id": 99,
+          "userId": "cltxtz4r1000jiutuqot5shja",
+          "churchId": 16,
+          "__typename": "ChurchUsersDetail"
+        },
+        {
+          "id": 100,
+          "userId": "cltxugr09000liutu9c7g1vpe",
+          "churchId": 16,
+          "__typename": "ChurchUsersDetail"
+        }
+      ],
+      "__typename": "Church"
+    },
+    {
+      "id": 11,
+      "image": {
+        "file": "gereja-katedral-jakarta-2023_08_18_06_05.webp",
+        "size": {
+          "width": 374,
+          "height": 231
+        }
+      },
+      "name": "Gereja Katedral Jakarta - Santa Maria Diangkat ke Surga",
+      "address": "Jl. Katedral No.7B, Ps. Baru, Kecamatan Sawah Besar, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10710",
+      "maps_url": "https://goo.gl/maps/xPbEn3NZsWGp61Mq6",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Harian (Senin - Jumat)",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00"
+            }
+          ],
+          "title": "Misa Harian (Sabtu)",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00 "
+            },
+            {
+              "start": "12:00 "
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "16:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "08:30"
+            },
+            {
+              "start": "11:00"
+            },
+            {
+              "start": "16:30"
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "16:00"
+            }
+          ],
+          "title": "Pengakuan Dosa (Setiap Hari Jumat)",
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:30"
+            },
+            {
+              "start": "11:00"
+            },
+            {
+              "start": "16:30"
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Misa Hari Raya Kenaikan Yesus Kristus",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Ibadat Jalan Salib (Setiap Hari Jumat hingga tanggal 27 Maret 2026)",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "16:00"
+            },
+            {
+              "start": "18:30"
+            }
+          ],
+          "title": "Misa Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:30"
+            },
+            {
+              "start": "11:00"
+            },
+            {
+              "start": "16:30"
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Misa Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "16:30"
+            },
+            {
+              "start": "19:00"
+            },
+            {
+              "start": "21:00"
+            },
+            {
+              "start": "23:00 (Tuguran)"
+            }
+          ],
+          "title": "Misa Kamis Putih",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:30"
+            }
+          ],
+          "title": "Pementasan Jalan Salib Kreatif",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "12:00"
+            },
+            {
+              "start": "15:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Ibadat Jumat Agung",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            },
+            {
+              "start": "21:00"
+            }
+          ],
+          "title": "Misa Sabtu Suci",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:30 (Pontifikal)"
+            },
+            {
+              "start": "11:00 (Keluarga)"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Hari Raya Minggu Paskah",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja Katedral Jakarta",
+      "seoDesc": "Jadwal Misa Gereja Katedral Jakarta - Santa Maria Diangkat ke Surga:  ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-katedral-jakarta-santa-maria-diangkat-ke-surga",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [
+        {
+          "id": 18,
+          "userId": "clmeewng2000dlsy879lcstji",
+          "churchId": 11,
+          "__typename": "ChurchUsersDetail"
+        },
+        {
+          "id": 93,
+          "userId": "cltxtssdk0007iutuu898tnmm",
+          "churchId": 11,
+          "__typename": "ChurchUsersDetail"
+        },
+        {
+          "id": 327,
+          "userId": "clw4s6v9k0001sdnkrdrs66p8",
+          "churchId": 11,
+          "__typename": "ChurchUsersDetail"
+        }
+      ],
+      "__typename": "Church"
+    },
+    {
+      "id": 13,
+      "image": {
+        "file": "gereja-santa-theresia-menteng-2023_08_18_06_17.webp",
+        "size": {
+          "width": 374,
+          "height": 231
+        }
+      },
+      "name": "Gereja Santa Theresia - Menteng",
+      "address": "Jl. Gereja Theresia No.2, RT.8/RW.4, Gondangdia, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10350",
+      "maps_url": "https://goo.gl/maps/fkEdeRZ3dcb47gzG6",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Harian (Senin - Jumat)",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "12:00"
+            },
+            {
+              "start": "18:00"
+            },
+            {
+              "start": "English Mass by St Peter Canisius International Catholic Parish - 19:30"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "English Mass by St Peter Canisius International Catholic Parish - 15:30 "
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "08:00"
+            },
+            {
+              "start": "10:00"
+            },
+            {
+              "start": "English Mass by St Peter Canisius International Catholic Parish - 15:00"
+            },
+            {
+              "start": "17:00"
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "English Mass - 14:30 "
+            },
+            {
+              "start": "18:00  "
+            }
+          ],
+          "title": "Minggu Palma ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "06:00 "
+            },
+            {
+              "start": "08:00 "
+            },
+            {
+              "start": "10:00 "
+            },
+            {
+              "start": "English Mass - 14:00 "
+            },
+            {
+              "start": "17:00 "
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Minggu Palma ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "English Mass - 14:00 "
+            },
+            {
+              "start": "18:00 "
+            },
+            {
+              "start": "21:00 "
+            },
+            {
+              "start": "Tuguran - 22:45"
+            }
+          ],
+          "title": "Kamis Putih ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "English Mass - 11:00 "
+            },
+            {
+              "start": "15:00 "
+            },
+            {
+              "start": "18:30"
+            }
+          ],
+          "title": "Jumat Agung ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "English Mass - 14:00 "
+            },
+            {
+              "start": "18:00 "
+            },
+            {
+              "start": "21:00"
+            }
+          ],
+          "title": "Vigili Paskah ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:00 "
+            },
+            {
+              "start": "Misa Anak - 10:00 "
+            },
+            {
+              "start": "English Mass - 14:00 "
+            },
+            {
+              "start": "16:30 "
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Minggu Paskah",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "10:00"
+            }
+          ],
+          "title": "Misa Paskah Lansia",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja Santa Theresia - Menteng",
+      "seoDesc": "Jadwal Misa Gereja Santa Theresia - Menteng: Misa Harian (Senin - Jumat) - 07:00 WIB | 18:00 WIB | Misa Jumat Pertama - 07:00 WIB | 12:00 WIB | 18:00 WIB | English Mass by St Peter Canisius International Catholic Parish - 19:30 WIB | Misa Sabtu - 07:00 WIB | English Mass by St Peter Canisius International Catholic Parish - 15:30  WIB | 18:00 WIB | Misa Minggu - 06:00 WIB | 08:00 WIB | 10:00 WIB | English Mass by St Peter Canisius International Catholic Parish - 15:00 WIB | 17:00 WIB | 19:00 WIB ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-santa-theresia-menteng",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [
+        {
+          "id": 9,
+          "userId": "clm64yaw70001lsy0pkbwuwdy",
+          "churchId": 13,
+          "__typename": "ChurchUsersDetail"
+        },
+        {
+          "id": 96,
+          "userId": "cltxtvjfh000diutue03gvad4",
+          "churchId": 13,
+          "__typename": "ChurchUsersDetail"
+        }
+      ],
+      "__typename": "Church"
+    },
+    {
+      "id": 645,
+      "image": {
+        "file": "chapel-of-the-twelve-apostles-2026_06_23_20_21.webp",
+        "size": {
+          "width": 3740,
+          "height": 2310
+        }
+      },
+      "name": "Chapel of the Twelve Apostles",
+      "address": "Jl. Medan Merdeka Timur No.18 7, RT.7/RW.1, Kota Jakarta Pusat, DKI Jakarta",
+      "maps_url": "https://maps.app.goo.gl/xJzMz6pnHPyrHeNF8",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "10:00"
+            }
+          ],
+          "title": "Weekly Mass (Sunday)",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:15"
+            }
+          ],
+          "title": "Daily Mass (Monday - Saturday)",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Adoration of the Blessed Sacrament (Friday)",
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [],
+      "status": true,
+      "seoTitle": "Jadwal Misa Chapel of The Twelve Apostles",
+      "seoDesc": "Jadwal Misa Chapel of the Twelve Apostles: ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "chapel-of-the-twelve-apostles",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": null,
+      "regencyId": 135,
+      "regencyName": null,
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [
+        {
+          "id": 439,
+          "userId": "cmqqnz2sa0007tk40ornthqd3",
+          "churchId": 645,
+          "__typename": "ChurchUsersDetail"
+        }
+      ],
+      "__typename": "Church"
+    },
+    {
+      "id": 63,
+      "image": {
+        "file": "gereja-santo-ignatius-loyola-jalan-malang-2024_11_19_07_51.webp",
+        "size": {
+          "width": 680,
+          "height": 510
+        }
+      },
+      "name": "Gereja Santo Ignatius Loyola - Jalan Malang",
+      "address": "Jl. Latuharhary No.13 RT.8/RW.7, Menteng,  Kec. Menteng\n Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10310",
+      "maps_url": "https://maps.app.goo.gl/fkL54WYYvGgmDj839",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "06:00"
+            }
+          ],
+          "title": "Misa Harian",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "11:00"
+            }
+          ],
+          "title": "Misa Minggu ABK (Tiap Minggu ke 4)",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00 "
+            },
+            {
+              "start": "21:00 "
+            },
+            {
+              "start": "Tuguran I - 22:30 "
+            },
+            {
+              "start": "Tuguran II - 23:15"
+            }
+          ],
+          "title": "Misa Kamis Putih",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "12:00 "
+            },
+            {
+              "start": "15:00 "
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Jumat Agung",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00 "
+            },
+            {
+              "start": "21:00"
+            }
+          ],
+          "title": "Vigili Paskah",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00 "
+            },
+            {
+              "start": "09:00 "
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Paskah",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00 "
+            },
+            {
+              "start": "09:00 "
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Hari Raya Kenaikan Yesus",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja Santo Ignatius Loyola - Jalan Malang",
+      "seoDesc": "Jadwal Misa Gereja Santo Ignatius Loyola - Jalan Malang: Misa Harian - 06:00 WIB | Misa Jumat Pertama - 18:00 WIB | Misa Sabtu - 17:00 WIB | Misa Minggu - 07:00 WIB | 09:00 WIB | 17:00 WIB | Misa Minggu ABK (Tiap Minggu ke 4) - 11:00 WIB ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-santo-ignatius-loyola-jalan-malang",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [
+        {
+          "id": 408,
+          "userId": "cml9e9umj0001i5ppxstprviz",
+          "churchId": 63,
+          "__typename": "ChurchUsersDetail"
+        }
+      ],
+      "__typename": "Church"
+    },
+    {
+      "id": 64,
+      "image": {
+        "file": "gereja-santa-maria-bunda-perantara-cideng-2023_08_21_07_52.webp",
+        "size": {
+          "width": 2560,
+          "height": 1211
+        }
+      },
+      "name": "Gereja Santa Maria Bunda Perantara - Cideng",
+      "address": "Jl. Tanah Abang II No.105, RT.1/RW.1, Cideng, Kecamatan Gambir, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10150",
+      "maps_url": "https://maps.app.goo.gl/i1VJNXjfGy8XLdEo6",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "06:00"
+            }
+          ],
+          "title": "Misa Harian (Senin-Sabtu)",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "12:00"
+            },
+            {
+              "start": "18:30"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "09:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "English Mass (Minggu)",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "18:30"
+            }
+          ],
+          "title": "Jalan Salib (SETIAP JUMAT)",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Ibadat dan Sakramen Tobat - 25 Maret 2026 ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "18.00"
+            }
+          ],
+          "title": "Ibadat dan Sakramen Tobat - 26 Maret 2026 ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "19.30"
+            }
+          ],
+          "title": "Ibadat dan Sakramen Tobat - 27 Maret 2026 (SETELAH JALAN SALIB)",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            },
+            {
+              "start": "20:00"
+            }
+          ],
+          "title": "Kamis Putih",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "09:00"
+            }
+          ],
+          "title": "Tablo Kisah Sengsara Yesus",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "15:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Jumat Agung",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Vigili Paskah",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Hari Raya Paskah",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "09:00"
+            }
+          ],
+          "title": "Hari Raya Kenaikan Yesus",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja Santa Maria Bunda Perantara - Cideng",
+      "seoDesc": "Jadwal Misa Gereja Santa Maria Bunda Perantara - Cideng: Misa Harian (Senin-Sabtu) - 06:00 WIB | Misa Jumat Pertama - 06:00 WIB | 12:00 WIB | 18:30 WIB | Misa Sabtu - 17:00 WIB | Misa Minggu - 06:00 WIB | 09:00 WIB | English Mass (Minggu) - 17:00 WIB ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-santa-maria-bunda-perantara-cideng",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [
+        {
+          "id": 103,
+          "userId": "cltxuk6j2000riutucrb3od4d",
+          "churchId": 64,
+          "__typename": "ChurchUsersDetail"
+        }
+      ],
+      "__typename": "Church"
+    },
+    {
+      "id": 66,
+      "image": {
+        "file": "gereja-bunda-hati-kudus-kemakmuran-2023_08_21_08_05.webp",
+        "size": {
+          "width": 765,
+          "height": 1020
+        }
+      },
+      "name": "Gereja Bunda Hati Kudus - Kemakmuran",
+      "address": "Jl. KH. Hasyim Ashari No.28, RT.3/RW.2, Petojo Utara, Kecamatan Gambir, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10130",
+      "maps_url": "https://maps.app.goo.gl/18LxRPduseUzeENY8",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "06:00"
+            }
+          ],
+          "title": "Misa Harian (Senin - Sabtu)",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "06:00"
+            },
+            {
+              "start": "12:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja Bunda Hati Kudus - Kemakmuran",
+      "seoDesc": "Jadwal Misa Gereja Bunda Hati Kudus - Kemakmuran: Misa Harian (Senin - Sabtu) - 06:00 WIB | Misa Jumat Pertama - 06:00 WIB | 12:00 WIB | 18:00 WIB | Misa Sabtu - 17:00 WIB | Misa Minggu - 07:00 WIB | 09:00 WIB | 17:00 WIB",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-bunda-hati-kudus-kemakmuran",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [],
+      "__typename": "Church"
+    },
+    {
+      "id": 12,
+      "image": {
+        "file": "gereja-st-paskalis-cempaka-putih-2023_08_18_06_11.webp",
+        "size": {
+          "width": 374,
+          "height": 231
+        }
+      },
+      "name": "Gereja Santo Paskalis - Cempaka Putih",
+      "address": "Jl. Letjen Suprapto No.C1/23, RT.8/RW.3, Cemp. Putih Bar., Kec. Cemp. Putih, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10520",
+      "maps_url": "https://goo.gl/maps/NrA2afkW2BmGPF2C7",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "05:30"
+            }
+          ],
+          "title": "Misa Harian (Senin-Jumat)",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "Gereja: 17:00"
+            },
+            {
+              "start": "Kapel Lourdes: 18:00"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "10:00"
+            },
+            {
+              "start": "17:00"
+            },
+            {
+              "start": "20:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "05:30"
+            },
+            {
+              "start": "12:00"
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "Kapel Lourdes - 18:00"
+            },
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "10:00"
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00 "
+            },
+            {
+              "start": "20:00 "
+            },
+            {
+              "start": "Kapel Lourdes - 19:00"
+            }
+          ],
+          "title": "Kamis Putih",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "Jalan Salib - 09:00 "
+            },
+            {
+              "start": "15:00 "
+            },
+            {
+              "start": "Kapel Lourdes - 15:00 "
+            },
+            {
+              "start": "19:00"
+            }
+          ],
+          "title": "Jumat Agung",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:00 "
+            },
+            {
+              "start": "20:00 "
+            },
+            {
+              "start": "Kapel Lourdes - 19:00"
+            }
+          ],
+          "title": "Vigili Paskah",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00 "
+            },
+            {
+              "start": "10:00 "
+            },
+            {
+              "start": "17:00"
+            }
+          ],
+          "title": "Minggu Paskah",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja St Paskalis - Cempaka Putih",
+      "seoDesc": "Jadwal Misa Gereja Santo Paskalis - Cempaka Putih: Misa Harian (Senin-Jumat) - 05:30 WIB | Misa Sabtu - Gereja: 17:00 WIB | Kapel Lourdes: 18:00 WIB | Misa Minggu - 07:00 WIB | 10:00 WIB | 17:00 WIB | 20:00 WIB | Misa Jumat Pertama - 05:30 WIB | 12:00 WIB | 18:00 WIB ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-santo-paskalis-cempaka-putih",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [],
+      "__typename": "Church"
+    },
+    {
+      "id": 15,
+      "image": {
+        "file": "gereja-kristus-raja-paroki-pejompongan-2023_08_18_06_49.webp",
+        "size": {
+          "width": 374,
+          "height": 231
+        }
+      },
+      "name": "Gereja Kristus Raja - Paroki Pejompongan",
+      "address": "Jl. Danau Toba No.56, RT.18/RW.4, Bend. Hilir, Kecamatan Tanah Abang, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10270",
+      "maps_url": "https://goo.gl/maps/c7gDm4ZG6YgfDDwW7",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "Senin 06:00"
+            },
+            {
+              "start": "Selasa 06:00"
+            },
+            {
+              "start": "Rabu 06:00"
+            },
+            {
+              "start": "Kamis 06:00"
+            },
+            {
+              "start": "Jumat 06:00"
+            },
+            {
+              "start": "Sabtu 06:00"
+            }
+          ],
+          "title": "Misa Harian",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "17:30"
+            }
+          ],
+          "title": "Misa Sabtu",
+          "status": true,
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:00"
+            },
+            {
+              "start": "09:00"
+            },
+            {
+              "start": "11:30 "
+            }
+          ],
+          "title": "Misa Minggu",
+          "status": true,
+          "is_special": false
+        }
+      ],
+      "specialSchedules": [
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "17:30"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "07:00 "
+            },
+            {
+              "start": "09:00 "
+            },
+            {
+              "start": "English Mass - 11:30"
+            }
+          ],
+          "title": "Minggu Palma",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "18:00 "
+            },
+            {
+              "start": "English Mass - 21:00"
+            }
+          ],
+          "title": "Kamis Putih ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "English Mass - 12:00 "
+            },
+            {
+              "start": "15:00 "
+            },
+            {
+              "start": "18:00"
+            }
+          ],
+          "title": "Jumat Agung",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "18:00 "
+            },
+            {
+              "start": "English Mass - 21:00"
+            }
+          ],
+          "title": "Vigili Paskah ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:00 "
+            },
+            {
+              "start": "10:00 "
+            },
+            {
+              "start": "English Mass - 12:00"
+            }
+          ],
+          "title": "Minggu Paskah ",
+          "status": false
+        },
+        {
+          "date": null,
+          "time": [
+            {
+              "start": "08:00 "
+            },
+            {
+              "start": "10:00 "
+            },
+            {
+              "start": "English Mass - 12:00"
+            }
+          ],
+          "title": "Hari Raya Kenaikan Yesus",
+          "status": false
+        }
+      ],
+      "status": true,
+      "seoTitle": "Jadwal Misa Gereja Kristus Raja - Paroki Pejompongan",
+      "seoDesc": "Jadwal Misa Gereja Kristus Raja - Paroki Pejompongan: Misa Harian - Senin 06:00 WIB | Selasa 06:00 WIB | Rabu 06:00 WIB | Kamis 06:00 WIB | Jumat 06:00 WIB | Sabtu 06:00 WIB | Misa Jumat Pertama - 18:00 WIB | Misa Sabtu - 17:30 WIB | Misa Minggu - 07:00 WIB | 09:00 WIB | 11:30  WIB ",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "gereja-kristus-raja-paroki-pejompongan",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [],
+      "__typename": "Church"
+    },
+    {
+      "id": 719,
+      "image": {
+        "file": "kapel-santo-carolus-salemba-2024_07_01_08_05.webp",
+        "size": {
+          "width": 680,
+          "height": 510
+        }
+      },
+      "name": "Kapel Santo Carolus - Salemba",
+      "address": "RS St. Carolus, Jl. Salemba Raya No.41, RW.5, Paseban, Kec. Senen, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 13820",
+      "maps_url": "https://maps.app.goo.gl/HMQ7doeDhp5jwpTg7",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "05:45"
+            }
+          ],
+          "title": "Misa Harian",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "05:45"
+            },
+            {
+              "start": "12:00"
+            }
+          ],
+          "title": "Misa Jumat Pertama",
+          "is_special": false
+        },
+        {
+          "time": [
+            {
+              "start": "07:30"
+            }
+          ],
+          "title": "Misa Minggu",
+          "is_special": false
+        }
+      ],
+      "specialSchedules": null,
+      "status": true,
+      "seoTitle": "Jadwal Misa Kapel Santo Carolus - Salemba",
+      "seoDesc": "Jadwal Misa Kapel Santo Carolus - Salemba: Misa Harian - 05:45 WIB | Misa Jumat Pertama - 12:00 WIB | Misa Minggu - 07:30 WIB",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "kapel-santo-carolus-salemba",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": null,
+      "regencyId": 135,
+      "regencyName": null,
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [],
+      "__typename": "Church"
+    },
+    {
+      "id": 14,
+      "image": {
+        "file": "kapel-st-peter-canisius-menteng-2023_08_18_06_25.webp",
+        "size": {
+          "width": 374,
+          "height": 231
+        }
+      },
+      "name": "Kapel St Peter Canisius - Menteng",
+      "address": "Jl. Menteng Raya No.64, RT.3/RW.9, Kb. Sirih, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10330",
+      "maps_url": "https://goo.gl/maps/AqapK1ZWKvg9D2zA7",
+      "schedules": [
+        {
+          "time": [
+            {
+              "start": "07:30"
+            },
+            {
+              "start": "English Mass by St Peter Canisius International Catholic Parish - 18:00"
+            }
+          ],
+          "title": "Misa Minggu",
+          "is_special": false
+        }
+      ],
+      "specialSchedules": null,
+      "status": true,
+      "seoTitle": "Jadwal Misa Kapel St Peter Canisius - Menteng",
+      "seoDesc": "Jadwal Misa Kapel St Peter Canisius - Menteng: Misa Minggu - 07:30 WIB | English Mass by St Peter Canisius International Catholic Parish - 18:00 WIB",
+      "seoKeywords": [],
+      "seoOgImage": null,
+      "slug": "kapel-st-peter-canisius-menteng",
+      "timeZone": "WIB",
+      "provinceId": 10,
+      "provinceName": "DKI Jakarta",
+      "regencyId": 135,
+      "regencyName": "Kota Jakarta Pusat",
+      "province": {
+        "id": "10",
+        "name": "DKI Jakarta",
+        "slug": "dki-jakarta",
+        "__typename": "ChurchProvince"
+      },
+      "regency": {
+        "id": "135",
+        "name": "Kota Jakarta Pusat",
+        "slug": "kota-jakarta-pusat",
+        "__typename": "ChurchRegency"
+      },
+      "ChurchUsers": [],
+      "__typename": "Church"
+    }
+  ],
+  "settings": {
+    "text": {
+      "session_login": 12,
+      "integration_ganalytics": "G-E0VEX0FN03"
+    },
+    "image": {
+      "global": {
+        "seoOgImage": {
+          "file": "1716179872370-JMLogo.webp",
+          "size": {
+            "width": 420,
+            "height": 420
+          }
+        }
+      },
+      "header_logo_white": {
+        "file": "1716179872400-JMLogo.webp",
+        "size": {
+          "width": 420,
+          "height": 420
+        }
+      }
+    }
+  },
+  "province": {
+    "id": 10,
+    "name": "DKI Jakarta",
+    "countryId": 92,
+    "slug": "dki-jakarta",
+    "createdAt": "2023-08-25T08:14:10.983Z",
+    "updatedAt": "2023-08-25T08:14:10.983Z"
+  },
+  "regency": {
+    "id": 135,
+    "name": "Kota Jakarta Pusat",
+    "provinceId": 10,
+    "slug": "kota-jakarta-pusat",
+    "createdAt": "2023-08-25T08:14:11.097Z",
+    "updatedAt": "2023-08-25T08:14:11.097Z"
+  },
+  "churchInitialSeo": {
+    "title": "Jadwal Misa Gereja Katedral Jakarta",
+    "desc": "Jadwal Misa Gereja Katedral Jakarta - Santa Maria Diangkat ke Surga:  "
+  },
+  "churchData": {
+    "id": 11,
+    "phone": null,
+    "email": null,
+    "image": {
+      "file": "gereja-katedral-jakarta-2023_08_18_06_05.webp",
+      "size": {
+        "width": 374,
+        "height": 231
+      }
+    },
+    "name": "Gereja Katedral Jakarta - Santa Maria Diangkat ke Surga",
+    "address": "Jl. Katedral No.7B, Ps. Baru, Kecamatan Sawah Besar, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10710",
+    "maps_url": "https://goo.gl/maps/xPbEn3NZsWGp61Mq6",
+    "status": true,
+    "schedules": [
+      {
+        "time": [
+          {
+            "start": "06:00"
+          },
+          {
+            "start": "18:00"
+          }
+        ],
+        "title": "Misa Harian (Senin - Jumat)",
+        "is_special": false
+      },
+      {
+        "time": [
+          {
+            "start": "06:00"
+          }
+        ],
+        "title": "Misa Harian (Sabtu)",
+        "is_special": false
+      },
+      {
+        "time": [
+          {
+            "start": "06:00 "
+          },
+          {
+            "start": "12:00 "
+          },
+          {
+            "start": "18:00"
+          }
+        ],
+        "title": "Misa Jumat Pertama",
+        "is_special": false
+      },
+      {
+        "time": [
+          {
+            "start": "16:00"
+          },
+          {
+            "start": "18:00"
+          }
+        ],
+        "title": "Misa Sabtu",
+        "is_special": false
+      },
+      {
+        "time": [
+          {
+            "start": "06:00"
+          },
+          {
+            "start": "08:30"
+          },
+          {
+            "start": "11:00"
+          },
+          {
+            "start": "16:30"
+          },
+          {
+            "start": "19:00"
+          }
+        ],
+        "title": "Misa Minggu",
+        "is_special": false
+      },
+      {
+        "time": [
+          {
+            "start": "16:00"
+          }
+        ],
+        "title": "Pengakuan Dosa (Setiap Hari Jumat)",
+        "is_special": false
+      }
+    ],
+    "inactiveSchedules": [
+      {
+        "time": [
+          {
+            "start": "17:00"
+          }
+        ],
+        "title": "Ibadat Jalan Salib (Setiap Hari Jumat hingga tanggal 27 Maret 2026)",
+        "is_special": true
+      }
+    ],
+    "specialSchedules": [
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "08:30"
+          },
+          {
+            "start": "11:00"
+          },
+          {
+            "start": "16:30"
+          },
+          {
+            "start": "19:00"
+          }
+        ],
+        "title": "Misa Hari Raya Kenaikan Yesus Kristus",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "17:00"
+          }
+        ],
+        "title": "Ibadat Jalan Salib (Setiap Hari Jumat hingga tanggal 27 Maret 2026)",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "16:00"
+          },
+          {
+            "start": "18:30"
+          }
+        ],
+        "title": "Misa Minggu Palma",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "08:30"
+          },
+          {
+            "start": "11:00"
+          },
+          {
+            "start": "16:30"
+          },
+          {
+            "start": "19:00"
+          }
+        ],
+        "title": "Misa Minggu Palma",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "16:30"
+          },
+          {
+            "start": "19:00"
+          },
+          {
+            "start": "21:00"
+          },
+          {
+            "start": "23:00 (Tuguran)"
+          }
+        ],
+        "title": "Misa Kamis Putih",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "08:30"
+          }
+        ],
+        "title": "Pementasan Jalan Salib Kreatif",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "12:00"
+          },
+          {
+            "start": "15:00"
+          },
+          {
+            "start": "18:00"
+          }
+        ],
+        "title": "Ibadat Jumat Agung",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "17:00"
+          },
+          {
+            "start": "21:00"
+          }
+        ],
+        "title": "Misa Sabtu Suci",
+        "status": false
+      },
+      {
+        "date": null,
+        "time": [
+          {
+            "start": "08:30 (Pontifikal)"
+          },
+          {
+            "start": "11:00 (Keluarga)"
+          },
+          {
+            "start": "17:00"
+          }
+        ],
+        "title": "Misa Hari Raya Minggu Paskah",
+        "status": false
+      }
+    ],
+    "sortOrder": 1,
+    "seoTitle": "Jadwal Misa Gereja Katedral Jakarta",
+    "seoDesc": "Jadwal Misa Gereja Katedral Jakarta - Santa Maria Diangkat ke Surga:  ",
+    "seoKeywords": [],
+    "seoOgImage": null,
+    "slug": "gereja-katedral-jakarta-santa-maria-diangkat-ke-surga",
+    "timeZone": "WIB",
+    "provinceId": 10,
+    "provinceName": "DKI Jakarta",
+    "regencyId": 135,
+    "regencyName": "Kota Jakarta Pusat",
+    "province": {
+      "id": "10",
+      "name": "DKI Jakarta",
+      "slug": "dki-jakarta",
+      "__typename": "ChurchProvince"
+    },
+    "regency": {
+      "id": "135",
+      "name": "Kota Jakarta Pusat",
+      "slug": "kota-jakarta-pusat",
+      "__typename": "ChurchRegency"
+    },
+    "ChurchUsers": [
+      {
+        "id": 18,
+        "userId": "clmeewng2000dlsy879lcstji",
+        "churchId": 11,
+        "__typename": "ChurchUsersDetail"
+      },
+      {
+        "id": 93,
+        "userId": "cltxtssdk0007iutuu898tnmm",
+        "churchId": 11,
+        "__typename": "ChurchUsersDetail"
+      },
+      {
+        "id": 327,
+        "userId": "clw4s6v9k0001sdnkrdrs66p8",
+        "churchId": 11,
+        "__typename": "ChurchUsersDetail"
+      }
+    ],
+    "__typename": "Church"
+  },
+  "wordTranslation": {
+    "getZoneBySlugRegencyProvince": {
+      "code": 200,
+      "status": true,
+      "message": "Berhasil mendapatkan data zona",
+      "data": {
+        "province": {
+          "id": 10,
+          "name": "DKI Jakarta",
+          "countryId": 92,
+          "slug": "dki-jakarta",
+          "createdAt": "2023-08-25T08:14:10.983Z",
+          "updatedAt": "2023-08-25T08:14:10.983Z"
+        },
+        "regency": {
+          "id": 135,
+          "name": "Kota Jakarta Pusat",
+          "provinceId": 10,
+          "slug": "kota-jakarta-pusat",
+          "createdAt": "2023-08-25T08:14:11.097Z",
+          "updatedAt": "2023-08-25T08:14:11.097Z"
+        }
+      },
+      "__typename": "ChurchZoneResponse"
+    },
+    "settings": {
+      "text": {
+        "session_login": 12,
+        "integration_ganalytics": "G-E0VEX0FN03"
+      },
+      "image": {
+        "global": {
+          "seoOgImage": {
+            "file": "1716179872370-JMLogo.webp",
+            "size": {
+              "width": 420,
+              "height": 420
+            }
+          }
+        },
+        "header_logo_white": {
+          "file": "1716179872400-JMLogo.webp",
+          "size": {
+            "width": 420,
+            "height": 420
+          }
+        }
+      }
+    },
+    "managed_status_popup_title": {
+      "text": {
+        "id": "Informasi Gereja Belum Dikelola"
+      },
+      "__typename": "WordTranslation"
+    },
+    "managed_status_popup_desc": {
+      "text": {
+        "id": "Informasi gereja ini dikumpulkan oleh tim Jadwalmisa.id. Silakan hubungi kami untuk mendaftar sebagai relawan gereja paroki ini melalui halaman Kontak."
+      },
+      "__typename": "WordTranslation"
+    },
+    "managed_status_title": {
+      "text": {
+        "id": "Jadwal dikelola oleh relawan"
+      },
+      "__typename": "WordTranslation"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,8 +44,8 @@ export default function AdminSidebar({ role, fullName }: Props) {
   }
 
   const links = NAV.filter((n) => {
-    if (n.superAdminOnly) return role === "superadmin";
-    if (n.adminOnly) return role === "admin" || role === "superadmin";
+    if (n.superAdminOnly) return role === "superadmin" || role === "founder";
+    if (n.adminOnly) return role === "admin" || role === "superadmin" || role === "founder";
     return true;
   });
 
