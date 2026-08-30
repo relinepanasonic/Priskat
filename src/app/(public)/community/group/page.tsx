@@ -35,9 +35,16 @@ export default async function GroupPage() {
   // Rooms RLS already hides hidden rooms I'm not a member of.
   const { data: rooms } = await supabase
     .from("rooms")
-    .select("id, name, description, is_public, is_hidden, owner_id, created_at")
+    .select(
+      "id, name, description, avatar_url, is_public, is_hidden, owner_id, created_at"
+    )
     .eq("is_archived", false)
     .order("created_at", { ascending: true });
+
+  const { data: unreadRows } = await supabase.rpc("my_unread_group_ids");
+  const unreadGroupIds: string[] = Array.isArray(unreadRows)
+    ? unreadRows.map((r: any) => (typeof r === "string" ? r : r?.my_unread_group_ids ?? r))
+    : [];
 
   const { data: roomMemberships } = await supabase
     .from("room_members")
@@ -96,6 +103,7 @@ export default async function GroupPage() {
       rooms={rooms || []}
       groups={shapedGroups}
       myRoomIds={myRoomIds}
+      unreadGroupIds={unreadGroupIds}
     />
   );
 }

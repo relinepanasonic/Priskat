@@ -9,19 +9,26 @@ import {
   useTransition,
 } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Check,
   DoorClosed,
   DoorOpen,
+  ImagePlus,
   Loader2,
   Lock,
+  Pencil,
   Plus,
+  Search,
   Send,
+  Share2,
+  UserPlus,
   UsersRound,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadImage, storagePath } from "@/lib/upload";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -30,6 +37,7 @@ type Room = {
   id: string;
   name: string;
   description: string | null;
+  avatar_url: string | null;
   is_public: boolean;
   is_hidden: boolean;
   owner_id: string | null;
@@ -69,23 +77,38 @@ const DICT = {
     noRoomsAdmin: "Create the first room.",
     noRoomsUser: "A founder needs to create a room first.",
     newRoom: "New room",
+    editRoom: "Room details",
+    editGroup: "Group details",
     roomName: "Room name",
+    groupName: "Group name",
     description: "Description (optional)",
+    picture: "Picture",
+    changePicture: "Change picture",
     whoAddsGroups: "Who can add groups",
     anyone: "Anyone",
     membersOnly: "Members only",
-    roomVisibility: "Room visibility",
+    visibility: "Visibility",
     visible: "Visible",
     hidden: "Hidden",
+    access: "Access",
+    public: "Public",
+    private: "Private",
+    save: "Save",
+    saved: "Saved",
+    addMember: "Add member",
+    share: "Share",
+    linkCopied: "Link copied",
+    searchPeople: "Search people…",
+    added: "Added",
     pickRoom: "Pick a room",
     noGroups: "No groups in this room yet",
     newGroup: "New group",
-    groupName: "Group name",
     join: "Join",
     joining: "Joining…",
     pickGroup: "Select a group to open the chat",
     create: "Create",
     cancel: "Cancel",
+    close: "Close",
     message: "Message",
     members: (n: number) => `${n} member${n === 1 ? "" : "s"}`,
     today: "Today",
@@ -102,23 +125,38 @@ const DICT = {
     noRoomsAdmin: "Buat ruang pertama.",
     noRoomsUser: "Seorang founder perlu membuat ruang dahulu.",
     newRoom: "Ruang baru",
+    editRoom: "Detail ruang",
+    editGroup: "Detail grup",
     roomName: "Nama ruang",
+    groupName: "Nama grup",
     description: "Deskripsi (opsional)",
+    picture: "Gambar",
+    changePicture: "Ganti gambar",
     whoAddsGroups: "Siapa yang bisa menambah grup",
     anyone: "Semua orang",
     membersOnly: "Hanya anggota",
-    roomVisibility: "Visibilitas ruang",
+    visibility: "Visibilitas",
     visible: "Terlihat",
     hidden: "Tersembunyi",
+    access: "Akses",
+    public: "Publik",
+    private: "Privat",
+    save: "Simpan",
+    saved: "Tersimpan",
+    addMember: "Tambah anggota",
+    share: "Bagikan",
+    linkCopied: "Tautan disalin",
+    searchPeople: "Cari orang…",
+    added: "Ditambahkan",
     pickRoom: "Pilih ruang",
     noGroups: "Belum ada grup di ruang ini",
     newGroup: "Grup baru",
-    groupName: "Nama grup",
     join: "Gabung",
     joining: "Bergabung…",
     pickGroup: "Pilih grup untuk membuka obrolan",
     create: "Buat",
     cancel: "Batal",
+    close: "Tutup",
     message: "Pesan",
     members: (n: number) => `${n} anggota`,
     today: "Hari ini",
@@ -168,7 +206,7 @@ function dayLabel(iso: string, t: T) {
 const tempId = () =>
   "temp-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
-/* ----------------------------------------------------------------- avatar --- */
+/* ---------------------------------------------------------------- avatar --- */
 
 function Avatar({
   url,
@@ -201,16 +239,24 @@ function Avatar({
   );
 }
 
+function Dot() {
+  return (
+    <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-red-500 ring-2 ring-[#16181d]" />
+  );
+}
+
 function Toggle({
   label,
   options,
   value,
   onChange,
+  disabled,
 }: {
   label: string;
   options: [{ v: boolean; label: string }, { v: boolean; label: string }];
   value: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="mb-3">
@@ -222,8 +268,9 @@ function Toggle({
           <button
             key={String(o.v)}
             type="button"
+            disabled={disabled}
             onClick={() => onChange(o.v)}
-            className={`flex-1 rounded-md py-1.5 text-[12px] font-semibold transition-colors ${
+            className={`flex-1 rounded-md py-1.5 text-[12px] font-semibold transition-colors disabled:opacity-50 ${
               value === o.v
                 ? "bg-brand-gold text-brand-dark"
                 : "text-brand-muted hover:text-white"
@@ -246,6 +293,7 @@ export default function GroupClient({
   rooms: initialRooms,
   groups: initialGroups,
   myRoomIds: initialRoomIds,
+  unreadGroupIds: initialUnread,
 }: {
   lang?: "id" | "en";
   me: Profile;
@@ -253,21 +301,23 @@ export default function GroupClient({
   rooms: Room[];
   groups: Group[];
   myRoomIds: string[];
+  unreadGroupIds: string[];
 }) {
   const t = DICT[lang];
   const supabase = useMemo(() => createClient(), []);
+  const params = useSearchParams();
 
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [groups, setGroups] = useState<Group[]>(initialGroups);
   const [myRoomIds, setMyRoomIds] = useState<Set<string>>(
     () => new Set(initialRoomIds)
   );
+  const [unread, setUnread] = useState<Set<string>>(() => new Set(initialUnread));
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(
     initialRooms[0]?.id ?? null
   );
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  // mobile stack: which of the 3 columns is on screen
   const [mobileCol, setMobileCol] = useState<"rooms" | "groups" | "chat">("rooms");
 
   const [byChat, setByChat] = useState<Record<string, Message[]>>({});
@@ -276,9 +326,14 @@ export default function GroupClient({
   const seen = useRef<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [modal, setModal] = useState<null | { type: "room" } | { type: "group" }>(
-    null
-  );
+  const [modal, setModal] = useState<
+    | null
+    | { type: "room" }
+    | { type: "group" }
+    | { type: "editRoom"; id: string }
+    | { type: "editGroup"; id: string }
+    | { type: "addMember"; scope: "room" | "group"; id: string }
+  >(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [joiningId, setJoiningId] = useState<string | null>(null);
@@ -294,17 +349,30 @@ export default function GroupClient({
     return map;
   }, [groups]);
 
+  const unreadRoomIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const g of groups) if (unread.has(g.id)) s.add(g.room_id);
+    return s;
+  }, [groups, unread]);
+
   const activeRoom = rooms.find((r) => r.id === activeRoomId) || null;
   const activeGroup = groups.find((g) => g.id === activeGroupId) || null;
   const roomGroups = activeRoomId ? groupsByRoom[activeRoomId] || [] : [];
   const chatId = activeGroup?.chat_id ?? null;
   const messages = chatId ? byChat[chatId] || [] : [];
 
+  const canEditRoom =
+    !!activeRoom && (activeRoom.owner_id === me.id || canCreateRoom);
   const canAddGroup =
     !!activeRoom &&
     (activeRoom.is_public ||
       activeRoom.owner_id === me.id ||
       myRoomIds.has(activeRoom.id) ||
+      canCreateRoom);
+  const canEditGroup =
+    !!activeGroup &&
+    (activeGroup.myRole === "owner" ||
+      activeGroup.myRole === "admin" ||
       canCreateRoom);
 
   const scrollToBottom = useCallback((smooth = false) => {
@@ -315,7 +383,27 @@ export default function GroupClient({
     });
   }, []);
 
-  /* ---- load a chat's messages ------------------------------------- */
+  /* ---- deep link (?room= / ?group=) ---------------------------- */
+  useEffect(() => {
+    const gid = params.get("group");
+    const rid = params.get("room");
+    if (gid) {
+      const g = groups.find((x) => x.id === gid);
+      if (g) {
+        setActiveRoomId(g.room_id);
+        setActiveGroupId(g.id);
+        setMobileCol("chat");
+        return;
+      }
+    }
+    if (rid && rooms.some((r) => r.id === rid)) {
+      setActiveRoomId(rid);
+      setMobileCol("groups");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ---- load a chat's messages -------------------------------- */
   const loadChat = useCallback(
     async (id: string) => {
       if (byChat[id]) {
@@ -344,26 +432,62 @@ export default function GroupClient({
   );
 
   useEffect(() => {
-    if (chatId) loadChat(chatId);
-  }, [chatId, loadChat]);
+    if (!activeGroup?.joined || !chatId) return;
+    loadChat(chatId);
+    supabase.rpc("mark_group_read", { gid: activeGroup.id });
+    setUnread((prev) => {
+      if (!prev.has(activeGroup.id)) return prev;
+      const n = new Set(prev);
+      n.delete(activeGroup.id);
+      return n;
+    });
+  }, [activeGroup?.id, activeGroup?.joined, chatId, loadChat, supabase]);
 
-  /* ---- realtime for the active chat ----------------------------- */
+  /* ---- realtime across every chat I've joined ---------------- */
+  const activeChatRef = useRef<string | null>(null);
+  activeChatRef.current = chatId;
+  const groupIdByChat = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const g of groups) if (g.chat_id) m[g.chat_id] = g.id;
+    return m;
+  }, [groups]);
+  const groupIdByChatRef = useRef(groupIdByChat);
+  groupIdByChatRef.current = groupIdByChat;
+
+  const myChatIds = useMemo(
+    () => groups.filter((g) => g.joined && g.chat_id).map((g) => g.chat_id as string),
+    [groups]
+  );
+  const myChatKey = myChatIds.slice().sort().join(",");
+
   useEffect(() => {
-    if (!chatId) return;
-    const ch = supabase
-      .channel(`group_messages:${chatId}`)
-      .on(
+    if (!myChatIds.length) return;
+    const channel = supabase.channel("group_chat_all");
+    for (const cid of myChatIds) {
+      channel.on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "group_messages",
-          filter: `subgroup_id=eq.${chatId}`,
+          filter: `subgroup_id=eq.${cid}`,
         },
         async (payload) => {
           const row = payload.new as Message;
           if (seen.current.has(row.id)) return;
           seen.current.add(row.id);
+          const isActive = row.subgroup_id === activeChatRef.current;
+          const gid = groupIdByChatRef.current[row.subgroup_id];
+
+          if (row.author_id !== me.id) {
+            if (isActive) {
+              supabase.rpc("mark_group_read", { gid });
+            } else if (gid) {
+              setUnread((prev) => new Set(prev).add(gid));
+            }
+          }
+          if (!isActive) return;
+
           let author = profileCache.current[row.author_id];
           if (!author) {
             const { data } = await supabase
@@ -377,20 +501,22 @@ export default function GroupClient({
             }
           }
           setByChat((prev) => {
-            const list = prev[chatId] || [];
+            const list = prev[row.subgroup_id] || [];
             if (list.some((m) => m.id === row.id)) return prev;
-            return { ...prev, [chatId]: [...list, { ...row, author }] };
+            return { ...prev, [row.subgroup_id]: [...list, { ...row, author }] };
           });
           scrollToBottom(true);
         }
-      )
-      .subscribe();
+      );
+    }
+    channel.subscribe();
     return () => {
-      supabase.removeChannel(ch);
+      supabase.removeChannel(channel);
     };
-  }, [chatId, supabase, scrollToBottom]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myChatKey, supabase, me.id, scrollToBottom]);
 
-  /* ---- send ---------------------------------------------------- */
+  /* ---- send ------------------------------------------------- */
   const [text, setText] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
   const autosize = () => {
@@ -459,7 +585,7 @@ export default function GroupClient({
     doSend(body);
   };
 
-  /* ---- create room / group + join ------------------------------ */
+  /* ---- create room / group + join ------------------------- */
   const createRoom = (
     name: string,
     description: string,
@@ -478,7 +604,9 @@ export default function GroupClient({
           is_public: isPublic,
           is_hidden: isHidden,
         })
-        .select("id, name, description, is_public, is_hidden, owner_id, created_at")
+        .select(
+          "id, name, description, avatar_url, is_public, is_hidden, owner_id, created_at"
+        )
         .single();
       if (error || !data) {
         console.error("[group] create room failed", error);
@@ -525,27 +653,21 @@ export default function GroupClient({
         setActionError(mErr.message);
         return;
       }
-      const { data: sub, error: sErr } = await supabase
+      const { data: sub } = await supabase
         .from("group_subgroups")
         .insert({ group_id: g.id, name: "main" })
         .select("id")
         .single();
-      if (sErr) console.error("[group] create chat thread failed", sErr);
 
       await supabase
         .from("room_members")
         .insert({ room_id: roomId, user_id: me.id, role: "member" })
-        .then(() => {}, () => {}); // ignore "already a member"
+        .then(() => {}, () => {});
 
       setMyRoomIds((prev) => new Set(prev).add(roomId));
       setGroups((prev) => [
         ...prev,
-        {
-          ...(g as any),
-          joined: true,
-          myRole: "owner",
-          chat_id: sub?.id ?? null,
-        },
+        { ...(g as any), joined: true, myRole: "owner", chat_id: sub?.id ?? null },
       ]);
       setActiveGroupId(g.id);
       setMobileCol("chat");
@@ -598,13 +720,79 @@ export default function GroupClient({
     });
   };
 
-  /* ---- render ------------------------------------------------- */
+  const saveRoom = (
+    id: string,
+    patch: Partial<Pick<Room, "name" | "description" | "avatar_url" | "is_public" | "is_hidden">>
+  ) =>
+    startTransition(async () => {
+      setActionError(null);
+      const { error } = await supabase.from("rooms").update(patch).eq("id", id);
+      if (error) {
+        console.error("[group] save room failed", error);
+        setActionError(error.message);
+        return;
+      }
+      setRooms((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+      closeModal();
+    });
+
+  const saveGroup = (
+    id: string,
+    patch: Partial<Pick<Group, "name" | "avatar_url" | "is_private">>
+  ) =>
+    startTransition(async () => {
+      setActionError(null);
+      const { error } = await supabase.from("groups").update(patch).eq("id", id);
+      if (error) {
+        console.error("[group] save group failed", error);
+        setActionError(error.message);
+        return;
+      }
+      setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, ...patch } : g)));
+      closeModal();
+    });
+
+  const addMember = async (scope: "room" | "group", id: string, userId: string) => {
+    if (scope === "room") {
+      const { error } = await supabase
+        .from("room_members")
+        .insert({ room_id: id, user_id: userId, role: "member" });
+      return error;
+    }
+    const { error } = await supabase
+      .from("group_members")
+      .insert({ group_id: id, user_id: userId, role: "member", status: "accepted" });
+    if (!error) {
+      const g = groups.find((x) => x.id === id);
+      if (g)
+        await supabase
+          .from("room_members")
+          .insert({ room_id: g.room_id, user_id: userId, role: "member" })
+          .then(() => {}, () => {});
+      setGroups((prev) =>
+        prev.map((x) =>
+          x.id === id ? { ...x, member_count: x.member_count + 1 } : x
+        )
+      );
+    }
+    return error;
+  };
+
+  const shareUrl = (kind: "room" | "group", id: string) => {
+    const url = `${window.location.origin}/community/group?${kind}=${id}`;
+    if (navigator.share) navigator.share({ url }).catch(() => {});
+    else navigator.clipboard?.writeText(url);
+    return url;
+  };
+
+  /* ---- render ------------------------------------------- */
   const shell =
-    "flex h-[calc(100dvh-170px)] md:h-[calc(100vh-56px)] overflow-hidden bg-brand-dark text-white";
+    "flex overflow-hidden bg-brand-dark text-white md:h-[calc(100vh-56px)] " +
+    "max-md:fixed max-md:inset-x-0 max-md:top-[112px] max-md:bottom-16 max-md:z-40";
 
   return (
     <div className={shell}>
-      {/* ============ MOBILE · room avatar rail (steps 2 & 3) =========== */}
+      {/* ============ MOBILE · room avatar rail (steps 2 & 3) ========== */}
       <nav
         className={`${
           mobileCol === "rooms" ? "hidden" : "flex"
@@ -633,13 +821,14 @@ export default function GroupClient({
               {active && (
                 <span className="absolute left-[-12px] top-1/2 h-7 w-1 -translate-y-1/2 rounded-r bg-brand-gold" />
               )}
-              <span
-                className={`transition ${
-                  active ? "" : "opacity-50 grayscale"
-                }`}
-              >
-                <Avatar name={r.name} size={44} />
+              <span className={`transition ${active ? "" : "opacity-50 grayscale"}`}>
+                <Avatar url={r.avatar_url} name={r.name} size={44} />
               </span>
+              {unreadRoomIds.has(r.id) && !active && (
+                <span className="absolute right-0 top-0">
+                  <Dot />
+                </span>
+              )}
             </button>
           );
         })}
@@ -696,19 +885,7 @@ export default function GroupClient({
                     active ? "bg-brand-gold/10" : "hover:bg-white/[0.04]"
                   }`}
                 >
-                  <span
-                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${
-                      active
-                        ? "bg-brand-gold text-brand-dark"
-                        : "bg-brand-gold/15 text-brand-gold"
-                    }`}
-                  >
-                    {r.is_hidden ? (
-                      <DoorClosed className="h-5 w-5" />
-                    ) : (
-                      <DoorOpen className="h-5 w-5" />
-                    )}
-                  </span>
+                  <Avatar url={r.avatar_url} name={r.name} size={40} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
                       <span className="truncate text-[14px] font-semibold text-white">
@@ -717,11 +894,15 @@ export default function GroupClient({
                       {!r.is_public && (
                         <Lock className="h-3 w-3 flex-shrink-0 text-brand-muted" />
                       )}
+                      {r.is_hidden && (
+                        <DoorClosed className="h-3 w-3 flex-shrink-0 text-brand-muted" />
+                      )}
                     </span>
                     <span className="block truncate text-[12px] text-brand-muted">
                       {r.description || `${n} ${t.groups.toLowerCase()}`}
                     </span>
                   </span>
+                  {unreadRoomIds.has(r.id) && <Dot />}
                 </button>
               );
             })
@@ -739,6 +920,15 @@ export default function GroupClient({
           <h2 className="flex-1 truncate text-[14px] font-bold">
             {activeRoom?.name || t.groups}
           </h2>
+          {canEditRoom && (
+            <button
+              onClick={() => setModal({ type: "editRoom", id: activeRoom!.id })}
+              className="rounded-full p-1.5 text-brand-muted hover:bg-white/5 hover:text-brand-gold"
+              aria-label={t.editRoom}
+            >
+              <Pencil className="h-[18px] w-[18px]" />
+            </button>
+          )}
           {activeRoom && canAddGroup && (
             <button
               onClick={() => setModal({ type: "group" })}
@@ -773,6 +963,7 @@ export default function GroupClient({
           ) : (
             roomGroups.map((g) => {
               const active = g.id === activeGroupId;
+              const isUnread = unread.has(g.id);
               const preview = g.chat_id
                 ? (byChat[g.chat_id] || []).slice(-1)[0]
                 : undefined;
@@ -790,18 +981,25 @@ export default function GroupClient({
                 >
                   <Avatar url={g.avatar_url} name={g.name} size={40} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-semibold text-white">
-                      {g.name}
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className={`truncate text-[14px] ${
+                          isUnread ? "font-bold text-white" : "font-semibold text-white"
+                        }`}
+                      >
+                        {g.name}
+                      </span>
+                      {g.is_private && (
+                        <Lock className="h-3 w-3 flex-shrink-0 text-brand-muted" />
+                      )}
                     </span>
                     <span className="block truncate text-[12px] text-brand-muted">
-                      {g.joined
-                        ? preview
-                          ? `${
-                              preview.author_id === me.id
-                                ? t.you
-                                : preview.author?.full_name?.split(" ")[0] || ""
-                            }: ${preview.content}`
-                          : t.members(g.member_count)
+                      {g.joined && preview
+                        ? `${
+                            preview.author_id === me.id
+                              ? t.you
+                              : preview.author?.full_name?.split(" ")[0] || ""
+                          }: ${preview.content}`
                         : t.members(g.member_count)}
                     </span>
                   </span>
@@ -813,6 +1011,8 @@ export default function GroupClient({
                         t.join
                       )}
                     </span>
+                  ) : isUnread ? (
+                    <Dot />
                   ) : (
                     preview && (
                       <span className="flex-shrink-0 self-start pt-0.5 text-[10px] text-brand-muted">
@@ -857,6 +1057,16 @@ export default function GroupClient({
                   {activeRoom?.name} · {t.members(activeGroup.member_count)}
                 </p>
               </div>
+              <ShareButton onClick={() => shareUrl("group", activeGroup.id)} t={t} />
+              {canEditGroup && (
+                <button
+                  onClick={() => setModal({ type: "editGroup", id: activeGroup.id })}
+                  className="rounded-full p-1.5 text-brand-muted hover:bg-white/5 hover:text-brand-gold"
+                  aria-label={t.editGroup}
+                >
+                  <Pencil className="h-[18px] w-[18px]" />
+                </button>
+              )}
             </header>
 
             {!activeGroup.joined || !chatId ? (
@@ -981,7 +1191,7 @@ export default function GroupClient({
                   )}
                 </div>
 
-                <div className="border-t border-[#2a2d35] bg-[#16181d] px-3 py-2.5">
+                <div className="border-t border-[#2a2d35] bg-[#16181d] px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
                   <div className="mx-auto flex max-w-2xl items-end gap-2">
                     <textarea
                       ref={taRef}
@@ -1035,11 +1245,85 @@ export default function GroupClient({
           onCreate={(name) => createGroup(activeRoomId, name)}
         />
       )}
+      {modal?.type === "editRoom" &&
+        (() => {
+          const r = rooms.find((x) => x.id === modal.id);
+          if (!r) return null;
+          return (
+            <EditRoomModal
+              t={t}
+              me={me}
+              room={r}
+              pending={pending}
+              error={actionError}
+              onClose={closeModal}
+              onSave={(patch) => saveRoom(r.id, patch)}
+              onAddMember={() =>
+                setModal({ type: "addMember", scope: "room", id: r.id })
+              }
+              onShare={() => shareUrl("room", r.id)}
+            />
+          );
+        })()}
+      {modal?.type === "editGroup" &&
+        (() => {
+          const g = groups.find((x) => x.id === modal.id);
+          if (!g) return null;
+          return (
+            <EditGroupModal
+              t={t}
+              me={me}
+              group={g}
+              pending={pending}
+              error={actionError}
+              onClose={closeModal}
+              onSave={(patch) => saveGroup(g.id, patch)}
+              onAddMember={() =>
+                setModal({ type: "addMember", scope: "group", id: g.id })
+              }
+              onShare={() => shareUrl("group", g.id)}
+            />
+          );
+        })()}
+      {modal?.type === "addMember" && (
+        <AddMemberModal
+          t={t}
+          supabase={supabase}
+          scope={modal.scope}
+          id={modal.id}
+          onClose={closeModal}
+          onAdd={(userId) => addMember(modal.scope, modal.id, userId)}
+        />
+      )}
     </div>
   );
 }
 
 /* --------------------------------------------------------------- helpers --- */
+
+function ShareButton({ onClick, t }: { onClick: () => void; t: T }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        onClick();
+        if (!(navigator as any).share) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        }
+      }}
+      className="relative rounded-full p-1.5 text-brand-muted hover:bg-white/5 hover:text-brand-gold"
+      aria-label={t.share}
+    >
+      <Share2 className="h-[18px] w-[18px]" />
+      {copied && (
+        <span className="absolute right-0 top-full z-10 mt-1 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-[10px] text-white">
+          {t.linkCopied}
+        </span>
+      )}
+    </button>
+  );
+}
 
 function EmptyState({
   icon,
@@ -1075,7 +1359,7 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-sm rounded-t-2xl border border-[#2a2d35] bg-[#16181d] p-5 sm:rounded-2xl">
+      <div className="max-h-[88vh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-[#2a2d35] bg-[#16181d] p-5 sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-[15px] font-bold text-white">{title}</h3>
           <button onClick={onClose} className="text-brand-muted hover:text-white">
@@ -1105,20 +1389,88 @@ function Field(
   );
 }
 
-function ModalActions({
+function PictureField({
   t,
+  me,
+  url,
+  name,
+  onChange,
+}: {
+  t: T;
+  me: Profile;
+  url: string | null;
+  name: string;
+  onChange: (url: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="mb-4">
+      <span className="mb-1 block text-[12px] font-medium text-brand-muted">
+        {t.picture}
+      </span>
+      <label className="flex cursor-pointer items-center gap-3">
+        {url ? (
+          <Image
+            src={url}
+            alt=""
+            width={56}
+            height={56}
+            className="h-14 w-14 rounded-full object-cover"
+          />
+        ) : (
+          <Avatar name={name} size={56} />
+        )}
+        <span className="inline-flex items-center gap-2 rounded-lg border border-[#333] px-3 py-2 text-[13px] font-semibold text-brand-light hover:bg-white/5">
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImagePlus className="h-4 w-4" />
+          )}
+          {t.changePicture}
+        </span>
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setBusy(true);
+            try {
+              const publicUrl = await uploadImage(
+                file,
+                "avatars",
+                storagePath(me.id, file.name)
+              );
+              onChange(publicUrl);
+            } catch (err) {
+              console.error("[group] picture upload failed", err);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      </label>
+    </div>
+  );
+}
+
+function ModalActions({
+  label,
   pending,
   error,
   disabled,
   onClose,
   onConfirm,
+  cancelLabel,
 }: {
-  t: T;
+  label: string;
   pending: boolean;
   error?: string | null;
   disabled: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  cancelLabel: string;
 }) {
   return (
     <>
@@ -1132,7 +1484,7 @@ function ModalActions({
           onClick={onClose}
           className="flex-1 rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
         >
-          {t.cancel}
+          {cancelLabel}
         </button>
         <button
           onClick={onConfirm}
@@ -1140,7 +1492,7 @@ function ModalActions({
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-gold py-2.5 text-[13px] font-bold text-brand-dark hover:bg-yellow-400 disabled:opacity-40"
         >
           {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-          {t.create}
+          {label}
         </button>
       </div>
     </>
@@ -1158,12 +1510,7 @@ function NewRoomModal({
   pending: boolean;
   error?: string | null;
   onClose: () => void;
-  onCreate: (
-    name: string,
-    description: string,
-    isPublic: boolean,
-    isHidden: boolean
-  ) => void;
+  onCreate: (n: string, d: string, isPublic: boolean, isHidden: boolean) => void;
 }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -1193,7 +1540,7 @@ function NewRoomModal({
         ]}
       />
       <Toggle
-        label={t.roomVisibility}
+        label={t.visibility}
         value={isHidden}
         onChange={setIsHidden}
         options={[
@@ -1202,7 +1549,8 @@ function NewRoomModal({
         ]}
       />
       <ModalActions
-        t={t}
+        label={t.create}
+        cancelLabel={t.cancel}
         pending={pending}
         error={error}
         disabled={!name.trim()}
@@ -1237,13 +1585,287 @@ function NewGroupModal({
         placeholder="Legio Maria · KTM · OMK …"
       />
       <ModalActions
-        t={t}
+        label={t.create}
+        cancelLabel={t.cancel}
         pending={pending}
         error={error}
         disabled={!name.trim()}
         onClose={onClose}
         onConfirm={() => onCreate(name.trim())}
       />
+    </ModalShell>
+  );
+}
+
+function ShareRow({ t, onShare }: { t: T; onShare: () => void }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        onShare();
+        if (!(navigator as any).share) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        }
+      }}
+      className="flex w-full items-center gap-2 rounded-lg border border-[#333] px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+    >
+      <Share2 className="h-4 w-4" /> {copied ? t.linkCopied : t.share}
+    </button>
+  );
+}
+
+function EditRoomModal({
+  t,
+  me,
+  room,
+  pending,
+  error,
+  onClose,
+  onSave,
+  onAddMember,
+  onShare,
+}: {
+  t: T;
+  me: Profile;
+  room: Room;
+  pending: boolean;
+  error?: string | null;
+  onClose: () => void;
+  onSave: (
+    p: Partial<Pick<Room, "name" | "description" | "avatar_url" | "is_public" | "is_hidden">>
+  ) => void;
+  onAddMember: () => void;
+  onShare: () => void;
+}) {
+  const editable = true; // gated by caller (canEditRoom)
+  const [name, setName] = useState(room.name);
+  const [desc, setDesc] = useState(room.description ?? "");
+  const [avatar, setAvatar] = useState(room.avatar_url);
+  const [isPublic, setIsPublic] = useState(room.is_public);
+  const [isHidden, setIsHidden] = useState(room.is_hidden);
+  return (
+    <ModalShell title={t.editRoom} onClose={onClose}>
+      <PictureField t={t} me={me} url={avatar} name={name} onChange={setAvatar} />
+      <Field label={t.roomName} value={name} onChange={(e) => setName(e.target.value)} />
+      <Field
+        label={t.description}
+        value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+      />
+      <Toggle
+        label={t.whoAddsGroups}
+        value={isPublic}
+        onChange={setIsPublic}
+        disabled={!editable}
+        options={[
+          { v: true, label: t.anyone },
+          { v: false, label: t.membersOnly },
+        ]}
+      />
+      <Toggle
+        label={t.visibility}
+        value={isHidden}
+        onChange={setIsHidden}
+        disabled={!editable}
+        options={[
+          { v: false, label: t.visible },
+          { v: true, label: t.hidden },
+        ]}
+      />
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={onAddMember}
+          className="flex items-center justify-center gap-2 rounded-lg border border-[#333] px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+        >
+          <UserPlus className="h-4 w-4" /> {t.addMember}
+        </button>
+        <ShareRow t={t} onShare={onShare} />
+      </div>
+      <ModalActions
+        label={t.save}
+        cancelLabel={t.close}
+        pending={pending}
+        error={error}
+        disabled={!name.trim()}
+        onClose={onClose}
+        onConfirm={() =>
+          onSave({
+            name: name.trim(),
+            description: desc.trim() || null,
+            avatar_url: avatar,
+            is_public: isPublic,
+            is_hidden: isHidden,
+          })
+        }
+      />
+    </ModalShell>
+  );
+}
+
+function EditGroupModal({
+  t,
+  me,
+  group,
+  pending,
+  error,
+  onClose,
+  onSave,
+  onAddMember,
+  onShare,
+}: {
+  t: T;
+  me: Profile;
+  group: Group;
+  pending: boolean;
+  error?: string | null;
+  onClose: () => void;
+  onSave: (p: Partial<Pick<Group, "name" | "avatar_url" | "is_private">>) => void;
+  onAddMember: () => void;
+  onShare: () => void;
+}) {
+  const [name, setName] = useState(group.name);
+  const [avatar, setAvatar] = useState(group.avatar_url);
+  const [isPrivate, setIsPrivate] = useState(group.is_private);
+  return (
+    <ModalShell title={t.editGroup} onClose={onClose}>
+      <PictureField t={t} me={me} url={avatar} name={name} onChange={setAvatar} />
+      <Field label={t.groupName} value={name} onChange={(e) => setName(e.target.value)} />
+      <Toggle
+        label={t.access}
+        value={isPrivate}
+        onChange={setIsPrivate}
+        options={[
+          { v: false, label: t.public },
+          { v: true, label: t.private },
+        ]}
+      />
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={onAddMember}
+          className="flex items-center justify-center gap-2 rounded-lg border border-[#333] px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+        >
+          <UserPlus className="h-4 w-4" /> {t.addMember}
+        </button>
+        <ShareRow t={t} onShare={onShare} />
+      </div>
+      <ModalActions
+        label={t.save}
+        cancelLabel={t.close}
+        pending={pending}
+        error={error}
+        disabled={!name.trim()}
+        onClose={onClose}
+        onConfirm={() =>
+          onSave({ name: name.trim(), avatar_url: avatar, is_private: isPrivate })
+        }
+      />
+    </ModalShell>
+  );
+}
+
+function AddMemberModal({
+  t,
+  supabase,
+  scope,
+  id,
+  onClose,
+  onAdd,
+}: {
+  t: T;
+  supabase: ReturnType<typeof createClient>;
+  scope: "room" | "group";
+  id: string;
+  onClose: () => void;
+  onAdd: (userId: string) => Promise<any>;
+}) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<Profile[]>([]);
+  const [existing, setExisting] = useState<Set<string>>(new Set());
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const table = scope === "room" ? "room_members" : "group_members";
+      const col = scope === "room" ? "room_id" : "group_id";
+      const { data } = await supabase.from(table).select("user_id").eq(col, id);
+      setExisting(new Set((data || []).map((r: any) => r.user_id)));
+    })();
+  }, [scope, id, supabase]);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    const h = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .ilike("full_name", `%${term}%`)
+        .limit(20);
+      if (!cancelled) setResults((data as Profile[]) || []);
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(h);
+    };
+  }, [q, supabase]);
+
+  return (
+    <ModalShell title={t.addMember} onClose={onClose}>
+      <div className="mb-3 flex items-center gap-2 rounded-lg border border-[#333] bg-[#232730] px-3">
+        <Search className="h-4 w-4 flex-shrink-0 text-brand-muted" />
+        <input
+          value={q}
+          autoFocus
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t.searchPeople}
+          className="flex-1 bg-transparent py-2.5 text-[14px] text-white placeholder-gray-500 focus:outline-none"
+        />
+      </div>
+      <ul className="max-h-72 space-y-1 overflow-y-auto">
+        {results.map((p) => {
+          const already = existing.has(p.id) || addedIds.has(p.id);
+          return (
+            <li key={p.id}>
+              <button
+                disabled={already || busyId === p.id}
+                onClick={async () => {
+                  setBusyId(p.id);
+                  const err = await onAdd(p.id);
+                  setBusyId(null);
+                  if (!err) setAddedIds((s) => new Set(s).add(p.id));
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-white/5 disabled:opacity-60"
+              >
+                <Avatar url={p.avatar_url} name={p.full_name} size={34} />
+                <span className="flex-1 truncate text-[14px] text-white">
+                  {p.full_name || "—"}
+                </span>
+                {busyId === p.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-brand-muted" />
+                ) : already ? (
+                  <span className="text-[11px] font-semibold text-brand-muted">
+                    {t.added}
+                  </span>
+                ) : (
+                  <UserPlus className="h-4 w-4 text-brand-gold" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <button
+        onClick={onClose}
+        className="mt-3 w-full rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+      >
+        {t.close}
+      </button>
     </ModalShell>
   );
 }
