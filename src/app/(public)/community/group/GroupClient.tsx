@@ -604,6 +604,47 @@ export default function GroupClient({
 
   return (
     <div className={shell}>
+      {/* ============ MOBILE · room avatar rail (steps 2 & 3) =========== */}
+      <nav
+        className={`${
+          mobileCol === "rooms" ? "hidden" : "flex"
+        } w-16 flex-shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-[#2a2d35] bg-[#111317] py-3 md:hidden`}
+      >
+        <button
+          onClick={() => setMobileCol("rooms")}
+          aria-label={t.rooms}
+          className="mb-1 rounded-full p-2 text-brand-muted hover:text-white"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        {rooms.map((r) => {
+          const active = r.id === activeRoomId;
+          return (
+            <button
+              key={r.id}
+              onClick={() => {
+                setActiveRoomId(r.id);
+                setActiveGroupId(null);
+                setMobileCol("groups");
+              }}
+              aria-label={r.name}
+              className="relative flex items-center justify-center py-0.5"
+            >
+              {active && (
+                <span className="absolute left-[-12px] top-1/2 h-7 w-1 -translate-y-1/2 rounded-r bg-brand-gold" />
+              )}
+              <span
+                className={`transition ${
+                  active ? "" : "opacity-50 grayscale"
+                }`}
+              >
+                <Avatar name={r.name} size={44} />
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
       {/* ============================================ COLUMN 1 · ROOMS === */}
       <aside
         className={`${
@@ -692,16 +733,9 @@ export default function GroupClient({
       <aside
         className={`${
           mobileCol === "groups" ? "flex" : "hidden"
-        } md:flex w-full md:w-64 lg:w-72 flex-col border-r border-[#2a2d35] bg-[#191c22]`}
+        } md:flex min-w-0 flex-1 md:w-64 md:flex-none lg:w-72 flex-col border-r border-[#2a2d35] bg-[#191c22]`}
       >
         <div className="flex items-center gap-2 border-b border-[#2a2d35] px-3 py-3">
-          <button
-            onClick={() => setMobileCol("rooms")}
-            className="-ml-1 rounded-full p-1.5 text-brand-muted hover:text-white md:hidden"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
           <h2 className="flex-1 truncate text-[14px] font-bold">
             {activeRoom?.name || t.groups}
           </h2>
