@@ -46,6 +46,7 @@ export interface DevotionCategory {
   name: string;
   name_id?: string | null;
   parent_id?: string | null;
+  image_url?: string | null;
   created_at: string;
 }
 

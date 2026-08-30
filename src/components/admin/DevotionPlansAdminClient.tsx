@@ -299,12 +299,29 @@ export default function DevotionPlansAdminClient({
                     }
                     <span className="font-bold text-sm text-white truncate">{cat.name}</span>
                   </div>
-                  <button
-                    onClick={(e) => handleDeleteCategory(e, cat.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-brand-muted hover:text-red-500 transition-all shrink-0"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const url = prompt("Enter image URL for this category:", cat.image_url || "");
+                        if (url !== null) {
+                          supabase.from("devotion_categories").update({ image_url: url }).eq("id", cat.id).then(({data}) => {
+                            setCategories(categories.map(c => c.id === cat.id ? { ...c, image_url: url } : c));
+                          });
+                        }
+                      }}
+                      className="p-1 text-brand-muted hover:text-brand-gold"
+                      title="Edit Category Image"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteCategory(e, cat.id)}
+                      className="p-1 text-brand-muted hover:text-red-500"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Sub-categories (expanded) */}
