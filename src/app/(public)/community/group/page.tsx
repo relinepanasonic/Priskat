@@ -32,14 +32,19 @@ export default async function GroupPage() {
   };
   const canCreateRoom = ROOM_ADMIN_ROLES.includes(profileRow?.role ?? "");
 
-  // Rooms (everyone sees every room).
+  // Rooms RLS already hides hidden rooms I'm not a member of.
   const { data: rooms } = await supabase
     .from("rooms")
-    .select("id, name, description, created_at")
+    .select("id, name, description, is_public, is_hidden, owner_id, created_at")
     .eq("is_archived", false)
     .order("created_at", { ascending: true });
 
-  // Groups I'm an accepted member of.
+  const { data: roomMemberships } = await supabase
+    .from("room_members")
+    .select("room_id")
+    .eq("user_id", user.id);
+  const myRoomIds = (roomMemberships || []).map((m: any) => m.room_id);
+
   const { data: memberships } = await supabase
     .from("group_members")
     .select("role, group_id")
@@ -51,7 +56,6 @@ export default async function GroupPage() {
 
   const roomIds = (rooms || []).map((r: any) => r.id);
 
-  // Every group inside those rooms that RLS lets me see (public ones + mine).
   let groups: any[] = [];
   if (roomIds.length) {
     const { data } = await supabase
@@ -61,23 +65,28 @@ export default async function GroupPage() {
       )
       .in("room_id", roomIds)
       .order("created_at", { ascending: true });
-    groups = (data || []).map((g: any) => ({
-      ...g,
-      joined: myGroupIds.includes(g.id),
-      myRole: myRoleByGroup[g.id] ?? null,
-    }));
+    groups = data || [];
   }
 
-  // Sub-channels for groups I've actually joined.
-  let channels: any[] = [];
+  // One hidden sub-thread per group holds the chat. Resolve it for my groups.
+  const chatIdByGroup: Record<string, string> = {};
   if (myGroupIds.length) {
-    const { data } = await supabase
+    const { data: subs } = await supabase
       .from("group_subgroups")
-      .select("id, group_id, name, description, created_at")
+      .select("id, group_id, created_at")
       .in("group_id", myGroupIds)
       .order("created_at", { ascending: true });
-    channels = data || [];
+    (subs || []).forEach((s: any) => {
+      if (!chatIdByGroup[s.group_id]) chatIdByGroup[s.group_id] = s.id;
+    });
   }
+
+  const shapedGroups = groups.map((g: any) => ({
+    ...g,
+    joined: myGroupIds.includes(g.id),
+    myRole: myRoleByGroup[g.id] ?? null,
+    chat_id: chatIdByGroup[g.id] ?? null,
+  }));
 
   return (
     <GroupClient
@@ -85,8 +94,8 @@ export default async function GroupPage() {
       me={me}
       canCreateRoom={canCreateRoom}
       rooms={rooms || []}
-      groups={groups}
-      channels={channels}
+      groups={shapedGroups}
+      myRoomIds={myRoomIds}
     />
   );
 }
