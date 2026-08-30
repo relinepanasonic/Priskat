@@ -9,3 +9,4 @@ WHERE name = 'Marriage' AND parent_id IS NULL;
 UPDATE public.devotion_categories
 SET image_url = '/images/categories/faith.jpg'
 WHERE name = 'Faith' AND parent_id IS NULL;
+

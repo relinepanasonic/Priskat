@@ -98,8 +98,6 @@ export default function PlansClient({
                     ) : (
                       <div className="w-full h-full flex flex-col p-3 overflow-y-auto hide-scrollbar">
                         <span className="text-white text-xs font-bold mt-2 leading-snug">{displayTitle}</span>
-                      </div>
-                    )}
                     
                     {isCompletedShelf && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
@@ -118,8 +116,6 @@ export default function PlansClient({
                         <span className="text-[10px] sm:text-xs font-serif font-bold text-[#e8decd] tracking-wide w-full text-center leading-tight drop-shadow-md">
                           {displayTitle}
                         </span>
-                      </div>
-                    )}
 
                     {/* Glossy overlay */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
@@ -174,30 +170,31 @@ export default function PlansClient({
             {topCategories.map(cat => {
               const catName = language === "id" && cat.name_id ? cat.name_id : cat.name;
               const isSelected = selectedCatId === cat.id;
+              const imageUrl = cat.image_url || `/images/categories/${cat.name.toLowerCase()}.jpg`;
               
               return (
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCatId(isSelected ? "all" : cat.id)}
-                  className={`relative overflow-hidden rounded-full px-6 py-2.5 transition-all duration-300 border ${
+                  className={`relative flex items-center justify-center overflow-hidden rounded-full h-12 sm:h-14 px-6 sm:px-8 transition-all duration-300 border ${
                     isSelected 
-                      ? "border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-105" 
-                      : "border-[#333] grayscale opacity-70 hover:opacity-100 hover:scale-105"
+                      ? "border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-105 z-10" 
+                      : "border-[#333] hover:border-[#555] grayscale hover:grayscale-0 hover:scale-105"
                   }`}
                 >
-                  {cat.image_url ? (
-                    <Image 
-                      src={cat.image_url} 
-                      alt={catName} 
-                      fill 
-                      className={`object-cover transition-opacity duration-300 ${isSelected ? "opacity-80" : "opacity-40"}`} 
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#2a2d35] to-[#1a1d24]" />
-                  )}
+                  <Image 
+                    src={imageUrl} 
+                    alt={catName} 
+                    fill 
+                    className={`object-cover transition-opacity duration-300 ${isSelected ? "opacity-90" : "opacity-60"}`} 
+                    onError={(e) => {
+                      // Fallback if image doesn't exist
+                      (e.currentTarget.style.display = 'none');
+                    }}
+                  />
+                  <div className={`absolute inset-0 transition-colors duration-300 ${isSelected ? "bg-black/20" : "bg-black/50"}`}></div>
                   
-                  <div className="absolute inset-0 bg-black/40"></div>
-                  <span className={`relative z-10 font-bold text-sm tracking-wide ${isSelected ? "text-white drop-shadow-md" : "text-gray-300"}`}>
+                  <span className={`relative z-10 font-bold text-sm tracking-wider ${isSelected ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" : "text-gray-200"}`}>
                     {catName}
                   </span>
                 </button>
