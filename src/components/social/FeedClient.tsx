@@ -220,6 +220,24 @@ export default function FeedClient({ userAvatar, userName, userId, posts, lang =
     }
   }, [content]);
 
+  // Check for shared drafts from other pages
+  useEffect(() => {
+    try {
+      const draft = localStorage.getItem("draft_thought");
+      if (draft) {
+        setContent(draft);
+        localStorage.removeItem("draft_thought");
+        // Focus and scroll to textarea slightly after setting content
+        setTimeout(() => {
+          textareaRef.current?.focus();
+          textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    } catch (e) {
+      console.log('Error reading draft_thought', e);
+    }
+  }, []);
+
   const insertText = (text: string) => {
     const newContent = content ? `${content}\n\n${text}` : text;
     setContent(newContent);

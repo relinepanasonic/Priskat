@@ -1,0 +1,1876 @@
+-- 039_seed_devotions_marriage.sql
+-- Generated from Marriage_devotions.csv by scripts/gen_devotion_seed.js
+-- Plans: 12  Days: 61  Top categories: 1  Sub-categories: 4
+--
+-- Self-contained: adds any missing bilingual columns first, so a skipped
+-- earlier migration cannot make this roll back.
+-- Re-runnable: each plan is deleted by English title and re-inserted. Because
+-- user_devotion_progress cascades on plan delete, re-running resets progress
+-- for any plan a user had already started.
+
+ALTER TABLE public.devotion_categories ADD COLUMN IF NOT EXISTS parent_id UUID
+  REFERENCES public.devotion_categories(id) ON DELETE CASCADE;
+ALTER TABLE public.devotion_categories ADD COLUMN IF NOT EXISTS name_id TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS title_id TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS subtitle TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS subtitle_id TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS description_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS devotional_title_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS devotional_content_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS reflection TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS reflection_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS prayer TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS prayer_id TEXT;
+
+DO $$
+DECLARE
+  v_top_id UUID;
+  v_cat_id UUID;
+  v_plan_id UUID;
+  v_day_id UUID;
+BEGIN
+
+  SELECT id INTO v_top_id FROM public.devotion_categories
+    WHERE name = 'Marriage' AND parent_id IS NULL
+    ORDER BY created_at ASC LIMIT 1;
+  IF v_top_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Marriage', 'Pernikahan', NULL) RETURNING id INTO v_top_id;
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Pernikahan' WHERE id = v_top_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Building a Strong Foundation' AND parent_id = v_top_id
+    ORDER BY created_at ASC LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Building a Strong Foundation', 'Membangun Fondasi yang Kuat', v_top_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Membangun Fondasi yang Kuat' WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Communication & Conflict' AND parent_id = v_top_id
+    ORDER BY created_at ASC LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Communication & Conflict', 'Komunikasi & Konflik', v_top_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Komunikasi & Konflik' WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Intimacy & Faithfulness' AND parent_id = v_top_id
+    ORDER BY created_at ASC LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Intimacy & Faithfulness', 'Keintiman & Kesetiaan', v_top_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Keintiman & Kesetiaan' WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Marriage Through Trials' AND parent_id = v_top_id
+    ORDER BY created_at ASC LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Marriage Through Trials', 'Pernikahan di Tengah Cobaan', v_top_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Pernikahan di Tengah Cobaan' WHERE id = v_cat_id;
+  END IF;
+
+  -- =================================================================
+  -- Laying the Cornerstone  (Marriage > Building a Strong Foundation, 5d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Building a Strong Foundation' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Laying the Cornerstone';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Laying the Cornerstone', 'Meletakkan Batu Penjuru',
+     'A 5-day path for engaged couples building on Christ', '5 hari bagi pasangan bertunangan yang membangun di atas Kristus',
+     'Engagement is more than picking a date and a venue — it is the season when two people begin, quite literally, to build. Over five days, this plan invites engaged couples to slow down and consider what they are actually building their marriage on: feelings that rise and fall, or the unshakeable person of Jesus Christ. Each day pairs a well-loved Scripture with honest, testimony-style reflection on covenant, unity, love, leaving-and-cleaving, and the daily choice to serve the Lord together — laying stone after stone of a foundation meant to last a lifetime.', 'Masa pertunangan bukan sekadar memilih tanggal dan gedung — inilah musim ketika dua orang benar-benar mulai membangun. Selama lima hari, rencana ini mengajak pasangan yang bertunangan untuk berhenti sejenak dan mempertimbangkan di atas apa sebenarnya mereka membangun pernikahan mereka: perasaan yang naik turun, atau pribadi Yesus Kristus yang tak tergoyahkan. Setiap hari memadukan ayat Alkitab yang dikenal luas dengan renungan yang jujur dan reflektif tentang perjanjian, kesatuan, kasih, meninggalkan-dan-bersatu, serta pilihan harian untuk melayani Tuhan bersama — meletakkan batu demi batu dari fondasi yang dirancang untuk bertahan seumur hidup.', 5, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Choosing the Rock', 'Memilih Batu Karang',
+     'Every couple building a life together is, whether they realize it or not, choosing a foundation. Some build on the sand of romance alone — the butterflies, the chemistry, the sense that this person simply feels right. Sand is not a bad place to visit. Feelings are a real and good part of love. But Jesus was blunt about what happens to a house built only on sand: when the rain falls and the streams rise and the wind blows, it falls, and great is its fall.
+
+Engagement is the season to ask, honestly, what you are actually building on. Chemistry will ebb and flow across a lifetime. Circumstances will change — jobs will be lost, illnesses will come, children will arrive and rearrange everything. If the marriage rests only on how you feel in this engaged season, it is vulnerable to every storm ahead. But a marriage built on the rock — on Christ himself, on his word, on a shared commitment to obey what he says about love — can take the same rain, the same wind, the same flood, and still stand.
+
+Many couples find that this shift in thinking changes the whole tone of their engagement. Instead of asking only ''does this feel right,'' they begin asking ''are we building this together on something that will hold.'' That means practical things: praying together even when it is awkward, being honest about weaknesses before the wedding rather than after, seeking wise counsel instead of assuming love will simply figure everything out. None of this is unromantic — it is, in fact, the most loving thing two people can do for each other.
+
+If you are engaged, take today as an invitation to name the rock together. Not vaguely, not privately, but out loud, as a couple: we are building this marriage on Jesus Christ and on obedience to his word. Say it in prayer. Say it to each other. It will not feel dramatic today, but on some future ordinary Tuesday, when a storm comes, you will be glad you already knew where you stood.', 'Setiap pasangan yang membangun kehidupan bersama, disadari atau tidak, sedang memilih sebuah fondasi. Ada yang membangun di atas pasir romantisme semata — kupu-kupu di perut, kecocokan kimiawi, perasaan bahwa orang ini ''pas'' begitu saja. Pasir bukan tempat yang buruk untuk singgah. Perasaan adalah bagian yang nyata dan baik dari kasih. Namun Yesus berkata dengan tegas tentang apa yang terjadi pada rumah yang dibangun hanya di atas pasir: ketika hujan turun, banjir datang, dan angin melanda, rumah itu roboh, dan hebatlah kerusakannya.
+
+Masa pertunangan adalah musim untuk bertanya dengan jujur, di atas apa sebenarnya kita membangun. Kecocokan perasaan akan pasang surut sepanjang hidup. Keadaan akan berubah — pekerjaan bisa hilang, penyakit bisa datang, anak-anak akan lahir dan mengubah segalanya. Jika pernikahan hanya bersandar pada bagaimana perasaan kita di masa pertunangan ini, ia rentan terhadap setiap badai yang akan datang. Tetapi pernikahan yang dibangun di atas batu karang — di atas Kristus sendiri, di atas firman-Nya, di atas komitmen bersama untuk taat pada apa yang Ia katakan tentang kasih — dapat menghadapi hujan, angin, dan banjir yang sama, dan tetap berdiri.
+
+Banyak pasangan mendapati bahwa perubahan cara berpikir ini mengubah seluruh suasana masa pertunangan mereka. Alih-alih hanya bertanya ''apakah ini terasa benar,'' mereka mulai bertanya ''apakah kami sedang membangun ini bersama di atas sesuatu yang akan bertahan.'' Itu berarti hal-hal praktis: berdoa bersama meski terasa canggung, jujur tentang kelemahan sebelum pernikahan bukan sesudahnya, mencari nasihat yang bijaksana alih-alih menganggap kasih akan menyelesaikan semuanya dengan sendirinya. Semua ini bukan tidak romantis — justru inilah hal paling penuh kasih yang bisa dilakukan dua orang satu sama lain.
+
+Jika kamu sedang bertunangan, jadikan hari ini undangan untuk menyebut batu karang itu bersama-sama. Bukan samar-samar, bukan diam-diam, tetapi dengan suara nyata, sebagai pasangan: kami membangun pernikahan ini di atas Yesus Kristus dan ketaatan pada firman-Nya. Ucapkan dalam doa. Ucapkan satu sama lain. Hari ini mungkin terasa biasa saja, tetapi pada suatu hari Selasa yang biasa di masa depan, ketika badai datang, kamu akan bersyukur sudah tahu di atas apa kamu berdiri.',
+     'Name out loud, together, what you are building your marriage on — and let that shape one decision you make this week.', 'Sebutkan bersama-sama, dengan suara nyata, di atas apa kalian membangun pernikahan ini — dan biarkan itu membentuk satu keputusan yang kalian ambil minggu ini.',
+     'Lord Jesus, we want to build our marriage on you, not on shifting feelings or convenient seasons. Teach us today to choose you as our rock, in ways both small and costly. Amen.', 'Tuhan Yesus, kami ingin membangun pernikahan kami di atas-Mu, bukan di atas perasaan yang berubah-ubah atau musim yang nyaman. Ajar kami hari ini untuk memilih-Mu sebagai batu karang kami, dalam hal-hal kecil maupun yang menuntut pengorbanan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 7:24-25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 7:24-25', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'A Cord of Three Strands', 'Tali Tiga Lembar',
+     'There is an old picture of marriage that many engaged couples never quite think through: a wedding is not the joining of two strands, but three. Husband, wife, and God, woven together — which is precisely why the ancient wisdom of Ecclesiastes says a cord of three strands is not quickly broken. Two people alone, however deeply in love, are still just two threads. Pull hard enough, and two threads can snap. But weave in a third — the presence and power of God himself — and the whole cord becomes far stronger than the sum of its parts.
+
+Engaged couples often plan every visible detail of the wedding day while leaving this invisible thread almost entirely unexamined. Where will God actually sit in the marriage? Will he be an occasional guest, invited in for the big decisions and the Sunday service, or will he be woven all the way through — into the ordinary Tuesday conversation, into the budget, into the way conflict gets handled? The cord metaphor is a picture of constant, daily weaving, not a one-time inclusion.
+
+This is also good news for two imperfect people. You do not need to be flawless to build a strong marriage; you need to be tethered to someone who is. When one of you is weak, tired, or simply wrong, the third strand holds. Many couples testify that the seasons when they felt closest as spouses were not the seasons when everything was easy, but the seasons when they were praying together most honestly — because it is in shared prayer that the third strand gets pulled taut.
+
+As you prepare for marriage, consider making shared prayer a non-negotiable rhythm now, before the wedding, not after. It does not need to be long or eloquent. It simply needs to be honest and consistent — two threads, deliberately, repeatedly, wrapping themselves around the third.', 'Ada gambaran lama tentang pernikahan yang jarang benar-benar dipikirkan oleh pasangan yang bertunangan: pernikahan bukanlah penyatuan dua tali, melainkan tiga. Suami, istri, dan Allah, dianyam menjadi satu — itulah sebabnya hikmat kuno dalam Pengkhotbah berkata bahwa tali tiga lembar tidak mudah diputuskan. Dua orang saja, sedalam apa pun cinta mereka, tetaplah dua utas benang. Tarik cukup keras, dua benang bisa putus. Tetapi anyamkan utas ketiga — kehadiran dan kuasa Allah sendiri — dan seluruh tali menjadi jauh lebih kuat daripada jumlah bagiannya.
+
+Pasangan yang bertunangan sering merencanakan setiap detail yang terlihat pada hari pernikahan, tetapi hampir sama sekali tidak memeriksa benang yang tak terlihat ini. Di mana sebenarnya tempat Allah dalam pernikahan itu? Apakah Ia hanya tamu sesekali, diundang untuk keputusan besar dan ibadah Minggu, atau apakah Ia dianyam sepenuhnya — ke dalam percakapan biasa hari Selasa, ke dalam anggaran keuangan, ke dalam cara konflik ditangani? Gambaran tali ini adalah gambaran anyaman yang terus-menerus setiap hari, bukan penyertaan satu kali saja.
+
+Ini juga kabar baik bagi dua orang yang tidak sempurna. Kamu tidak perlu sempurna untuk membangun pernikahan yang kuat; kamu perlu terikat pada Dia yang sempurna. Ketika salah satu dari kalian lemah, lelah, atau bahkan salah, utas ketiga itu tetap menahan. Banyak pasangan bersaksi bahwa musim-musim ketika mereka merasa paling dekat sebagai suami istri bukanlah musim ketika segalanya mudah, melainkan musim ketika mereka berdoa bersama dengan paling jujur — karena dalam doa bersamalah utas ketiga itu ditarik erat.
+
+Saat kamu mempersiapkan pernikahan, pertimbangkan untuk menjadikan doa bersama sebagai kebiasaan yang tidak bisa ditawar, mulai sekarang, sebelum pernikahan, bukan sesudahnya. Tidak perlu panjang atau fasih. Cukup jujur dan konsisten — dua benang, dengan sengaja, berulang kali, melilit utas ketiga.',
+     'This week, agree on one simple, repeatable rhythm of prayer together — even five honest minutes counts.', 'Minggu ini, sepakati satu kebiasaan doa bersama yang sederhana dan bisa diulang — lima menit yang jujur pun sudah cukup berarti.',
+     'Father, weave yourself into the center of our relationship, not just the edges. Make us a cord of three strands, and teach us to pray together honestly, starting today. Amen.', 'Bapa, anyamkan diri-Mu di pusat hubungan kami, bukan hanya di pinggirnya. Jadikan kami tali tiga lembar, dan ajar kami berdoa bersama dengan jujur, mulai hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-12', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Love That Chooses', 'Kasih yang Memilih',
+     'Almost every couple hears 1 Corinthians 13 read at a wedding, and almost every couple half-forgets, by the time the honeymoon glow fades, what the passage is actually describing. It is not a description of a feeling. Patience, kindness, the refusal to envy or boast, the choice not to keep a record of wrongs — these are not emotions that simply happen to us. They are actions, decisions, muscles exercised again and again, often precisely when we do not feel like exercising them.
+
+This matters enormously for engaged couples, because engagement is usually the easiest season for feeling in love and one of the hardest seasons for practicing this kind of love. There are fewer daily friction points than marriage will bring — no shared laundry, no shared finances yet, no 2 a.m. arguments about who forgot to lock the door. It is worth asking honestly: when the warm feeling is not present, will we still choose patience? Will we still choose to keep no record of wrongs?
+
+The good news is that this kind of love can be practiced now, in small ways, before the stakes are as high as they will be later. Choosing to listen without interrupting during a hard conversation. Choosing not to bring up an old mistake during a new disagreement. Choosing to celebrate your fiancé''s success instead of quietly comparing it to your own. Each small choice is training for a lifetime of larger ones.
+
+Love, in this biblical sense, is not fragile. It does not depend on being handled gently by circumstances. It bears, believes, hopes, and endures — all things. That kind of love can be chosen on your best day and, just as importantly, on your worst one. Ask God today to begin building that kind of love in you, starting now, so that on your wedding day you are not merely feeling love, but already practicing it.', 'Hampir setiap pasangan mendengar 1 Korintus 13 dibacakan pada hari pernikahan mereka, dan hampir setiap pasangan setengah melupakan, begitu masa madu berlalu, apa yang sebenarnya digambarkan oleh bacaan itu. Ini bukan gambaran sebuah perasaan. Kesabaran, kemurahan hati, keengganan untuk iri hati atau memegahkan diri, pilihan untuk tidak menyimpan kesalahan orang lain — semua ini bukan emosi yang begitu saja terjadi pada kita. Semua ini adalah tindakan, keputusan, otot yang dilatih berulang kali, sering kali justru ketika kita tidak ingin melatihnya.
+
+Ini sangat penting bagi pasangan yang bertunangan, karena masa pertunangan biasanya adalah musim paling mudah untuk merasa jatuh cinta, dan salah satu musim paling sulit untuk mempraktikkan kasih semacam ini. Gesekan harian jauh lebih sedikit dibandingkan yang akan dibawa oleh pernikahan — belum ada cucian bersama, belum ada keuangan bersama, belum ada pertengkaran pukul dua pagi tentang siapa yang lupa mengunci pintu. Layak ditanyakan dengan jujur: ketika perasaan hangat itu tidak hadir, akankah kami tetap memilih sabar? Akankah kami tetap memilih untuk tidak menyimpan kesalahan?
+
+Kabar baiknya, kasih semacam ini bisa dilatih sekarang, dalam hal-hal kecil, sebelum taruhannya setinggi yang akan terjadi nanti. Memilih untuk mendengarkan tanpa memotong saat percakapan sulit. Memilih untuk tidak mengungkit kesalahan lama saat berselisih tentang hal baru. Memilih untuk merayakan keberhasilan calon pasangan alih-alih diam-diam membandingkannya dengan keberhasilan diri sendiri. Setiap pilihan kecil adalah latihan untuk pilihan-pilihan besar seumur hidup.
+
+Kasih, dalam pengertian Alkitab ini, tidaklah rapuh. Ia tidak bergantung pada diperlakukan dengan lembut oleh keadaan. Ia menanggung, percaya, mengharapkan, dan sabar menanggung segala sesuatu. Kasih semacam itu bisa dipilih pada hari terbaikmu, dan sama pentingnya, pada hari terburukmu. Mintalah kepada Allah hari ini untuk mulai membangun kasih semacam itu dalam dirimu, mulai sekarang, sehingga pada hari pernikahanmu kamu bukan sekadar merasakan kasih, tetapi sudah mempraktikkannya.',
+     'Notice one moment this week when love felt like a choice rather than a feeling — and make the loving choice anyway.', 'Perhatikan satu momen minggu ini ketika kasih terasa seperti pilihan, bukan perasaan — dan tetap pilih untuk mengasihi.',
+     'Lord, grow in us a love that is patient and kind on ordinary days, not just easy ones. Help us practice this love now, before the wedding, so it becomes our habit for a lifetime. Amen.', 'Tuhan, tumbuhkan dalam kami kasih yang sabar dan murah hati pada hari-hari biasa, bukan hanya hari-hari mudah. Tolong kami melatih kasih ini sekarang, sebelum pernikahan, agar menjadi kebiasaan kami seumur hidup. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 13:4-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 13:4-7', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Leaving Well, Cleaving Well', 'Meninggalkan dengan Baik, Bersatu dengan Teguh',
+     'God''s very first description of marriage, spoken before there was ever a wedding to plan, is remarkably simple: a man leaves his father and mother and is united to his wife, and the two become one flesh. Leaving and uniting — in that order, and both on purpose. It is worth noticing that the leaving comes first. Before a new ''one flesh'' unit can be formed, the old primary loyalty has to shift.
+
+For engaged couples, this is often the quiet, unglamorous work behind the wedding planning. It means having honest conversations about family patterns you will keep and ones you will not repeat. It means learning to make decisions as a couple, even when parents have strong opinions, without dishonoring your parents but without letting them run the marriage either. It means your future spouse becomes, practically and emotionally, your new ''first family'' — the person you turn to first with news, worries, and decisions.
+
+This is not always easy, especially in cultures — including much of Indonesian culture — where extended family involvement is deep and loving and constant. Leaving does not mean cutting off or dishonoring parents; Scripture elsewhere is clear about honoring them. It means a reordering of primary loyalty, done with grace, so that husband and wife can become genuinely, fully one.
+
+Talk honestly with your fiancé this week about what ''leaving'' will look like for each of your families — the boundaries you will need, the traditions you want to keep, the ways you will support your parents while still building an independent household. Getting this conversation right now will save you enormous conflict later, and it will let the ''uniting'' part of this verse happen the way God intended: completely, joyfully, and without divided hearts.', 'Gambaran pertama Allah tentang pernikahan, diucapkan bahkan sebelum ada pesta pernikahan untuk direncanakan, sangatlah sederhana: seorang laki-laki meninggalkan ayah dan ibunya dan bersatu dengan istrinya, sehingga keduanya menjadi satu daging. Meninggalkan dan bersatu — dalam urutan itu, dan keduanya dilakukan dengan sengaja. Perlu diperhatikan bahwa meninggalkan datang lebih dulu. Sebelum unit ''satu daging'' yang baru dapat terbentuk, kesetiaan utama yang lama harus bergeser.
+
+Bagi pasangan yang bertunangan, inilah pekerjaan yang tenang dan tidak glamor di balik persiapan pernikahan. Artinya, ada percakapan jujur tentang pola keluarga yang akan kalian pertahankan dan yang tidak akan kalian ulangi. Artinya, belajar mengambil keputusan sebagai pasangan, bahkan ketika orang tua punya pendapat kuat, tanpa mempermalukan orang tua tetapi juga tanpa membiarkan mereka mengatur pernikahan. Artinya, calon pasanganmu menjadi, secara praktis dan emosional, ''keluarga utama'' barumu — orang pertama yang kamu tuju dengan kabar, kekhawatiran, dan keputusan.
+
+Ini tidak selalu mudah, terutama dalam budaya — termasuk banyak budaya di Indonesia — di mana keterlibatan keluarga besar begitu dalam, penuh kasih, dan terus-menerus. Meninggalkan bukan berarti memutuskan hubungan atau tidak menghormati orang tua; bagian lain Alkitab jelas mengajarkan untuk menghormati mereka. Artinya adalah penataan ulang kesetiaan utama, dilakukan dengan penuh anugerah, sehingga suami dan istri dapat benar-benar, sepenuhnya, menjadi satu.
+
+Bicaralah dengan jujur bersama calon pasanganmu minggu ini tentang seperti apa ''meninggalkan'' itu bagi keluarga kalian masing-masing — batasan yang kalian perlukan, tradisi yang ingin kalian pertahankan, cara kalian akan tetap mendukung orang tua sambil membangun rumah tangga yang mandiri. Membicarakan ini sekarang akan menghindarkan kalian dari konflik besar di kemudian hari, dan akan membiarkan bagian ''bersatu'' dari ayat ini terjadi sebagaimana dimaksudkan Allah: sepenuhnya, dengan sukacita, dan tanpa hati yang terbagi.',
+     'Talk together about one boundary or pattern with your families that you want to set wisely, in love, before the wedding.', 'Bicarakan bersama satu batasan atau pola dalam keluarga masing-masing yang ingin kalian tetapkan dengan bijak, dalam kasih, sebelum pernikahan.',
+     'Lord, give us grace to honor our parents while building a new home together, fully united, with undivided hearts. Amen.', 'Tuhan, berikan kami anugerah untuk menghormati orang tua kami sambil membangun rumah baru bersama, sepenuhnya bersatu, dengan hati yang tidak terbagi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 2:24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 2:24', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'As for Us and Our House', 'Tetapi Kami Seisi Rumah Kami',
+     'Joshua''s famous line was not spoken at a wedding, but it belongs at the start of one anyway. Near the end of his life, standing before the people he had led for decades, Joshua laid out a choice: serve the gods of the surrounding nations, or serve the Lord who had brought them safely this far. Then he made a declaration that has echoed through generations of families since — ''as for me and my household, we will serve the Lord.''
+
+Engagement is the moment to make that same declaration as a couple, deliberately, before the busyness of married life sweeps you along into whatever direction is easiest. It is easy to assume faith will simply carry over into marriage the way it exists now. But households, like nations, drift toward whatever is convenient unless someone decides, on purpose, which way they will go. Joshua did not wait to see what would happen. He chose, and he said so out loud, publicly.
+
+What might it look like for your future household to make this choice on purpose? It might mean deciding now, before the wedding, how you will worship together — which parish, which rhythms of prayer, how you will raise children in the faith if God gives you children. It might mean agreeing that no matter how demanding work or family life becomes, Sunday Mass and shared prayer are non-negotiable. These decisions, made early and together, become the guardrails that keep a household oriented toward God even in seasons when neither spouse feels particularly spiritual.
+
+As you finish this five-day journey, consider saying Joshua''s words together, out loud, as your own — not as a formality, but as a real commitment for the household you are about to become. As for us and our house, we will serve the Lord. Let that be the last stone you lay before the wedding, and the first one you build on every day after.', 'Ucapan terkenal Yosua tidak diucapkan pada sebuah pernikahan, tetapi tetap pantas menjadi awal dari salah satunya. Menjelang akhir hidupnya, berdiri di hadapan umat yang telah ia pimpin selama puluhan tahun, Yosua memberikan sebuah pilihan: melayani ilah-ilah bangsa-bangsa di sekitar mereka, atau melayani TUHAN yang telah membawa mereka dengan selamat sejauh ini. Lalu ia membuat pernyataan yang bergema turun-temurun sejak itu — ''tetapi aku dan seisi rumahku, kami akan beribadah kepada TUHAN.''
+
+Masa pertunangan adalah saat yang tepat untuk membuat pernyataan yang sama sebagai pasangan, dengan sengaja, sebelum kesibukan hidup berumah tangga menyeret kalian ke arah mana pun yang paling mudah. Mudah untuk menganggap iman akan begitu saja berlanjut ke dalam pernikahan sebagaimana adanya sekarang. Tetapi rumah tangga, seperti bangsa-bangsa, cenderung hanyut ke arah yang paling nyaman kecuali seseorang memutuskan, dengan sengaja, ke arah mana mereka akan pergi. Yosua tidak menunggu untuk melihat apa yang akan terjadi. Ia memilih, dan ia mengatakannya dengan lantang, di depan umum.
+
+Seperti apa keputusan yang disengaja ini bagi rumah tangga kalian di masa depan? Bisa berarti memutuskan sekarang, sebelum pernikahan, bagaimana kalian akan beribadah bersama — paroki mana, ritme doa yang mana, bagaimana kalian akan membesarkan anak-anak dalam iman jika Allah mengaruniakan anak. Bisa berarti sepakat bahwa betapapun sibuknya pekerjaan atau kehidupan keluarga, Misa Minggu dan doa bersama tidak bisa ditawar. Keputusan-keputusan ini, dibuat sejak awal dan bersama-sama, menjadi pagar pengaman yang menjaga rumah tangga tetap berorientasi kepada Allah bahkan di musim-musim ketika tak seorang pun dari pasangan merasa sedang bersemangat secara rohani.
+
+Saat menutup perjalanan lima hari ini, pertimbangkan untuk mengucapkan kata-kata Yosua bersama-sama, dengan suara nyata, sebagai milik kalian sendiri — bukan sekadar formalitas, tetapi komitmen sungguhan bagi rumah tangga yang akan segera kalian bentuk. Tetapi kami seisi rumah kami, kami akan beribadah kepada TUHAN. Biarlah itu menjadi batu terakhir yang kalian letakkan sebelum pernikahan, dan batu pertama yang kalian bangun setiap hari sesudahnya.',
+     'Say Joshua''s declaration together out loud, and decide on one concrete practice that will keep your future household oriented toward God.', 'Ucapkan pernyataan Yosua bersama-sama dengan suara nyata, dan tentukan satu kebiasaan konkret yang akan menjaga rumah tangga kalian tetap berorientasi kepada Allah.',
+     'Lord, as we prepare for marriage, we declare together: as for us and our house, we will serve you. Root that choice deep in us before the wedding day and every day after. Amen.', 'Tuhan, saat kami mempersiapkan pernikahan, kami menyatakan bersama: kami seisi rumah kami akan beribadah kepada-Mu. Tanamkan pilihan itu dalam-dalam dalam diri kami sebelum hari pernikahan dan setiap hari sesudahnya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Joshua 24:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yosua 24:15', 'TB', 1);
+
+  -- =================================================================
+  -- The First Year Foundation  (Marriage > Building a Strong Foundation, 3d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Building a Strong Foundation' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'The First Year Foundation';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'The First Year Foundation', 'Fondasi Tahun Pertama',
+     'A 3-day reset for newlyweds still learning each other', '3 hari penyegaran bagi pengantin baru yang masih saling belajar',
+     'The first year of marriage is full of small surprises — the way your spouse loads the dishwasher, handles stress, or goes quiet after a hard day. None of it is what the wedding day prepared you for. This short three-day plan is written for newlyweds navigating that adjustment, offering honest encouragement about binding love, patient unity, and bringing daily anxieties to God together instead of letting them settle quietly between two people who are still becoming one.', 'Tahun pertama pernikahan penuh dengan kejutan-kejutan kecil — cara pasangan mengisi rak piring, menghadapi stres, atau menjadi diam setelah hari yang berat. Semua itu tidak pernah benar-benar dipersiapkan oleh hari pernikahan. Rencana singkat tiga hari ini ditulis bagi pengantin baru yang sedang menjalani masa penyesuaian itu, memberikan dorongan yang jujur tentang kasih yang mengikat, kesatuan yang sabar, dan membawa kekhawatiran harian kepada Allah bersama-sama, alih-alih membiarkannya diam-diam mengendap di antara dua orang yang masih dalam proses menjadi satu.', 3, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Bond That Holds It Together', 'Ikatan yang Mempersatukan',
+     'No one warns newlyweds quite enough about how strange the first few months can feel. You spent months, maybe years, planning a single day, and then suddenly you are living an entire ordinary life with another person — sharing a bathroom, negotiating whose family gets which holiday, discovering that your spouse squeezes the toothpaste tube from the wrong end. It is common, in this season, to wonder privately whether something is wrong simply because marriage feels less like a fairy tale and more like a construction site.
+
+Paul''s letter to the Colossians offers a picture that fits this season perfectly. After listing virtues like compassion, kindness, humility, and patience, he adds one more instruction: over all these, put on love, which binds everything together in perfect unity. Love here is described almost architecturally — a binding, a belt, a cord that holds the whole structure together even while other pieces are still settling into place.
+
+That image matters because it tells newlyweds something freeing: you do not need every piece of the marriage to be finished or polished yet. The communication does not need to be flawless. The habits do not need to be fully merged. What holds a still-unfinished house together is love, chosen and practiced daily, wrapping around all the pieces that are still under construction. Many couples find, looking back years later, that the awkward, adjusting first months were exactly where this binding love was quietly being strengthened.
+
+If this first year feels less smooth than you expected, take heart — that is normal, not a warning sign. Keep putting on love deliberately, the way you would put on a coat, even on days it does not come naturally. It is precisely that daily choice which binds two still-adjusting lives into a genuinely unified one.', 'Tidak ada yang cukup memperingatkan pengantin baru tentang betapa anehnya beberapa bulan pertama itu bisa terasa. Kamu menghabiskan berbulan-bulan, bahkan bertahun-tahun, merencanakan satu hari, lalu tiba-tiba kamu menjalani seluruh kehidupan biasa bersama orang lain — berbagi kamar mandi, merundingkan siapa mendapat hari raya keluarga yang mana, menyadari bahwa pasanganmu memencet odol dari ujung yang salah. Wajar, di musim ini, diam-diam bertanya-tanya apakah ada yang salah hanya karena pernikahan terasa lebih seperti lokasi pembangunan daripada dongeng.
+
+Surat Paulus kepada jemaat di Kolose menawarkan gambaran yang sangat pas untuk musim ini. Setelah menyebutkan sifat-sifat seperti belas kasihan, kemurahan, kerendahan hati, dan kesabaran, ia menambahkan satu petunjuk lagi: di atas semuanya itu, kenakanlah kasih, sebagai pengikat yang mempersatukan dan menyempurnakan. Kasih di sini digambarkan hampir seperti sesuatu yang arsitektural — sebuah ikatan, sebuah sabuk, sebuah tali yang menahan seluruh struktur tetap bersatu meski bagian-bagian lain masih dalam proses menetap pada tempatnya.
+
+Gambaran itu penting karena memberi tahu pengantin baru sesuatu yang melegakan: kamu tidak perlu setiap bagian dari pernikahanmu sudah selesai atau sempurna sekarang. Komunikasi tidak perlu sempurna. Kebiasaan tidak perlu sepenuhnya menyatu. Yang menahan rumah yang belum selesai ini tetap bersatu adalah kasih, dipilih dan dilatih setiap hari, melilit semua bagian yang masih dalam pembangunan. Banyak pasangan mendapati, bertahun-tahun kemudian saat menoleh ke belakang, bahwa bulan-bulan pertama yang canggung dan penuh penyesuaian itu justru saat ikatan kasih ini diam-diam sedang diperkuat.
+
+Jika tahun pertama ini terasa kurang mulus dari yang kamu bayangkan, tenanglah — itu wajar, bukan tanda peringatan. Teruslah mengenakan kasih dengan sengaja, seperti mengenakan jaket, bahkan pada hari-hari ketika itu tidak terasa alami. Justru pilihan harian itulah yang mengikat dua kehidupan yang masih menyesuaikan diri menjadi benar-benar satu.',
+     'Where in your still-adjusting first year do you need to consciously ''put on love'' today, rather than wait for it to come naturally?', 'Di bagian mana dari tahun pertama kalian yang masih dalam penyesuaian ini kamu perlu dengan sadar ''mengenakan kasih'' hari ini, alih-alih menunggu itu datang dengan sendirinya?',
+     'Lord, bind our still-unfinished marriage together with your love. When patience runs thin in these adjusting months, remind us to put love on deliberately. Amen.', 'Tuhan, ikatlah pernikahan kami yang belum sepenuhnya selesai ini dengan kasih-Mu. Ketika kesabaran menipis di bulan-bulan penyesuaian ini, ingatkan kami untuk mengenakan kasih dengan sengaja. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:14', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Bearing With Each Other', 'Sabar Menanggung Satu Sama Lain',
+     'There is a particular moment many newlyweds remember vividly: the first time a small habit that once seemed endearing suddenly becomes mildly irritating. The way he hums off-key while cooking. The way she leaves cabinet doors open. It is not that love has faded — it is that daily proximity reveals real, human texture, the kind that dating and engagement rarely fully show.
+
+Paul''s letter to the Ephesians speaks directly into this moment, urging believers to be completely humble and gentle, patient, bearing with one another in love, making every effort to keep the unity of the Spirit through the bond of peace. Notice that bearing with one another is listed as an ongoing effort, not a one-time achievement. It assumes friction will happen and asks for a posture of patience in response, rather than surprise or offense.
+
+For newlyweds, this is enormously practical. It means the small habits and quirks you are discovering in each other are not signs of a mistake, but simply the raw material every real marriage is made of. The ''making every effort'' language matters too — unity does not maintain itself passively. It takes intentional gentleness on hard days, a decision to extend patience before frustration curdles into resentment.
+
+If this first year has surfaced quirks, habits, or friction points you did not expect, take it as an invitation rather than an alarm. Practice naming what annoys you gently and honestly, rather than letting it build silently. And practice, just as intentionally, bearing with your spouse''s imperfections the way you hope yours will be borne — with humility, gentleness, and patience, held together by the bond of peace.', 'Ada satu momen tertentu yang diingat dengan jelas oleh banyak pengantin baru: saat pertama kali kebiasaan kecil yang dulu terasa menggemaskan tiba-tiba terasa sedikit mengganggu. Cara dia bersenandung sumbang saat memasak. Cara dia meninggalkan pintu lemari terbuka. Bukan berarti kasih sudah memudar — hanya saja kedekatan sehari-hari menyingkapkan tekstur manusiawi yang nyata, yang jarang sepenuhnya terlihat saat berpacaran atau bertunangan.
+
+Surat Paulus kepada jemaat di Efesus berbicara langsung ke momen ini, mendesak orang percaya untuk hidup dengan rendah hati, lemah lembut, sabar, dan saling membantu dalam kasih, serta berusaha memelihara kesatuan Roh oleh ikatan damai sejahtera. Perhatikan bahwa saling menanggung ini disebutkan sebagai usaha yang berkelanjutan, bukan pencapaian sekali jadi. Ini mengasumsikan bahwa gesekan akan terjadi dan meminta sikap sabar sebagai responsnya, bukan keterkejutan atau tersinggung.
+
+Bagi pengantin baru, ini sangat praktis. Artinya, kebiasaan-kebiasaan kecil dan keunikan yang sedang kamu temukan pada satu sama lain bukanlah tanda kesalahan, melainkan sekadar bahan mentah yang membentuk setiap pernikahan yang nyata. Kata ''berusaha'' juga penting — kesatuan tidak terpelihara dengan sendirinya secara pasif. Ini membutuhkan kelembutan yang disengaja pada hari-hari sulit, keputusan untuk memberi kesabaran sebelum frustrasi berubah menjadi kepahitan.
+
+Jika tahun pertama ini memunculkan keunikan, kebiasaan, atau titik gesekan yang tidak kamu duga, anggaplah itu sebuah undangan, bukan tanda bahaya. Berlatihlah menyebutkan apa yang mengganggumu dengan lembut dan jujur, alih-alih membiarkannya menumpuk diam-diam. Dan berlatihlah, dengan sama sengajanya, menanggung kekurangan pasanganmu sebagaimana kamu berharap kekuranganmu ditanggung — dengan rendah hati, lemah lembut, dan sabar, terikat oleh ikatan damai sejahtera.',
+     'Name one small habit of your spouse''s that has been quietly irritating you, and choose gentle patience over silent frustration.', 'Sebutkan satu kebiasaan kecil pasanganmu yang diam-diam mengganggumu, dan pilihlah kesabaran yang lembut daripada frustrasi yang dipendam.',
+     'Lord, give us humility and gentleness for the small frictions of daily life together. Help us bear with each other in love, and keep our unity through your peace. Amen.', 'Tuhan, berikan kami kerendahan hati dan kelembutan untuk gesekan-gesekan kecil dalam hidup bersama sehari-hari. Tolong kami saling menanggung dalam kasih, dan peliharalah kesatuan kami melalui damai sejahtera-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:2-3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:2-3', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Bringing the Worries Together', 'Membawa Kekhawatiran Bersama',
+     'The first year of marriage tends to bring a steady stream of new anxieties — money conversations that feel more real now that accounts are joined, career decisions that affect two lives instead of one, wondering whether you are doing this whole ''being married'' thing right. Left unspoken, these worries can quietly settle between spouses like a low fog, present but never quite named.
+
+Paul''s words to the Philippians were not written specifically for newlyweds, but they land with striking relevance: do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus. Notice this is addressed to ''you'' plural in the original context — a whole community bringing its anxieties to God together. It works just as powerfully for a household of two.
+
+Newlyweds often default to carrying financial or family worries alone, either to protect a spouse from stress or out of habits formed long before the wedding. But this verse invites something different: bringing anxieties to God together, out loud, as a couple, with thanksgiving even in uncertain seasons. That shared act of prayer does something private worry cannot — it invites God''s peace to guard both hearts and both minds at once, rather than each of you standing guard alone.
+
+As you close this short three-day plan, consider naming one real worry from this first year — financial, relational, or otherwise — and bringing it to God together tonight, out loud, in each other''s presence. Let this become a habit for every anxious season ahead: not carried separately, but presented together, guarded by a peace that neither of you could produce on your own.', 'Tahun pertama pernikahan cenderung membawa aliran kekhawatiran baru yang terus-menerus — percakapan tentang uang yang terasa lebih nyata sekarang setelah rekening digabung, keputusan karier yang memengaruhi dua kehidupan bukan hanya satu, bertanya-tanya apakah kamu sedang menjalani ''kehidupan pernikahan'' ini dengan benar. Jika tidak diungkapkan, kekhawatiran ini bisa diam-diam mengendap di antara pasangan seperti kabut tipis, hadir tetapi tak pernah benar-benar disebutkan.
+
+Kata-kata Paulus kepada jemaat di Filipi tidak ditulis khusus untuk pengantin baru, tetapi sangat relevan: janganlah hendaknya kamu kuatir tentang apa pun juga, tetapi nyatakanlah dalam segala hal keinginanmu kepada Allah dalam doa dan permohonan dengan ucapan syukur. Damai sejahtera Allah, yang melampaui segala akal, akan memelihara hati dan pikiranmu dalam Kristus Yesus. Perhatikan bahwa ini ditujukan kepada ''kamu'' dalam bentuk jamak dalam konteks aslinya — seluruh komunitas membawa kekhawatirannya kepada Allah bersama-sama. Ini bekerja sama kuatnya bagi rumah tangga yang terdiri dari dua orang.
+
+Pengantin baru sering kali secara default menanggung kekhawatiran finansial atau keluarga sendirian, entah untuk melindungi pasangan dari stres atau karena kebiasaan yang terbentuk jauh sebelum pernikahan. Tetapi ayat ini mengundang sesuatu yang berbeda: membawa kekhawatiran kepada Allah bersama-sama, dengan suara nyata, sebagai pasangan, dengan ucapan syukur bahkan di musim-musim yang tidak pasti. Tindakan doa bersama ini melakukan sesuatu yang tidak bisa dilakukan kekhawatiran pribadi — ia mengundang damai sejahtera Allah untuk memelihara kedua hati dan kedua pikiran sekaligus, bukan masing-masing berjaga sendirian.
+
+Saat menutup rencana singkat tiga hari ini, pertimbangkan untuk menyebutkan satu kekhawatiran nyata dari tahun pertama ini — soal keuangan, hubungan, atau lainnya — dan membawanya kepada Allah bersama malam ini, dengan suara nyata, di hadapan satu sama lain. Biarlah ini menjadi kebiasaan untuk setiap musim cemas yang akan datang: tidak ditanggung sendiri-sendiri, tetapi dipersembahkan bersama, dijaga oleh damai sejahtera yang tak dapat dihasilkan oleh kalian sendiri.',
+     'Name one worry from this first year and bring it to God together tonight, out loud, instead of carrying it separately.', 'Sebutkan satu kekhawatiran dari tahun pertama ini dan bawalah bersama kepada Allah malam ini, dengan suara nyata, alih-alih menanggungnya sendiri-sendiri.',
+     'Father, we bring our worries to you together tonight, with thanksgiving even in uncertainty. Guard both our hearts and minds with your peace as we build this first year. Amen.', 'Bapa, kami membawa kekhawatiran kami kepada-Mu bersama malam ini, dengan ucapan syukur bahkan di tengah ketidakpastian. Jagalah hati dan pikiran kami berdua dengan damai sejahtera-Mu saat kami membangun tahun pertama ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 4:6-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 4:6-7', 'TB', 1);
+
+  -- =================================================================
+  -- Rebuilding on the Rock  (Marriage > Building a Strong Foundation, 7d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Building a Strong Foundation' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Rebuilding on the Rock';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Rebuilding on the Rock', 'Membangun Kembali di Atas Batu Karang',
+     'A 7-day renewal for married couples recommitting to their foundation', '7 hari pemulihan bagi pasangan menikah yang ingin mengukuhkan kembali fondasi mereka',
+     'Every marriage, even a good one, eventually needs an honest inspection of its foundation. Years of routine, small disappointments, and quiet drift can wear at a covenant without either spouse noticing until they look up and feel strangely distant from someone they know so well. This seven-day plan is written for married couples — whatever their number of years together — who want to slow down and deliberately recommit to building their marriage on Christ, walking through covenant, devotion, mercy, trust, and daily renewal one unhurried day at a time.', 'Setiap pernikahan, bahkan yang baik sekalipun, pada akhirnya membutuhkan pemeriksaan yang jujur atas fondasinya. Bertahun-tahun rutinitas, kekecewaan-kekecewaan kecil, dan pergeseran yang tenang dapat mengikis perjanjian tanpa disadari salah satu pasangan, hingga suatu hari mereka merasa aneh berjarak dengan seseorang yang begitu dikenal. Rencana tujuh hari ini ditulis bagi pasangan yang sudah menikah — berapa pun lama usia pernikahan mereka — yang ingin berhenti sejenak dan dengan sengaja mengukuhkan kembali komitmen membangun pernikahan mereka di atas Kristus, menyusuri tema perjanjian, kesetiaan, belas kasihan, kepercayaan, dan pembaruan harian, satu hari demi satu hari dengan tenang.', 7, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Unless the Lord Builds the House', 'Jikalau Bukan TUHAN yang Membangun Rumah',
+     'There comes a point in most marriages — sometimes after five years, sometimes after twenty-five — when a couple looks around at the life they have built and feels a quiet unease. The house is standing, the roles are functioning, but something about it feels more like management than love. Meals get made, bills get paid, children get raised, and yet a couple can privately wonder when exactly they stopped building together and started merely maintaining.
+
+The psalmist names this exact danger with startling directness: unless the Lord builds the house, the builders labor in vain. It is possible to work extremely hard at a marriage — scheduling date nights, reading the right books, keeping the peace — and still labor in vain if Christ has quietly been edged out of the center of it. Effort alone does not guarantee a strong foundation. The foundation has to actually be him.
+
+This is not meant to discourage the effort you have already poured into your marriage. It is meant to redirect it. Recommitting to your foundation does not usually require dramatic upheaval; it requires an honest look at where Christ currently sits in your shared life, and a willingness to invite him back to the center if he has slipped to the edges. Many couples find that this simple honesty — admitting ''we have been building mostly on our own effort lately'' — is itself the first stone of rebuilding.
+
+As you begin this seven-day renewal, resist the urge to fix everything today. Simply bring this psalm before God together: Lord, we have been building. Some of it has been good. But we want you building with us, and through us, not standing outside watching us labor. Let this day be the honest beginning of a house rebuilt on you.', 'Ada satu titik dalam kebanyakan pernikahan — kadang setelah lima tahun, kadang setelah dua puluh lima tahun — ketika pasangan melihat kembali kehidupan yang telah mereka bangun dan merasakan keresahan yang tenang. Rumah itu berdiri, peran-peran berjalan, tetapi ada sesuatu yang terasa lebih seperti mengelola daripada mengasihi. Makanan tersaji, tagihan terbayar, anak-anak dibesarkan, namun diam-diam pasangan bisa bertanya-tanya kapan tepatnya mereka berhenti membangun bersama dan mulai sekadar mempertahankan.
+
+Pemazmur menyebutkan bahaya yang persis ini dengan sangat lugas: jikalau bukan TUHAN yang membangun rumah, sia-sialah usaha orang yang membangunnya. Mungkin saja seseorang bekerja sangat keras untuk pernikahannya — menjadwalkan malam kencan, membaca buku-buku yang tepat, menjaga kedamaian — namun tetap berjerih lelah dengan sia-sia jika Kristus diam-diam telah tergeser dari pusatnya. Usaha saja tidak menjamin fondasi yang kuat. Fondasi itu harus benar-benar Dia.
+
+Ini bukan dimaksudkan untuk mengecilkan hati atas usaha yang telah kamu curahkan pada pernikahanmu. Ini dimaksudkan untuk mengarahkannya kembali. Mengukuhkan kembali fondasi biasanya tidak memerlukan pergolakan yang dramatis; ia memerlukan pandangan yang jujur tentang di mana sebenarnya Kristus berada dalam kehidupan bersama kalian, dan kerelaan untuk mengundang-Nya kembali ke pusat jika Ia telah bergeser ke tepi. Banyak pasangan mendapati bahwa kejujuran sederhana ini — mengakui ''akhir-akhir ini kami lebih banyak membangun dengan usaha kami sendiri'' — itu sendiri adalah batu pertama dari pembangunan kembali.
+
+Saat kamu memulai pemulihan tujuh hari ini, tahanlah keinginan untuk memperbaiki segalanya hari ini. Cukup bawa mazmur ini kepada Allah bersama-sama: Tuhan, kami telah membangun. Sebagiannya baik. Tetapi kami ingin Engkau membangun bersama kami, dan melalui kami, bukan berdiri di luar menyaksikan kami berjerih lelah. Biarlah hari ini menjadi permulaan yang jujur dari sebuah rumah yang dibangun kembali di atas-Mu.',
+     'Where has your marriage recently felt more like maintenance than partnership with God — and what would it look like to invite him back to the center?', 'Di bagian mana pernikahanmu akhir-akhir ini terasa lebih seperti mempertahankan daripada bermitra dengan Allah — dan seperti apa mengundang-Nya kembali ke pusat itu?',
+     'Lord, we have been building this house. Forgive us for the seasons we tried to do it alone. Build with us again, starting today. Amen.', 'Tuhan, kami telah membangun rumah ini. Ampuni kami untuk musim-musim ketika kami mencoba melakukannya sendiri. Bangunlah bersama kami lagi, mulai hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 127:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 127:1', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Wife and Husband of Your Youth', 'Istri dan Suami Masa Mudamu',
+     'The prophet Malachi confronts a hard truth in Israel''s marriages of his day: covenant faithfulness had quietly eroded, and God calls it out directly, reminding the people that he is a witness between a man and ''the wife of his youth'' — the one to whom he pledged himself before the years, the routines, and the disappointments accumulated. It is a striking phrase, because it reaches back in time, past whatever distance the present moment holds, to the original ''yes'' that was spoken.
+
+For couples years into marriage, this phrase can feel almost tender in its specificity. Somewhere inside the tired, familiar person across the table is still the person you once could not stop thinking about — the wife of your youth, the husband of your youth. Time and routine do not erase that person; they simply layer over them with fatigue, familiarity, and the accumulated weight of ordinary life.
+
+Recommitting to your foundation often starts with remembering, honestly and specifically, what drew you to this person in the first place, and recognizing that covenant does not expire simply because the initial excitement has. Malachi''s warning was against treachery — against treating covenant loosely because the feelings had cooled. The remedy is not manufactured nostalgia, but a renewed decision to honor the vow spoken to the wife or husband of your youth, even now, especially now.
+
+Today, consider telling your spouse one specific memory of what first drew you to them, and naming, out loud, that the covenant you made still holds — not because the feelings never changed, but because your word did not. That kind of remembering is not sentimentality; it is covenant maintenance, and it matters more than either of you may realize.', 'Nabi Maleakhi menghadapi sebuah kebenaran yang sulit dalam pernikahan-pernikahan Israel pada zamannya: kesetiaan perjanjian telah diam-diam terkikis, dan Allah menegurnya secara langsung, mengingatkan umat bahwa Ia menjadi saksi antara seorang laki-laki dan ''istri masa mudanya'' — orang yang kepadanya ia telah berjanji sebelum tahun-tahun, rutinitas, dan kekecewaan-kekecewaan menumpuk. Ini adalah ungkapan yang mengesankan, karena ia menjangkau kembali ke masa lalu, melampaui jarak apa pun yang ada saat ini, kepada ''ya'' yang pertama kali diucapkan.
+
+Bagi pasangan yang sudah bertahun-tahun menikah, ungkapan ini bisa terasa hampir menyentuh dalam kekhususannya. Di suatu tempat di dalam sosok yang lelah dan familiar di seberang meja itu, masih ada orang yang dulu tak henti kamu pikirkan — istri masa mudamu, suami masa mudamu. Waktu dan rutinitas tidak menghapus orang itu; mereka hanya melapisi dengan kelelahan, keakraban, dan beban kehidupan biasa yang menumpuk.
+
+Mengukuhkan kembali fondasi seringkali dimulai dengan mengingat, dengan jujur dan spesifik, apa yang pertama kali menarikmu kepada orang ini, dan menyadari bahwa perjanjian tidak berakhir hanya karena semangat awal telah mendingin. Peringatan Maleakhi ditujukan pada pengkhianatan — memperlakukan perjanjian dengan sembarangan karena perasaan telah mereda. Obatnya bukan nostalgia buatan, melainkan keputusan yang diperbarui untuk menghormati janji yang diucapkan kepada istri atau suami masa mudamu, bahkan sekarang, terlebih sekarang.
+
+Hari ini, pertimbangkan untuk memberi tahu pasanganmu satu kenangan spesifik tentang apa yang pertama kali menarikmu kepadanya, dan menyebutkan, dengan suara nyata, bahwa perjanjian yang kalian buat masih berlaku — bukan karena perasaan tidak pernah berubah, tetapi karena kata-katamu tidak berubah. Mengingat semacam itu bukanlah sentimentalitas; itu adalah pemeliharaan perjanjian, dan itu penting lebih dari yang mungkin kalian sadari.',
+     'Tell your spouse one specific memory of what first drew you to them, and say out loud that your covenant still holds.', 'Ceritakan kepada pasanganmu satu kenangan spesifik tentang apa yang pertama kali menarikmu kepadanya, dan katakan dengan suara nyata bahwa perjanjianmu masih berlaku.',
+     'Lord, you were a witness to the vow we made. Renew in us today the tenderness we once had, and the faithfulness that does not depend on it. Amen.', 'Tuhan, Engkau menjadi saksi atas janji yang kami buat. Perbaruilah dalam diri kami hari ini kelembutan yang dulu kami miliki, dan kesetiaan yang tidak bergantung padanya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Malachi 2:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Maleakhi 2:14', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Devoted, Not Just Committed', 'Setia dengan Kasih Mesra, Bukan Sekadar Berkomitmen',
+     'There is a quiet difference between a marriage that is merely committed and one that is genuinely devoted. Commitment can survive on willpower alone — staying because you said you would, honoring the promise even when the warmth has faded. Devotion asks for something more: an active, ongoing affection that actively honors the other person, that looks for reasons to esteem them rather than simply tolerate them.
+
+Paul''s instruction to the Romans captures this precisely: be devoted to one another, and outdo one another in showing honor. Notice the almost playful competitive language — outdoing each other, not in criticism or score-keeping, but in honor. It pictures two people who have decided, deliberately, to notice and voice what is admirable in the other, rather than defaulting to what is irritating.
+
+For couples further along in marriage, this can feel like a genuinely fresh instruction, because it is easy, after years together, to see mostly the friction points — the habits that grate, the roles that feel unfair, the ways your spouse has disappointed you. Devotion is a deliberate redirection of attention: choosing to notice, and say out loud, what still deserves honor in this person you married.
+
+Today, try outdoing your spouse in honor, quite literally. Say one specific, sincere compliment or word of appreciation, and mean it. Then notice whether it becomes easier to say another tomorrow. Devotion, like most things in marriage, grows through repetition — a habit of honor chosen daily until it becomes the marriage''s default posture rather than an occasional gesture.', 'Ada perbedaan yang tenang antara pernikahan yang sekadar berkomitmen dan pernikahan yang sungguh-sungguh setia dengan kasih mesra. Komitmen bisa bertahan hanya dengan kemauan keras — tetap tinggal karena sudah berjanji, menghormati janji bahkan ketika kehangatan telah memudar. Kasih mesra menuntut sesuatu yang lebih: kasih sayang yang aktif dan berkelanjutan yang secara aktif menghormati orang lain, yang mencari alasan untuk menghargainya, bukan sekadar menoleransinya.
+
+Petunjuk Paulus kepada jemaat di Roma menangkap hal ini dengan tepat: hendaklah kamu saling mengasihi sebagai saudara dan saling mendahului dalam memberi hormat. Perhatikan bahasa yang hampir kompetitif dan menyenangkan ini — saling mendahului, bukan dalam kritik atau menghitung-hitung kesalahan, tetapi dalam memberi hormat. Ini menggambarkan dua orang yang telah memutuskan, dengan sengaja, untuk memperhatikan dan menyuarakan apa yang patut dikagumi dari yang lain, alih-alih terus-menerus fokus pada yang mengganggu.
+
+Bagi pasangan yang lebih lama menikah, ini bisa terasa seperti petunjuk yang sungguh segar, karena mudah, setelah bertahun-tahun bersama, untuk lebih banyak melihat titik-titik gesekan — kebiasaan yang mengganggu, peran yang terasa tidak adil, cara pasangan mengecewakan. Kasih mesra adalah pengalihan perhatian yang disengaja: memilih untuk memperhatikan, dan mengucapkan dengan suara nyata, apa yang masih layak dihormati dari orang yang kamu nikahi ini.
+
+Hari ini, cobalah mendahului pasanganmu dalam memberi hormat, secara harfiah. Ucapkan satu pujian atau kata penghargaan yang spesifik dan tulus, dan sungguh-sungguh maksudkan itu. Lalu perhatikan apakah menjadi lebih mudah mengucapkan yang lain besok. Kasih mesra, seperti kebanyakan hal dalam pernikahan, tumbuh melalui pengulangan — kebiasaan menghormati yang dipilih setiap hari hingga menjadi sikap dasar pernikahan, bukan sekadar gerakan sesekali.',
+     'Give your spouse one specific, sincere word of honor today — and notice what it stirs in you to say it.', 'Berikan pasanganmu satu kata penghormatan yang spesifik dan tulus hari ini — dan perhatikan apa yang tergerak dalam dirimu saat mengucapkannya.',
+     'Lord, move us from mere commitment to genuine devotion. Teach us to outdo each other in honor, starting with today''s ordinary moments. Amen.', 'Tuhan, ubahlah kami dari sekadar berkomitmen menjadi sungguh-sungguh setia dengan kasih mesra. Ajar kami saling mendahului dalam memberi hormat, mulai dari momen-momen biasa hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'A Love That Covers', 'Kasih yang Menutupi',
+     'Long marriages accumulate history, and not all of that history is pleasant. Every couple who has stayed together for years carries a private archive of small wounds — the sharp word said during an argument years ago, the promise that was broken, the season one spouse was distracted or distant. Left unaddressed, this archive can quietly poison the present, even when both people have, in theory, moved on.
+
+Peter''s short instruction cuts directly to what a marriage actually needs to keep going: above all, love each other deeply, because love covers over a multitude of sins. This is not a call to pretend wrongdoing never happened, or to avoid the harder conversations that real repair requires. It is a call to a kind of love that does not keep score, that does not resurrect old failures as ammunition, that chooses covering over cataloguing.
+
+Many couples who have been married a long time can testify that this single practice — refusing to keep a running list of each other''s failures — has done more for their marriage''s health than almost anything else. It does not mean issues go unaddressed; healthy marriages still have honest conversations about hurt. But once something has genuinely been dealt with, love lets it stay covered rather than dragging it back out in every future disagreement.
+
+Take an honest inventory today: is there an old wound or failure you have been quietly keeping on file, bringing it out in arguments long after it should have been laid to rest? Ask God for grace to let love cover it — genuinely, not just outwardly — so that your marriage''s foundation is not weighed down by an archive of old grievances, but strengthened by a covering love that keeps choosing forward.', 'Pernikahan yang panjang mengumpulkan sejarah, dan tidak semua sejarah itu menyenangkan. Setiap pasangan yang telah bersama bertahun-tahun membawa arsip pribadi luka-luka kecil — kata tajam yang diucapkan saat bertengkar bertahun-tahun lalu, janji yang diingkari, musim ketika salah satu pasangan terganggu atau menjauh. Jika dibiarkan tanpa ditangani, arsip ini bisa diam-diam meracuni masa kini, bahkan ketika keduanya, secara teori, sudah melangkah maju.
+
+Petunjuk singkat Petrus langsung menuju pada apa yang sebenarnya dibutuhkan sebuah pernikahan agar terus berjalan: yang terutama, kasihilah sungguh-sungguh seorang akan yang lain, sebab kasih menutupi banyak sekali dosa. Ini bukan panggilan untuk berpura-pura kesalahan tidak pernah terjadi, atau menghindari percakapan sulit yang benar-benar dibutuhkan untuk pemulihan. Ini adalah panggilan kepada kasih yang tidak menghitung-hitung kesalahan, yang tidak membangkitkan kegagalan lama sebagai amunisi, yang memilih menutupi daripada mengarsipkan.
+
+Banyak pasangan yang sudah lama menikah dapat bersaksi bahwa satu praktik ini — menolak menyimpan daftar kesalahan pasangan yang terus berjalan — telah berbuat lebih banyak bagi kesehatan pernikahan mereka daripada hampir apa pun yang lain. Ini tidak berarti masalah dibiarkan tanpa ditangani; pernikahan yang sehat tetap memiliki percakapan jujur tentang luka. Tetapi setelah sesuatu benar-benar diselesaikan, kasih membiarkannya tetap tertutup daripada menariknya keluar lagi di setiap perselisihan berikutnya.
+
+Lakukan inventarisasi yang jujur hari ini: adakah luka atau kegagalan lama yang diam-diam kamu simpan dalam arsip, kamu keluarkan dalam pertengkaran lama setelah seharusnya sudah diselesaikan? Mintalah anugerah dari Allah agar kasih menutupinya — sungguh-sungguh, bukan hanya secara lahiriah — sehingga fondasi pernikahanmu tidak terbebani oleh arsip keluhan lama, melainkan diperkuat oleh kasih yang menutupi dan terus memilih untuk melangkah maju.',
+     'Identify one old grievance you have been quietly filing away, and ask God for grace to let love genuinely cover it.', 'Kenali satu keluhan lama yang diam-diam kamu simpan, dan mintalah anugerah dari Allah agar kasih sungguh-sungguh menutupinya.',
+     'Lord, teach us to love deeply enough to stop keeping score. Where we have been archiving old wounds, help us truly let love cover them. Amen.', 'Tuhan, ajar kami mengasihi dengan cukup dalam sehingga berhenti menghitung-hitung kesalahan. Di mana kami telah mengarsipkan luka lama, tolong kami membiarkan kasih benar-benar menutupinya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 4:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 4:8', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Betrothed Forever', 'Bertunangan Selama-lamanya',
+     'The prophet Hosea''s story is one of the most striking in Scripture — a man commanded by God to marry an unfaithful woman as a living picture of God''s own relentless love for his wandering people. In the midst of that unlikely story comes a promise of stunning tenderness: I will betroth you to me forever, in righteousness and justice, in love and compassion; I will betroth you in faithfulness.
+
+Notice that this is not a one-time wedding vow being described, but an ongoing, repeated betrothal — as if God is not content to have simply married his people once, long ago, but insists on renewing that commitment again and again, in righteousness, in love, in faithfulness. It is a picture of covenant that refuses to be static, that keeps actively choosing the relationship rather than resting on a decision made in the past.
+
+This is a beautiful model for married couples who have been together long enough that the original wedding day feels distant. Marriage is not a covenant made once and then coasted on for decades; it is, in some sense, a betrothal renewed daily — a repeated choosing, in righteousness and love and faithfulness, of the person God gave you. Every ordinary morning offers another small betrothal: choosing again, freely, to belong to this person.
+
+Today, consider renewing your vows in miniature — not with a formal ceremony, but with a simple, sincere statement to your spouse: I choose you again today, in faithfulness and love. Let that small, repeated betrothal become part of the rhythm of your marriage, the way God''s own covenant love is renewed toward his people again and again, without growing old or routine.', 'Kisah nabi Hosea adalah salah satu yang paling mengesankan dalam Alkitab — seorang laki-laki diperintahkan Allah untuk menikahi seorang perempuan yang tidak setia sebagai gambaran hidup dari kasih Allah yang tak henti-hentinya bagi umat-Nya yang sering menyimpang. Di tengah kisah yang tak terduga itu muncul sebuah janji yang begitu menyentuh: Aku akan menjadikan engkau isteri-Ku untuk selama-lamanya, dalam keadilan dan kebenaran, dalam kasih setia dan kasih sayang; Aku akan menjadikan engkau isteri-Ku dalam kesetiaan.
+
+Perhatikan bahwa ini bukan menggambarkan janji pernikahan satu kali, melainkan pertunangan yang berkelanjutan dan berulang — seolah-olah Allah tidak puas hanya menikahi umat-Nya sekali, jauh di masa lalu, tetapi bersikeras memperbarui komitmen itu berulang kali, dalam kebenaran, dalam kasih, dalam kesetiaan. Ini adalah gambaran perjanjian yang menolak untuk statis, yang terus aktif memilih hubungan itu daripada beristirahat di atas keputusan yang dibuat di masa lalu.
+
+Ini adalah teladan yang indah bagi pasangan yang telah bersama cukup lama sehingga hari pernikahan pertama terasa jauh. Pernikahan bukanlah perjanjian yang dibuat sekali lalu dijalani dengan santai selama puluhan tahun; ia adalah, dalam arti tertentu, pertunangan yang diperbarui setiap hari — pilihan yang berulang, dalam kebenaran, kasih, dan kesetiaan, terhadap orang yang Allah berikan kepadamu. Setiap pagi yang biasa menawarkan pertunangan kecil lagi: memilih lagi, dengan bebas, untuk menjadi milik orang ini.
+
+Hari ini, pertimbangkan untuk memperbarui janji nikahmu dalam skala kecil — bukan dengan upacara resmi, tetapi dengan pernyataan sederhana dan tulus kepada pasanganmu: aku memilihmu lagi hari ini, dalam kesetiaan dan kasih. Biarlah pertunangan kecil yang berulang ini menjadi bagian dari ritme pernikahanmu, sebagaimana kasih perjanjian Allah sendiri diperbarui bagi umat-Nya berulang kali, tanpa pernah menjadi usang atau sekadar rutinitas.',
+     'Say a small, sincere renewal of your vows to your spouse today: ''I choose you again, in faithfulness and love.''', 'Ucapkan pembaruan janji nikah yang kecil dan tulus kepada pasanganmu hari ini: ''Aku memilihmu lagi, dalam kesetiaan dan kasih.''',
+     'Lord, as you betroth your people again and again in faithfulness, renew our own covenant today. Let us choose each other freshly, not out of habit but out of faithful love. Amen.', 'Tuhan, sebagaimana Engkau menjadikan umat-Mu milik-Mu berulang kali dalam kesetiaan, perbaruilah perjanjian kami hari ini. Biarlah kami memilih satu sama lain dengan segar, bukan karena kebiasaan tetapi karena kasih yang setia. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hosea 2:19-20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hosea 2:19-20', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Trusting Beyond What You Can See', 'Percaya Melampaui Apa yang Bisa Dilihat',
+     'After years of marriage, a couple has usually watched each other change in ways neither could have predicted at the wedding altar. Careers shift, health changes, dreams get revised, and sometimes a spouse becomes, in certain seasons, genuinely hard to understand. It is tempting in these moments to rely entirely on your own understanding — reading a spouse''s silence, mood, or decision through the worst possible interpretation, simply because that is what your own reasoning suggests.
+
+The book of Proverbs offers wisdom that applies as much to marriage as to any other area of life: trust in the Lord with all your heart, and lean not on your own understanding. Applied to a marriage under strain, this is an invitation to bring confusing or painful seasons to God rather than trying to resolve every uncertainty through sheer analysis, suspicion, or control.
+
+This does not mean avoiding honest conversation with your spouse — quite the opposite. It means holding your own interpretations more loosely, submitting your anxious guesses about your spouse''s heart to God in prayer before assuming the worst, and asking him to straighten paths that feel tangled by misunderstanding. Many couples testify that some of their hardest seasons were made worse not by the actual circumstance, but by each spouse privately trusting their own worst-case reading of the other rather than bringing it to God first.
+
+If there is a season of confusion or tension in your marriage right now, bring it to God today before you bring it to another conclusion in your own mind. Ask him to give you eyes to see your spouse the way he does, and trust him to straighten what feels unclear, rather than leaning entirely on your own understanding of a situation you may not fully see.', 'Setelah bertahun-tahun menikah, sebuah pasangan biasanya telah menyaksikan satu sama lain berubah dengan cara yang tidak pernah bisa diperkirakan pada hari pernikahan. Karier berubah, kesehatan berubah, impian direvisi, dan kadang seorang pasangan menjadi, dalam musim-musim tertentu, sungguh sulit dipahami. Sangat menggoda dalam momen-momen ini untuk sepenuhnya bersandar pada pengertian sendiri — menafsirkan kediaman, suasana hati, atau keputusan pasangan melalui interpretasi terburuk yang mungkin, hanya karena itulah yang disarankan oleh nalar sendiri.
+
+Kitab Amsal menawarkan hikmat yang berlaku sama pentingnya bagi pernikahan seperti bagi bidang kehidupan lainnya: percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar pada pengertianmu sendiri. Diterapkan pada pernikahan yang sedang tertekan, ini adalah undangan untuk membawa musim-musim yang membingungkan atau menyakitkan kepada Allah, alih-alih mencoba menyelesaikan setiap ketidakpastian hanya melalui analisis, kecurigaan, atau kendali sendiri.
+
+Ini tidak berarti menghindari percakapan jujur dengan pasangan — justru sebaliknya. Ini berarti memegang tafsiranmu sendiri dengan lebih longgar, menyerahkan dugaan cemas tentang hati pasanganmu kepada Allah dalam doa sebelum mengasumsikan yang terburuk, dan meminta Dia meluruskan jalan yang terasa kusut karena kesalahpahaman. Banyak pasangan bersaksi bahwa beberapa musim tersulit mereka menjadi lebih buruk bukan karena keadaan sebenarnya, melainkan karena masing-masing pasangan diam-diam mempercayai tafsiran terburuk mereka sendiri tentang yang lain, alih-alih membawanya kepada Allah lebih dulu.
+
+Jika saat ini ada musim kebingungan atau ketegangan dalam pernikahanmu, bawalah itu kepada Allah hari ini sebelum kamu sampai pada kesimpulan lain dalam pikiranmu sendiri. Mintalah Dia memberimu mata untuk melihat pasanganmu sebagaimana Dia melihatnya, dan percayalah Dia meluruskan apa yang terasa tidak jelas, alih-alih sepenuhnya bersandar pada pengertianmu sendiri tentang situasi yang mungkin belum sepenuhnya kamu pahami.',
+     'Bring one confusing or tense situation in your marriage to God in prayer today, before drawing your own conclusions about your spouse''s heart.', 'Bawalah satu situasi yang membingungkan atau tegang dalam pernikahanmu kepada Allah dalam doa hari ini, sebelum menarik kesimpulanmu sendiri tentang hati pasanganmu.',
+     'Lord, we don''t always understand each other, and we don''t always understand our own hearts. Help us trust you with what confuses us, and straighten the paths that feel tangled. Amen.', 'Tuhan, kami tidak selalu memahami satu sama lain, dan kami tidak selalu memahami hati kami sendiri. Tolong kami mempercayai-Mu dengan apa yang membingungkan kami, dan luruskanlah jalan yang terasa kusut. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'New Every Morning', 'Selalu Baru Setiap Pagi',
+     'It would be easy to end a week of renewal with a tidy conclusion — as if, after seven days of reflection, a marriage is now simply fixed. Real marriages do not work that way, and Scripture does not pretend they do. The book of Lamentations, written in the middle of genuine grief and loss, offers instead a different kind of hope: the Lord''s mercies never come to an end, they are new every morning; great is his faithfulness.
+
+This is, in many ways, the truest promise a married couple can build a lifetime on. Not the promise that today''s rebuilding fixes everything permanently, but that tomorrow morning, God''s mercy will be there again, freshly available, regardless of how today went. A marriage does not need to get everything right once and stay right forever; it needs two people willing to keep receiving new mercy and offering it to each other, morning after morning, decade after decade.
+
+This is deeply freeing for couples recommitting to their foundation. You do not need to have arrived at a perfect marriage by the end of this week. You simply need to trust that God''s faithfulness toward you, and the mercy he asks you to extend to your spouse, will be renewed again tomorrow, and the next day, and the day after that — for as long as you both shall live. That is what makes a marriage capable of lasting decades: not flawless execution, but a foundation of mercy that renews itself daily, never running dry.
+
+As you close this seven-day renewal, thank God together for whatever ground you have covered this week, however small. Then release the pressure of having to have finished the work. Trust instead in a God whose mercies toward your marriage — and whose grace to extend mercy to each other — will be new again tomorrow morning, and the morning after, for as long as you keep building together on him.', 'Akan mudah untuk mengakhiri seminggu pemulihan ini dengan kesimpulan yang rapi — seolah-olah, setelah tujuh hari perenungan, sebuah pernikahan kini sudah sepenuhnya diperbaiki. Pernikahan yang nyata tidak berjalan seperti itu, dan Alkitab tidak berpura-pura demikian. Kitab Ratapan, ditulis di tengah kesedihan dan kehilangan yang sesungguhnya, justru menawarkan jenis harapan yang berbeda: tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi; besar kesetiaan-Mu.
+
+Ini, dalam banyak hal, adalah janji paling benar yang bisa dijadikan fondasi seumur hidup oleh pasangan menikah. Bukan janji bahwa pembangunan kembali hari ini akan memperbaiki segalanya secara permanen, melainkan bahwa esok pagi, rahmat Allah akan ada lagi di sana, tersedia dengan segar, terlepas dari bagaimana hari ini berjalan. Sebuah pernikahan tidak perlu melakukan semuanya dengan benar sekali dan tetap benar selamanya; ia membutuhkan dua orang yang bersedia terus menerima rahmat baru dan memberikannya kepada satu sama lain, pagi demi pagi, dekade demi dekade.
+
+Ini sangat melegakan bagi pasangan yang mengukuhkan kembali fondasi mereka. Kamu tidak perlu telah mencapai pernikahan yang sempurna pada akhir minggu ini. Kamu hanya perlu percaya bahwa kesetiaan Allah terhadapmu, dan rahmat yang Ia minta kamu berikan kepada pasanganmu, akan diperbarui lagi esok hari, dan hari berikutnya, dan hari sesudahnya — selama kalian berdua hidup. Itulah yang membuat sebuah pernikahan mampu bertahan puluhan tahun: bukan pelaksanaan yang sempurna, tetapi fondasi rahmat yang memperbarui dirinya setiap hari, tak pernah kering.
+
+Saat kamu menutup pemulihan tujuh hari ini, bersyukurlah bersama kepada Allah untuk apa pun kemajuan yang telah kalian tempuh minggu ini, sekecil apa pun itu. Lalu lepaskan tekanan untuk harus menyelesaikan pekerjaan itu. Percayalah sebaliknya kepada Allah yang rahmat-Nya terhadap pernikahanmu — dan anugerah-Nya untuk memberikan rahmat satu sama lain — akan baru lagi esok pagi, dan pagi sesudahnya, selama kalian terus membangun bersama di atas-Nya.',
+     'Thank God together for this week''s small steps, and release the pressure of a ''finished'' marriage — trusting his mercy to renew again tomorrow.', 'Bersyukurlah bersama kepada Allah atas langkah-langkah kecil minggu ini, dan lepaskan tekanan untuk memiliki pernikahan yang ''selesai'' — percayalah rahmat-Nya akan diperbarui lagi esok hari.',
+     'Lord, thank you that your mercy toward our marriage is new every morning. We release the pressure of perfection and trust your faithfulness to keep building us, together, for as long as we live. Amen.', 'Tuhan, terima kasih bahwa rahmat-Mu terhadap pernikahan kami selalu baru setiap pagi. Kami melepaskan tekanan untuk menjadi sempurna dan percaya pada kesetiaan-Mu untuk terus membangun kami, bersama-sama, selama kami hidup. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
+
+  -- =================================================================
+  -- Speak Truth in Love  (Marriage > Communication & Conflict, 3d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Communication & Conflict' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Speak Truth in Love';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Speak Truth in Love', 'Berkata Benar dalam Kasih',
+     'A short reset for honest, gentle conversation', 'Pemulihan singkat untuk percakapan yang jujur dan lembut',
+     'A three-day starting point for couples who want their words to build up instead of tear down. Rooted in Ephesians'' call to speak truth in love, these days walk through honesty without harshness, timing our words wisely, and choosing gentleness as a daily habit rather than a rare miracle.', 'Titik awal tiga hari bagi pasangan yang ingin kata-kata mereka membangun, bukan menghancurkan. Berpijak pada seruan Efesus untuk berkata benar dalam kasih, hari-hari ini menuntun kita melalui kejujuran tanpa kekerasan, ketepatan waktu berbicara, dan memilih kelembutan sebagai kebiasaan harian, bukan mukjizat langka.', 3, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Honesty Without Harshness', 'Jujur Tanpa Kekerasan',
+     'Most couples do not struggle with whether to be honest with each other. They struggle with how. Somewhere along the way, many of us learned that honesty and gentleness were opposites — that if we softened our words too much, the truth would get lost, and if we wanted to be taken seriously, we had to sharpen our tone. Scripture offers a different picture entirely: truth and love were never meant to compete. Ephesians 4:15 calls believers to speak the truth in love, as if the two are a single motion, not two separate choices we alternate between depending on our mood.
+
+In marriage, this matters more than almost anywhere else, because our spouse hears our tone before they hear our words. A wife can say something completely true — ''I felt dismissed when you didn''t ask about my day'' — and have it land as an attack if her voice carries contempt, or land as an invitation if it carries warmth. The content of honesty rarely changes the outcome as much as the posture behind it does. This is not about being less truthful. It is about remembering that the person receiving the truth is someone we have vowed to love, not an opponent to be defeated.
+
+Many couples find that their sharpest words come out not because they wanted to wound, but because they felt unheard for too long and honesty finally broke through as frustration. That is a very human pattern, and it is worth naming without shame. The goal isn''t to suppress honesty until it disappears — repressed truth curdles into resentment far more damage than a well-timed hard conversation ever does. The goal is to practice saying true things early, gently, and often, so they never have to explode.
+
+Today is simply an invitation to notice: when you tell your spouse something true, what does your voice sound like? Is it aimed at understanding, or at winning? Love does not mean withholding truth to keep the peace. It means offering truth as a gift, wrapped in the kind of care that says, ''I am telling you this because our marriage matters to me, not because I want to hurt you.''', 'Kebanyakan pasangan tidak bergumul dengan apakah mereka harus jujur satu sama lain. Mereka bergumul dengan bagaimana caranya. Entah bagaimana, banyak dari kita belajar bahwa kejujuran dan kelembutan adalah dua hal yang berlawanan — bahwa jika kata-kata kita terlalu dilunakkan, kebenaran akan hilang, dan jika ingin didengar sungguh-sungguh, kita harus mempertajam nada bicara. Alkitab menawarkan gambaran yang sama sekali berbeda: kebenaran dan kasih tidak pernah dimaksudkan untuk saling bersaing. Efesus 4:15 memanggil orang percaya untuk berkata benar di dalam kasih, seolah keduanya adalah satu gerakan yang sama, bukan dua pilihan terpisah yang kita gonta-ganti tergantung suasana hati.
+
+Dalam pernikahan, hal ini lebih penting daripada di tempat lain mana pun, karena pasangan kita mendengar nada suara kita sebelum mereka mendengar kata-kata kita. Seorang istri bisa mengatakan sesuatu yang sepenuhnya benar — ''Aku merasa diabaikan ketika kamu tidak menanyakan hariku'' — namun terdengar seperti serangan jika suaranya membawa penghinaan, atau terdengar seperti undangan jika suaranya membawa kehangatan. Isi kejujuran jarang mengubah hasilnya sebanyak sikap di baliknya. Ini bukan tentang menjadi kurang jujur. Ini tentang mengingat bahwa orang yang menerima kebenaran itu adalah orang yang telah kita janjikan untuk dikasihi, bukan lawan yang harus dikalahkan.
+
+Banyak pasangan mendapati bahwa kata-kata paling tajam mereka keluar bukan karena ingin melukai, melainkan karena terlalu lama merasa tidak didengar sehingga kejujuran akhirnya meledak sebagai frustrasi. Itu adalah pola yang sangat manusiawi, dan layak diakui tanpa rasa malu. Tujuannya bukan menekan kejujuran sampai lenyap — kebenaran yang dipendam justru membusuk menjadi kepahitan yang jauh lebih merusak daripada percakapan sulit yang disampaikan tepat waktu. Tujuannya adalah membiasakan diri mengatakan hal-hal yang benar sejak awal, dengan lembut, dan sesering mungkin, sehingga tidak perlu meledak.
+
+Hari ini adalah undangan sederhana untuk memperhatikan: ketika kamu mengatakan sesuatu yang benar kepada pasanganmu, seperti apa suaramu terdengar? Apakah diarahkan untuk memahami, atau untuk menang? Kasih bukan berarti menahan kebenaran demi menjaga kedamaian semu. Kasih berarti menawarkan kebenaran sebagai hadiah, dibungkus dengan kepedulian yang berkata, ''Aku mengatakan ini karena pernikahan kita berharga bagiku, bukan karena aku ingin menyakitimu.''',
+     'Before your next honest conversation, pause and ask yourself whether your tone is aimed at understanding or at winning.', 'Sebelum percakapan jujur berikutnya, berhentilah sejenak dan tanyakan pada dirimu apakah nadamu diarahkan untuk memahami atau untuk menang.',
+     'Lord, teach us to hold truth and love together in our marriage. When we speak, let our words carry both honesty and tenderness, so that what we say builds up rather than breaks down. Give us the courage to say hard things gently, and the humility to hear them the same way. Amen.', 'Tuhan, ajarlah kami memegang kebenaran dan kasih bersama-sama dalam pernikahan kami. Ketika kami berbicara, biarlah kata-kata kami membawa kejujuran sekaligus kelembutan, sehingga apa yang kami ucapkan membangun, bukan menghancurkan. Berilah kami keberanian untuk menyampaikan hal-hal sulit dengan lembut, dan kerendahan hati untuk mendengarnya dengan cara yang sama. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Right Word at the Right Time', 'Perkataan yang Tepat pada Waktunya',
+     'Proverbs is full of a wisdom our culture tends to overlook: timing is not a minor detail of communication, it is half the message. ''A word fitly spoken is like apples of gold in a setting of silver.'' The image is deliberate — something valuable, crafted, placed where it belongs. The same true sentence spoken at the right moment can heal a marriage, and spoken at the wrong moment can wound it. Many couples discover this the hard way, bringing up a real concern the instant their spouse walks in exhausted from work, or in the middle of an unrelated argument, where it lands as an ambush rather than a conversation.
+
+This is not a call to avoid difficult topics or to wait forever for a ''perfect'' moment that never comes. It is a call to notice the state of the person in front of us. Is my spouse hungry, exhausted, distracted, or already carrying stress from somewhere else? None of these make a concern less true, but they change whether it can actually be heard. Wisdom asks, ''Is now a moment when this can be received, or only a moment when I need to say it?'' Those are two very different questions, and confusing them is one of the quiet ways couples wound each other without meaning to.
+
+There is also a kind of holy patience in waiting for the right time — not the anxious patience of avoidance, but the confident patience of someone who trusts the relationship enough to say, ''This matters, and I want to bring it to you in a way you can actually receive.'' That patience communicates something powerful on its own: that we care more about being understood than about being right immediately.
+
+Today, consider one thing you have been meaning to say to your spouse. Instead of asking only what you want to say, ask when and how it could actually land as care rather than as criticism. A well-timed word, offered gently, does more good than the same truth thrown out in frustration ever could.', 'Kitab Amsal penuh dengan kebijaksanaan yang sering diabaikan budaya kita: ketepatan waktu bukanlah detail kecil dalam komunikasi, melainkan separuh dari pesan itu sendiri. ''Perkataan yang diucapkan pada waktunya adalah seperti buah apel emas di pinggan perak.'' Gambaran ini disengaja — sesuatu yang berharga, dibuat dengan cermat, ditempatkan pada tempatnya. Kalimat yang sama benarnya, jika diucapkan pada saat yang tepat, dapat memulihkan pernikahan, dan jika diucapkan pada saat yang salah, dapat melukainya. Banyak pasangan menyadarinya dengan cara yang sulit, mengangkat kekhawatiran nyata tepat saat pasangannya baru pulang kerja dalam keadaan lelah, atau di tengah pertengkaran lain yang tidak berhubungan, sehingga terasa seperti serangan mendadak, bukan percakapan.
+
+Ini bukan ajakan untuk menghindari topik sulit atau menunggu selamanya untuk ''saat yang sempurna'' yang tidak pernah datang. Ini ajakan untuk memperhatikan keadaan orang di hadapan kita. Apakah pasanganku sedang lapar, lelah, terganggu, atau sudah membawa beban dari tempat lain? Tidak satu pun dari hal ini membuat kekhawatiran kita menjadi kurang benar, tetapi semuanya mengubah apakah kekhawatiran itu benar-benar bisa didengar. Kebijaksanaan bertanya, ''Apakah sekarang saat yang tepat agar ini bisa diterima, atau hanya saat aku ingin mengatakannya?'' Keduanya adalah pertanyaan yang sangat berbeda, dan mencampuradukkannya adalah salah satu cara diam-diam pasangan saling melukai tanpa bermaksud demikian.
+
+Ada juga semacam kesabaran kudus dalam menunggu waktu yang tepat — bukan kesabaran cemas karena menghindar, melainkan kesabaran percaya diri dari seseorang yang cukup mempercayai hubungannya untuk berkata, ''Ini penting, dan aku ingin menyampaikannya dengan cara yang benar-benar bisa kamu terima.'' Kesabaran itu sendiri sudah menyampaikan sesuatu yang kuat: bahwa kita lebih peduli untuk dipahami daripada untuk segera dibenarkan.
+
+Hari ini, pikirkan satu hal yang sudah lama ingin kamu sampaikan kepada pasanganmu. Alih-alih hanya bertanya apa yang ingin kamu katakan, tanyakan juga kapan dan bagaimana hal itu bisa benar-benar terasa sebagai kepedulian, bukan kritik. Perkataan yang tepat waktu, disampaikan dengan lembut, membawa kebaikan yang jauh lebih besar daripada kebenaran yang sama namun dilontarkan dalam kekesalan.',
+     'Think of one true thing you need to say to your spouse — then ask when, not just what, will help it be received well.', 'Pikirkan satu hal benar yang perlu kamu sampaikan kepada pasanganmu — lalu tanyakan kapan, bukan hanya apa, yang akan membantu itu diterima dengan baik.',
+     'Father, give us wisdom to notice the right moment, and patience to wait for it. Help us care as much about how our words land as about how badly we want to say them. Shape our timing the way you shape our tongues, for your glory and our marriage''s good. Amen.', 'Bapa, berilah kami hikmat untuk mengenali saat yang tepat, dan kesabaran untuk menantikannya. Tolong kami peduli sebesar keinginan kami untuk berbicara, sebesar itu pula pada bagaimana kata-kata kami akan diterima. Bentuklah ketepatan waktu kami sebagaimana Engkau membentuk lidah kami, demi kemuliaan-Mu dan kebaikan pernikahan kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 25:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 25:11', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Gentleness as a Daily Choice', 'Kelembutan sebagai Pilihan Harian',
+     'James gives one of the most practical instructions in all of Scripture for anyone who wants a peaceful home: be quick to listen, slow to speak, slow to become angry. Notice the order. Listening comes first, not last. Speech comes second, and only after real listening has happened. Anger, if it comes at all, comes slowly — after understanding, not before it. Most conflict in marriage runs in exactly the opposite order: quick to speak, quick to anger, and listening only happens afterward, if at all, usually in the form of damage control.
+
+Gentleness is often mistaken for weakness, especially in the middle of a disagreement where it can feel like the only way to be heard is to raise our voice or dig in harder. But gentleness in marriage is not passivity — it is strength under control. It takes far more strength to stay calm while your spouse is upset than it does to match their volume. It takes more discipline to ask a clarifying question than to fire back a defense. This kind of gentleness does not mean agreeing with everything or never disagreeing; it means disagreeing in a way that keeps the relationship intact.
+
+Over three days, we have walked through honesty without harshness, timing that respects the person we love, and now gentleness that we choose again and again, not because it comes naturally but because we decide it matters more than being right in the moment. None of this happens perfectly. Every couple has days where old habits win. What matters is the direction we keep returning to — a marriage that speaks truth, at the right time, in a gentle spirit.
+
+As this short devotion ends, consider it less a finish line and more a starting point. Gentleness is a daily choice, renewed each morning, especially on the days it feels hardest to offer. Ask God to grow this in you — not as a personality trait you either have or don''t, but as fruit of His Spirit, cultivated one conversation at a time.', 'Surat Yakobus memberikan salah satu instruksi paling praktis dalam seluruh Alkitab bagi siapa pun yang menginginkan rumah tangga yang damai: cepat untuk mendengar, lambat untuk berkata-kata, lambat untuk marah. Perhatikan urutannya. Mendengar didahulukan, bukan diakhirkan. Berbicara ada di urutan kedua, dan hanya setelah benar-benar mendengarkan. Kemarahan, jika memang muncul, datang belakangan — setelah pemahaman, bukan sebelumnya. Kebanyakan konflik dalam pernikahan justru berjalan dengan urutan yang persis terbalik: cepat berkata-kata, cepat marah, dan mendengarkan baru terjadi belakangan, jika terjadi sama sekali, biasanya dalam bentuk usaha memperbaiki kerusakan.
+
+Kelembutan sering disalahartikan sebagai kelemahan, terutama di tengah pertengkaran, ketika rasanya satu-satunya cara untuk didengar adalah dengan meninggikan suara atau bersikeras lebih keras. Namun kelembutan dalam pernikahan bukanlah kepasifan — itu adalah kekuatan yang terkendali. Dibutuhkan jauh lebih banyak kekuatan untuk tetap tenang saat pasanganmu marah daripada untuk menyamai volume suaranya. Dibutuhkan disiplin yang lebih besar untuk mengajukan pertanyaan klarifikasi daripada untuk membalas dengan pembelaan diri. Kelembutan semacam ini bukan berarti menyetujui segalanya atau tidak pernah berbeda pendapat; artinya adalah berbeda pendapat dengan cara yang menjaga hubungan tetap utuh.
+
+Selama tiga hari, kita telah melewati kejujuran tanpa kekerasan, ketepatan waktu yang menghargai orang yang kita kasihi, dan sekarang kelembutan yang kita pilih berulang kali, bukan karena itu datang secara alami, melainkan karena kita memutuskan bahwa itu lebih penting daripada menjadi benar pada saat itu. Tidak satu pun dari ini terjadi dengan sempurna. Setiap pasangan memiliki hari-hari ketika kebiasaan lama menang. Yang penting adalah arah yang terus kita tuju kembali — pernikahan yang berkata benar, pada waktu yang tepat, dengan roh yang lembut.
+
+Saat renungan singkat ini berakhir, anggaplah ini bukan garis akhir melainkan titik awal. Kelembutan adalah pilihan harian, diperbarui setiap pagi, terutama pada hari-hari ketika terasa paling sulit untuk diberikan. Mintalah Tuhan menumbuhkan ini dalam dirimu — bukan sebagai sifat kepribadian yang kamu miliki atau tidak, melainkan sebagai buah Roh-Nya, dipupuk satu percakapan demi satu percakapan.',
+     'In your next disagreement, try reversing the usual order: listen first, speak second, and let anger come last, if at all.', 'Dalam pertengkaran berikutnya, cobalah membalik urutan yang biasa: dengarkan dahulu, berbicaralah kemudian, dan biarkan kemarahan datang paling akhir, jika memang harus datang.',
+     'Lord, grow gentleness in us as a daily fruit of your Spirit, not a rare accident of a good mood. Make us quick to listen to each other, slow to speak, and slow to anger. When it is hard, remind us that gentleness is strength, not weakness, and that you are patient with us the same way. Amen.', 'Tuhan, tumbuhkanlah kelembutan dalam diri kami sebagai buah Roh yang harian, bukan kebetulan langka dari suasana hati yang baik. Jadikan kami cepat mendengarkan satu sama lain, lambat berkata-kata, dan lambat marah. Ketika itu terasa sulit, ingatkanlah kami bahwa kelembutan adalah kekuatan, bukan kelemahan, dan bahwa Engkau pun sabar terhadap kami dengan cara yang sama. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 1:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 1:19', 'TB', 1);
+
+  -- =================================================================
+  -- Breaking the Silence  (Marriage > Communication & Conflict, 5d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Communication & Conflict' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Breaking the Silence';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Breaking the Silence', 'Memecah Kesunyian',
+     'Learning to listen and end the cycle of shutting down', 'Belajar mendengar dan mengakhiri siklus menutup diri',
+     'For couples caught in the exhausting rhythm of withdrawing instead of talking, this five-day plan explores why silence feels safer than conflict, what real listening actually costs us, and how small, brave words can begin to thaw a relationship that has gone quiet. It is written for anyone who has ever gone to bed angry without saying why, or realized weeks had passed since a real conversation happened.', 'Bagi pasangan yang terjebak dalam ritme melelahkan berupa menarik diri, bukannya berbicara, rencana lima hari ini menelusuri mengapa kesunyian terasa lebih aman daripada konflik, apa sebenarnya harga dari mendengarkan yang sesungguhnya, dan bagaimana kata-kata kecil yang berani dapat mulai mencairkan hubungan yang telah membisu. Ditulis untuk siapa pun yang pernah tidur dalam kemarahan tanpa mengatakan sebabnya, atau menyadari berminggu-minggu telah berlalu sejak percakapan yang sungguh-sungguh terjadi.', 5, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Why We Go Quiet', 'Mengapa Kita Menjadi Diam',
+     'There is a particular kind of loneliness that happens not when a couple is fighting, but when they have stopped fighting altogether — when disagreement has curdled into silence, and two people who once talked about everything now move through the same house like careful strangers. Silence in marriage rarely starts as cruelty. It usually starts as self-protection. Somewhere along the way, speaking up felt too costly — it led to a fight, or to being misunderstood, or to feeling more alone even while talking than while staying quiet. So we stopped trying, and called it peace.
+
+Scripture is honest about how corrosive this kind of quiet actually is. Proverbs speaks of a brother offended being harder to win back than a strong city, and disputes being like the bars of a fortress gate. That is not a small image — it describes something that has been deliberately locked, reinforced, and defended. Withdrawal can feel like the gentler option compared to conflict, but over time it builds exactly this kind of fortress between two people who are supposed to be one flesh. The wall goes up one avoided conversation at a time.
+
+Many couples do not even notice the wall being built. It rarely arrives as a single dramatic decision to stop talking. It arrives as a hundred small choices to let something go ''for now'' — a comment swallowed here, a hurt unspoken there — until ''for now'' becomes the pattern of the whole marriage. The silence starts to feel normal, even comfortable in its own strange way, because at least it does not hurt the way conflict did. But comfort and health are not the same thing, and a marriage can be quiet and still be starving.
+
+Today is simply for noticing, without judgment. Is there a topic, a hurt, a habit that you have quietly stopped bringing up — not because it resolved, but because it felt easier to let it go silent? Naming that honestly, even just to yourself and to God, is the first small crack in the wall.', 'Ada jenis kesepian tertentu yang terjadi bukan ketika pasangan sedang bertengkar, melainkan ketika mereka telah berhenti bertengkar sama sekali — ketika perbedaan pendapat membusuk menjadi kesunyian, dan dua orang yang dahulu membicarakan segalanya kini berjalan melewati rumah yang sama seperti orang asing yang hati-hati. Kesunyian dalam pernikahan jarang dimulai sebagai kekejaman. Biasanya dimulai sebagai perlindungan diri. Entah bagaimana, berbicara terasa terlalu mahal harganya — itu berujung pada pertengkaran, atau disalahpahami, atau membuat kita merasa lebih sendirian bahkan saat berbicara dibanding saat diam. Maka kita berhenti mencoba, dan menyebutnya kedamaian.
+
+Alkitab jujur tentang betapa merusaknya kesunyian semacam ini. Amsal berbicara tentang saudara yang tersinggung lebih sulit dimenangkan kembali daripada kota yang kuat, dan pertengkaran seperti palang pintu gerbang kubu pertahanan. Itu bukan gambaran yang kecil — itu menggambarkan sesuatu yang sengaja dikunci, diperkuat, dan dipertahankan. Menarik diri bisa terasa seperti pilihan yang lebih lembut dibanding konflik, tetapi seiring waktu itu membangun tembok semacam ini di antara dua orang yang seharusnya menjadi satu daging. Tembok itu dibangun satu percakapan yang dihindari demi satu percakapan lainnya.
+
+Banyak pasangan bahkan tidak menyadari tembok itu sedang dibangun. Itu jarang datang sebagai satu keputusan dramatis untuk berhenti berbicara. Ia datang sebagai seratus pilihan kecil untuk membiarkan sesuatu berlalu ''untuk sekarang'' — komentar yang ditelan di sini, luka yang tidak diungkapkan di sana — sampai ''untuk sekarang'' menjadi pola seluruh pernikahan. Kesunyian mulai terasa normal, bahkan nyaman dengan caranya sendiri yang aneh, karena setidaknya tidak menyakiti seperti konflik. Tetapi kenyamanan dan kesehatan bukanlah hal yang sama, dan sebuah pernikahan bisa saja sunyi namun sesungguhnya sedang kelaparan.
+
+Hari ini sekadar untuk memperhatikan, tanpa menghakimi. Adakah topik, luka, atau kebiasaan yang diam-diam sudah kamu hentikan untuk dibicarakan — bukan karena sudah selesai, melainkan karena terasa lebih mudah membiarkannya membisu? Mengakui itu dengan jujur, bahkan hanya kepada dirimu sendiri dan kepada Tuhan, adalah retakan kecil pertama pada tembok itu.',
+     'Notice one topic you have quietly stopped bringing up with your spouse, and ask why it started to feel safer left unsaid.', 'Perhatikan satu topik yang diam-diam sudah kamu hentikan untuk dibicarakan dengan pasanganmu, dan tanyakan mengapa itu mulai terasa lebih aman jika tidak diucapkan.',
+     'Lord, you see the walls we have built without meaning to. Soften the ground of our hearts before it hardens further. Give us the courage to notice our silence honestly, and the hope to believe that speaking again is still possible. Amen.', 'Tuhan, Engkau melihat tembok-tembok yang telah kami bangun tanpa kami sadari. Lembutkanlah tanah hati kami sebelum semakin mengeras. Berilah kami keberanian untuk mengakui kesunyian kami dengan jujur, dan pengharapan untuk percaya bahwa berbicara kembali masih mungkin terjadi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 18:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 18:19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Cost of Real Listening', 'Harga dari Mendengar yang Sesungguhnya',
+     'It is easy to assume that the opposite of silence is talking, but in a marriage recovering from distance, the real opposite of silence is listening. Talking without listening can actually deepen the gap — two people taking turns making their case, waiting for their turn to speak rather than absorbing what the other is saying. Real listening is slower, humbler, and honestly more costly than most of us expect, because it requires setting down our own defense long enough to actually understand someone else''s pain, even when that pain implicates us.
+
+The book of James does not describe listening as a soft, passive skill — it places it first, ahead of speaking and ahead of anger, as if listening is the discipline that makes everything else possible. To truly listen to a spouse who has felt unheard for a long time means we will likely hear things that are hard to receive: frustration, disappointment, maybe even old wounds we thought were resolved. The temptation in that moment is to defend, explain, or correct. But defending too early is often just another form of not listening.
+
+Many couples find that the walls between them did not come down through one big breakthrough conversation, but through many small moments of one person choosing to listen without immediately responding — a pause held a few seconds longer than felt natural, a question asked instead of an excuse offered. This kind of listening does not mean agreeing with everything said. It means honoring the person enough to let their experience exist fully in the room before we respond to it.
+
+Today, consider practicing this in one conversation: ask your spouse a genuine question about something that has felt distant between you, and then hold back the urge to explain yourself before they finish. Let them know they were fully heard before anything else is said. It costs something. It also tends to be the very thing that starts to melt the silence.', 'Mudah untuk menganggap bahwa lawan dari kesunyian adalah berbicara, tetapi dalam pernikahan yang sedang pulih dari kerenggangan, lawan sesungguhnya dari kesunyian adalah mendengarkan. Berbicara tanpa mendengarkan justru bisa memperdalam jarak — dua orang bergantian menyampaikan pembelaan masing-masing, menunggu giliran untuk bicara alih-alih menyerap apa yang dikatakan yang lain. Mendengar yang sesungguhnya lebih lambat, lebih rendah hati, dan sejujurnya lebih mahal harganya daripada yang kebanyakan dari kita duga, karena itu membutuhkan kita meletakkan pembelaan diri cukup lama untuk benar-benar memahami luka orang lain, bahkan ketika luka itu melibatkan kesalahan kita.
+
+Kitab Yakobus tidak menggambarkan mendengarkan sebagai keterampilan yang lembut dan pasif — ia menempatkannya di urutan pertama, sebelum berbicara dan sebelum marah, seolah mendengarkan adalah disiplin yang memungkinkan segala hal lainnya terjadi. Untuk benar-benar mendengarkan pasangan yang sudah lama merasa tidak didengar berarti kita kemungkinan besar akan mendengar hal-hal yang sulit diterima: frustrasi, kekecewaan, bahkan mungkin luka lama yang kita kira sudah selesai. Godaan pada saat itu adalah membela diri, menjelaskan, atau membetulkan. Tetapi membela diri terlalu cepat sering kali hanyalah bentuk lain dari tidak mendengarkan.
+
+Banyak pasangan mendapati bahwa tembok di antara mereka tidak runtuh lewat satu percakapan besar yang mengubah segalanya, melainkan lewat banyak momen kecil ketika satu orang memilih mendengarkan tanpa langsung menanggapi — jeda yang ditahan beberapa detik lebih lama dari yang terasa alami, pertanyaan yang diajukan alih-alih alasan yang diberikan. Mendengarkan semacam ini bukan berarti menyetujui segala yang dikatakan. Artinya adalah menghormati orang itu cukup untuk membiarkan pengalamannya sepenuhnya hadir di ruangan itu sebelum kita menanggapinya.
+
+Hari ini, pertimbangkan untuk mempraktikkan ini dalam satu percakapan: tanyakan kepada pasanganmu pertanyaan yang tulus tentang sesuatu yang terasa renggang di antara kalian, lalu tahan dorongan untuk menjelaskan dirimu sebelum ia selesai bicara. Biarkan ia tahu bahwa ia benar-benar didengar sebelum apa pun dikatakan lagi. Itu memerlukan pengorbanan. Namun itu juga sering kali menjadi hal yang mulai mencairkan kesunyian.',
+     'In your next conversation, try asking one genuine question and holding back your explanation until your spouse feels fully heard.', 'Dalam percakapan berikutnya, cobalah mengajukan satu pertanyaan yang tulus dan tahan penjelasanmu sampai pasanganmu merasa benar-benar didengar.',
+     'Father, teach us to listen before we defend ourselves. Give us patience to hear the full weight of what our spouse carries, even when it is hard to hear. Let our listening be the first step toward closing the distance between us. Amen.', 'Bapa, ajarlah kami mendengarkan sebelum membela diri. Berilah kami kesabaran untuk mendengar seluruh beban yang dibawa pasangan kami, bahkan ketika itu sulit didengar. Biarlah mendengarkan kami menjadi langkah pertama untuk menutup jarak di antara kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 18:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 18:13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'The First Brave Word', 'Kata Pertama yang Berani',
+     'Ecclesiastes tells us plainly that there is a time to keep silence and a time to speak — both are wise in their season, and both can be misused. The trouble for many couples caught in a cycle of withdrawal is not that they never speak, but that they have quietly decided it is always a time to keep silence, because speaking has felt too risky for too long. Breaking that pattern rarely requires a dramatic speech. It usually just requires one honest sentence, spoken first by someone who is tired of the quiet but afraid to be the one who breaks it.
+
+There is real vulnerability in being the first to speak after a long silence. It means risking that the other person might not respond the way we hope, that old hurt might resurface, that the conversation could go sideways. This fear is legitimate — it is not imagined. But staying silent to avoid that risk guarantees a different kind of loss: a marriage that stays safe by staying distant. Somewhere, a choice has to be made about which risk is worth taking.
+
+The first brave word does not need to solve everything. It can be as small as, ''I''ve missed talking to you,'' or ''I think we''ve both been avoiding something, and I want to try again.'' These are not confrontations. They are invitations. And invitations, unlike accusations, tend to lower the other person''s defenses rather than raise them, because they communicate a desire for connection rather than a demand for change.
+
+If you are the one who has been quiet longer than you meant to be, consider today whether you might be the one to speak first — not to win an argument, but to open a door. It may not be received perfectly the first time. Grace, offered by both people, usually needs more than one attempt. But every reopened conversation starts somewhere, and it can start with you.', 'Kitab Pengkhotbah dengan jelas mengatakan bahwa ada waktu untuk berdiam diri dan ada waktu untuk berbicara — keduanya bijaksana pada musimnya, dan keduanya bisa disalahgunakan. Masalah bagi banyak pasangan yang terjebak dalam siklus menarik diri bukanlah karena mereka tidak pernah berbicara, melainkan karena mereka diam-diam telah memutuskan bahwa selalu saatnya untuk berdiam diri, karena berbicara terasa terlalu berisiko untuk waktu yang terlalu lama. Memutus pola itu jarang membutuhkan pidato yang dramatis. Biasanya hanya membutuhkan satu kalimat jujur, diucapkan pertama kali oleh seseorang yang lelah dengan kesunyian namun takut menjadi orang yang memecahkannya.
+
+Ada kerentanan yang nyata dalam menjadi orang pertama yang berbicara setelah kesunyian yang panjang. Itu berarti mengambil risiko bahwa orang lain mungkin tidak merespons seperti yang kita harapkan, bahwa luka lama bisa muncul kembali, bahwa percakapan bisa berjalan tidak sesuai rencana. Ketakutan ini nyata — bukan khayalan. Tetapi tetap diam untuk menghindari risiko itu menjamin jenis kerugian lain: pernikahan yang tetap aman dengan cara tetap berjarak. Suatu saat, pilihan harus dibuat tentang risiko mana yang layak diambil.
+
+Kata pertama yang berani tidak perlu menyelesaikan segalanya. Bisa sesederhana, ''Aku rindu berbicara denganmu,'' atau ''Aku rasa kita berdua sudah menghindari sesuatu, dan aku ingin mencoba lagi.'' Ini bukan konfrontasi. Ini adalah undangan. Dan undangan, tidak seperti tuduhan, cenderung menurunkan pertahanan orang lain, bukan menaikkannya, karena undangan mengomunikasikan keinginan untuk terhubung, bukan tuntutan untuk berubah.
+
+Jika kamu adalah orang yang sudah diam lebih lama dari yang kamu maksudkan, pertimbangkan hari ini apakah kamu bisa menjadi orang yang berbicara lebih dahulu — bukan untuk memenangkan perdebatan, melainkan untuk membuka pintu. Mungkin tidak diterima dengan sempurna pada percobaan pertama. Anugerah, yang diberikan oleh kedua belah pihak, biasanya membutuhkan lebih dari satu kali usaha. Tetapi setiap percakapan yang dibuka kembali dimulai dari suatu tempat, dan itu bisa dimulai darimu.',
+     'Ask yourself honestly whether you might be the one this silence needs to speak first — not to win, but to open a door.', 'Tanyakan pada dirimu dengan jujur apakah kamu mungkin orang yang perlu berbicara lebih dahulu untuk memecah kesunyian ini — bukan untuk menang, melainkan untuk membuka pintu.',
+     'Lord, give me courage to speak the first small, honest word after silence. Take away my fear of being misunderstood, and replace it with trust that you go before me into this conversation. Let my words be an invitation, not a weapon. Amen.', 'Tuhan, berilah aku keberanian untuk mengucapkan kata pertama yang kecil dan jujur setelah kesunyian. Ambillah rasa takutku disalahpahami, dan gantilah dengan kepercayaan bahwa Engkau berjalan mendahuluiku ke dalam percakapan ini. Biarlah kata-kataku menjadi undangan, bukan senjata. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 3:7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 3:7', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'When You Are Met With More Silence', 'Ketika Kamu Disambut dengan Kesunyian Lagi',
+     'Not every attempt to reopen a conversation is met with warmth right away. Sometimes we gather the courage to speak, and the response is short, guarded, or another retreat into quiet. This can feel like proof that trying was pointless, that the wall is simply too thick to reach through. It is one of the most discouraging moments in the whole process of breaking a silence, and it deserves honesty rather than a quick spiritual bandage.
+
+Paul''s words to the Romans were written into real, imperfect relationships, not idealized ones: ''If it is possible, as far as it depends on you, live at peace with everyone.'' Notice the careful qualifiers — ''if it is possible,'' ''as far as it depends on you.'' Scripture does not promise that our effort alone will guarantee reconciliation on our timeline. It calls us to be faithful with our part, even when the other person is not yet ready to meet us there. That distinction matters enormously for anyone who has tried to reach across silence and been met with more of it.
+
+This does not mean giving up after one attempt, nor does it mean forcing a conversation someone is not ready to have. It means continuing to be a safe, steady presence — not shutting back down in hurt pride, but also not demanding an immediate response on our terms. Sometimes the person who has been quiet the longest needs to see consistency over time before they trust that the door being opened is not going to slam shut again the moment things get uncomfortable.
+
+If today''s attempt at connection was met with distance, resist the urge to interpret it as final failure. Faithfulness in marriage often looks like showing up gently again tomorrow, and the day after, doing what depends on you, and trusting God with the rest.', 'Tidak setiap usaha untuk membuka kembali percakapan disambut dengan kehangatan segera. Kadang kita mengumpulkan keberanian untuk berbicara, dan tanggapannya singkat, berjaga-jaga, atau justru mundur lagi ke dalam kesunyian. Ini bisa terasa seperti bukti bahwa mencoba itu sia-sia, bahwa temboknya terlalu tebal untuk ditembus. Ini adalah salah satu momen paling melemahkan semangat dalam seluruh proses memecah kesunyian, dan itu layak dihadapi dengan kejujuran, bukan sekadar perban rohani yang cepat.
+
+Kata-kata Paulus kepada jemaat di Roma ditulis untuk hubungan yang nyata dan tidak sempurna, bukan hubungan yang ideal: ''Sedapat-dapatnya, kalau hal itu bergantung padamu, hiduplah dalam perdamaian dengan semua orang.'' Perhatikan kualifikasi yang hati-hati itu — ''sedapat-dapatnya,'' ''kalau hal itu bergantung padamu.'' Alkitab tidak menjanjikan bahwa usaha kita sendiri akan menjamin pemulihan hubungan sesuai jadwal kita. Alkitab memanggil kita untuk setia dengan bagian kita, bahkan ketika orang lain belum siap menemui kita di sana. Perbedaan itu sangat penting bagi siapa pun yang sudah berusaha menjangkau melalui kesunyian dan disambut dengan lebih banyak kesunyian lagi.
+
+Ini bukan berarti menyerah setelah satu percobaan, dan juga bukan berarti memaksakan percakapan yang belum siap dihadapi orang lain. Artinya adalah terus menjadi kehadiran yang aman dan stabil — tidak menutup diri lagi karena harga diri yang terluka, tetapi juga tidak menuntut tanggapan segera sesuai syarat kita. Kadang orang yang paling lama diam perlu melihat konsistensi dari waktu ke waktu sebelum ia percaya bahwa pintu yang dibuka tidak akan tertutup lagi begitu keadaan menjadi tidak nyaman.
+
+Jika usahamu untuk terhubung hari ini disambut dengan jarak, tahan dorongan untuk menafsirkannya sebagai kegagalan final. Kesetiaan dalam pernikahan sering kali terlihat seperti tetap hadir dengan lembut lagi esok hari, dan hari berikutnya, melakukan apa yang bergantung padamu, dan mempercayakan sisanya kepada Tuhan.',
+     'If your effort to reconnect was met with distance, ask God for patience to keep doing your part faithfully without forcing the outcome.', 'Jika usahamu untuk terhubung kembali disambut dengan jarak, mintalah kesabaran dari Tuhan untuk terus melakukan bagianmu dengan setia tanpa memaksakan hasilnya.',
+     'God, when my efforts to reconnect are met with more silence, keep me from giving up in hurt or forcing what isn''t ready. Help me be faithful with what depends on me, and trust you with my spouse''s heart and timing. Amen.', 'Tuhan, ketika usahaku untuk terhubung kembali disambut dengan lebih banyak kesunyian, jagalah aku agar tidak menyerah dalam luka atau memaksakan apa yang belum siap. Tolong aku setia dengan apa yang bergantung padaku, dan percayakan hati serta waktu pasanganku kepada-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:18', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'A Marriage That Talks Again', 'Pernikahan yang Kembali Berbicara',
+     'By the end of this short journey, the goal is not a marriage that never falls quiet again — silence has its place, and rest, and simply being together without words, is one of the good gifts of a long relationship. The goal is a marriage where silence is chosen rather than defaulted into, where quiet is companionship rather than avoidance. That distinction is everything. One kind of silence draws two people closer; the other slowly pulls them apart.
+
+The Song of Songs, for all its poetry, is fundamentally a book about two people delighting in hearing each other''s voice: ''Let me hear your voice, for your voice is sweet.'' It is a striking thing to include in Scripture — a whole book that treats a spouse''s voice as something worth longing for, worth actively wanting to hear again. That longing is worth remembering on the days when talking to each other has become a chore rather than a delight. Somewhere beneath the distance, that longing is very likely still there, waiting to be reawakened.
+
+Rebuilding a habit of talking after a season of silence takes ordinary, unglamorous repetition — a few minutes each evening with phones down, a genuine ''how are you, really'' asked and answered honestly, small check-ins that do not wait for a crisis to happen before two people speak from the heart. None of this needs to be dramatic. Marriages are rarely rebuilt in one grand gesture; they are rebuilt the same way they eroded — one ordinary conversation at a time.
+
+As you close this plan, consider naming one small, sustainable habit that could keep your voices reaching each other going forward — a nightly check-in, a weekly walk without phones, a standing invitation to say ''can we talk about this'' without fear. Ask God to bless that habit, not as a discipline you grit your teeth through, but as a doorway back to delight in the person you married.', 'Menjelang akhir perjalanan singkat ini, tujuannya bukanlah pernikahan yang tidak akan pernah sunyi lagi — kesunyian punya tempatnya, dan istirahat, serta sekadar bersama tanpa kata-kata, adalah salah satu anugerah baik dari hubungan yang panjang. Tujuannya adalah pernikahan di mana kesunyian dipilih, bukan menjadi kebiasaan default, di mana diam adalah kebersamaan, bukan penghindaran. Perbedaan itu sangat menentukan segalanya. Satu jenis kesunyian mendekatkan dua orang; yang lain perlahan menjauhkan mereka.
+
+Kidung Agung, dengan segala keindahan puitisnya, pada dasarnya adalah kitab tentang dua orang yang bergembira mendengar suara satu sama lain: ''Perdengarkanlah suaramu kepadaku, sebab merdu suaramu itu.'' Sungguh mencolok bahwa hal ini dimasukkan dalam Alkitab — sebuah kitab utuh yang memperlakukan suara pasangan sebagai sesuatu yang layak dirindukan, layak diinginkan untuk didengar kembali secara aktif. Kerinduan itu layak diingat pada hari-hari ketika berbicara satu sama lain telah menjadi kewajiban, bukan kesenangan. Di balik kerenggangan itu, kerinduan itu sangat mungkin masih ada, menunggu untuk dibangunkan kembali.
+
+Membangun kembali kebiasaan berbicara setelah masa kesunyian membutuhkan pengulangan yang biasa dan tidak muluk-muluk — beberapa menit setiap malam dengan ponsel diletakkan, pertanyaan ''bagaimana kabarmu, sungguh-sungguh'' yang ditanyakan dan dijawab dengan jujur, pemeriksaan kecil yang tidak menunggu krisis terjadi sebelum dua orang berbicara dari hati. Semua ini tidak perlu dramatis. Pernikahan jarang dibangun kembali dalam satu gerakan besar; ia dibangun kembali dengan cara yang sama seperti ketika ia terkikis — satu percakapan biasa demi satu percakapan.
+
+Saat kamu menutup rencana ini, pertimbangkan untuk menamai satu kebiasaan kecil dan berkelanjutan yang bisa menjaga suara kalian tetap saling menjangkau ke depannya — pemeriksaan setiap malam, jalan kaki mingguan tanpa ponsel, undangan tetap untuk berkata ''bolehkah kita membicarakan ini'' tanpa rasa takut. Mintalah Tuhan memberkati kebiasaan itu, bukan sebagai disiplin yang kamu jalani dengan gigi terkatup, melainkan sebagai pintu kembali menuju kegembiraan akan pribadi yang kamu nikahi.',
+     'Name one small, sustainable habit that could keep your voices reaching each other, and ask God to bless it starting this week.', 'Sebutkan satu kebiasaan kecil dan berkelanjutan yang bisa menjaga suara kalian tetap saling menjangkau, dan mintalah Tuhan memberkatinya mulai minggu ini.',
+     'Lord, thank you for walking us through this season of quiet. Restore in us the delight of hearing each other''s voice, and give us small, faithful habits that keep our hearts open to one another. May our home become a place where words flow freely again, in love. Amen.', 'Tuhan, terima kasih telah menuntun kami melewati musim kesunyian ini. Pulihkanlah dalam diri kami kegembiraan mendengar suara satu sama lain, dan berilah kami kebiasaan kecil yang setia yang menjaga hati kami tetap terbuka satu sama lain. Kiranya rumah kami menjadi tempat di mana kata-kata kembali mengalir dengan bebas, dalam kasih. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Song of Songs 2:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kidung Agung 2:14', 'TB', 1);
+
+  -- =================================================================
+  -- After the Harsh Words  (Marriage > Communication & Conflict, 7d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Communication & Conflict' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'After the Harsh Words';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'After the Harsh Words', 'Setelah Kata-Kata yang Keras',
+     'A seven-day path to gentler speech and a healed argument cycle', 'Jalan tujuh hari menuju perkataan yang lebih lembut dan siklus pertengkaran yang pulih',
+     'For couples worn down by the same fight resurfacing again and again, this seven-day plan names the pattern honestly, walks through repentance and forgiveness for wounding words, and rebuilds new habits of gentle speech one day at a time. It is for anyone who has said something in anger they wish they could take back, and anyone who has been on the receiving end of it, ready to try again.', 'Bagi pasangan yang lelah karena pertengkaran yang sama terus muncul berulang kali, rencana tujuh hari ini mengakui pola itu dengan jujur, menuntun melalui pertobatan dan pengampunan atas kata-kata yang melukai, dan membangun kembali kebiasaan berbicara yang lembut satu hari demi satu hari. Ditulis untuk siapa pun yang pernah mengucapkan sesuatu dalam kemarahan yang ingin ditarik kembali, dan siapa pun yang pernah menerimanya, namun siap untuk mencoba lagi.', 7, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Naming the Pattern', 'Mengenali Pola yang Berulang',
+     'Almost every long-married couple can name it: the argument that keeps coming back, wearing slightly different clothes each time but carrying the exact same wound underneath. Maybe it is about money, or in-laws, or who carries more of the load at home, or something smaller that somehow always spirals into something larger. The topic on the surface rarely stays the same, but the pattern beneath it — the tone, the trigger words, the way it always seems to end — repeats with exhausting familiarity. Many couples feel a quiet dread rising the moment a conversation starts sliding toward that same old territory.
+
+Scripture does not shy away from naming destructive speech plainly. Proverbs warns that reckless words pierce like a sword, while the tongue of the wise brings healing. That image of piercing is not an exaggeration for many couples caught in a recurring fight — real wounds accumulate, even when both people generally love each other and mean well. Recognizing a pattern is not the same as assigning blame entirely to one person. Recurring conflict is almost always a two-person dance, even when it doesn''t feel that way in the heat of it.
+
+This week begins with the hardest and most important step: honestly naming what the pattern is, without immediately trying to fix it or defend your part in it. What does the fight usually start with? What words tend to get said that can''t easily be unsaid? What does each of you tend to do — withdraw, raise your voice, bring up old history — once things escalate? Naming this clearly, ideally together, takes away some of its power to ambush you the next time.
+
+If reading this stirred up memory of a specific, painful exchange, that is normal and does not need to be pushed away. Bring it honestly before God today. He is not shocked by the reality of a hard marriage season, and He is present in the naming of it, not just in the eventual healing.', 'Hampir setiap pasangan yang telah lama menikah bisa mengenalinya: pertengkaran yang terus kembali, mengenakan pakaian yang sedikit berbeda setiap kali namun membawa luka yang persis sama di baliknya. Mungkin itu tentang uang, atau mertua, atau siapa yang menanggung lebih banyak beban di rumah, atau sesuatu yang lebih kecil yang entah bagaimana selalu berkembang menjadi lebih besar. Topik di permukaan jarang tetap sama, tetapi pola di baliknya — nada suara, kata-kata pemicu, cara pertengkaran itu selalu berakhir — berulang dengan kejenuhan yang melelahkan. Banyak pasangan merasakan kecemasan diam-diam muncul begitu percakapan mulai bergeser ke wilayah lama yang sama itu.
+
+Alkitab tidak menghindar dari menyebut perkataan yang merusak secara terus terang. Amsal memperingatkan bahwa perkataan yang sembrono menusuk seperti pedang, sedangkan lidah orang bijak mendatangkan kesembuhan. Gambaran tikaman itu bukan berlebihan bagi banyak pasangan yang terjebak dalam pertengkaran berulang — luka nyata menumpuk, bahkan ketika kedua orang pada dasarnya saling mengasihi dan bermaksud baik. Mengenali sebuah pola bukan berarti menimpakan kesalahan sepenuhnya kepada satu orang. Konflik yang berulang hampir selalu adalah tarian dua orang, bahkan ketika terasa tidak demikian di tengah panasnya suasana.
+
+Minggu ini dimulai dengan langkah tersulit dan terpenting: mengenali dengan jujur seperti apa pola itu, tanpa langsung mencoba memperbaikinya atau membela bagian kita di dalamnya. Biasanya pertengkaran itu dimulai dengan apa? Kata-kata apa yang cenderung diucapkan yang sulit ditarik kembali? Apa yang biasanya dilakukan masing-masing dari kalian — menarik diri, meninggikan suara, mengungkit sejarah lama — begitu keadaan memanas? Mengenali ini dengan jelas, idealnya bersama-sama, mengurangi sebagian kekuatannya untuk menyergap kalian di lain waktu.
+
+Jika membaca ini membangkitkan ingatan akan suatu pertukaran kata yang menyakitkan, itu wajar dan tidak perlu ditepis. Bawalah itu dengan jujur di hadapan Tuhan hari ini. Ia tidak terkejut dengan kenyataan musim pernikahan yang sulit, dan Ia hadir dalam pengakuan itu, bukan hanya dalam kesembuhan yang akhirnya datang.',
+     'Gently name your recurring argument''s usual pattern — what starts it, what escalates it, how it usually ends — without assigning blame yet.', 'Kenali dengan lembut pola biasa dari pertengkaran yang berulang itu — apa yang memulainya, apa yang memperparahnya, bagaimana biasanya berakhir — tanpa dulu menimpakan kesalahan.',
+     'Lord, you know the fight we keep having, even the words we''ve said that we wish we could take back. Give us courage to name this pattern honestly today, without hiding from it or from each other. Meet us in the naming, and begin your healing work from here. Amen.', 'Tuhan, Engkau tahu pertengkaran yang terus kami alami, bahkan kata-kata yang sudah kami ucapkan yang ingin kami tarik kembali. Berilah kami keberanian untuk mengenali pola ini dengan jujur hari ini, tanpa bersembunyi darinya atau dari satu sama lain. Temuilah kami dalam pengakuan ini, dan mulailah karya pemulihan-Mu dari sini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 12:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 12:18', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Weight of Words We Cannot Unsay', 'Beban Kata-Kata yang Tak Bisa Ditarik Kembali',
+     'There is a peculiar grief that comes after saying something in anger that you knew, even as it left your mouth, would land like a blow. Many spouses can recall the exact sentence — sometimes years later — because words spoken in the heat of a recurring fight tend to aim for the most tender, most personal target we know about the other person, precisely because we know them so well. That is one of the strange cruelties of marriage: the same intimacy that lets us love each other deeply also gives us the precision to wound each other deeply.
+
+James describes the tongue as a small part of the body capable of enormous damage, comparing it to a spark that sets a whole forest ablaze. It is a sobering image for anyone who has watched one careless sentence escalate an ordinary disagreement into a full-blown crisis within minutes. The size of the words is never the point — a handful of syllables, spoken in five seconds, can take months to unravel. This is not meant to shame anyone for the moments they have failed; every person who has ever argued has said something they regret. It is meant to help us take those words seriously, rather than brushing them off as ''just something said in the moment.''
+
+Part of healing a recurring fight is being willing to look honestly at what has actually been said in the worst moments — not to relitigate every fight, but to recognize which specific words landed hardest and why. Sometimes a phrase becomes a wound not because of what it meant in the moment, but because it confirmed a fear the other person already secretly carried: that they are not enough, not wanted, not able to be trusted. Understanding why a word wounded so deeply is often more healing than simply apologizing for saying it.
+
+Today, if it feels right, consider gently asking your spouse — not in the middle of conflict, but in a calm moment — what words from your past arguments have stayed with them the longest. Listen without defending. This is not about reopening old wounds carelessly; it is about finally understanding them well enough to stop reopening them by accident.', 'Ada semacam kesedihan khas yang muncul setelah mengatakan sesuatu dalam kemarahan yang kita tahu, bahkan saat kata itu keluar dari mulut, akan mendarat seperti pukulan. Banyak pasangan bisa mengingat kalimat persisnya — kadang bertahun-tahun kemudian — karena kata-kata yang diucapkan dalam panasnya pertengkaran berulang cenderung membidik sasaran yang paling lembut dan paling pribadi yang kita ketahui tentang orang lain, justru karena kita mengenal mereka begitu dalam. Itulah salah satu kekejaman aneh dalam pernikahan: keintiman yang sama yang memungkinkan kita saling mengasihi dengan dalam juga memberi kita ketepatan untuk saling melukai dengan dalam.
+
+Yakobus menggambarkan lidah sebagai bagian kecil dari tubuh yang mampu menimbulkan kerusakan yang sangat besar, membandingkannya dengan percikan api yang membakar seluruh hutan. Itu gambaran yang menyadarkan bagi siapa pun yang pernah menyaksikan satu kalimat sembrono mengubah pertengkaran biasa menjadi krisis besar dalam hitungan menit. Besarnya kata-kata bukanlah intinya — segenggam suku kata, diucapkan dalam lima detik, bisa membutuhkan waktu berbulan-bulan untuk diurai kembali. Ini bukan untuk mempermalukan siapa pun atas momen-momen kegagalan mereka; setiap orang yang pernah bertengkar pasti pernah mengatakan sesuatu yang disesalinya. Ini dimaksudkan untuk membantu kita menganggap kata-kata itu serius, bukan menganggapnya remeh sebagai ''sekadar ucapan sesaat.''
+
+Bagian dari memulihkan pertengkaran yang berulang adalah bersedia melihat dengan jujur apa yang sebenarnya telah diucapkan pada momen-momen terburuk — bukan untuk mengungkit ulang setiap pertengkaran, melainkan untuk mengenali kata-kata mana yang paling menyakitkan dan mengapa. Kadang sebuah kalimat menjadi luka bukan karena maknanya saat itu, melainkan karena kalimat itu membenarkan ketakutan yang sudah lama diam-diam dibawa orang lain: bahwa dirinya tidak cukup, tidak diinginkan, tidak bisa dipercaya. Memahami mengapa sebuah kata melukai begitu dalam sering kali lebih memulihkan daripada sekadar meminta maaf karena telah mengucapkannya.
+
+Hari ini, jika terasa tepat, pertimbangkan untuk dengan lembut bertanya kepada pasanganmu — bukan di tengah konflik, melainkan pada saat yang tenang — kata-kata apa dari pertengkaran masa lalu kalian yang paling lama membekas baginya. Dengarkan tanpa membela diri. Ini bukan untuk membuka kembali luka lama dengan sembarangan; ini untuk akhirnya memahaminya cukup baik agar tidak membukanya kembali secara tidak sengaja.',
+     'Consider, in a calm moment, gently asking your spouse which words from past arguments have stayed with them the longest — and simply listen.', 'Pertimbangkan, pada saat yang tenang, untuk bertanya dengan lembut kepada pasanganmu kata-kata mana dari pertengkaran masa lalu yang paling lama membekas baginya — lalu cukup dengarkan.',
+     'Father, forgive us for the words we have used as weapons, even when we did not fully mean to wound. Show us clearly where our words have left lasting marks, and give us the humility to understand them rather than dismiss them. Begin healing what has been said. Amen.', 'Bapa, ampunilah kami atas kata-kata yang telah kami gunakan sebagai senjata, bahkan ketika kami tidak sepenuhnya bermaksud melukai. Tunjukkanlah dengan jelas di mana kata-kata kami telah meninggalkan bekas yang bertahan lama, dan berilah kami kerendahan hati untuk memahaminya, bukan mengabaikannya. Mulailah memulihkan apa yang telah diucapkan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 3:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 3:5', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Repentance That Names the Specific Hurt', 'Pertobatan yang Menyebut Luka secara Spesifik',
+     'Most of us are fairly practiced at the general apology — ''I''m sorry for how I acted'' — and far less practiced at the specific one. A general apology can smooth over a moment, but it rarely heals a pattern, because it doesn''t require us to look closely at what we actually did or said. Psalm 51, David''s prayer after his sin was exposed, models something much more searching: ''Against you, you only, have I sinned and done what is evil in your sight.'' David does not soften the confession into vague language. He names it plainly, before God, and asks for a genuinely clean heart, not just relief from the discomfort of guilt.
+
+In a marriage recovering from a recurring fight, this kind of specific repentance matters enormously. ''I''m sorry I yelled'' is different from ''I''m sorry I said you never think of anyone but yourself — that wasn''t fair, and I know it landed on an old fear of yours.'' The second version costs more to say, because it requires actually remembering what was said and taking responsibility for its specific impact, not just its general unpleasantness. It also tends to heal far more, because it tells our spouse: I see exactly what I did, and I am not minimizing it.
+
+This kind of repentance can feel exposing, even frightening — what if naming it clearly makes it more real, more undeniable? But the opposite is usually true. Vague apologies leave the wound unaddressed, still tender under the surface, ready to be reopened by the next argument. Specific, honest repentance actually closes something. It tells both people exactly what happened, so it can be forgiven completely rather than half-acknowledged and quietly carried forward.
+
+If there is a specific thing you said in a past fight that you have only ever apologized for in general terms, consider today whether it is time to name it clearly — to God first, and then, when the moment is right, to your spouse.', 'Kebanyakan dari kita cukup terbiasa dengan permintaan maaf yang umum — ''Maaf atas sikapku'' — dan jauh kurang terbiasa dengan permintaan maaf yang spesifik. Permintaan maaf yang umum bisa meredakan suatu momen, tetapi jarang memulihkan sebuah pola, karena tidak mengharuskan kita melihat dengan cermat apa yang sebenarnya kita lakukan atau katakan. Mazmur 51, doa Daud setelah dosanya terbongkar, memberi contoh sesuatu yang jauh lebih mendalam: ''Terhadap Engkau, terhadap Engkau sajalah aku telah berdosa dan melakukan apa yang Kauanggap jahat.'' Daud tidak melunakkan pengakuannya menjadi bahasa yang kabur. Ia menyebutnya dengan jelas, di hadapan Tuhan, dan memohon hati yang benar-benar tahir, bukan sekadar kelegaan dari rasa tidak nyaman karena bersalah.
+
+Dalam pernikahan yang sedang pulih dari pertengkaran berulang, pertobatan yang spesifik semacam ini sangat penting. ''Maaf aku berteriak'' berbeda dari ''Maaf aku berkata kamu tidak pernah memikirkan orang lain selain dirimu sendiri — itu tidak adil, dan aku tahu itu mengenai ketakutan lamamu.'' Versi kedua lebih mahal untuk diucapkan, karena mengharuskan kita benar-benar mengingat apa yang dikatakan dan bertanggung jawab atas dampak spesifiknya, bukan hanya ketidaknyamanannya secara umum. Versi ini juga cenderung memulihkan jauh lebih banyak, karena memberi tahu pasangan kita: aku melihat persis apa yang kulakukan, dan aku tidak meremehkannya.
+
+Pertobatan semacam ini bisa terasa membuka diri, bahkan menakutkan — bagaimana jika menyebutnya dengan jelas justru membuatnya lebih nyata, lebih tak terbantahkan? Tetapi biasanya yang terjadi justru sebaliknya. Permintaan maaf yang kabur meninggalkan luka tidak tertangani, masih lembut di bawah permukaan, siap dibuka kembali oleh pertengkaran berikutnya. Pertobatan yang spesifik dan jujur benar-benar menutup sesuatu. Itu memberi tahu kedua orang persis apa yang terjadi, sehingga bisa diampuni sepenuhnya, bukan setengah diakui lalu diam-diam dibawa terus.
+
+Jika ada hal spesifik yang kamu katakan dalam pertengkaran masa lalu yang hanya pernah kamu minta maafkan secara umum, pertimbangkan hari ini apakah sudah waktunya menyebutnya dengan jelas — kepada Tuhan lebih dulu, lalu, pada saat yang tepat, kepada pasanganmu.',
+     'Think of one specific thing you have only apologized for in general terms — ask God whether it is time to name it clearly.', 'Pikirkan satu hal spesifik yang hanya pernah kamu minta maafkan secara umum — tanyakan kepada Tuhan apakah sudah waktunya menyebutnya dengan jelas.',
+     'Create in me a clean heart, O God, and renew a right spirit within me. Give me the courage to name specifically what I have said and done that has wounded my spouse, and the trust that honest confession heals more than vague regret ever could. Amen.', 'Ciptakanlah dalam diriku hati yang tahir, ya Allah, dan perbaruilah dalam diriku roh yang teguh. Berilah aku keberanian untuk menyebut secara spesifik apa yang telah kukatakan dan lakukan yang melukai pasanganku, serta kepercayaan bahwa pengakuan yang jujur memulihkan lebih banyak daripada penyesalan yang kabur. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 51:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 51:6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Forgiveness That Doesn''t Keep Score', 'Pengampunan yang Tidak Menghitung Kesalahan',
+     'Once specific repentance has been offered, the next step belongs to the one who was wounded, and it is no less demanding: forgiveness. Not the shallow kind that says ''it''s fine'' while quietly filing the offense away for the next argument, but the kind Paul describes — love that keeps no record of wrongs. That phrase, ''keeps no record,'' is a striking financial image: no ledger, no running tally kept in a back pocket, ready to be pulled out and read aloud the next time a fight escalates.
+
+Many couples caught in a recurring fight are, without quite realizing it, keeping exactly that kind of ledger. Every new disagreement becomes an opportunity to reference the old one — ''this is just like last time,'' ''you always do this,'' ''remember when you said...'' Each reference adds weight to the current conflict, dragging in every past hurt until a small disagreement about dishes somehow becomes a referendum on the entire marriage. Real forgiveness means retiring that ledger, not pretending the entries never happened, but choosing not to reopen the book every time a new argument starts.
+
+This is genuinely hard, and it is worth being honest about that. Forgiveness that keeps no record does not mean forgetting, and it does not mean the wound didn''t matter. It means deciding, by grace, not to use past pain as ammunition in present conflict. This is possible not because we are naturally forgiving people, but because we have been forgiven an even larger debt ourselves, one we could never repay, and are asked to extend the same grace we have received.
+
+Today, consider whether there is a specific old wound you have been quietly keeping on file, ready to bring up in the next disagreement. Ask God for the grace to close that entry — not to erase that it happened, but to release your right to use it as a weapon going forward.', 'Setelah pertobatan yang spesifik diberikan, langkah berikutnya menjadi milik orang yang terluka, dan itu sama sekali tidak kalah menuntutnya: pengampunan. Bukan pengampunan dangkal yang berkata ''tidak apa-apa'' sambil diam-diam menyimpan pelanggaran itu untuk pertengkaran berikutnya, melainkan yang digambarkan Paulus — kasih yang tidak menyimpan kesalahan orang lain. Frasa itu, ''tidak menyimpan kesalahan,'' adalah gambaran keuangan yang mencolok: tidak ada buku besar, tidak ada catatan yang terus dijaga di saku belakang, siap dikeluarkan dan dibacakan keras-keras saat pertengkaran berikutnya memanas.
+
+Banyak pasangan yang terjebak dalam pertengkaran berulang, tanpa sepenuhnya menyadarinya, sedang menyimpan buku besar semacam itu. Setiap perbedaan pendapat baru menjadi kesempatan untuk merujuk yang lama — ''ini persis seperti waktu itu,'' ''kamu selalu begini,'' ''ingat waktu kamu bilang...'' Setiap rujukan menambah beban pada konflik saat ini, menyeret setiap luka masa lalu sampai perbedaan pendapat kecil tentang piring kotor entah bagaimana menjadi referendum atas seluruh pernikahan. Pengampunan yang sesungguhnya berarti menutup buku besar itu, bukan berpura-pura catatannya tidak pernah terjadi, melainkan memilih untuk tidak membuka buku itu lagi setiap kali pertengkaran baru dimulai.
+
+Ini sungguh sulit, dan layak diakui dengan jujur. Pengampunan yang tidak menyimpan kesalahan bukan berarti melupakan, dan bukan berarti luka itu tidak penting. Artinya adalah memutuskan, oleh anugerah, untuk tidak menggunakan rasa sakit masa lalu sebagai amunisi dalam konflik saat ini. Ini mungkin dilakukan bukan karena kita secara alami adalah pribadi yang pengampun, melainkan karena kita sendiri telah diampuni dari utang yang jauh lebih besar, yang tidak akan pernah bisa kita bayar, dan diminta untuk memberikan anugerah yang sama seperti yang telah kita terima.
+
+Hari ini, pertimbangkan apakah ada luka lama spesifik yang diam-diam kamu simpan dalam catatan, siap diungkit pada perbedaan pendapat berikutnya. Mintalah anugerah dari Tuhan untuk menutup catatan itu — bukan menghapus bahwa itu pernah terjadi, melainkan melepaskan hakmu untuk menggunakannya sebagai senjata ke depannya.',
+     'Identify one old wound you have been quietly keeping on file, and ask God for grace to release your right to use it as a weapon.', 'Kenali satu luka lama yang diam-diam kamu simpan dalam catatan, dan mintalah anugerah dari Tuhan untuk melepaskan hakmu menggunakannya sebagai senjata.',
+     'Lord, you have forgiven us a debt we could never repay. Teach us to forgive each other the same way — without a ledger, without keeping score, without dragging old wounds into new disagreements. Give us the grace to close what needs to be closed. Amen.', 'Tuhan, Engkau telah mengampuni kami dari utang yang tidak akan pernah bisa kami bayar. Ajarlah kami mengampuni satu sama lain dengan cara yang sama — tanpa buku besar, tanpa menghitung kesalahan, tanpa menyeret luka lama ke dalam perbedaan pendapat baru. Berilah kami anugerah untuk menutup apa yang perlu ditutup. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 13:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 13:5', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Interrupting the Pattern in the Moment', 'Menghentikan Pola pada Saat Terjadinya',
+     'Understanding a pattern and repenting of past harm is essential groundwork, but eventually a couple has to face the practical question: what do we actually do the next time we feel the old fight starting to rise again? Insight alone rarely stops a pattern in real time — in the heat of the moment, old habits move faster than good intentions. This is where a concrete, agreed-upon plan becomes one of the most loving things a couple can build together.
+
+Proverbs offers a strikingly practical piece of wisdom here: starting a quarrel is like breaching a dam — once the first crack forms, the flood is hard to stop. So drop the matter before a dispute breaks out. This is not a call to avoid necessary conversations. It is a call to notice the earliest signs of the old pattern — a certain tone creeping in, a familiar phrase about to be said, a rising heartbeat — and to have a plan for that exact moment, before the dam breaks completely.
+
+Many couples find it helps to agree in advance on a simple signal — a word, a gesture, a short break — that either person can use the moment they feel the old cycle starting, without it being read as stonewalling or an accusation. ''Can we pause for ten minutes and come back to this?'' is not avoidance when it is used honestly; it is wisdom, giving the flood a chance to recede before real damage is done. The goal is not to suppress the conversation forever, but to have it once both people can speak from calm conviction rather than reflexive defense.
+
+Today, if you don''t already have one, consider discussing with your spouse a simple, agreed-upon way to interrupt the pattern early — before the dam breaks — so that the next hard conversation has a real chance to go differently than the last one did.', 'Memahami sebuah pola dan bertobat dari luka masa lalu adalah dasar yang penting, tetapi pada akhirnya pasangan harus menghadapi pertanyaan praktis: apa yang sebenarnya akan kita lakukan saat berikutnya kita merasakan pertengkaran lama itu mulai muncul kembali? Pemahaman saja jarang cukup untuk menghentikan pola secara langsung — di tengah panasnya suasana, kebiasaan lama bergerak lebih cepat daripada niat baik. Di sinilah rencana yang konkret dan disepakati bersama menjadi salah satu hal paling penuh kasih yang bisa dibangun sebuah pasangan bersama.
+
+Amsal menawarkan kebijaksanaan yang sangat praktis di sini: memulai pertengkaran seperti membuka jalan air — sekali retakan pertama terbentuk, banjir sulit dihentikan. Karena itu, tinggalkanlah perkara itu sebelum perbantahan meletus. Ini bukan ajakan untuk menghindari percakapan yang perlu. Ini ajakan untuk memperhatikan tanda-tanda paling awal dari pola lama — nada tertentu yang mulai muncul, frasa akrab yang hampir diucapkan, detak jantung yang mulai meningkat — dan memiliki rencana untuk momen persis itu, sebelum bendungan benar-benar jebol.
+
+Banyak pasangan mendapati bahwa membantu untuk menyepakati sebelumnya sebuah sinyal sederhana — sebuah kata, isyarat, jeda singkat — yang bisa digunakan siapa pun begitu merasa siklus lama mulai muncul, tanpa dianggap sebagai penolakan atau tuduhan. ''Bisakah kita berhenti sepuluh menit dan kembali membicarakan ini nanti?'' bukanlah penghindaran jika digunakan dengan jujur; itu adalah kebijaksanaan, memberi kesempatan bagi banjir untuk surut sebelum kerusakan nyata terjadi. Tujuannya bukan menekan percakapan itu selamanya, melainkan membicarakannya sekali kedua orang bisa berbicara dari keyakinan yang tenang, bukan pembelaan diri yang reflektif.
+
+Hari ini, jika kalian belum memilikinya, pertimbangkan untuk mendiskusikan dengan pasanganmu cara sederhana yang disepakati bersama untuk menghentikan pola itu sejak dini — sebelum bendungan jebol — sehingga percakapan sulit berikutnya memiliki kesempatan nyata untuk berjalan berbeda dari yang sebelumnya.',
+     'Agree with your spouse in advance on a simple, non-accusatory signal to pause the next time the old pattern starts to rise.', 'Sepakati dengan pasanganmu sebelumnya sebuah sinyal sederhana dan tidak menuduh untuk berhenti sejenak saat pola lama mulai muncul kembali.',
+     'Lord, give us wisdom to notice the earliest signs of our old pattern, and the humility to pause before the dam breaks. Help us build a plan together, not as a way to avoid each other, but as a way to finally speak to each other well. Amen.', 'Tuhan, berilah kami hikmat untuk mengenali tanda-tanda paling awal dari pola lama kami, dan kerendahan hati untuk berhenti sejenak sebelum bendungan jebol. Tolong kami membangun rencana bersama, bukan sebagai cara untuk menghindari satu sama lain, melainkan cara untuk akhirnya berbicara dengan baik satu sama lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 17:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 17:14', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Rebuilding a Gentle Tongue', 'Membangun Kembali Lidah yang Lembut',
+     'Once the old pattern has been named, repented of, forgiven, and given a way to be interrupted, there remains the slower, quieter work of rebuilding — replacing what was torn down with something new. Proverbs describes it beautifully: a gentle answer turns away wrath, but a harsh word stirs up anger. This is not simply good advice about tone; it is a small, repeatable act of faith that the way we speak can actually change the direction an entire conversation takes.
+
+Rebuilding gentle speech after a season of harsh words does not happen by willpower alone. It happens through small, consistent choices practiced far away from conflict, so that gentleness becomes the default rather than a strategy remembered only in crisis. This might look like choosing warmer words during ordinary, low-stakes moments — the way we ask for something, the way we respond to a small mistake, the way we greet each other after a long day. These small moments train the tongue the way daily exercise trains a muscle, so that when a harder conversation does arrive, gentleness is already the more familiar habit.
+
+There is grace in knowing this rebuilding is gradual. No couple moves overnight from a well-worn pattern of harshness to effortless gentleness. There will be days the old habit wins, days a sharp word slips out before it can be caught. What matters is the direction of practice, not a flawless record — a couple that keeps returning to gentleness, even after a stumble, is rebuilding something real, brick by brick.
+
+Today, choose one ordinary moment to practice a gentle answer where a sharper one would have come naturally — not because the harder issues have disappeared, but because gentleness practiced in small things becomes strength available for the larger ones.', 'Setelah pola lama dikenali, ditobati, diampuni, dan diberi cara untuk dihentikan, masih ada pekerjaan yang lebih lambat dan lebih tenang untuk membangun kembali — mengganti apa yang telah runtuh dengan sesuatu yang baru. Amsal menggambarkannya dengan indah: jawaban yang lemah lembut meredakan kegeraman, tetapi perkataan yang pedas membangkitkan marah. Ini bukan sekadar nasihat baik tentang nada bicara; ini adalah tindakan iman kecil yang bisa diulang, bahwa cara kita berbicara benar-benar bisa mengubah arah keseluruhan sebuah percakapan.
+
+Membangun kembali perkataan yang lembut setelah musim kata-kata keras tidak terjadi hanya dengan kemauan keras. Itu terjadi melalui pilihan-pilihan kecil yang konsisten, dipraktikkan jauh dari konflik, sehingga kelembutan menjadi kebiasaan default, bukan strategi yang hanya diingat saat krisis. Ini bisa terlihat seperti memilih kata-kata yang lebih hangat pada saat-saat biasa yang tidak berisiko tinggi — cara kita meminta sesuatu, cara kita menanggapi kesalahan kecil, cara kita menyapa satu sama lain setelah hari yang panjang. Momen-momen kecil ini melatih lidah sebagaimana olahraga harian melatih otot, sehingga ketika percakapan yang lebih sulit tiba, kelembutan sudah menjadi kebiasaan yang lebih akrab.
+
+Ada anugerah dalam mengetahui bahwa pembangunan kembali ini bersifat bertahap. Tidak ada pasangan yang berpindah dalam semalam dari pola kekerasan yang sudah mengakar menjadi kelembutan tanpa usaha. Akan ada hari-hari ketika kebiasaan lama menang, hari-hari ketika kata yang tajam terlepas sebelum sempat ditahan. Yang penting adalah arah latihan, bukan catatan yang sempurna — pasangan yang terus kembali kepada kelembutan, bahkan setelah tersandung, sedang membangun sesuatu yang nyata, batu bata demi batu bata.
+
+Hari ini, pilihlah satu momen biasa untuk mempraktikkan jawaban yang lemah lembut di tempat yang secara alami akan menghasilkan jawaban yang lebih tajam — bukan karena masalah yang lebih besar telah lenyap, melainkan karena kelembutan yang dipraktikkan dalam hal-hal kecil menjadi kekuatan yang tersedia untuk hal-hal yang lebih besar.',
+     'Choose one ordinary, low-stakes moment today to practice a gentle answer where a sharper one would have come naturally.', 'Pilihlah satu momen biasa dan tidak berisiko tinggi hari ini untuk mempraktikkan jawaban yang lemah lembut di tempat yang secara alami akan menghasilkan jawaban yang lebih tajam.',
+     'Lord, rebuild in us a gentle tongue, one small moment at a time. Where harshness has become a habit, teach us a new one. Let our ordinary words, long before any conflict starts, become the training ground for the gentleness we want to offer each other always. Amen.', 'Tuhan, bangunlah kembali dalam diri kami lidah yang lembut, satu momen kecil demi satu momen kecil. Di tempat kekerasan telah menjadi kebiasaan, ajarlah kami kebiasaan yang baru. Biarlah kata-kata biasa kami, jauh sebelum konflik apa pun dimulai, menjadi tempat latihan bagi kelembutan yang ingin selalu kami berikan satu sama lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 15:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 15:1', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'A New Way of Speaking, Together', 'Cara Berbicara yang Baru, Bersama-sama',
+     'Seven days ago, this plan began with naming a painful, recurring pattern honestly. It ends here, not because the work of gentle speech is finished — it never fully is, for any couple, in any season — but because a real beginning has been made: the pattern named, the specific hurts acknowledged, forgiveness extended without keeping score, an early-warning plan built together, and small daily practice in gentleness already underway. That is not a small thing. That is the actual architecture of a healed way of speaking.
+
+Colossians offers a fitting benediction for a week like this one: let your conversation be always full of grace, seasoned with salt. Salt, in the ancient world, preserved and enhanced — it was not bland, and it was not harsh; it brought out the best flavor of what it touched. That is a beautiful picture for marital speech: not watered-down niceness that avoids anything real, and not sharp seasoning meant to sting, but words that bring out the best in the person we are speaking to, even when the topic is difficult.
+
+There will be another disagreement. That is not a failure of this week''s work; it is simply what it means to be two different people building a life together. The measure of what has changed will not be the absence of conflict, but the presence of a different kind of conflict — one where hard things can be said without cruelty, where a raised voice can still be met with a gentle answer, where old wounds are not weaponized, and where both people trust that even a hard conversation is still evidence of love, not the end of it.
+
+As you close this week, consider writing down, together, one or two sentences that capture what you want your new way of speaking to sound like — a short, shared commitment you can return to on the harder days. Ask God to seal what has been rebuilt this week, and to keep teaching you both, one gentle conversation at a time, for the rest of your marriage.', 'Tujuh hari yang lalu, rencana ini dimulai dengan mengenali sebuah pola yang menyakitkan dan berulang secara jujur. Ia berakhir di sini, bukan karena pekerjaan berbicara dengan lembut sudah selesai — itu tidak pernah sepenuhnya selesai, bagi pasangan mana pun, pada musim apa pun — melainkan karena sebuah permulaan yang nyata telah dibuat: pola dikenali, luka-luka spesifik diakui, pengampunan diberikan tanpa menghitung kesalahan, rencana peringatan dini dibangun bersama, dan latihan kelembutan harian yang kecil sudah berjalan. Itu bukan hal yang kecil. Itu adalah arsitektur sesungguhnya dari cara berbicara yang telah dipulihkan.
+
+Kitab Kolose menawarkan berkat penutup yang cocok untuk minggu seperti ini: hendaklah kata-katamu senantiasa penuh kasih, jangan hambar, tetapi berbumbu, sehingga kamu tahu bagaimana kamu harus memberi jawab kepada setiap orang. Garam, di dunia kuno, mengawetkan dan meningkatkan cita rasa — ia tidak hambar, dan ia tidak menyakitkan; ia memunculkan rasa terbaik dari apa yang disentuhnya. Itu gambaran yang indah untuk perkataan dalam pernikahan: bukan kebaikan yang diencerkan yang menghindari segala hal yang nyata, dan bukan pula bumbu tajam yang dimaksudkan untuk menyakiti, melainkan kata-kata yang memunculkan yang terbaik dari orang yang sedang kita ajak bicara, bahkan ketika topiknya sulit.
+
+Akan ada perbedaan pendapat lain. Itu bukan kegagalan dari pekerjaan minggu ini; itu sekadar arti menjadi dua pribadi berbeda yang membangun kehidupan bersama. Ukuran dari apa yang telah berubah bukanlah ketiadaan konflik, melainkan hadirnya jenis konflik yang berbeda — di mana hal-hal sulit bisa dikatakan tanpa kekejaman, di mana suara yang meninggi masih bisa disambut dengan jawaban yang lemah lembut, di mana luka lama tidak dijadikan senjata, dan di mana kedua orang percaya bahwa bahkan percakapan yang sulit tetap menjadi bukti kasih, bukan akhir darinya.
+
+Saat kamu menutup minggu ini, pertimbangkan untuk menulis bersama satu atau dua kalimat yang menangkap seperti apa cara berbicara barumu yang kamu inginkan — sebuah komitmen singkat dan bersama yang bisa kamu kembali kepadanya pada hari-hari yang lebih sulit. Mintalah Tuhan meneguhkan apa yang telah dibangun kembali minggu ini, dan terus mengajar kalian berdua, satu percakapan lembut demi satu percakapan, untuk sisa pernikahan kalian.',
+     'Write down, together, one or two sentences that capture what you want your new way of speaking to sound like going forward.', 'Tuliskan bersama satu atau dua kalimat yang menangkap seperti apa cara berbicara baru kalian yang kalian inginkan ke depannya.',
+     'Lord, thank you for walking with us through this week of naming, repenting, forgiving, and rebuilding. Seal this new beginning in our hearts. Let our conversation always be full of grace, seasoned well, so that even our hardest words remain evidence of our love for each other and for you. Amen.', 'Tuhan, terima kasih telah berjalan bersama kami melalui minggu pengenalan, pertobatan, pengampunan, dan pembangunan kembali ini. Teguhkanlah permulaan baru ini dalam hati kami. Biarlah kata-kata kami senantiasa penuh kasih, berbumbu dengan baik, sehingga bahkan kata-kata kami yang paling sulit sekalipun tetap menjadi bukti kasih kami satu sama lain dan kepada-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 4:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 4:6', 'TB', 1);
+
+  -- =================================================================
+  -- Finding Each Other Again  (Marriage > Intimacy & Faithfulness, 4d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Intimacy & Faithfulness' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Finding Each Other Again';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Finding Each Other Again', 'Menemukan Kembali Satu Sama Lain',
+     'A short path back to closeness after a busy season', 'Jalan singkat menuju keintiman setelah musim yang sibuk',
+     'For couples who look up one day and realize the calendar has quietly replaced their conversations, this four-day plan is a gentle on-ramp back to each other. Drawing on the tenderness of Scripture, it offers short, honest reflections on how busyness, fatigue, and habit can crowd out closeness without either spouse meaning it to happen, and it invites husband and wife to choose small, deliberate acts of attention that let warmth return.', 'Bagi pasangan yang suatu hari menyadari bahwa jadwal diam-diam telah menggantikan percakapan mereka, rencana empat hari ini adalah jalan lembut untuk kembali saling mendekat. Dengan kelembutan firman Tuhan, renungan singkat dan jujur ini membahas bagaimana kesibukan, kelelahan, dan rutinitas bisa menggeser keintiman tanpa disengaja, serta mengajak suami istri memilih tindakan kecil dan sengaja agar kehangatan itu kembali.', 4, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'When Life Gets Loud', 'Ketika Hidup Menjadi Ramai',
+     'It rarely happens all at once. A marriage doesn''t wake up distant; it drifts there, one rushed morning and one exhausted evening at a time. Work deadlines, children''s schedules, phones that never stop buzzing, and the simple weight of keeping a household running can quietly crowd out the very thing marriage is supposed to protect: two people truly knowing each other. Many couples find themselves passing like coworkers in a shared house, efficient and polite, but no longer curious about one another.
+
+The good news is that noticing this is not a failure. It is the first grace. God does not ask couples to pretend the busy season away; He asks them to bring it honestly before Him and before each other. Scripture reminds us again and again that closeness is not an accident we stumble into, but a garden that needs tending. Genesis tells us that a man leaves his parents and is united to his wife, becoming one flesh - a bond meant to be cultivated, not left to chance.
+
+If you are in a season where connection feels like one more task on the to-do list, take heart. You are not the first couple to feel this, and you will not be the last to find your way back. The Lord who joined you together is not surprised by your fatigue, and He is present in the ordinary, tired evenings as much as in the romantic ones. He simply asks for a beginning: one honest look, one small gesture, one moment of attention offered freely.
+
+Today, resist the urge to fix everything at once. Instead, simply name what has happened without blame. A busy season took your attention; it did not take your love. That love is still there, waiting to be noticed again, like a fire banked low but not out.', 'Hal ini jarang terjadi sekaligus. Sebuah pernikahan tidak tiba-tiba terbangun dalam keadaan berjarak; ia hanyut ke sana, satu pagi yang tergesa dan satu malam yang lelah demi satu malam yang lelah. Tenggat pekerjaan, jadwal anak-anak, ponsel yang tak henti bergetar, dan beban menjaga rumah tangga tetap berjalan bisa diam-diam menggeser hal yang sebenarnya harus dijaga oleh pernikahan: dua orang yang benar-benar saling mengenal. Banyak pasangan mendapati diri mereka berpapasan seperti rekan kerja di rumah yang sama, efisien dan sopan, tetapi tidak lagi ingin tahu satu sama lain.
+
+Kabar baiknya, menyadari hal ini bukanlah kegagalan. Ini adalah anugerah pertama. Allah tidak meminta pasangan berpura-pura musim sibuk itu tidak ada; Ia meminta mereka membawanya dengan jujur di hadapan-Nya dan satu sama lain. Firman Tuhan berulang kali mengingatkan bahwa keintiman bukan kebetulan yang kita temukan begitu saja, melainkan taman yang perlu dirawat. Kitab Kejadian mengatakan bahwa seorang laki-laki meninggalkan ayah dan ibunya lalu bersatu dengan istrinya, menjadi satu daging - ikatan yang dimaksudkan untuk dipelihara, bukan dibiarkan begitu saja.
+
+Jika Anda sedang berada dalam musim ketika kedekatan terasa seperti satu tugas lagi dalam daftar pekerjaan, tenangkanlah hati. Anda bukan pasangan pertama yang merasakan ini, dan Anda tidak akan menjadi yang terakhir menemukan jalan kembali. Tuhan yang mempersatukan Anda tidak terkejut dengan kelelahan Anda, dan Ia hadir dalam malam-malam biasa yang lelah sama seperti dalam malam-malam yang romantis. Ia hanya meminta sebuah permulaan: satu pandangan yang jujur, satu gerakan kecil, satu momen perhatian yang diberikan dengan tulus.
+
+Hari ini, tahanlah keinginan untuk memperbaiki segalanya sekaligus. Sebaliknya, sebutkan saja apa yang telah terjadi tanpa menyalahkan. Musim sibuk mengambil perhatian Anda; ia tidak mengambil cinta Anda. Cinta itu masih ada, menunggu untuk diperhatikan kembali, seperti api yang meredup tetapi tidak padam.',
+     'Name one way busyness has quietly crowded out your closeness this season, without blaming your spouse for it.', 'Sebutkan satu cara kesibukan diam-diam menggeser kedekatan Anda musim ini, tanpa menyalahkan pasangan Anda.',
+     'Lord, You joined us together and You see how tired we have become. Forgive us for letting the noise of life crowd out our attention to each other. Soften our hearts tonight, and give us the grace to begin turning back toward one another, gently and without pressure. Amen.', 'Tuhan, Engkau yang mempersatukan kami dan Engkau tahu betapa lelahnya kami. Ampunilah kami karena membiarkan hiruk-pikuk hidup menggeser perhatian kami satu sama lain. Lembutkanlah hati kami malam ini, dan berilah kami anugerah untuk mulai berpaling kembali kepada satu sama lain, dengan lembut dan tanpa tekanan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 2:24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 2:24', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Choosing Attention Over Autopilot', 'Memilih Perhatian, Bukan Rutinitas Kosong',
+     'There is a difference between being in the same room and being truly present with someone. A couple can sit through an entire dinner, phones nearby, minds elsewhere, and technically ''spend time together'' while never really seeing each other. Autopilot is comfortable because it is easy; presence takes intention. Ecclesiastes reminds us that two are better than one, because they have a good return for their labor - but that return only comes when two people actually show up for each other, not just occupy the same house.
+
+Attention is one of the simplest, most overlooked forms of love. It doesn''t require a grand gesture or a weekend away, though those are wonderful when they''re possible. It can be as small as putting the phone face-down during dinner, asking a real question and waiting for the real answer, or noticing when your spouse seems tired and asking why instead of assuming you already know. These small choices, repeated, are what rebuild the sense of being known.
+
+It helps to remember that your spouse is not asking to be entertained; they are asking to be seen. In a culture that constantly pulls our eyes toward screens, choosing to look at your husband or wife - really look, with curiosity instead of routine - is a countercultural act of love. It says, without words, ''You still matter more to me than the next notification.''
+
+Today, try one deliberate act of undivided attention. It does not need to be long. Ten unhurried minutes of real conversation, with nothing else competing for your eyes and ears, can do more to rebuild closeness than an entire distracted evening together.', 'Ada perbedaan antara berada di ruangan yang sama dan benar-benar hadir bersama seseorang. Sepasang suami istri bisa duduk sepanjang makan malam, ponsel di dekat mereka, pikiran di tempat lain, dan secara teknis ''menghabiskan waktu bersama'' tanpa benar-benar saling melihat. Rutinitas otomatis terasa nyaman karena mudah; kehadiran yang sungguh membutuhkan kesengajaan. Kitab Pengkhotbah mengingatkan bahwa berdua lebih baik dari seorang diri, sebab mereka mendapat upah baik dari jerih payah mereka - tetapi upah itu hanya datang ketika dua orang benar-benar hadir bagi satu sama lain, bukan sekadar menempati rumah yang sama.
+
+Perhatian adalah salah satu bentuk kasih paling sederhana yang paling sering diabaikan. Ia tidak memerlukan gerakan besar atau liburan akhir pekan, meskipun itu indah jika memungkinkan. Ia bisa sesederhana meletakkan ponsel menghadap ke bawah saat makan malam, mengajukan pertanyaan yang sungguh-sungguh dan menunggu jawaban yang sungguh-sungguh, atau menyadari saat pasangan Anda terlihat lelah lalu bertanya mengapa alih-alih menganggap sudah tahu jawabannya. Pilihan-pilihan kecil ini, jika diulang, adalah yang membangun kembali rasa dikenal.
+
+Perlu diingat bahwa pasangan Anda tidak meminta untuk dihibur; mereka meminta untuk dilihat. Dalam budaya yang terus menarik mata kita ke layar, memilih untuk memandang suami atau istri Anda - benar-benar memandang, dengan rasa ingin tahu bukan rutinitas - adalah tindakan kasih yang melawan arus. Itu berkata, tanpa kata-kata, ''Kamu masih lebih penting bagiku daripada notifikasi berikutnya.''
+
+Hari ini, cobalah satu tindakan perhatian penuh yang disengaja. Tidak perlu lama. Sepuluh menit percakapan sungguh-sungguh tanpa terburu-buru, tanpa hal lain yang bersaing untuk mata dan telinga Anda, dapat berbuat lebih banyak untuk membangun kembali keintiman daripada seluruh malam bersama yang penuh gangguan.',
+     'What is one small habit of undivided attention you could give your spouse today?', 'Apa satu kebiasaan kecil perhatian penuh yang bisa Anda berikan kepada pasangan Anda hari ini?',
+     'Father, teach us to be truly present with each other, not just physically near. Help us set aside distractions and choose real attention, even in small moments. Let our love be seen not only in big gestures but in the quiet gift of noticing one another. Amen.', 'Bapa, ajarilah kami untuk benar-benar hadir satu sama lain, bukan hanya dekat secara fisik. Bantulah kami menyingkirkan gangguan dan memilih perhatian yang sungguh, bahkan dalam momen-momen kecil. Biarlah kasih kami terlihat bukan hanya dalam gerakan besar tetapi dalam pemberian yang tenang berupa saling memperhatikan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Tenderness Is a Choice, Not a Feeling', 'Kelembutan Adalah Pilihan, Bukan Sekadar Perasaan',
+     'After a long day, tenderness is often the last thing that feels available. It is far easier to be short with each other, to retreat into separate corners of the house, or to let irritation stand in for honesty. But Scripture calls husbands and wives to a kindness that does not wait for the right mood. Ephesians tells us to be kind and compassionate to one another - a command, not a suggestion for when we happen to feel warm toward each other.
+
+Tenderness is often misunderstood as something spontaneous, a spark that either exists or doesn''t on a given evening. In reality, lasting tenderness in marriage is built through small, repeated choices: a gentle tone chosen over a sharp one, a hand reaching for a hand instead of staying folded, a soft word offered even when you are tired. These choices don''t erase exhaustion, but they keep the door of the heart from swinging shut.
+
+Many couples discover that when they stop waiting to ''feel like'' being affectionate and instead choose one small tender gesture, the feeling often follows the action rather than the other way around. A hand on the shoulder, a few minutes of sitting close on the couch, a text in the middle of the day just to say ''I''m thinking of you'' - these ordinary acts rebuild the emotional and physical closeness that busyness had worn thin.
+
+Today, choose one act of tenderness before you feel ready for it. Let it be simple and sincere. Trust that God honors small, faithful choices more than we realize, and that warmth often returns to a marriage exactly the way it left - quietly, one gesture at a time.', 'Setelah hari yang panjang, kelembutan sering kali terasa sebagai hal terakhir yang tersedia. Jauh lebih mudah untuk bersikap ketus, mundur ke sudut rumah masing-masing, atau membiarkan kejengkelan menggantikan kejujuran. Namun firman Tuhan memanggil suami dan istri kepada kebaikan yang tidak menunggu suasana hati yang tepat. Surat Efesus mengatakan agar kita ramah dan penuh kasih mesra seorang terhadap yang lain - sebuah perintah, bukan saran untuk saat kita kebetulan merasa hangat satu sama lain.
+
+Kelembutan sering disalahpahami sebagai sesuatu yang spontan, percikan yang ada atau tidak ada pada malam tertentu. Kenyataannya, kelembutan yang bertahan dalam pernikahan dibangun melalui pilihan-pilihan kecil yang diulang: nada suara yang lembut dipilih daripada yang tajam, tangan yang meraih tangan alih-alih tetap terlipat, kata yang lembut yang diberikan bahkan saat lelah. Pilihan-pilihan ini tidak menghapus kelelahan, tetapi menjaga pintu hati agar tidak tertutup rapat.
+
+Banyak pasangan menemukan bahwa ketika mereka berhenti menunggu ''merasa ingin'' bersikap mesra dan sebaliknya memilih satu gerakan lembut yang kecil, perasaan itu sering mengikuti tindakan, bukan sebaliknya. Tangan di bahu, beberapa menit duduk berdekatan di sofa, pesan di tengah hari hanya untuk berkata ''aku sedang memikirkanmu'' - tindakan-tindakan sederhana ini membangun kembali kedekatan emosional dan fisik yang telah menipis karena kesibukan.
+
+Hari ini, pilihlah satu tindakan kelembutan sebelum Anda merasa siap. Biarlah itu sederhana dan tulus. Percayalah bahwa Allah menghargai pilihan-pilihan kecil yang setia lebih dari yang kita sadari, dan kehangatan sering kembali ke pernikahan persis seperti caranya pergi - diam-diam, satu gerakan pada satu waktu.',
+     'What is one small, sincere gesture of tenderness you can offer your spouse today, even if you don''t feel ready?', 'Apa satu gerakan kelembutan kecil dan tulus yang bisa Anda berikan kepada pasangan hari ini, meski belum merasa siap?',
+     'Lord Jesus, You loved us not when it was easy but always. Give us the grace to choose kindness and tenderness toward each other even when we are tired or distracted. Let our small gestures rebuild the warmth between us. Amen.', 'Tuhan Yesus, Engkau mengasihi kami bukan hanya ketika mudah, tetapi selalu. Berilah kami anugerah untuk memilih kebaikan dan kelembutan satu sama lain bahkan ketika kami lelah atau terganggu. Biarlah gerakan-gerakan kecil kami membangun kembali kehangatan di antara kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:32', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Rebuilding, One Ordinary Day at a Time', 'Membangun Kembali, Satu Hari Biasa Demi Satu Hari',
+     'By now, you have taken a few small steps back toward each other: naming the distance honestly, offering undivided attention, choosing tenderness before feeling ready. It would be tempting to think that closeness, once rebuilt, should feel dramatic - like a movie reunion. In truth, most marriages are restored the same quiet way they drifted: through ordinary days, faithfully lived, one after another.
+
+Colossians tells us to put on love, which binds everything together in perfect unity. Love, here, is described almost like clothing - something we choose to put on each day, deliberately, rather than something that simply happens to us. This is freeing. It means you do not need to wait for a perfect romantic feeling to return before you act with love. You can put it on today, and again tomorrow, and the closeness will follow.
+
+Many couples who have walked through a distant season say the same thing afterward: the return to closeness didn''t happen in one dramatic conversation, but in a string of ordinary evenings where they simply kept choosing each other. A shared cup of coffee before the day starts. A hand held during a walk. A prayer said together before sleep. None of these look impressive from the outside, but together they form the quiet architecture of a marriage that lasts.
+
+As you finish this short plan, don''t put pressure on yourselves to have ''arrived'' somewhere. Instead, commit to one simple, repeatable habit of closeness you can carry forward - a nightly check-in, a weekly walk, a shared prayer. Trust that God, who joined you together, delights in the small, faithful rhythms that keep a marriage warm.', 'Sampai di sini, Anda telah mengambil beberapa langkah kecil kembali menuju satu sama lain: menyebutkan jarak itu dengan jujur, memberikan perhatian penuh, memilih kelembutan sebelum merasa siap. Mudah untuk berpikir bahwa keintiman, setelah dibangun kembali, seharusnya terasa dramatis - seperti pertemuan kembali dalam film. Kenyataannya, sebagian besar pernikahan dipulihkan dengan cara tenang yang sama seperti saat menjauh: melalui hari-hari biasa yang dijalani dengan setia, satu demi satu.
+
+Surat Kolose mengatakan agar kita mengenakan kasih, sebagai pengikat yang mempersatukan dan menyempurnakan. Kasih, di sini, digambarkan hampir seperti pakaian - sesuatu yang kita pilih untuk kenakan setiap hari, dengan sengaja, bukan sesuatu yang begitu saja terjadi pada kita. Ini membebaskan. Artinya, Anda tidak perlu menunggu perasaan romantis yang sempurna kembali sebelum bertindak dengan kasih. Anda bisa mengenakannya hari ini, dan lagi besok, dan keintiman akan mengikuti.
+
+Banyak pasangan yang telah melewati musim yang berjarak mengatakan hal yang sama setelahnya: kembalinya keintiman tidak terjadi dalam satu percakapan dramatis, melainkan dalam rangkaian malam-malam biasa ketika mereka terus memilih satu sama lain. Secangkir kopi bersama sebelum hari dimulai. Genggaman tangan saat berjalan. Doa yang diucapkan bersama sebelum tidur. Tidak satu pun dari ini terlihat mengesankan dari luar, tetapi bersama-sama membentuk struktur tenang dari pernikahan yang bertahan.
+
+Saat Anda menyelesaikan rencana singkat ini, jangan menekan diri untuk merasa telah ''sampai'' di suatu tempat. Sebaliknya, komitmenlah pada satu kebiasaan keintiman sederhana yang bisa diulang dan dibawa terus - saling bertanya kabar setiap malam, jalan-jalan mingguan, doa bersama. Percayalah bahwa Allah, yang mempersatukan Anda, bersukacita atas ritme-ritme kecil yang setia yang menjaga pernikahan tetap hangat.',
+     'What one simple, repeatable habit of closeness will you commit to carrying forward after today?', 'Kebiasaan keintiman sederhana dan berulang apa yang akan Anda komitmenkan untuk terus dijalankan setelah hari ini?',
+     'Lord, thank You for meeting us in this short season of returning to each other. Help us to keep choosing love daily, not waiting for perfect feelings but putting on kindness and closeness as a habit of the heart. Bless the ordinary days of our marriage and make them holy. Amen.', 'Tuhan, terima kasih telah menyertai kami dalam musim singkat kembali kepada satu sama lain ini. Bantulah kami untuk terus memilih kasih setiap hari, tidak menunggu perasaan yang sempurna tetapi mengenakan kebaikan dan keintiman sebagai kebiasaan hati. Berkatilah hari-hari biasa pernikahan kami dan jadikanlah itu kudus. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:14', 'TB', 1);
+
+  -- =================================================================
+  -- Guarding the Flame  (Marriage > Intimacy & Faithfulness, 7d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Intimacy & Faithfulness' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Guarding the Flame';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Guarding the Flame', 'Menjaga Nyala Api',
+     'Seven days for faithfulness of heart', 'Tujuh hari untuk kesetiaan hati',
+     'Faithfulness rarely fails in a single dramatic moment; it erodes quietly, through unguarded thoughts, careless comparisons, and small compromises long before any outward line is crossed. This seven-day plan walks husbands and wives through the biblical call to guard the heart, examining the everyday pressures - loneliness, flattery, digital temptation, comparison, and drifting affection - that can weaken a marriage from the inside, and offering practical, prayerful ways to keep the flame of covenant love burning bright.', 'Kesetiaan jarang runtuh dalam satu momen dramatis; ia terkikis diam-diam, melalui pikiran yang tak dijaga, perbandingan yang ceroboh, dan kompromi-kompromi kecil jauh sebelum ada batas lahiriah yang dilanggar. Rencana tujuh hari ini menuntun suami dan istri melalui seruan Alkitab untuk menjaga hati, membahas tekanan sehari-hari - kesepian, sanjungan, godaan digital, perbandingan, dan kasih yang mulai menjauh - yang dapat melemahkan pernikahan dari dalam, serta menawarkan cara-cara praktis dan penuh doa untuk menjaga nyala api kasih perjanjian tetap menyala.', 7, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Faithfulness Begins in the Heart', 'Kesetiaan Dimulai dari Hati',
+     'When we think of faithfulness in marriage, we often picture a single dramatic line that must never be crossed. That line matters, but Scripture points to something even more foundational: the heart, where every choice is first made long before any action follows. ''Above all else, guard your heart, for everything you do flows from it.'' Proverbs does not say guard your behavior first; it says guard your heart, because behavior is simply the heart made visible.
+
+This means faithfulness is not only about what we refuse to do, but about what we allow ourselves to dwell on. A wandering imagination, a habit of comparing our spouse unfavorably to someone else, a growing emotional closeness with a coworker that we tell ourselves is harmless - these are the quiet, early stages where faithfulness is either strengthened or slowly worn down, long before anything visible happens. Many couples who face a crisis of trust later realize it did not begin with one bad decision, but with months of small, unguarded thoughts that were never brought into the light.
+
+This is not meant to produce fear or suspicion, but sober awareness paired with hope. God who calls us to guard our hearts also promises to help us do it - He is not a distant judge waiting to catch us failing, but a Father who wants to protect the very thing He designed: a marriage covenant reflecting His own faithful love. Bringing our hearts honestly before Him, rather than hiding our struggles, is itself an act of faithfulness.
+
+Today, take an honest inventory. Is there a thought pattern, a relationship, or a habit that has been quietly claiming space in your heart that belongs to your marriage? Naming it honestly before God, without shame, is the first and most important step of guarding the flame.', 'Ketika memikirkan kesetiaan dalam pernikahan, kita sering membayangkan satu garis dramatis yang tidak boleh dilanggar. Garis itu penting, tetapi Alkitab menunjuk pada sesuatu yang lebih mendasar: hati, tempat setiap pilihan pertama kali dibuat jauh sebelum tindakan mengikutinya. ''Jagalah hatimu dengan segala kewaspadaan, karena dari situlah terpancar kehidupan.'' Kitab Amsal tidak berkata jagalah perilakumu terlebih dahulu; ia berkata jagalah hatimu, karena perilaku hanyalah hati yang menjadi kelihatan.
+
+Ini berarti kesetiaan bukan hanya soal apa yang kita tolak untuk lakukan, tetapi juga apa yang kita izinkan untuk kita renungkan. Imajinasi yang mengembara, kebiasaan membandingkan pasangan secara tidak menguntungkan dengan orang lain, kedekatan emosional yang tumbuh dengan rekan kerja yang kita anggap tidak berbahaya - inilah tahap-tahap awal yang diam-diam, di mana kesetiaan diperkuat atau perlahan terkikis, jauh sebelum ada yang tampak. Banyak pasangan yang menghadapi krisis kepercayaan kemudian menyadari bahwa itu tidak dimulai dari satu keputusan buruk, tetapi dari berbulan-bulan pikiran kecil yang tak dijaga dan tak pernah dibawa ke dalam terang.
+
+Ini bukan dimaksudkan untuk menimbulkan ketakutan atau kecurigaan, melainkan kesadaran yang jernih disertai harapan. Allah yang memanggil kita untuk menjaga hati juga berjanji membantu kita melakukannya - Ia bukan hakim yang jauh menunggu kita gagal, melainkan Bapa yang ingin melindungi hal yang justru Ia rancang: perjanjian pernikahan yang mencerminkan kasih setia-Nya sendiri. Membawa hati kita dengan jujur di hadapan-Nya, bukan menyembunyikan pergumulan, adalah tindakan kesetiaan itu sendiri.
+
+Hari ini, lakukanlah pemeriksaan hati yang jujur. Adakah pola pikir, hubungan, atau kebiasaan yang diam-diam telah mengambil ruang di hati Anda yang seharusnya menjadi milik pernikahan Anda? Menyebutkannya dengan jujur di hadapan Allah, tanpa rasa malu, adalah langkah pertama dan terpenting dalam menjaga nyala api itu.',
+     'Is there a thought, habit, or relationship quietly claiming space in your heart that belongs to your marriage?', 'Adakah pikiran, kebiasaan, atau hubungan yang diam-diam mengambil ruang di hati Anda yang seharusnya menjadi milik pernikahan Anda?',
+     'Lord, search my heart and know me. Show me anything I have allowed to grow there that threatens the faithfulness I promised my spouse. Give me courage to name it honestly, and grace to guard what You have entrusted to me. Amen.', 'Tuhan, selidikilah hatiku dan kenallah aku. Tunjukkanlah apa pun yang telah aku biarkan tumbuh di sana yang mengancam kesetiaan yang aku janjikan kepada pasanganku. Berilah aku keberanian untuk mengakuinya dengan jujur, dan anugerah untuk menjaga apa yang telah Engkau percayakan kepadaku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 4:23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 4:23', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Danger of Small Compromises', 'Bahaya Kompromi-Kompromi Kecil',
+     'Almost no one who has damaged their marriage''s trust set out to do so. Nearly every account of broken faithfulness begins the same way: with something small that seemed harmless at the time. An extra text message here, a conversation kept secret there, a friendship allowed to become closer than it should. Paul''s warning in 1 Corinthians is blunt for good reason: ''Flee from sexual immorality... whoever sins sexually, sins against their own body.'' The word ''flee'' is active - it assumes temptation rarely announces itself plainly, and by the time it is fully visible, it may already be dangerously close.
+
+Small compromises are dangerous precisely because they don''t feel dangerous. They feel like nothing - a little attention that feels flattering, a little secrecy that feels private rather than deceptive, a little emotional intimacy shared with someone outside the marriage that feels like ''just friendship.'' But faithfulness is not preserved by waiting to see how far is too far; it is preserved by drawing generous boundaries early, while the stakes still feel small.
+
+This is not about living in fear of every friendship or interaction outside marriage - healthy relationships with others are part of a full life. It is about honesty with ourselves regarding which relationships and habits require closer boundaries because of the particular vulnerability they create. A wise couple names these areas together rather than leaving each spouse to guess or discover them alone.
+
+Today, consider whether there is a ''small'' compromise you have been minimizing - not because it is scandalous, but simply because it quietly draws affection, attention, or secrecy away from your marriage. Faithfulness is protected far more often in these small, unglamorous decisions than in dramatic moments of temptation.', 'Hampir tidak ada orang yang merusak kepercayaan dalam pernikahannya berniat melakukannya sejak awal. Hampir setiap kisah kesetiaan yang runtuh dimulai dengan cara yang sama: dengan sesuatu yang kecil yang saat itu terasa tidak berbahaya. Pesan tambahan di sini, percakapan yang dirahasiakan di sana, persahabatan yang dibiarkan menjadi lebih dekat daripada seharusnya. Peringatan Paulus dalam surat 1 Korintus tegas dengan alasan yang baik: ''Jauhkanlah dirimu dari percabulan!... Barangsiapa melakukan percabulan, berdosa terhadap dirinya sendiri.'' Kata ''jauhkanlah dirimu'' bersifat aktif - ia mengasumsikan godaan jarang menampakkan diri secara terang-terangan, dan pada saat sudah terlihat jelas, mungkin sudah sangat dekat dan berbahaya.
+
+Kompromi-kompromi kecil berbahaya justru karena tidak terasa berbahaya. Rasanya seperti tidak ada apa-apa - sedikit perhatian yang terasa menyenangkan, sedikit kerahasiaan yang terasa pribadi bukan menipu, sedikit keintiman emosional yang dibagikan dengan seseorang di luar pernikahan yang terasa ''sekadar pertemanan''. Namun kesetiaan tidak dijaga dengan menunggu untuk melihat seberapa jauh sudah terlalu jauh; ia dijaga dengan menetapkan batas yang lapang sejak awal, ketika taruhannya masih terasa kecil.
+
+Ini bukan tentang hidup dalam ketakutan terhadap setiap persahabatan atau interaksi di luar pernikahan - hubungan yang sehat dengan orang lain adalah bagian dari kehidupan yang utuh. Ini tentang kejujuran terhadap diri sendiri mengenai hubungan dan kebiasaan mana yang memerlukan batasan lebih ketat karena kerentanan khusus yang ditimbulkannya. Pasangan yang bijaksana menyebutkan area-area ini bersama, bukan membiarkan masing-masing menebak atau menemukannya sendiri.
+
+Hari ini, pertimbangkan apakah ada kompromi ''kecil'' yang telah Anda anggap remeh - bukan karena itu memalukan, tetapi karena diam-diam menarik kasih sayang, perhatian, atau kerahasiaan menjauh dari pernikahan Anda. Kesetiaan jauh lebih sering dijaga dalam keputusan-keputusan kecil yang tidak mencolok ini daripada dalam momen godaan yang dramatis.',
+     'Is there a ''small'' habit or relationship you''ve been minimizing that quietly draws affection or secrecy away from your marriage?', 'Adakah kebiasaan atau hubungan ''kecil'' yang Anda anggap remeh, yang diam-diam menarik kasih sayang atau kerahasiaan menjauh dari pernikahan Anda?',
+     'Father, give me the wisdom to flee temptation early rather than test how close I can get to it. Help me draw generous boundaries around my heart and my time, so that nothing quietly steals what belongs to my marriage. Amen.', 'Bapa, berilah aku hikmat untuk menjauh dari godaan sejak awal, bukan menguji seberapa dekat aku bisa mendekatinya. Bantulah aku menetapkan batas yang lapang di sekitar hati dan waktuku, sehingga tidak ada yang diam-diam mencuri apa yang menjadi milik pernikahanku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 6:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 6:18', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Guarding the Marriage from the Outside', 'Menjaga Pernikahan dari Tekanan Luar',
+     'No marriage exists in a vacuum. Financial stress, demanding jobs, well-meaning but intrusive family members, and a culture that often treats commitment as optional all press against a couple from the outside. Ruth''s declaration to Naomi - ''Where you go I will go, and where you stay I will stay'' - is often read at weddings for its beauty, but it was actually spoken in the middle of genuine hardship, loss, and uncertainty. Loyalty that means something is loyalty tested by real pressure, not just loyalty declared in comfortable seasons.
+
+Outside pressures on a marriage rarely announce themselves as threats. They often look like reasonable priorities - a job that demands more hours, a friend group that speaks casually about spouses in ways that erode respect, a family member who consistently undermines a spouse''s decisions. None of these are necessarily malicious, but left unaddressed, they can slowly pull a couple''s primary loyalty away from each other and toward something or someone else.
+
+Guarding a marriage from outside pressure requires the couple to function as a team with clear boundaries, communicating a united front even when it is uncomfortable to do so with parents, friends, or coworkers. It means saying, in both word and action, ''My spouse and our covenant come first,'' even when that costs something socially or professionally.
+
+Today, consider what outside pressures - financial, familial, cultural, or professional - are currently pressing on your marriage. Talk honestly with your spouse about where you need to build a stronger, more united boundary together, so the two of you remain each other''s primary loyalty.', 'Tidak ada pernikahan yang berdiri dalam ruang hampa. Tekanan finansial, pekerjaan yang menuntut, anggota keluarga yang bermaksud baik namun ikut campur, serta budaya yang sering memperlakukan komitmen sebagai pilihan bebas, semuanya menekan pasangan dari luar. Pernyataan Rut kepada Naomi - ''Ke mana engkau pergi, ke situ jugalah aku pergi, dan di mana engkau bermalam, di situ jugalah aku bermalam'' - sering dibacakan dalam pernikahan karena keindahannya, tetapi sebenarnya diucapkan di tengah kesulitan, kehilangan, dan ketidakpastian yang nyata. Kesetiaan yang berarti adalah kesetiaan yang diuji oleh tekanan nyata, bukan sekadar kesetiaan yang diucapkan pada musim yang nyaman.
+
+Tekanan dari luar terhadap pernikahan jarang memperkenalkan diri sebagai ancaman. Sering kali terlihat seperti prioritas yang masuk akal - pekerjaan yang menuntut lebih banyak jam, kelompok pertemanan yang berbicara santai tentang pasangan dengan cara yang mengikis rasa hormat, anggota keluarga yang terus-menerus meremehkan keputusan pasangan. Tidak satu pun dari ini pasti berniat jahat, tetapi jika dibiarkan, semuanya bisa perlahan menarik kesetiaan utama pasangan menjauh dari satu sama lain menuju sesuatu atau seseorang yang lain.
+
+Menjaga pernikahan dari tekanan luar mengharuskan pasangan berfungsi sebagai satu tim dengan batasan yang jelas, menunjukkan sikap bersatu meskipun terasa tidak nyaman untuk melakukannya di hadapan orang tua, teman, atau rekan kerja. Ini berarti mengatakan, baik dengan kata maupun tindakan, ''Pasanganku dan perjanjian kami adalah yang utama,'' bahkan ketika hal itu memerlukan pengorbanan secara sosial atau profesional.
+
+Hari ini, pertimbangkan tekanan luar apa - finansial, keluarga, budaya, atau pekerjaan - yang sedang menekan pernikahan Anda saat ini. Bicaralah dengan jujur kepada pasangan Anda tentang di mana Anda perlu membangun batasan yang lebih kuat dan bersatu bersama, agar Anda berdua tetap menjadi kesetiaan utama satu sama lain.',
+     'What outside pressure - financial, familial, or professional - needs a clearer, united boundary from you and your spouse right now?', 'Tekanan luar apa - finansial, keluarga, atau pekerjaan - yang saat ini memerlukan batasan yang lebih jelas dan bersatu dari Anda dan pasangan Anda?',
+     'Lord, help us stand united as a team against the pressures that pull at our marriage from the outside. Give us wisdom to set boundaries with courage and love, and remind us that our covenant with each other comes before every other loyalty except You. Amen.', 'Tuhan, tolong kami berdiri bersatu sebagai satu tim melawan tekanan-tekanan yang menarik pernikahan kami dari luar. Berilah kami hikmat untuk menetapkan batasan dengan keberanian dan kasih, dan ingatkanlah kami bahwa perjanjian kami satu sama lain didahulukan atas setiap kesetiaan lain kecuali kepada-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ruth 1:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Rut 1:16', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Comparison, the Quiet Thief', 'Perbandingan, Sang Pencuri Diam-Diam',
+     'Comparison rarely arrives loudly. It slips in through a curated photo online, a friend''s glowing description of their spouse, a passing thought that someone else might have been easier to love. Left unchecked, comparison quietly convinces us that faithfulness to our actual spouse - imperfect, familiar, real - is a lesser choice than some imagined alternative. Paul''s words to the Corinthians describe love as patient and kind, not envious or boastful - a description that leaves no room for the quiet resentment comparison breeds.
+
+It helps to remember that every marriage we compare ourselves to, whether a couple we know or a curated image online, is incomplete information. We see someone''s highlight reel and compare it to our own unfiltered, exhausted Tuesday evening. This is not a fair comparison, and it never can be, because no one shows the world their marriage''s hardest moments. Comparison built on incomplete pictures will always make our own real, ordinary marriage look worse than it is.
+
+The antidote to comparison is not denial - pretending your marriage has no struggles - but gratitude rooted in truth. Actively naming what is good, real, and worth loving about your actual spouse retrains the heart to see clearly rather than through the distorted lens of what-if. Faithfulness of heart is strengthened every time we choose to appreciate what we have rather than mourn what we imagine we''re missing.
+
+Today, notice any comparison creeping into your thoughts - about your spouse, your marriage, or someone else''s relationship. Counter it deliberately with one true, specific thing you are grateful for in your own marriage. Practiced often, this simple habit becomes a quiet but powerful guard for your heart.', 'Perbandingan jarang datang dengan suara keras. Ia menyelinap melalui foto yang telah diatur di media sosial, deskripsi cemerlang seorang teman tentang pasangannya, pikiran sekilas bahwa mungkin ada orang lain yang lebih mudah dicintai. Jika dibiarkan, perbandingan diam-diam meyakinkan kita bahwa kesetiaan kepada pasangan kita yang sesungguhnya - tidak sempurna, akrab, nyata - adalah pilihan yang lebih rendah dibandingkan alternatif yang hanya ada dalam bayangan. Kata-kata Paulus kepada jemaat Korintus menggambarkan kasih sebagai sabar dan murah hati, tidak cemburu dan tidak memegahkan diri - sebuah gambaran yang tidak menyisakan ruang bagi kepahitan diam-diam yang ditimbulkan perbandingan.
+
+Perlu diingat bahwa setiap pernikahan yang kita bandingkan dengan pernikahan kita sendiri, baik pasangan yang kita kenal maupun gambar yang telah diatur di media sosial, adalah informasi yang tidak lengkap. Kita melihat sorotan terbaik seseorang dan membandingkannya dengan malam Selasa kita sendiri yang lelah dan apa adanya. Ini bukan perbandingan yang adil, dan tidak akan pernah adil, karena tidak ada yang menunjukkan kepada dunia momen tersulit pernikahan mereka. Perbandingan yang dibangun di atas gambaran yang tidak lengkap akan selalu membuat pernikahan kita yang nyata dan biasa terlihat lebih buruk dari sebenarnya.
+
+Penawar bagi perbandingan bukanlah penyangkalan - berpura-pura pernikahan Anda tidak memiliki pergumulan - melainkan syukur yang berakar pada kebenaran. Secara aktif menyebutkan apa yang baik, nyata, dan patut dicintai dari pasangan Anda yang sesungguhnya melatih kembali hati untuk melihat dengan jernih, bukan melalui lensa bayangan ''bagaimana jika'' yang menyimpangkan. Kesetiaan hati diperkuat setiap kali kita memilih untuk menghargai apa yang kita miliki daripada meratapi apa yang kita bayangkan sedang kita lewatkan.
+
+Hari ini, perhatikan setiap perbandingan yang menyelinap ke dalam pikiran Anda - tentang pasangan Anda, pernikahan Anda, atau hubungan orang lain. Lawanlah dengan sengaja dengan satu hal yang benar dan spesifik yang Anda syukuri dari pernikahan Anda sendiri. Jika dilatih terus-menerus, kebiasaan sederhana ini menjadi penjaga hati yang diam-diam namun kuat.',
+     'What is one true, specific thing you are grateful for about your actual spouse today?', 'Apa satu hal yang benar dan spesifik yang Anda syukuri dari pasangan Anda hari ini?',
+     'Lord, forgive me for the times I have measured my marriage against imagined alternatives instead of appreciating what is real and good in front of me. Teach my heart gratitude, and guard me from the quiet theft of comparison. Amen.', 'Tuhan, ampunilah aku untuk saat-saat aku mengukur pernikahanku dengan alternatif yang hanya ada dalam bayangan, alih-alih menghargai apa yang nyata dan baik di hadapanku. Ajarlah hatiku untuk bersyukur, dan jagalah aku dari pencurian diam-diam yang bernama perbandingan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 13:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 13:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Faithful in the Digital Age', 'Setia di Zaman Digital',
+     'Faithfulness once meant guarding physical proximity; today it also means guarding a screen. Private messages, old flames a search away, and endless images curated to catch attention have made it possible to feel emotionally or visually unfaithful without ever leaving the couch. Job''s ancient words carry surprising relevance here: ''I made a covenant with my eyes not to look lustfully at a young woman.'' Long before smartphones, Job understood that the eyes are a gateway the heart follows, and that faithfulness requires deliberately governing what we allow ourselves to look at.
+
+This is not about shame or paranoia regarding technology itself, which is simply a tool. It is about honesty regarding how easily that tool can create secret spaces in a marriage - private conversations the other spouse doesn''t know about, content consumed in isolation that shapes unrealistic expectations, hours of attention given to a screen that could have gone toward the person across the room. Digital faithfulness asks the same question every other kind of faithfulness asks: is there anything happening here that I would be uncomfortable showing my spouse?
+
+Practical faithfulness in this area often looks unglamorous: shared passwords or transparency about accounts, honest conversations about what feels like it''s crossing a line, choosing to close a tab or put down a phone the moment something starts to feel secretive. None of these steps are about distrust; they are about building a marriage where nothing needs to hide, because nothing is being hidden.
+
+Today, take an honest look at your digital habits. Is there a space online that has quietly become private in a way that would be uncomfortable to share with your spouse? Bringing it into the light, even in a small way, is an act of faithfulness worth far more than it costs.', 'Kesetiaan dahulu berarti menjaga kedekatan fisik; kini ia juga berarti menjaga layar. Pesan pribadi, mantan kekasih yang hanya sejauh satu pencarian, dan gambar-gambar tak terbatas yang dirancang untuk menarik perhatian telah membuat seseorang bisa merasa tidak setia secara emosional atau visual tanpa pernah beranjak dari sofa. Perkataan kuno Ayub memiliki relevansi yang mengejutkan di sini: ''Aku telah menetapkan syarat bagi mataku, masakan aku memperhatikan anak dara.'' Jauh sebelum ada telepon pintar, Ayub memahami bahwa mata adalah gerbang yang diikuti hati, dan bahwa kesetiaan menuntut kita dengan sengaja mengatur apa yang kita izinkan untuk kita lihat.
+
+Ini bukan tentang rasa malu atau kecurigaan berlebihan terhadap teknologi itu sendiri, yang sesungguhnya hanyalah alat. Ini tentang kejujuran mengenai betapa mudahnya alat itu menciptakan ruang rahasia dalam pernikahan - percakapan pribadi yang tidak diketahui pasangan, konten yang dikonsumsi sendirian yang membentuk ekspektasi yang tidak realistis, jam-jam perhatian yang diberikan kepada layar yang seharusnya bisa diberikan kepada orang yang duduk di seberang ruangan. Kesetiaan digital menanyakan pertanyaan yang sama seperti setiap bentuk kesetiaan lainnya: adakah sesuatu di sini yang akan membuatku tidak nyaman jika ditunjukkan kepada pasanganku?
+
+Kesetiaan praktis dalam area ini sering kali terlihat tidak mencolok: kata sandi yang dibagikan atau keterbukaan tentang akun, percakapan jujur tentang apa yang terasa melewati batas, memilih menutup tab atau meletakkan ponsel begitu sesuatu mulai terasa rahasia. Tidak satu pun dari langkah-langkah ini adalah tentang ketidakpercayaan; semuanya tentang membangun pernikahan di mana tidak ada yang perlu disembunyikan, karena memang tidak ada yang disembunyikan.
+
+Hari ini, lihatlah dengan jujur kebiasaan digital Anda. Adakah ruang daring yang diam-diam telah menjadi pribadi dengan cara yang akan terasa tidak nyaman jika dibagikan kepada pasangan Anda? Membawanya ke dalam terang, bahkan dengan cara kecil, adalah tindakan kesetiaan yang jauh lebih berharga daripada biayanya.',
+     'Is there a space in your digital life that has quietly become private in a way you''d be uncomfortable sharing with your spouse?', 'Adakah ruang dalam kehidupan digital Anda yang diam-diam telah menjadi pribadi dengan cara yang membuat Anda tidak nyaman jika dibagikan kepada pasangan Anda?',
+     'Lord, I make a covenant with my eyes and my attention today, as Job once did. Help me govern what I look at and where my mind lingers, so that nothing hidden slowly grows between me and my spouse. Keep our marriage a place where nothing needs to hide. Amen.', 'Tuhan, hari ini aku menetapkan syarat bagi mataku dan perhatianku, seperti yang pernah dilakukan Ayub. Bantulah aku mengatur apa yang aku lihat dan ke mana pikiranku melayang, sehingga tidak ada yang tersembunyi perlahan tumbuh di antara aku dan pasanganku. Jagalah pernikahan kami menjadi tempat di mana tidak ada yang perlu disembunyikan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Job 31:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ayub 31:1', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Faithfulness Reflects God''s Own Faithfulness', 'Kesetiaan yang Mencerminkan Kesetiaan Allah',
+     'There is a reason Scripture so often compares God''s covenant with His people to a marriage. Faithfulness is not simply a rule for married couples to follow; it is meant to be a living picture of who God is. ''Great is your faithfulness; your mercies begin afresh each morning,'' Lamentations declares, in the middle of a book about devastating loss. Even there, faithfulness is described as new every day - not a single unbroken streak that shatters at the first failure, but a steady, renewed commitment offered morning after morning.
+
+This should encourage every couple who feels they have already stumbled in small ways - through a wandering thought, a careless comparison, an unguarded conversation. Faithfulness is not primarily about a perfect record; it is about a heart that keeps returning, keeps choosing, keeps beginning again. God''s own faithfulness to His often unfaithful people is the model: steady love that does not give up, even when it has every reason to.
+
+This also means faithfulness in marriage is ultimately a spiritual act, not merely a relational one. When a husband or wife chooses fidelity of heart, they are not only keeping a promise to their spouse; they are participating in the very character of God, who keeps His promises even when we do not deserve it. This reframes faithfulness from a burden to bear into a grace to receive and reflect.
+
+Today, if you have noticed areas where your heart has drifted this week, do not let shame keep you from beginning again. Bring it honestly to God, receive His mercy that is new this morning, and let that mercy strengthen your resolve to guard your marriage with renewed, humble commitment.', 'Ada alasan mengapa Alkitab begitu sering membandingkan perjanjian Allah dengan umat-Nya seperti sebuah pernikahan. Kesetiaan bukan sekadar aturan yang harus diikuti pasangan yang menikah; ia dimaksudkan menjadi gambaran hidup tentang siapa Allah itu. ''Besar kesetiaan-Mu; kasih setia-Mu baru setiap pagi,'' demikian Kitab Ratapan menyatakan, di tengah kitab tentang kehilangan yang menghancurkan. Bahkan di sana, kesetiaan digambarkan baru setiap hari - bukan satu rekor sempurna yang hancur pada kegagalan pertama, melainkan komitmen yang teguh dan diperbarui yang ditawarkan setiap pagi.
+
+Ini seharusnya menguatkan setiap pasangan yang merasa telah tersandung dengan cara-cara kecil - melalui pikiran yang mengembara, perbandingan yang ceroboh, percakapan yang tidak dijaga. Kesetiaan bukan pertama-tama soal rekor yang sempurna; ia soal hati yang terus kembali, terus memilih, terus memulai lagi. Kesetiaan Allah sendiri kepada umat-Nya yang sering tidak setia adalah teladannya: kasih yang teguh yang tidak menyerah, bahkan ketika ada segala alasan untuk menyerah.
+
+Ini juga berarti kesetiaan dalam pernikahan pada akhirnya adalah tindakan rohani, bukan sekadar tindakan relasional. Ketika seorang suami atau istri memilih kesetiaan hati, mereka tidak hanya menepati janji kepada pasangannya; mereka turut ambil bagian dalam karakter Allah sendiri, yang menepati janji-Nya bahkan ketika kita tidak layak menerimanya. Ini mengubah kesetiaan dari beban yang harus dipikul menjadi anugerah yang diterima dan dicerminkan.
+
+Hari ini, jika Anda telah menyadari area-area di mana hati Anda menjauh minggu ini, jangan biarkan rasa malu menghalangi Anda untuk memulai lagi. Bawalah itu dengan jujur kepada Allah, terimalah belas kasihan-Nya yang baru pagi ini, dan biarkan belas kasihan itu menguatkan tekad Anda untuk menjaga pernikahan Anda dengan komitmen yang diperbarui dan rendah hati.',
+     'Where do you need to receive God''s renewed mercy today rather than carry shame about a stumble this week?', 'Di area mana Anda perlu menerima belas kasihan Allah yang diperbarui hari ini, alih-alih menanggung rasa malu atas kesalahan minggu ini?',
+     'Lord, thank You that Your faithfulness is new every morning, even toward me. Where I have stumbled this week, I bring it to You without hiding. Let Your steady mercy renew my resolve to be faithful in heart, reflecting the very love You have shown me. Amen.', 'Tuhan, terima kasih karena kesetiaan-Mu baru setiap pagi, bahkan bagiku. Di mana aku tersandung minggu ini, aku membawanya kepada-Mu tanpa menyembunyikannya. Biarlah belas kasihan-Mu yang teguh memperbarui tekadku untuk setia dalam hati, mencerminkan kasih yang telah Engkau tunjukkan kepadaku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'Keeping the Flame Alive', 'Menjaga Nyala Api Tetap Hidup',
+     'A flame that is never tended eventually goes out, not from a sudden gust of wind but from ordinary neglect - forgetting to add fuel, forgetting to shield it from drafts. Faithfulness works the same way. It is not primarily preserved by avoiding catastrophe; it is preserved by ongoing tending - affection offered, honesty maintained, boundaries kept, gratitude practiced. Song of Songs describes love with striking intensity: ''Many waters cannot quench love; rivers cannot sweep it away.'' This is love as something powerful and resilient, but it is resilient because it is actively kept, not because it survives automatically.
+
+Over this week, we have looked honestly at where faithfulness begins - in the heart, in small compromises, under outside pressure, in comparison, in digital habits, and in the mercy that lets us begin again. None of this is meant to leave a couple anxious, scanning constantly for danger. It is meant to leave a couple attentive, the way any two people tending something precious remain attentive - not out of fear, but out of love for what they are protecting.
+
+Faithfulness, in the end, is simply love that keeps choosing, day after day, the person you promised your life to. It is strengthened far more by ordinary faithfulness - showing up, telling the truth, guarding your eyes and your heart, choosing gratitude over comparison - than by any single grand romantic gesture. The couples whose marriages burn steady for decades are rarely the ones who never faced temptation or pressure; they are the ones who kept tending the flame, faithfully, one ordinary day at a time.
+
+As you close this plan, choose one concrete way you will keep tending the flame of your marriage going forward - a regular check-in with your spouse, an honest conversation about a boundary, a renewed habit of gratitude. Trust that the God who is faithful to you will give you what you need to remain faithful in return.', 'Sebuah nyala api yang tidak pernah dirawat pada akhirnya akan padam, bukan karena tiupan angin yang tiba-tiba, melainkan karena kelalaian biasa - lupa menambahkan bahan bakar, lupa melindunginya dari angin. Kesetiaan bekerja dengan cara yang sama. Ia tidak dijaga terutama dengan menghindari bencana; ia dijaga melalui perawatan yang terus-menerus - kasih sayang yang diberikan, kejujuran yang dipertahankan, batasan yang dijaga, syukur yang dilatih. Kitab Kidung Agung menggambarkan kasih dengan intensitas yang mencolok: ''Air yang banyak tak dapat memadamkan cinta, dan sungai tak dapat menghanyutkannya.'' Ini adalah kasih sebagai sesuatu yang kuat dan tangguh, tetapi ia tangguh karena secara aktif dijaga, bukan karena bertahan dengan sendirinya.
+
+Sepanjang minggu ini, kita telah melihat dengan jujur di mana kesetiaan dimulai - di dalam hati, dalam kompromi-kompromi kecil, di bawah tekanan luar, dalam perbandingan, dalam kebiasaan digital, dan dalam belas kasihan yang mengizinkan kita memulai lagi. Semua ini tidak dimaksudkan untuk membuat pasangan cemas, terus-menerus mengawasi bahaya. Ini dimaksudkan untuk membuat pasangan waspada, sebagaimana dua orang yang merawat sesuatu yang berharga tetap waspada - bukan karena takut, melainkan karena kasih terhadap apa yang mereka lindungi.
+
+Kesetiaan, pada akhirnya, hanyalah kasih yang terus memilih, hari demi hari, orang yang telah Anda janjikan seumur hidup Anda. Ia diperkuat jauh lebih banyak oleh kesetiaan yang biasa-biasa saja - hadir, berkata jujur, menjaga mata dan hati, memilih syukur daripada perbandingan - daripada oleh satu gerakan romantis yang besar. Pasangan yang pernikahannya menyala teguh selama puluhan tahun jarang yang tidak pernah menghadapi godaan atau tekanan; mereka adalah yang terus merawat nyala api itu, dengan setia, satu hari biasa demi satu hari.
+
+Saat Anda menutup rencana ini, pilihlah satu cara konkret yang akan Anda lakukan untuk terus merawat nyala api pernikahan Anda ke depan - saling bertanya kabar secara teratur dengan pasangan Anda, percakapan jujur tentang sebuah batasan, kebiasaan syukur yang diperbarui. Percayalah bahwa Allah yang setia kepada Anda akan memberi Anda apa yang Anda butuhkan untuk tetap setia sebagai balasannya.',
+     'What is one concrete way you will keep tending the flame of your marriage after this week?', 'Apa satu cara konkret yang akan Anda lakukan untuk terus merawat nyala api pernikahan Anda setelah minggu ini?',
+     'Lord, thank You for walking with us through this week of guarding our hearts. Help us keep tending the flame of our marriage with ordinary, faithful choices, trusting that You who are faithful to us will strengthen us to remain faithful to each other, for as long as we both shall live. Amen.', 'Tuhan, terima kasih telah menyertai kami sepanjang minggu ini dalam menjaga hati kami. Bantulah kami terus merawat nyala api pernikahan kami dengan pilihan-pilihan yang biasa namun setia, percaya bahwa Engkau yang setia kepada kami akan menguatkan kami untuk tetap setia satu sama lain, selama kami berdua hidup. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Song of Songs 8:7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kidung Agung 8:7', 'TB', 1);
+
+  -- =================================================================
+  -- Trust Restored  (Marriage > Intimacy & Faithfulness, 5d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Intimacy & Faithfulness' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Trust Restored';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Trust Restored', 'Kepercayaan yang Pulih',
+     'Rebuilding confidence in your marriage after doubt', 'Membangun kembali kepercayaan dalam pernikahan setelah keraguan',
+     'Trust, once shaken by misunderstanding, insecurity, or a season of hurt, does not return overnight - but it can return. This five-day plan walks couples gently through naming the doubt honestly, choosing patience over suspicion, rebuilding through small consistent actions, forgiving without forgetting wisdom, and hoping again for the marriage God intended, offering steady, grace-filled companionship for anyone working to trust their spouse - and their marriage - more fully again.', 'Kepercayaan, sekali terguncang oleh kesalahpahaman, rasa tidak aman, atau musim yang menyakitkan, tidak kembali dalam semalam - tetapi ia bisa kembali. Rencana lima hari ini menuntun pasangan dengan lembut melalui menyebutkan keraguan dengan jujur, memilih kesabaran daripada kecurigaan, membangun kembali melalui tindakan-tindakan kecil yang konsisten, mengampuni tanpa melupakan kebijaksanaan, dan berharap kembali bagi pernikahan yang Allah rancang, menawarkan pendampingan yang teguh dan penuh anugerah bagi siapa pun yang sedang berusaha mempercayai pasangannya - dan pernikahannya - kembali secara utuh.', 5, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Naming the Doubt Honestly', 'Menyebutkan Keraguan dengan Jujur',
+     'Trust can be shaken in many ways - a season of miscommunication, an old wound that keeps resurfacing, insecurity that has nothing to do with anything your spouse actually did, or a real breach that needs honest repair. Whatever the cause, the first step toward restoring trust is rarely a grand gesture; it is simply naming, honestly, that trust has been shaken at all. Many couples try to skip this step, moving straight to ''let''s just move forward,'' only to find the same doubts resurfacing months later because they were never actually spoken aloud.
+
+Scripture consistently favors honesty over avoidance. Proverbs tells us to trust in the Lord with all our heart and lean not on our own understanding - and part of leaning on Him rather than our own understanding is being willing to admit when our understanding of our marriage feels shaky. This is not weakness; it is wisdom. Naming doubt honestly, without exaggeration and without minimizing, creates the possibility for real healing, while silence lets doubt quietly calcify into permanent distance.
+
+It is worth distinguishing between two different kinds of doubt: doubt rooted in something your spouse actually did, which calls for honest conversation and, over time, rebuilt trust through consistent action, and doubt rooted in your own insecurity, past wounds, or fear, which calls for compassion toward yourself and often prayer and reflection more than confrontation. Both are real. Both deserve honesty rather than suppression.
+
+Today, simply notice and name, without judgment, where trust in your marriage currently feels uncertain. You do not need to solve it today. You only need to stop pretending it isn''t there, and bring it honestly before God as the first step of a longer healing.', 'Kepercayaan bisa terguncang dengan banyak cara - musim kesalahpahaman, luka lama yang terus muncul kembali, rasa tidak aman yang sebenarnya tidak ada hubungannya dengan apa pun yang dilakukan pasangan Anda, atau pelanggaran nyata yang memerlukan pemulihan yang jujur. Apa pun penyebabnya, langkah pertama menuju pemulihan kepercayaan jarang berupa gerakan besar; ia hanyalah menyebutkan, dengan jujur, bahwa kepercayaan memang telah terguncang. Banyak pasangan mencoba melewati langkah ini, langsung menuju ''mari kita lanjut saja,'' hanya untuk mendapati keraguan yang sama muncul kembali berbulan-bulan kemudian karena tidak pernah benar-benar diucapkan.
+
+Alkitab secara konsisten mendukung kejujuran daripada penghindaran. Kitab Amsal mengatakan agar kita percaya kepada TUHAN dengan segenap hati dan jangan bersandar pada pengertian sendiri - dan bagian dari bersandar kepada-Nya alih-alih pengertian sendiri adalah bersedia mengakui ketika pemahaman kita tentang pernikahan kita terasa goyah. Ini bukan kelemahan; ini kebijaksanaan. Menyebutkan keraguan dengan jujur, tanpa berlebihan dan tanpa meremehkan, menciptakan kemungkinan bagi pemulihan yang sungguh, sementara diam membiarkan keraguan diam-diam mengeras menjadi jarak yang permanen.
+
+Perlu dibedakan antara dua jenis keraguan: keraguan yang berakar pada sesuatu yang benar-benar dilakukan pasangan Anda, yang memerlukan percakapan jujur dan, seiring waktu, kepercayaan yang dibangun kembali melalui tindakan yang konsisten, serta keraguan yang berakar pada rasa tidak aman, luka lama, atau ketakutan diri sendiri, yang memerlukan belas kasih terhadap diri sendiri dan sering kali doa serta refleksi lebih daripada konfrontasi. Keduanya nyata. Keduanya layak mendapat kejujuran, bukan penekanan.
+
+Hari ini, sadari dan sebutkan saja, tanpa menghakimi, di mana kepercayaan dalam pernikahan Anda saat ini terasa tidak pasti. Anda tidak perlu menyelesaikannya hari ini. Anda hanya perlu berhenti berpura-pura itu tidak ada, dan membawanya dengan jujur di hadapan Allah sebagai langkah pertama dari pemulihan yang lebih panjang.',
+     'Where does trust in your marriage currently feel uncertain, and can you name it honestly without judgment today?', 'Di mana kepercayaan dalam pernikahan Anda saat ini terasa tidak pasti, dan bisakah Anda menyebutkannya dengan jujur tanpa menghakimi hari ini?',
+     'Lord, I bring my doubts honestly to You today rather than hiding them. Where trust has been shaken in my marriage, help me name it clearly, without exaggeration or denial, and trust that You can guide us toward healing. Amen.', 'Tuhan, hari ini aku membawa keraguanku dengan jujur kepada-Mu daripada menyembunyikannya. Di mana kepercayaan telah terguncang dalam pernikahanku, tolong aku menyebutkannya dengan jelas, tanpa berlebihan atau menyangkal, dan percaya bahwa Engkau dapat membimbing kami menuju pemulihan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Patience Instead of Suspicion', 'Kesabaran, Bukan Kecurigaan',
+     'When trust has been shaken, it is tempting to manage the fear by watching closely - checking, questioning, scanning for evidence that confirms our worst suspicions. This is an understandable response to hurt, but it rarely leads where we hope. Suspicion, even when it feels protective, often creates the very distance it is trying to prevent, because no one feels close to someone who seems to be constantly auditing them. Love, Paul reminds us, always trusts and always hopes - not naively, ignoring real red flags, but as a settled posture rather than a constant, anxious surveillance.
+
+There is an important difference between healthy accountability, which two spouses can agree to together with openness on both sides, and one-sided suspicion, which quietly turns a marriage into an investigation. Healthy accountability says, ''Let''s build transparency together because we both want this marriage healthy.'' Suspicion says, ''I will catch you.'' The first invites partnership. The second breeds resentment, even when the doubting spouse has legitimate reasons for their fear.
+
+Patience does not mean pretending everything is fine, nor does it mean ignoring genuine warning signs. It means giving trust room to rebuild through consistent evidence over time, rather than demanding instant certainty that no relationship can actually provide. Trust that has been broken is rebuilt the same way it was originally built - slowly, through many small moments of reliability - not through a single reassurance or a single test passed.
+
+Today, notice if fear is pushing you toward suspicion rather than patience. Where appropriate, choose one small way to extend patience to your spouse today - not blind trust, but the kind of hopeful patience that gives rebuilding room to happen.', 'Ketika kepercayaan telah terguncang, godaan untuk mengelola ketakutan itu adalah dengan mengawasi dengan ketat - memeriksa, mempertanyakan, mencari-cari bukti yang mengonfirmasi kecurigaan terburuk kita. Ini adalah respons yang bisa dipahami terhadap luka, tetapi jarang membawa ke arah yang kita harapkan. Kecurigaan, meskipun terasa melindungi, sering kali justru menciptakan jarak yang sedang dicoba dicegahnya, karena tidak ada yang merasa dekat dengan seseorang yang tampak terus-menerus mengaudit dirinya. Kasih, Paulus mengingatkan kita, selalu percaya dan selalu berharap - bukan secara naif, mengabaikan tanda bahaya yang nyata, melainkan sebagai sikap yang mantap, bukan pengawasan yang cemas terus-menerus.
+
+Ada perbedaan penting antara akuntabilitas yang sehat, yang bisa disepakati bersama oleh kedua pasangan dengan keterbukaan dari kedua belah pihak, dan kecurigaan sepihak, yang diam-diam mengubah pernikahan menjadi sebuah investigasi. Akuntabilitas yang sehat berkata, ''Mari kita bangun keterbukaan bersama karena kita berdua menginginkan pernikahan ini sehat.'' Kecurigaan berkata, ''Aku akan menangkapmu.'' Yang pertama mengundang kemitraan. Yang kedua menumbuhkan kepahitan, bahkan ketika pasangan yang meragukan memiliki alasan yang sah untuk ketakutannya.
+
+Kesabaran bukan berarti berpura-pura semuanya baik-baik saja, dan bukan juga mengabaikan tanda peringatan yang sungguh nyata. Artinya adalah memberi ruang bagi kepercayaan untuk dibangun kembali melalui bukti yang konsisten seiring waktu, bukan menuntut kepastian instan yang sebenarnya tidak bisa diberikan oleh hubungan mana pun. Kepercayaan yang telah rusak dibangun kembali dengan cara yang sama seperti awalnya dibangun - perlahan, melalui banyak momen kecil keandalan - bukan melalui satu penegasan atau satu ujian yang lolos.
+
+Hari ini, perhatikan apakah ketakutan sedang mendorong Anda ke arah kecurigaan alih-alih kesabaran. Jika sesuai, pilihlah satu cara kecil untuk memberikan kesabaran kepada pasangan Anda hari ini - bukan kepercayaan buta, tetapi jenis kesabaran penuh harapan yang memberi ruang bagi pemulihan untuk terjadi.',
+     'Is fear pushing you toward suspicion today? What is one small way you can choose patience instead?', 'Apakah ketakutan sedang mendorong Anda ke arah kecurigaan hari ini? Apa satu cara kecil Anda bisa memilih kesabaran sebagai gantinya?',
+     'Lord, when fear tempts me toward suspicion, teach me the patience of a love that always hopes. Help me tell the difference between wisdom and fear, and give our marriage room to rebuild trust slowly and honestly. Amen.', 'Tuhan, ketika ketakutan menggodaku ke arah kecurigaan, ajarlah aku kesabaran kasih yang selalu berharap. Bantulah aku membedakan antara kebijaksanaan dan ketakutan, dan berilah pernikahan kami ruang untuk membangun kembali kepercayaan secara perlahan dan jujur. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 13:7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 13:7', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Trust Is Rebuilt in Small, Consistent Steps', 'Kepercayaan Dibangun Kembali dalam Langkah-Langkah Kecil yang Konsisten',
+     'Trust is rarely restored through one dramatic conversation or one grand romantic gesture, however meaningful those moments can be. More often, it is rebuilt the way it was first built: through hundreds of small, consistent, reliable moments that slowly teach the heart it is safe to believe again. Being where you said you would be. Following through on small promises. Answering honestly rather than defensively. None of these are glamorous, but together, over time, they form the quiet architecture of restored confidence.
+
+Galatians reminds us not to become weary in doing good, for at the proper time we will reap a harvest if we do not give up. This is a helpful word for couples rebuilding trust, because the process is often slower than either spouse would like. There can be real discouragement in doing the small, faithful thing again and again without feeling an immediate emotional payoff. But trust, like any harvest, grows in its own time, through consistent tending, not through impatience or shortcuts.
+
+For the spouse working to rebuild trust after a breach, this means understanding that reassurance is not a one-time event but an ongoing gift, offered patiently even when it feels repetitive. For the spouse working to extend trust again, it means noticing and acknowledging the small, consistent efforts being made, rather than only noticing when something feels off. Both postures require humility, and both are forms of love in action.
+
+Today, identify one small, concrete, repeatable action - on either side - that could contribute to rebuilding trust in your marriage. It does not need to be dramatic. Small, faithful, and consistent is exactly the kind of harvest Scripture promises will come in its proper time.', 'Kepercayaan jarang dipulihkan melalui satu percakapan dramatis atau satu gerakan romantis besar, sebermakna apa pun momen-momen itu. Lebih sering, ia dibangun kembali dengan cara yang sama seperti pertama kali dibangun: melalui ratusan momen kecil yang konsisten dan dapat diandalkan yang perlahan mengajarkan hati bahwa aman untuk percaya lagi. Berada di tempat yang Anda katakan akan Anda datangi. Menepati janji-janji kecil. Menjawab dengan jujur, bukan defensif. Tidak satu pun dari ini mengesankan, tetapi bersama-sama, seiring waktu, semuanya membentuk struktur tenang dari kepercayaan yang pulih.
+
+Surat Galatia mengingatkan kita untuk jangan jemu-jemu berbuat baik, karena apabila kita tidak menjadi lemah, kita akan menuai pada waktunya. Ini kata-kata yang menolong bagi pasangan yang sedang membangun kembali kepercayaan, karena prosesnya sering lebih lambat daripada yang diinginkan kedua belah pihak. Bisa ada rasa putus asa yang nyata dalam melakukan hal kecil yang setia berulang kali tanpa merasakan hasil emosional yang segera. Namun kepercayaan, seperti panen apa pun, tumbuh pada waktunya sendiri, melalui perawatan yang konsisten, bukan melalui ketidaksabaran atau jalan pintas.
+
+Bagi pasangan yang berusaha membangun kembali kepercayaan setelah sebuah pelanggaran, ini berarti memahami bahwa penegasan bukanlah peristiwa satu kali, melainkan pemberian yang berkelanjutan, ditawarkan dengan sabar bahkan ketika terasa berulang. Bagi pasangan yang berusaha memberikan kepercayaan kembali, ini berarti memperhatikan dan mengakui upaya-upaya kecil yang konsisten yang sedang dilakukan, bukan hanya memperhatikan ketika sesuatu terasa tidak beres. Kedua sikap ini memerlukan kerendahan hati, dan keduanya adalah bentuk kasih dalam tindakan.
+
+Hari ini, kenali satu tindakan kecil, konkret, dan dapat diulang - dari sisi mana pun - yang dapat berkontribusi pada pemulihan kepercayaan dalam pernikahan Anda. Tidak perlu dramatis. Kecil, setia, dan konsisten adalah tepat jenis panen yang dijanjikan Alkitab akan tiba pada waktunya.',
+     'What is one small, repeatable action you can take today to help rebuild trust in your marriage?', 'Apa satu tindakan kecil dan dapat diulang yang bisa Anda lakukan hari ini untuk membantu memulihkan kepercayaan dalam pernikahan Anda?',
+     'Lord, give us patience for the slow, ordinary work of rebuilding trust. Help us not grow weary in doing good toward each other, and let the small, faithful things we do today become part of a harvest of restored confidence in due time. Amen.', 'Tuhan, berilah kami kesabaran untuk pekerjaan yang lambat dan biasa dalam membangun kembali kepercayaan. Bantulah kami untuk tidak jemu-jemu berbuat baik satu sama lain, dan biarlah hal-hal kecil dan setia yang kami lakukan hari ini menjadi bagian dari panen kepercayaan yang pulih pada waktunya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Forgiving Without Forgetting Wisdom', 'Mengampuni Tanpa Melupakan Kebijaksanaan',
+     'Forgiveness and trust are related but not identical, and confusing the two often leaves couples stuck. Forgiveness is a decision of the heart, offered as a gift, sometimes even before trust has been rebuilt - it releases the debt owed and refuses to let bitterness take root. Trust, on the other hand, is rebuilt gradually through demonstrated reliability. You can genuinely forgive your spouse today and still, wisely, still be in the process of rebuilding trust over the following months. This is not a contradiction; it is simply how healing works.
+
+Colossians calls us to bear with one another and forgive as the Lord forgave us - a forgiveness that is generous, not conditional on the offending party earning it back first. This kind of forgiveness frees the hurt spouse from carrying the crushing weight of resentment, which harms them as much as it might ever ''punish'' the other. Choosing to forgive is choosing your own freedom as much as it is a gift to your spouse.
+
+At the same time, forgiveness does not require pretending nothing happened or ignoring wisdom about what needs to change going forward. A wife who forgives her husband for a broken promise can still, wisely, ask for greater transparency moving forward. A husband who forgives his wife for a season of emotional distance can still, wisely, prioritize consistent quality time as they rebuild. Forgiveness releases the debt; wisdom still shapes how the relationship moves forward in a healthy way.
+
+Today, consider whether there is a place where you have been withholding forgiveness while waiting for trust to be fully restored first, or conversely, extending trust faster than is wise while skipping real forgiveness. Ask God for the grace to do both - to forgive freely, and to rebuild wisely - in their proper order and their proper time.', 'Pengampunan dan kepercayaan saling terkait tetapi tidak sama, dan mencampuradukkan keduanya sering membuat pasangan terjebak. Pengampunan adalah keputusan hati, diberikan sebagai anugerah, kadang bahkan sebelum kepercayaan dibangun kembali - ia melepaskan hutang yang harus dibayar dan menolak membiarkan kepahitan berakar. Kepercayaan, di sisi lain, dibangun kembali secara bertahap melalui keandalan yang ditunjukkan. Anda bisa benar-benar mengampuni pasangan Anda hari ini dan tetap, dengan bijaksana, masih dalam proses membangun kembali kepercayaan selama bulan-bulan berikutnya. Ini bukan kontradiksi; inilah cara kerja pemulihan.
+
+Surat Kolose memanggil kita untuk saling bersabar dan mengampuni sebagaimana Tuhan telah mengampuni kita - pengampunan yang murah hati, tidak bersyarat pada pihak yang bersalah harus mendapatkannya kembali terlebih dahulu. Pengampunan semacam ini membebaskan pasangan yang terluka dari menanggung beban kepahitan yang menghancurkan, yang merugikan mereka sama besarnya dengan ''hukuman'' apa pun bagi pihak lain. Memilih untuk mengampuni adalah memilih kebebasan diri sendiri sama besarnya dengan memberikan anugerah kepada pasangan.
+
+Pada saat yang sama, pengampunan tidak mengharuskan kita berpura-pura tidak ada yang terjadi atau mengabaikan kebijaksanaan tentang apa yang perlu berubah ke depan. Seorang istri yang mengampuni suaminya atas janji yang diingkari tetap bisa, dengan bijaksana, meminta keterbukaan yang lebih besar ke depannya. Seorang suami yang mengampuni istrinya atas musim kejauhan emosional tetap bisa, dengan bijaksana, memprioritaskan waktu berkualitas yang konsisten saat mereka membangun kembali. Pengampunan melepaskan hutang; kebijaksanaan tetap membentuk bagaimana hubungan bergerak maju dengan cara yang sehat.
+
+Hari ini, pertimbangkan apakah ada tempat di mana Anda telah menahan pengampunan sambil menunggu kepercayaan sepenuhnya pulih terlebih dahulu, atau sebaliknya, memberikan kepercayaan lebih cepat daripada yang bijaksana sambil melewatkan pengampunan yang sungguh. Mintalah kepada Allah anugerah untuk melakukan keduanya - mengampuni dengan bebas, dan membangun kembali dengan bijaksana - pada urutan dan waktu yang tepat.',
+     'Is there a place where you are withholding forgiveness, or conversely, extending trust faster than is wise? Bring it honestly before God today.', 'Adakah tempat di mana Anda menahan pengampunan, atau sebaliknya, memberikan kepercayaan lebih cepat daripada yang bijaksana? Bawalah itu dengan jujur di hadapan Allah hari ini.',
+     'Lord, teach me to forgive as freely as You have forgiven me, releasing bitterness even before trust is fully restored. Give me wisdom to rebuild trust patiently and carefully, without confusing forgiveness with pretending nothing happened. Amen.', 'Tuhan, ajarlah aku mengampuni sebebas Engkau telah mengampuniku, melepaskan kepahitan bahkan sebelum kepercayaan sepenuhnya pulih. Berilah aku hikmat untuk membangun kembali kepercayaan dengan sabar dan hati-hati, tanpa mencampuradukkan pengampunan dengan berpura-pura tidak ada yang terjadi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Hope for the Marriage God Intended', 'Berharap bagi Pernikahan yang Allah Rancang',
+     'By the end of this short journey, it is worth stepping back and remembering why any of this rebuilding matters: because marriage, at its best, is meant to be a place of deep safety, where two people can be fully known and still fully loved. Doubt and hurt can make that vision feel distant, even naive. But Jeremiah''s promise to a discouraged, exiled people applies just as truly to a discouraged marriage: ''I know the plans I have for you... plans to prosper you and not to harm you, plans to give you hope and a future.''
+
+This does not mean every difficult season resolves easily, or that rebuilding trust is quick or guaranteed to feel finished on any particular timeline. It means that God has not given up on your marriage, even in the seasons when you have felt tempted to give up on it yourself. The same God who authored the covenant of marriage is present in the slow, unglamorous work of restoring it, and He specializes in bringing hope out of places that once felt hopeless.
+
+Many couples who have walked through a season of rebuilding trust say, on the other side of it, that their marriage became not merely restored but in some ways deeper than before - not because the hurt was good, but because the honest work of rebuilding taught them things about grace, patience, and each other that a smoother season never would have. This is not a promise that pain becomes instantly meaningful, but it is a real testimony many couples carry: God can bring genuine good even from a hard season, when both spouses stay committed to the slow work of healing.
+
+As you close this plan, take a moment to pray specifically for hope regarding your own marriage - not vague optimism, but real trust that God is actively at work in the rebuilding, however long it takes. Whatever stage of restoring trust you are in, you are not walking it alone, and the story is not yet finished.', 'Di akhir perjalanan singkat ini, layak untuk mundur sejenak dan mengingat mengapa semua pemulihan ini penting: karena pernikahan, pada intinya, dimaksudkan menjadi tempat keamanan yang dalam, di mana dua orang bisa sepenuhnya dikenal dan tetap sepenuhnya dicintai. Keraguan dan luka bisa membuat visi itu terasa jauh, bahkan naif. Namun janji Yeremia kepada umat yang putus asa dan terbuang berlaku sama benarnya bagi pernikahan yang putus asa: ''Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu... rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.''
+
+Ini tidak berarti setiap musim sulit terselesaikan dengan mudah, atau bahwa membangun kembali kepercayaan itu cepat atau dijamin terasa selesai pada jangka waktu tertentu. Ini berarti Allah belum menyerah pada pernikahan Anda, bahkan di musim-musim ketika Anda merasa tergoda untuk menyerah sendiri. Allah yang sama yang mengarang perjanjian pernikahan hadir dalam pekerjaan yang lambat dan tidak mencolok dari memulihkannya, dan Ia ahli dalam mendatangkan harapan dari tempat-tempat yang pernah terasa tanpa harapan.
+
+Banyak pasangan yang telah melewati musim membangun kembali kepercayaan mengatakan, di sisi lain dari perjalanan itu, bahwa pernikahan mereka bukan hanya pulih tetapi dalam beberapa hal menjadi lebih dalam daripada sebelumnya - bukan karena lukanya baik, tetapi karena pekerjaan jujur dari pemulihan mengajarkan mereka hal-hal tentang anugerah, kesabaran, dan satu sama lain yang tidak akan pernah diajarkan oleh musim yang lebih mulus. Ini bukan janji bahwa rasa sakit langsung menjadi bermakna, tetapi ini kesaksian nyata yang dibawa banyak pasangan: Allah dapat mendatangkan kebaikan sejati bahkan dari musim yang sulit, ketika kedua pasangan tetap berkomitmen pada pekerjaan pemulihan yang lambat.
+
+Saat Anda menutup rencana ini, luangkan waktu untuk berdoa secara khusus untuk harapan mengenai pernikahan Anda sendiri - bukan optimisme yang samar, tetapi kepercayaan sungguh bahwa Allah sedang aktif bekerja dalam pemulihan itu, betapapun lamanya waktu yang dibutuhkan. Pada tahap apa pun Anda berada dalam memulihkan kepercayaan, Anda tidak berjalan sendirian, dan kisah itu belum selesai.',
+     'Take a moment to pray specifically for hope regarding your own marriage, trusting God is at work in the rebuilding, however long it takes.', 'Luangkan waktu untuk berdoa secara khusus bagi harapan mengenai pernikahan Anda sendiri, percaya bahwa Allah sedang bekerja dalam pemulihan itu, betapapun lamanya waktu yang dibutuhkan.',
+     'Lord, thank You for the plans You have for our marriage - plans for hope and a future, even after a season of doubt. Strengthen our trust in each other and in You as we continue this slow, worthwhile work of rebuilding. We believe our story is not yet finished. Amen.', 'Tuhan, terima kasih untuk rancangan yang Engkau miliki bagi pernikahan kami - rancangan harapan dan hari depan, bahkan setelah musim keraguan. Kuatkanlah kepercayaan kami satu sama lain dan kepada-Mu saat kami melanjutkan pekerjaan pemulihan yang lambat namun berharga ini. Kami percaya kisah kami belum selesai. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Jeremiah 29:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yeremia 29:11', 'TB', 1);
+
+  -- =================================================================
+  -- When Money Is Tight  (Marriage > Marriage Through Trials, 5d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Marriage Through Trials' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'When Money Is Tight';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'When Money Is Tight', 'Ketika Keuangan Menghimpit',
+     'Finding unity and trust when finances press hard on a marriage', 'Menemukan kesatuan dan iman saat keuangan menekan pernikahan',
+     'A five-day devotional for couples carrying the weight of financial stress — job loss, debt, unexpected bills, or simply never having quite enough. Rather than offering a formula for wealth, these reflections walk through what it means to stay tender with each other, honest before God, and rooted in a provision that isn''t measured in a bank balance.', 'Renungan lima hari bagi pasangan yang menanggung beban tekanan keuangan — kehilangan pekerjaan, utang, tagihan tak terduga, atau sekadar rasa tidak pernah cukup. Alih-alih menawarkan rumus menjadi kaya, renungan ini menuntun apa artinya tetap lembut satu sama lain, jujur di hadapan Tuhan, dan berakar pada pemeliharaan yang tidak diukur dari saldo rekening.', 5, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Weight We Carry Together', 'Beban yang Kami Pikul Bersama',
+     'There is a particular kind of tiredness that comes from money trouble — not just the practical exhaustion of budgeting and re-budgeting, but the quiet ache of feeling like you are failing the person you promised to build a life with. Financial stress has a way of seeping into every conversation, turning ordinary questions like "did you pay that bill" into landmines, and making two people who love each other start to feel like opponents instead of teammates.
+
+Many couples who have walked through lean seasons say the same thing: the money itself was never really the hardest part. The hardest part was what fear did to them — the short tempers, the silent resentment, the temptation to hide a purchase or a worry rather than say it out loud. Scarcity has a way of making a marriage feel smaller, when what a couple actually needs in that season is to feel more connected, not less.
+
+Scripture never promises a Christian marriage will be free of financial pressure. What it promises is a Father who sees, who knows what His children need, and who has not forgotten the couple lying awake doing math in their heads. Paul wrote to the Philippians not from comfort but from prison, and still he could say that God would supply every need. That confidence wasn''t naivety — it was hard-won trust, the kind that only grows in seasons exactly like this one.
+
+Today is simply an invitation to stop carrying the weight alone, and to stop letting it come between you. Whatever this season holds — a job search, a stack of bills, a hard conversation about spending — bring it into the light together, and bring it before God together. A marriage that learns to be honest about money in hard times usually comes out the other side sturdier than it went in.', 'Ada jenis kelelahan tertentu yang muncul dari masalah keuangan — bukan sekadar lelah fisik karena menyusun dan menyusun ulang anggaran, tetapi luka diam-diam karena merasa gagal bagi orang yang telah kita janji untuk membangun hidup bersamanya. Tekanan keuangan punya cara meresap ke dalam setiap percakapan, mengubah pertanyaan sederhana seperti "sudah bayar tagihan itu belum" menjadi ranjau, dan membuat dua orang yang saling mengasihi mulai merasa seperti lawan, bukan rekan.
+
+Banyak pasangan yang pernah melewati musim sulit berkata hal yang sama: uang itu sendiri sebenarnya bukan bagian tersulit. Bagian tersulit adalah apa yang dilakukan rasa takut terhadap mereka — kata-kata yang jadi kasar, kekesalan yang dipendam, godaan untuk menyembunyikan pembelian atau kekhawatiran daripada mengatakannya terus terang. Kekurangan punya cara membuat pernikahan terasa lebih sempit, padahal yang sesungguhnya dibutuhkan pasangan di musim itu adalah merasa lebih terhubung, bukan makin menjauh.
+
+Alkitab tidak pernah menjanjikan pernikahan orang Kristen akan bebas dari tekanan keuangan. Yang dijanjikan adalah seorang Bapa yang melihat, yang tahu apa yang dibutuhkan anak-anak-Nya, dan yang tidak melupakan pasangan yang terjaga di malam hari menghitung-hitung angka dalam pikiran mereka. Paulus menulis surat kepada jemaat Filipi bukan dari tempat yang nyaman, melainkan dari penjara, dan ia tetap bisa berkata bahwa Allah akan mencukupi segala keperluan. Keyakinan itu bukan kepolosan — itu iman yang diperjuangkan, yang hanya bertumbuh dalam musim-musim seperti ini.
+
+Hari ini hanyalah sebuah ajakan untuk berhenti memikul beban itu sendirian, dan berhenti membiarkannya menjadi penghalang di antara kalian. Apa pun yang sedang dihadapi musim ini — pencarian kerja, tumpukan tagihan, percakapan berat tentang pengeluaran — bawalah itu ke dalam terang bersama-sama, dan bawalah itu di hadapan Tuhan bersama-sama. Pernikahan yang belajar jujur soal uang di masa sulit biasanya keluar dari sana lebih kokoh daripada sebelumnya.',
+     'Where has fear about money made you feel like opponents instead of teammates lately, and what would it look like to bring that fear into the light together tonight?', 'Di titik mana rasa takut soal uang belakangan ini membuat kalian merasa seperti lawan, bukan rekan, dan seperti apa jika malam ini kalian membawa rasa takut itu ke dalam terang bersama-sama?',
+     'Father, You see every number we cannot make balance and every worry we carry into the night. Teach us to face this season as a team, not as opponents. Remind us that Your supply has never been limited to our income, and steady our hearts to trust You together. Amen.', 'Bapa, Engkau melihat setiap angka yang tidak bisa kami seimbangkan dan setiap kekhawatiran yang kami bawa ke dalam malam. Ajar kami menghadapi musim ini sebagai satu tim, bukan sebagai lawan. Ingatkan kami bahwa pemeliharaan-Mu tidak pernah dibatasi oleh penghasilan kami, dan teguhkan hati kami untuk percaya kepada-Mu bersama-sama. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 4:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 4:19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Seeking First Things First', 'Mencari Dahulu yang Terutama',
+     'When money is scarce, it has a way of demanding to be first in every conversation, every plan, every decision. It is not hard to understand why — bills have due dates, and hunger doesn''t wait politely. But Jesus'' words in the Sermon on the Mount were spoken directly to people who were genuinely poor, genuinely uncertain about tomorrow''s food and clothing, and He still told them to seek His kingdom first, trusting that the rest would be added.
+
+This is not a promise that seeking God first will make a couple wealthy. It is a promise about order — about what steadies a marriage when everything else feels unsteady. A couple who prays together before they argue about the budget, who reads Scripture together before they panic-scroll their bank app, tends to find a strange calm they can''t fully explain. It doesn''t erase the bills. It changes what the bills are allowed to do to the relationship.
+
+There is real wisdom in this for a marriage specifically: when finances dominate, they tend to crowd out everything tender — date nights, prayer, even simple affection, because everything starts to feel like it costs something you don''t have. Seeking the kingdom first can be as ordinary as choosing to pray for five minutes before opening the mail, or as simple as reminding each other out loud that your worth as a couple was never tied to your net worth.
+
+Consider today what has quietly taken first place in your home during this hard season — is it the anxiety itself, the spreadsheet, the fear of what others might think? Naming it is the first step toward putting God back at the center, not as a magic fix for the finances, but as the steady ground both of you can stand on while you work the problem together.', 'Saat uang menipis, ia punya cara menuntut untuk didahulukan dalam setiap percakapan, setiap rencana, setiap keputusan. Tidak sulit memahami mengapa — tagihan punya tanggal jatuh tempo, dan rasa lapar tidak menunggu dengan sopan. Namun perkataan Yesus dalam Khotbah di Bukit disampaikan langsung kepada orang-orang yang benar-benar miskin, benar-benar tidak pasti soal makanan dan pakaian esok hari, dan Ia tetap berkata agar mereka mencari dahulu Kerajaan-Nya, percaya bahwa yang lain akan ditambahkan.
+
+Ini bukan janji bahwa mencari Tuhan dahulu akan membuat pasangan menjadi kaya. Ini janji tentang urutan — tentang apa yang meneguhkan pernikahan ketika segala sesuatu terasa goyah. Pasangan yang berdoa bersama sebelum berdebat soal anggaran, yang membaca Firman bersama sebelum panik memeriksa aplikasi bank, sering menemukan ketenangan aneh yang sulit dijelaskan sepenuhnya. Itu tidak menghapus tagihan. Itu mengubah apa yang boleh dilakukan tagihan itu terhadap hubungan mereka.
+
+Ada hikmat nyata di sini khusus untuk pernikahan: ketika keuangan mendominasi, ia cenderung menyingkirkan segala hal yang lembut — malam kencan, doa, bahkan kasih sayang sederhana, karena segalanya mulai terasa membutuhkan biaya yang tidak dimiliki. Mencari Kerajaan dahulu bisa sesederhana memilih berdoa lima menit sebelum membuka surat tagihan, atau sesederhana saling mengingatkan bahwa harga diri kalian sebagai pasangan tidak pernah terikat pada kekayaan bersih.
+
+Renungkan hari ini apa yang diam-diam mengambil tempat pertama di rumah kalian selama musim sulit ini — apakah itu kecemasan itu sendiri, lembar anggaran, atau rasa takut akan pandangan orang lain? Menyebutnya adalah langkah pertama untuk mengembalikan Tuhan ke pusat, bukan sebagai solusi ajaib bagi keuangan, tetapi sebagai tanah yang teguh bagi kalian berdua untuk berdiri sementara menghadapi masalah itu bersama.',
+     'What has quietly taken the first place that God belongs in during this financial season, and what small habit could reorder that this week?', 'Apa yang diam-diam menempati tempat pertama yang seharusnya milik Tuhan selama musim keuangan ini, dan kebiasaan kecil apa yang bisa mengatur ulang itu minggu ini?',
+     'Lord, in the pressure of unpaid bills and uncertain paychecks, we confess how easily anxiety takes the first seat in our home. Teach us to seek You first, not as an escape from our responsibilities but as the ground we stand on while we face them. Order our hearts, and order our home. Amen.', 'Tuhan, di tengah tekanan tagihan yang belum terbayar dan gaji yang tidak menentu, kami mengaku betapa mudahnya kecemasan mengambil tempat pertama di rumah kami. Ajar kami mencari Engkau dahulu, bukan sebagai pelarian dari tanggung jawab kami, melainkan sebagai tanah tempat kami berdiri saat menghadapinya. Aturlah hati kami, dan aturlah rumah kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 6:33', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 6:33', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Leaning Not on Our Own Understanding', 'Jangan Bersandar pada Pengertian Sendiri',
+     'One of the hidden dangers of financial stress in a marriage is that it tempts each spouse to become their own strategist, quietly running the numbers alone, making private decisions about what to cut or where to borrow, without fully looping the other person in. It often comes from a good place — not wanting to burden your spouse, wanting to protect them from worry — but it can leave both people feeling isolated in a fight they are actually facing together.
+
+Proverbs 3 offers a different posture: trust the Lord with all your heart, and don''t lean only on your own understanding. This isn''t a call to be careless with money or to stop planning wisely. It''s a call to hold your plans with open hands, to acknowledge that neither spouse has full visibility into what tomorrow holds, and to let that shared uncertainty draw you toward God and toward each other rather than into isolated anxiety.
+
+Couples who weather financial hardship well often describe a shift from "my plan" or "your plan" to "our plan, held loosely before God." That might mean sitting down together over the actual numbers, even when it''s uncomfortable. It might mean praying out loud before a big financial decision instead of after. It might simply mean saying, "I don''t understand how we get through this month, but I trust that we will figure it out together, with God''s help."
+
+If you have been quietly carrying financial worry alone — running scenarios in your head at 2 a.m., protecting your spouse from numbers you think might scare them — consider today what it would look like to invite them back in. Leaning on each other, not just on your own understanding, is part of what it means to let God make your paths straight.', 'Salah satu bahaya tersembunyi dari tekanan keuangan dalam pernikahan adalah godaan bagi setiap pasangan untuk menjadi ahli strategi sendiri-sendiri, diam-diam menghitung angka sendirian, membuat keputusan pribadi tentang apa yang harus dipotong atau dari mana harus meminjam, tanpa sepenuhnya melibatkan pasangannya. Ini sering datang dari niat baik — tidak ingin membebani pasangan, ingin melindunginya dari kekhawatiran — tetapi bisa membuat keduanya merasa terisolasi dalam pergumulan yang sebenarnya sedang mereka hadapi bersama.
+
+Amsal 3 menawarkan sikap yang berbeda: percayalah kepada TUHAN dengan segenap hatimu, dan jangan bersandar pada pengertianmu sendiri. Ini bukan ajakan untuk ceroboh dengan uang atau berhenti merencanakan dengan bijak. Ini ajakan untuk memegang rencana kalian dengan tangan terbuka, mengakui bahwa tidak ada satu pun pasangan yang benar-benar tahu apa yang akan terjadi esok, dan membiarkan ketidakpastian bersama itu menarik kalian mendekat kepada Tuhan dan satu sama lain, bukan malah menjerumuskan ke dalam kecemasan yang terisolasi.
+
+Pasangan yang berhasil melewati kesulitan keuangan dengan baik sering menceritakan pergeseran dari "rencanaku" atau "rencanamu" menjadi "rencana kita, yang dipegang longgar di hadapan Tuhan." Itu bisa berarti duduk bersama membahas angka-angka yang sebenarnya, meski tidak nyaman. Bisa berarti berdoa bersuara sebelum keputusan keuangan besar, bukan sesudahnya. Bisa juga sesederhana berkata, "Aku tidak tahu bagaimana kita akan melewati bulan ini, tapi aku percaya kita akan mencari jalannya bersama, dengan pertolongan Tuhan."
+
+Jika selama ini kalian diam-diam memikul kekhawatiran keuangan sendirian — menghitung berbagai skenario dalam pikiran pada jam dua pagi, melindungi pasangan dari angka yang menurut kalian akan menakutkannya — renungkan hari ini seperti apa jika kalian mengundangnya kembali masuk. Bersandar satu sama lain, bukan hanya pada pengertian sendiri, adalah bagian dari membiarkan Tuhan meluruskan jalan kalian.',
+     'Is there a financial worry you''ve been carrying alone to protect your spouse, and what would it take to bring them back into the plan?', 'Adakah kekhawatiran keuangan yang selama ini kamu pikul sendirian demi melindungi pasanganmu, dan apa yang dibutuhkan untuk melibatkannya kembali dalam rencana itu?',
+     'Lord, forgive us for the times we have carried this burden alone instead of together, and together instead of leaning on You. Teach us to submit our plans to You and to trust each other with the numbers, the fears, and the hope. Make our paths straight, even through this uncertain season. Amen.', 'Tuhan, ampuni kami untuk saat-saat kami memikul beban ini sendirian, alih-alih bersama, dan bersama tanpa bersandar kepada-Mu. Ajar kami menyerahkan rencana kami kepada-Mu dan saling mempercayai dengan angka-angka, ketakutan, dan harapan kami. Luruskanlah jalan kami, bahkan melalui musim yang tidak pasti ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'A Love Free From the Love of Money', 'Kasih yang Bebas dari Cinta akan Uang',
+     'It''s easy to assume the Bible''s warnings about the love of money apply mainly to the wealthy, to people tempted by excess. But financial hardship can produce its own version of that love — a preoccupation with money that comes not from greed but from fear, where every waking thought circles back to what''s missing rather than what''s present. The writer of Hebrews pairs the warning against loving money with a promise: God has said He will never leave us or forsake us. Contentment, in that context, isn''t about having enough money — it''s about trusting the One who is enough.
+
+For a married couple, this contentment is something you build together, almost like a muscle. It rarely arrives as a single decision and more often grows through small, repeated choices: choosing gratitude for what you do have over comparison with what others seem to have; choosing to laugh together over a simple meal instead of resenting that it isn''t more; choosing to remind each other, out loud, that God has not left the room even when the account balance is low.
+
+This doesn''t mean pretending the hardship isn''t real or that contentment means never trying to improve your situation. It means refusing to let money — or its absence — become the measure of your worth, your marriage, or God''s faithfulness. A couple who can say, even through gritted teeth, "we don''t have much right now, but we have each other and we have God" has found something that money was never able to buy in the first place.
+
+Take a moment today to name, together, one thing this season has not been able to take from you — not despite the hardship, but genuinely true even now. Let that be a small anchor of contentment as you keep working toward better days.', 'Mudah untuk berasumsi bahwa peringatan Alkitab tentang cinta akan uang terutama berlaku bagi orang kaya, bagi mereka yang tergoda oleh kelimpahan. Tetapi kesulitan keuangan bisa menghasilkan versi cinta akan uang yang lain — sebuah keterpakuan pada uang yang muncul bukan dari keserakahan melainkan dari rasa takut, ketika setiap pikiran yang terjaga kembali berputar pada apa yang kurang, bukan apa yang ada. Penulis kitab Ibrani memadukan peringatan terhadap cinta akan uang dengan sebuah janji: Allah telah berfirman bahwa Ia tidak akan meninggalkan atau membiarkan kita. Kepuasan hati, dalam konteks itu, bukan soal memiliki cukup uang — melainkan soal percaya kepada Dia yang cukup.
+
+Bagi pasangan suami-istri, kepuasan hati ini adalah sesuatu yang dibangun bersama, hampir seperti melatih otot. Ia jarang datang sebagai satu keputusan tunggal, melainkan lebih sering bertumbuh melalui pilihan-pilihan kecil yang berulang: memilih bersyukur atas apa yang dimiliki daripada membandingkan dengan apa yang tampaknya dimiliki orang lain; memilih tertawa bersama di atas makanan sederhana daripada kesal karena tidak lebih dari itu; memilih saling mengingatkan, bersuara, bahwa Tuhan belum meninggalkan ruangan itu meski saldo rekening sedang rendah.
+
+Ini bukan berarti berpura-pura bahwa kesulitan itu tidak nyata atau bahwa kepuasan hati berarti tidak pernah berusaha memperbaiki keadaan. Ini berarti menolak membiarkan uang — atau ketiadaannya — menjadi ukuran harga diri kalian, pernikahan kalian, atau kesetiaan Tuhan. Pasangan yang bisa berkata, bahkan sambil menggigit gigi, "kami tidak punya banyak sekarang, tapi kami punya satu sama lain dan kami punya Tuhan" telah menemukan sesuatu yang sejak awal tidak bisa dibeli oleh uang.
+
+Luangkan waktu hari ini untuk menyebutkan bersama, satu hal yang tidak bisa direnggut oleh musim ini — bukan meski ada kesulitan, tetapi yang benar-benar nyata bahkan sekarang. Biarkan itu menjadi jangkar kecil kepuasan hati saat kalian terus berjuang menuju hari-hari yang lebih baik.',
+     'What is one thing this financial season has not been able to take from you as a couple, and can you name it out loud together tonight?', 'Apa satu hal yang tidak bisa direnggut musim keuangan ini dari kalian sebagai pasangan, dan bisakah kalian menyebutkannya bersuara bersama malam ini?',
+     'Father, when our thoughts circle endlessly around what we lack, remind us that You have never left us and never will. Grow in us a contentment that isn''t dependent on our circumstances, and let our marriage be a place where gratitude is stronger than comparison. Amen.', 'Bapa, ketika pikiran kami terus berputar pada apa yang kami kurang, ingatkan kami bahwa Engkau tidak pernah meninggalkan kami dan tidak akan pernah. Tumbuhkanlah dalam kami kepuasan hati yang tidak bergantung pada keadaan, dan jadikanlah pernikahan kami tempat di mana rasa syukur lebih kuat daripada perbandingan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 13:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 13:5', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Grace Sufficient for Every Good Work', 'Kasih Karunia yang Cukup untuk Setiap Pekerjaan Baik',
+     'By the fifth day of really sitting with financial stress, it''s common for couples to feel a kind of grief — not just about the money, but about the plans that had to be paused, the generosity they wish they could offer, the ease they used to take for granted. Paul''s words to the Corinthians speak into exactly this: God is able to make all grace abound, so that in all things, at all times, having all you need, you will abound in every good work. It''s a promise about sufficiency, not surplus — enough grace for today''s need, even when today''s need is real.
+
+This kind of sufficiency often looks different than we expect. It might not look like a windfall that erases the debt overnight. More often it looks like unexpected help arriving at just the right moment, like a friend showing up with a meal on the hardest week, like the strength to have one more honest conversation instead of shutting down, like finding you can still be generous with your time or your presence even when your wallet is thin. Grace has a way of showing up exactly where it''s needed, even if it rarely shows up early.
+
+For a marriage, this final day of the plan is a good place to look back rather than only forward. Where has grace already shown up during this hard season — in a bill that was somehow covered, in a moment of patience neither of you expected to have, in a conversation that could have gone badly but didn''t? Naming these moments builds a kind of memory the two of you can return to the next time things get tight, evidence that God has been faithful before and will be again.
+
+Whatever financial chapter you are in right now, you do not have to walk it as two separate people managing two separate anxieties. You are one, before God, carrying this together — and the same grace that has carried other couples through leaner years than this one is available to carry you too. Let this be the posture you close the week with: not denial that things are hard, but confidence that grace is sufficient, and that it is enough for today.', 'Pada hari kelima benar-benar bergumul dengan tekanan keuangan, wajar jika pasangan merasakan semacam duka — bukan hanya soal uang, tetapi soal rencana yang harus ditunda, kemurahan hati yang ingin sekali mereka berikan, kemudahan yang dulu mereka anggap biasa. Perkataan Paulus kepada jemaat di Korintus berbicara tepat pada hal ini: Allah sanggup melimpahkan segala kasih karunia, sehingga dalam segala hal, pada segala waktu, kalian berkecukupan dalam segala sesuatu, kalian akan mempunyai kelimpahan untuk setiap pekerjaan baik. Ini janji tentang kecukupan, bukan kelimpahan berlebih — kasih karunia yang cukup untuk kebutuhan hari ini, bahkan ketika kebutuhan hari ini nyata adanya.
+
+Kecukupan semacam ini sering terlihat berbeda dari yang kita bayangkan. Mungkin bukan berupa rezeki mendadak yang menghapus utang dalam semalam. Lebih sering ia terlihat seperti bantuan tak terduga yang datang di saat yang tepat, seperti seorang teman datang membawa makanan di minggu tersulit, seperti kekuatan untuk melakukan satu percakapan jujur lagi alih-alih menutup diri, seperti mendapati bahwa kalian masih bisa murah hati dengan waktu atau kehadiran meski dompet menipis. Kasih karunia punya cara muncul tepat di tempat yang dibutuhkan, meski jarang muncul lebih awal.
+
+Bagi sebuah pernikahan, hari terakhir dari renungan ini adalah saat yang baik untuk menoleh ke belakang, bukan hanya ke depan. Di mana kasih karunia sudah muncul selama musim sulit ini — dalam tagihan yang entah bagaimana bisa terbayar, dalam momen kesabaran yang tidak kalian duga akan dimiliki, dalam percakapan yang bisa saja berujung buruk tetapi tidak? Menyebutkan momen-momen ini membangun semacam kenangan yang bisa kalian kembali ke sana saat keadaan sulit lagi, bukti bahwa Tuhan pernah setia dan akan setia lagi.
+
+Apa pun babak keuangan yang sedang kalian jalani sekarang, kalian tidak harus menjalaninya sebagai dua orang terpisah yang mengelola dua kecemasan terpisah. Kalian satu, di hadapan Tuhan, memikul ini bersama-sama — dan kasih karunia yang sama yang telah menuntun pasangan-pasangan lain melewati tahun-tahun yang lebih sulit dari ini, tersedia juga untuk menuntun kalian. Biarlah ini menjadi sikap yang kalian bawa untuk menutup minggu ini: bukan penyangkalan bahwa keadaan sulit, tetapi keyakinan bahwa kasih karunia itu cukup, dan itu cukup untuk hari ini.',
+     'Looking back over this hard season, where can you already see grace has shown up, even in a small way, and how can you carry that memory forward?', 'Melihat ke belakang selama musim sulit ini, di mana kalian sudah bisa melihat kasih karunia hadir, meski dalam cara kecil, dan bagaimana kalian bisa membawa kenangan itu ke depan?',
+     'God of all grace, thank You for every unexpected provision, every patient moment, every quiet mercy we almost missed during this season. We don''t ask for more than we need — only for the confidence that Your grace really is sufficient. Carry us, together, through whatever comes next. Amen.', 'Allah sumber segala kasih karunia, terima kasih untuk setiap pemeliharaan tak terduga, setiap momen kesabaran, setiap belas kasihan diam-diam yang hampir kami lewatkan selama musim ini. Kami tidak meminta lebih dari yang kami butuhkan — hanya keyakinan bahwa kasih karunia-Mu sungguh cukup. Tuntunlah kami, bersama-sama, melalui apa pun yang akan datang. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 9:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 9:8', 'TB', 1);
+
+  -- =================================================================
+  -- Waiting Together  (Marriage > Marriage Through Trials, 3d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Marriage Through Trials' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Waiting Together';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'Waiting Together', 'Menanti Bersama',
+     'A short devotional for couples carrying long-awaited hopes', 'Renungan singkat bagi pasangan yang memikul harapan yang lama dinanti',
+     'For couples in seasons of waiting — for a child, for healing, for a door to open that has stayed closed longer than they hoped — this three-day devotional offers no promises about timing, but a steady companionship in the waiting itself. It is written for anyone whose hope has grown tired, without asking them to pretend it hasn''t.', 'Bagi pasangan yang sedang berada dalam musim penantian — menanti seorang anak, menanti kesembuhan, menanti pintu yang terbuka namun tetap tertutup lebih lama dari yang mereka harapkan — renungan tiga hari ini tidak menjanjikan soal waktu, tetapi menawarkan kesetiaan menemani dalam penantian itu sendiri. Ditulis untuk siapa pun yang harapannya sudah mulai lelah, tanpa memintanya berpura-pura tidak demikian.', 3, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Ache of Waiting Well', 'Perihnya Menanti dengan Setia',
+     'There is a particular loneliness in long waiting that other people, even loving friends and family, rarely understand. Whether the wait is for a child who hasn''t come, healing that hasn''t arrived, or a hope you''ve stopped saying out loud because it''s easier than watching someone''s face fall when you admit it still hasn''t happened — the waiting itself becomes its own kind of weight, separate from whatever it is you''re actually waiting for. It touches everything: how you celebrate other people''s good news, how you pray, how you talk to your spouse on the hard days.
+
+The Psalms, remarkably, don''t rush past this. "Wait for the Lord; be strong and take heart and wait for the Lord" is not a verse that pretends waiting is easy or brief. It''s a repeated command precisely because waiting is hard enough that we need to be told twice, in the same breath, to be strong. Scripture treats waiting as a real spiritual labor, not a passive pause between the parts of life that matter.
+
+For a married couple, long waiting can either isolate you from each other or knit you together, depending largely on whether you let each other see the ache honestly. It is tempting to manage your own grief quietly so as not to burden your spouse, especially when you suspect they are hurting just as much. But couples who weather long seasons of unanswered longing well tend to be the ones who stopped performing strength for each other and instead let themselves be weak together, in the same room, before the same God.
+
+If you are in a season like this, today is not for finding the right words to fix it. It is simply for acknowledging, without hurry, that this is hard — and that hard, honest waiting, done together, is still a form of faithfulness even when it doesn''t feel like one.', 'Ada kesepian tertentu dalam penantian panjang yang jarang dipahami oleh orang lain, bahkan oleh teman dan keluarga yang mengasihi sekalipun. Entah itu menanti seorang anak yang belum kunjung datang, kesembuhan yang belum tiba, atau harapan yang sudah berhenti kalian ucapkan karena lebih mudah daripada melihat wajah seseorang berubah kecewa saat kalian mengakui itu belum juga terjadi — penantian itu sendiri menjadi beban tersendiri, terpisah dari apa pun yang sebenarnya kalian nantikan. Ia menyentuh segalanya: bagaimana kalian merayakan kabar baik orang lain, bagaimana kalian berdoa, bagaimana kalian berbicara dengan pasangan di hari-hari yang berat.
+
+Kitab Mazmur, secara luar biasa, tidak buru-buru melewati hal ini. "Nantikanlah TUHAN! Kuatkan dan teguhkanlah hatimu, dan nantikanlah TUHAN!" bukanlah ayat yang berpura-pura bahwa menanti itu mudah atau singkat. Ini perintah yang diulang justru karena menanti itu cukup berat sehingga kita perlu diberitahu dua kali, dalam satu napas, untuk menjadi kuat. Alkitab memperlakukan penantian sebagai kerja rohani yang sungguh nyata, bukan jeda pasif di antara bagian-bagian hidup yang benar-benar penting.
+
+Bagi pasangan suami-istri, penantian panjang bisa membuat kalian saling menjauh atau justru saling merajut erat, tergantung sebagian besar apakah kalian saling membiarkan melihat perih itu dengan jujur. Ada godaan untuk mengelola duka sendiri secara diam-diam agar tidak membebani pasangan, terutama saat kalian menduga ia juga terluka sama dalamnya. Namun pasangan yang berhasil melewati musim penantian panjang dengan baik cenderung adalah mereka yang berhenti berpura-pura kuat satu sama lain dan mulai membiarkan diri lemah bersama, di ruangan yang sama, di hadapan Tuhan yang sama.
+
+Jika kalian sedang berada dalam musim seperti ini, hari ini bukan untuk mencari kata-kata yang tepat untuk memperbaikinya. Ini sekadar untuk mengakui, tanpa terburu-buru, bahwa ini berat — dan bahwa penantian yang berat dan jujur, dijalani bersama, tetap merupakan bentuk kesetiaan meski tidak terasa demikian.',
+     'Have you and your spouse been quietly managing your grief separately? What would it look like tonight to let each other see the ache honestly instead?', 'Apakah kalian berdua diam-diam mengelola duka masing-masing secara terpisah? Seperti apa jika malam ini kalian saling membiarkan melihat perih itu dengan jujur?',
+     'Lord, You know the exact shape of what we are waiting for, and You have not forgotten us in the waiting. Give us strength to wait honestly, together, without pretending it doesn''t hurt. Hold our hearts gently while we hold onto hope. Amen.', 'Tuhan, Engkau tahu persis apa yang kami nantikan, dan Engkau tidak melupakan kami dalam penantian ini. Berikanlah kekuatan untuk menanti dengan jujur, bersama-sama, tanpa berpura-pura ini tidak menyakitkan. Peganglah hati kami dengan lembut selagi kami tetap berpegang pada pengharapan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 27:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 27:14', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Giving Our Longing Words', 'Memberi Kata pada Kerinduan Kami',
+     'In the Old Testament, Hannah''s longing for a child is not glossed over politely — she wept bitterly, prayed with such intensity that a priest mistook her for drunk, and poured out her grief in words rather than swallowing it. When her prayer was finally answered, she didn''t just quietly return to normal life; she spoke her thanks out loud, naming what had happened, giving voice to both the ache and the answer. Her story is a reminder that bringing longing to God in words — not vague, generic prayers but specific, honest ones — is itself an act of faith.
+
+Many couples waiting for something they long for deeply find themselves praying less over time, not more, because it feels safer to stop asking than to keep being disappointed. It''s an understandable instinct, but it can quietly rob a marriage of a shared language for the hope you''re still carrying. Praying together specifically, even when it''s hard, keeps the longing where it belongs — spoken between you and before God — instead of becoming a silent weight each of you carries alone.
+
+This doesn''t mean forcing yourselves into eloquent prayers you don''t feel. Hannah''s prayer wasn''t polished; it was raw enough to be misread as drunkenness. Sometimes the most faithful prayer a couple can offer is simply saying out loud, together, exactly what they are hoping for and exactly how tired they are of hoping for it — trusting that God can hold both the request and the exhaustion at once.
+
+Consider tonight praying specifically, together, about what you are waiting for — not a vague "help us through this," but the actual words of your hope, spoken plainly, the way Hannah once did in a doorway at Shiloh, refusing to let her longing go unspoken.', 'Dalam Perjanjian Lama, kerinduan Hana akan seorang anak tidak digambarkan dengan sopan santun yang menutupinya — ia menangis dengan sangat pedih, berdoa dengan begitu intens sehingga seorang imam mengiranya mabuk, dan mencurahkan dukanya dalam kata-kata, bukan menelannya diam-diam. Ketika doanya akhirnya dijawab, ia tidak sekadar diam-diam kembali ke kehidupan biasa; ia mengucapkan syukurnya dengan lantang, menyebut apa yang telah terjadi, memberi suara pada perih maupun pada jawabannya. Kisahnya mengingatkan kita bahwa membawa kerinduan kepada Tuhan dalam kata-kata — bukan doa yang samar dan umum, melainkan yang spesifik dan jujur — adalah tindakan iman itu sendiri.
+
+Banyak pasangan yang menanti sesuatu yang dirindukan dalam-dalam mendapati diri mereka semakin jarang berdoa seiring waktu, bukan semakin sering, karena terasa lebih aman berhenti meminta daripada terus-menerus kecewa. Ini naluri yang bisa dipahami, tetapi diam-diam bisa merampas bahasa bersama yang dimiliki pernikahan untuk harapan yang masih kalian pikul. Berdoa bersama secara spesifik, bahkan ketika itu sulit, menjaga kerinduan itu tetap di tempatnya — diucapkan di antara kalian dan di hadapan Tuhan — alih-alih menjadi beban sunyi yang dipikul masing-masing sendirian.
+
+Ini bukan berarti memaksakan diri berdoa dengan kata-kata indah yang tidak dirasakan. Doa Hana tidak rapi; ia begitu mentah hingga disalahartikan sebagai mabuk. Kadang doa paling setia yang bisa dipanjatkan sepasang suami-istri hanyalah mengatakan dengan lantang, bersama-sama, persis apa yang mereka harapkan dan persis betapa lelahnya mereka berharap — percaya bahwa Tuhan bisa menampung permohonan sekaligus kelelahan itu bersamaan.
+
+Pertimbangkan malam ini untuk berdoa secara spesifik, bersama-sama, tentang apa yang kalian nantikan — bukan sekadar "tolonglah kami melewati ini" yang samar, melainkan kata-kata sebenarnya dari harapan kalian, diucapkan dengan terus terang, sebagaimana Hana dahulu lakukan di depan pintu Silo, menolak membiarkan kerinduannya tak terucap.',
+     'Have you stopped praying specifically for what you''re waiting for because it feels safer than being disappointed again? What would it look like to name it plainly tonight, together?', 'Apakah kalian berhenti berdoa secara spesifik untuk apa yang dinantikan karena terasa lebih aman daripada kecewa lagi? Seperti apa jika malam ini kalian menyebutnya dengan jelas, bersama-sama?',
+     'Lord, like Hannah, we bring our longing to You in plain words, not polished ones. You are not offended by our raw honesty or our tears. Hear what we are asking for, and hold us together as we keep asking. Amen.', 'Tuhan, seperti Hana, kami membawa kerinduan kami kepada-Mu dalam kata-kata yang terus terang, bukan yang rapi. Engkau tidak tersinggung oleh kejujuran kami yang mentah atau air mata kami. Dengarlah apa yang kami mohonkan, dan satukanlah kami selagi kami terus memohon. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Samuel 1:27', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Samuel 1:27', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'A Good Purpose We Cannot Yet See', 'Rencana Baik yang Belum Bisa Kami Lihat',
+     'Romans 8:28 is a verse often quoted too quickly, offered as a tidy answer to pain that isn''t tidy at all. Read slowly, though, it doesn''t promise that every circumstance is good — it promises that God works in all things, including the ones that are genuinely hard, for the good of those who love Him. That''s a very different claim. It doesn''t ask a couple to call their waiting good. It asks them to trust that God is at work inside it, even when the working is invisible.
+
+For couples carrying a long-awaited hope, this verse can feel like both a comfort and a challenge on different days. Some days it steadies you: a reminder that this season is not wasted, not meaningless, not outside God''s reach, even if you can''t yet see how. Other days it can feel too soon, too easy to say when the ache is fresh. Both responses are honest, and both are allowed. Faith doesn''t require feeling reassured every single day — it requires continuing to trust even on the days you don''t feel it.
+
+One thing many couples discover, often only in hindsight, is that the waiting itself became a place where their marriage deepened in ways a faster answer might never have produced — a shared resilience, a habit of turning toward each other and toward God instead of away, a tenderness born from having grieved something together. None of that makes the wait itself good, or erases the real loss some couples carry. But it does mean the waiting was not empty, even while it felt that way.
+
+As this short devotional closes, hold both truths gently: the hope you are waiting for is real and worth continuing to bring to God, and the God who holds your today also holds whatever comes next. Whatever the answer, whenever it comes, you do not have to wait for it as two separate people. You wait as one, and you are not waiting alone.', 'Roma 8:28 adalah ayat yang sering dikutip terlalu cepat, ditawarkan sebagai jawaban rapi untuk rasa sakit yang sama sekali tidak rapi. Namun jika dibaca perlahan, ayat ini tidak menjanjikan bahwa setiap keadaan itu baik — ayat ini menjanjikan bahwa Allah turut bekerja dalam segala sesuatu, termasuk yang benar-benar sulit, untuk kebaikan mereka yang mengasihi-Nya. Itu klaim yang sangat berbeda. Ayat ini tidak meminta pasangan menyebut penantian mereka sebagai sesuatu yang baik. Ia meminta mereka percaya bahwa Allah sedang bekerja di dalamnya, bahkan ketika kerja itu tidak terlihat.
+
+Bagi pasangan yang memikul harapan yang lama dinanti, ayat ini bisa terasa sebagai penghiburan sekaligus tantangan pada hari-hari yang berbeda. Ada hari ketika ayat ini meneguhkan: pengingat bahwa musim ini tidak sia-sia, tidak tanpa makna, tidak berada di luar jangkauan Allah, meski kalian belum bisa melihat caranya. Ada hari lain ketika ayat ini terasa terlalu cepat, terlalu mudah diucapkan saat perih masih segar. Kedua respons itu jujur, dan keduanya diizinkan. Iman tidak menuntut perasaan diteguhkan setiap hari — iman menuntut untuk terus percaya bahkan pada hari kalian tidak merasakannya.
+
+Satu hal yang ditemukan banyak pasangan, sering kali baru disadari kemudian, adalah bahwa penantian itu sendiri menjadi tempat pernikahan mereka bertumbuh lebih dalam dengan cara yang mungkin tidak akan pernah dihasilkan oleh jawaban yang lebih cepat — ketahanan bersama, kebiasaan berpaling kepada satu sama lain dan kepada Tuhan alih-alih menjauh, kelembutan yang lahir dari berduka bersama atas sesuatu. Tidak satu pun dari itu membuat penantian itu sendiri baik, atau menghapus kehilangan nyata yang dipikul sebagian pasangan. Tetapi itu berarti penantian itu tidak kosong, meski terasa demikian.
+
+Saat renungan singkat ini berakhir, peganglah kedua kebenaran ini dengan lembut: harapan yang kalian nantikan itu nyata dan layak terus dibawa kepada Tuhan, dan Tuhan yang memegang hari ini kalian juga memegang apa pun yang akan datang. Apa pun jawabannya, kapan pun itu tiba, kalian tidak perlu menantinya sebagai dua orang terpisah. Kalian menanti sebagai satu, dan kalian tidak menanti sendirian.',
+     'In what small way has your marriage already deepened through this season of waiting, even if the wait itself is not yet over?', 'Dalam cara kecil apa pernikahan kalian sudah bertumbuh lebih dalam melalui musim penantian ini, meskipun penantian itu sendiri belum berakhir?',
+     'Father, we don''t understand why this has taken so long, and we won''t pretend we do. But we trust that You are at work even in what we cannot see. Keep us close to each other and close to You in the waiting that remains, however long it lasts. Amen.', 'Bapa, kami tidak mengerti mengapa ini memakan waktu selama ini, dan kami tidak akan berpura-pura mengerti. Namun kami percaya bahwa Engkau sedang bekerja bahkan dalam apa yang tidak bisa kami lihat. Dekatkanlah kami satu sama lain dan dekat kepada-Mu dalam penantian yang tersisa, selama apa pun itu berlangsung. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:28', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:28', 'TB', 1);
+
+  -- =================================================================
+  -- In Sickness and In Health  (Marriage > Marriage Through Trials, 7d)
+  -- =================================================================
+  SELECT c.id INTO v_cat_id
+    FROM public.devotion_categories c
+    JOIN public.devotion_categories p ON p.id = c.parent_id
+   WHERE c.name = 'Marriage Through Trials' AND p.name = 'Marriage'
+   ORDER BY c.created_at ASC LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'In Sickness and In Health';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days, cover_image_url)
+  VALUES
+    (v_cat_id, 'In Sickness and In Health', 'Dalam Untung dan Malang, Dalam Sehat dan Sakit',
+     'A seven-day journey for couples facing illness and caregiving together', 'Perjalanan tujuh hari bagi pasangan yang menghadapi sakit dan perawatan bersama',
+     'When illness enters a marriage — a diagnosis, a long recovery, a season of caregiving that stretches longer than either spouse expected — the vows spoken on a wedding day are tested in ways nothing else quite matches. This seven-day devotional walks gently through exhaustion, fear, tenderness, and the quiet endurance of two people learning to love each other through bodies and circumstances that don''t cooperate, grounded in a God who draws especially close to the brokenhearted.', 'Ketika sakit memasuki sebuah pernikahan — sebuah diagnosis, pemulihan yang panjang, musim perawatan yang berlangsung lebih lama dari yang dibayangkan kedua pasangan — janji yang diucapkan pada hari pernikahan diuji dengan cara yang tidak tertandingi oleh apa pun. Renungan tujuh hari ini menuntun dengan lembut melalui kelelahan, ketakutan, kelembutan, dan ketekunan diam-diam dari dua orang yang belajar saling mengasihi melalui tubuh dan keadaan yang tidak bekerja sama, berakar pada Allah yang mendekat secara khusus kepada mereka yang patah hati.', 7, NULL)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'When the Vow Becomes Real', 'Ketika Janji Itu Menjadi Nyata',
+     '"In sickness and in health" is one of the shortest phrases in a wedding vow, and one of the easiest to say without truly imagining what it might someday cost. Most couples speak those words with health, energy, and decades of imagined ordinary life ahead of them. It is only later, when illness actually enters the marriage — a diagnosis, a hospital stay, a chronic condition that reshapes daily life — that those five words stop being poetry and become a daily, sometimes hourly, choice.
+
+This shift can be disorienting. The marriage you have now may look very different from the one you pictured on your wedding day: roles have changed, routines have been upended, and the person you married may need care in ways neither of you expected. It is normal to grieve the marriage you thought you''d have, even while you remain committed to the one you actually have. Grief and love are not opposites here; they often live in the same room.
+
+Ecclesiastes offers a plain, almost practical picture of marriage''s purpose in hard times: two are better than one, because if either falls, the other can help them up. There is no spiritual flourish in this verse, no promise that falling won''t happen — only the quiet assurance that you were never meant to fall, or to catch a fall, alone. Illness tests this promise more directly than almost anything else in married life, and it is exactly where the promise is most needed.
+
+If you are early in a season of illness or caregiving, today is simply for acknowledging that this is hard, that it was not what you planned, and that showing up for each other inside this hardship — however imperfectly — is itself a form of the vow being kept, not broken.', '"Dalam untung dan malang, dalam sehat dan sakit" adalah salah satu frasa terpendek dalam janji pernikahan, dan salah satu yang paling mudah diucapkan tanpa benar-benar membayangkan apa yang mungkin suatu hari harus dibayarnya. Kebanyakan pasangan mengucapkan kata-kata itu dalam keadaan sehat, penuh energi, dan dengan bayangan puluhan tahun kehidupan biasa di depan mereka. Baru kemudian, ketika sakit benar-benar memasuki pernikahan — sebuah diagnosis, rawat inap, kondisi kronis yang mengubah kehidupan sehari-hari — lima kata itu berhenti menjadi puisi dan menjadi pilihan harian, kadang setiap jam.
+
+Pergeseran ini bisa membingungkan. Pernikahan yang kalian jalani sekarang mungkin terlihat sangat berbeda dari yang kalian bayangkan pada hari pernikahan: peran telah berubah, rutinitas terguncang, dan orang yang kalian nikahi mungkin membutuhkan perawatan dengan cara yang tidak diduga oleh kalian berdua. Wajar untuk berduka atas pernikahan yang kalian kira akan kalian jalani, sekalipun kalian tetap berkomitmen pada pernikahan yang sesungguhnya kalian jalani sekarang. Duka dan kasih bukanlah lawan di sini; keduanya sering tinggal di ruangan yang sama.
+
+Kitab Pengkhotbah menawarkan gambaran yang sederhana, hampir praktis, tentang tujuan pernikahan di masa sulit: berdua lebih baik dari pada seorang diri, sebab jika salah satu jatuh, yang lain dapat membantunya bangun. Tidak ada hiasan rohani dalam ayat ini, tidak ada janji bahwa jatuh tidak akan terjadi — hanya jaminan yang tenang bahwa kalian tidak pernah dimaksudkan untuk jatuh, atau menangkap yang jatuh, sendirian. Sakit menguji janji ini lebih langsung daripada hampir apa pun dalam kehidupan pernikahan, dan di situlah janji ini paling dibutuhkan.
+
+Jika kalian berada di awal musim sakit atau perawatan, hari ini sekadar untuk mengakui bahwa ini berat, bahwa ini bukan yang direncanakan, dan bahwa hadir bagi satu sama lain di tengah kesulitan ini — meski tidak sempurna — adalah bentuk janji yang sedang ditepati, bukan dilanggar.',
+     'In what way does your marriage look different now than the one you pictured on your wedding day, and where have you still been showing up for each other inside that change?', 'Dalam hal apa pernikahan kalian sekarang terlihat berbeda dari yang kalian bayangkan pada hari pernikahan, dan di mana kalian tetap hadir bagi satu sama lain di tengah perubahan itu?',
+     'Lord, this is not the season we pictured, and some days the weight of it is more than we know how to carry. Thank You that we were never meant to carry it alone. Help us to keep helping each other up, one day at a time, and to feel Your presence holding us both. Amen.', 'Tuhan, ini bukan musim yang kami bayangkan, dan ada hari-hari ketika bebannya lebih berat dari yang kami tahu cara memikulnya. Terima kasih karena kami tidak pernah dimaksudkan untuk memikulnya sendirian. Tolonglah kami untuk terus saling membantu bangkit, sehari demi sehari, dan merasakan kehadiran-Mu memeluk kami berdua. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Close to the Brokenhearted', 'Dekat pada yang Patah Hati',
+     'Caregiving, whether you are the one giving care or receiving it, has a way of quietly fracturing something in a person over time — not always dramatically, but through the slow accumulation of exhaustion, fear, and the constant low hum of worry about what comes next. Illness rarely announces itself politely and then leaves; it tends to move in, rearrange the furniture, and demand attention indefinitely. It is entirely possible to keep functioning, keep showing up for appointments and medications and meals, and still feel privately brokenhearted underneath it all.
+
+The Psalms were written, in large part, by people in exactly this condition — not composed, not put-together, but crushed in spirit and honest about it. "The Lord is close to the brokenhearted and saves those who are crushed in spirit" is not a verse for people who have it all figured out. It''s a verse for the exhausted spouse sitting in a hospital hallway, for the patient who is tired of being brave, for the couple who loves each other deeply and is still, quietly, coming apart at the seams from strain.
+
+This verse matters for a marriage specifically because it gives permission to stop performing wellness for each other. You do not have to pretend you are handling this fine in order to be worthy of God''s nearness, or your spouse''s love. In fact, it is often in the moments of admitted brokenness — the tears in the car after a hard appointment, the whispered "I don''t know how much longer I can do this" — that God''s closeness becomes most tangible, because that is precisely where He has promised to meet the crushed in spirit.
+
+If today has been one of the harder ones, let this be enough: you do not need to arrive at God, or at each other, put together. He is already close to exactly where you are.', 'Merawat, entah kalian yang memberi perawatan atau yang menerimanya, punya cara diam-diam meretakkan sesuatu dalam diri seseorang seiring waktu — tidak selalu dramatis, tetapi melalui penumpukan perlahan dari kelelahan, ketakutan, dan dengungan kekhawatiran yang terus-menerus tentang apa yang akan terjadi selanjutnya. Sakit jarang datang dengan sopan lalu pergi; ia cenderung menetap, mengatur ulang perabotan, dan menuntut perhatian tanpa batas waktu. Sangat mungkin untuk tetap berfungsi, tetap hadir untuk janji temu dokter, obat-obatan, dan makan, namun secara pribadi tetap merasa patah hati di balik semuanya.
+
+Kitab Mazmur ditulis, sebagian besar, oleh orang-orang dalam kondisi persis seperti ini — bukan yang tersusun rapi, melainkan yang remuk jiwanya dan jujur tentangnya. "TUHAN dekat kepada orang-orang yang patah hati dan menyelamatkan orang-orang yang remuk jiwanya" bukanlah ayat untuk orang-orang yang sudah menguasai segalanya. Ini ayat untuk pasangan yang lelah duduk di lorong rumah sakit, untuk pasien yang lelah harus terus tampak tegar, untuk pasangan yang saling mengasihi dalam-dalam namun diam-diam sedang terurai karena tekanan.
+
+Ayat ini penting khusus bagi pernikahan karena memberi izin untuk berhenti berpura-pura baik-baik saja di hadapan satu sama lain. Kalian tidak perlu berpura-pura sedang menghadapi semua ini dengan baik agar layak mendapat kedekatan Tuhan, atau kasih pasangan kalian. Justru sering kali di momen-momen mengakui keremukan itulah — air mata di dalam mobil setelah janji temu yang berat, bisikan "aku tidak tahu berapa lama lagi aku bisa menjalani ini" — kedekatan Tuhan menjadi paling nyata, karena di situlah tepatnya Ia berjanji untuk bertemu dengan yang remuk jiwanya.
+
+Jika hari ini adalah salah satu hari yang lebih berat, biarlah ini cukup: kalian tidak perlu datang kepada Tuhan, atau kepada satu sama lain, dalam keadaan tersusun rapi. Ia sudah dekat dengan tepat di mana kalian berada sekarang.',
+     'Where have you been performing wellness for your spouse instead of letting them see the real weight you''re carrying?', 'Di mana kalian selama ini berpura-pura baik-baik saja di hadapan pasangan, alih-alih membiarkannya melihat beban sesungguhnya yang kalian pikul?',
+     'Lord, we are tired in ways we don''t always say out loud. Thank You for being close to us exactly here, in the brokenness, not waiting for us to be strong first. Meet us in this hallway, this hospital room, this hard afternoon, and let us feel You near. Amen.', 'Tuhan, kami lelah dengan cara yang tidak selalu kami ungkapkan. Terima kasih karena Engkau dekat dengan kami tepat di sini, dalam keremukan ini, tanpa menunggu kami kuat lebih dulu. Temuilah kami di lorong ini, di ruang rumah sakit ini, di sore yang berat ini, dan biarkan kami merasakan-Mu dekat. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 34:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 34:19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Comfort That Passes Through Us', 'Penghiburan yang Mengalir Melalui Kami',
+     'Caregiving spouses often describe a strange loneliness in the middle of constant togetherness — being physically present with the person you love more hours a day than ever before, while emotionally feeling more isolated than you''ve ever felt, because so much of your own need has to be set aside to attend to theirs. Paul''s words to the Corinthians offer a picture that reframes this: God is the Father of compassion and the God of all comfort, who comforts us in all our troubles, so that we can comfort others with the comfort we ourselves have received.
+
+This is not a call to simply push through without needing comfort yourself. It''s an honest acknowledgment that comfort is meant to move — to be received before it can be given. A caregiving spouse who is running on empty cannot pour out comfort indefinitely; eventually the well needs refilling. Seeking your own comfort from God, from trusted friends, from rest when it''s available, is not selfish in a season like this — it is what makes it possible to keep comforting the one you love.
+
+There is also something deeply tender in the idea that whatever comfort you have received in your own hard seasons — past illness, past grief, past fear — was never wasted. It was preparing you, in ways you likely couldn''t have known then, for exactly this moment: to sit beside your spouse''s hospital bed, or manage their medications, or simply hold their hand through a hard diagnosis, with a steadiness that came from somewhere.
+
+Today, consider where you might need to receive comfort before you can keep giving it. That might mean a phone call to a friend, a quiet prayer where you finally say how tired you are, or simply letting yourself cry without immediately moving on to the next task. Comfort received is not comfort wasted — it''s comfort being prepared to pass through you to someone else who needs it.', 'Pasangan yang merawat sering menggambarkan kesepian aneh di tengah kebersamaan yang terus-menerus — secara fisik hadir bersama orang yang dicintai lebih banyak jam sehari daripada sebelumnya, sementara secara emosional merasa lebih terisolasi dari yang pernah dirasakan, karena begitu banyak kebutuhan mereka sendiri harus disisihkan untuk melayani kebutuhan pasangannya. Perkataan Paulus kepada jemaat di Korintus menawarkan gambaran yang mengubah cara pandang ini: Allah adalah Bapa yang penuh belas kasihan dan sumber segala penghiburan, yang menghibur kita dalam segala penderitaan kita, sehingga kita pun sanggup menghibur orang lain dengan penghiburan yang telah kita terima dari Allah.
+
+Ini bukan ajakan untuk sekadar bertahan tanpa membutuhkan penghiburan sendiri. Ini pengakuan jujur bahwa penghiburan dimaksudkan untuk mengalir — diterima terlebih dahulu sebelum bisa diberikan. Pasangan yang merawat dan kehabisan tenaga tidak bisa terus-menerus mencurahkan penghiburan tanpa henti; pada akhirnya sumur itu perlu diisi ulang. Mencari penghiburan sendiri dari Tuhan, dari teman yang dipercaya, dari istirahat saat tersedia, bukanlah keegoisan di musim seperti ini — itu yang memungkinkan kalian terus menghibur orang yang kalian kasihi.
+
+Ada juga sesuatu yang sangat menyentuh dalam gagasan bahwa penghiburan apa pun yang pernah kalian terima di musim sulit kalian sendiri — sakit di masa lalu, duka di masa lalu, ketakutan di masa lalu — tidak pernah sia-sia. Itu sedang mempersiapkan kalian, dengan cara yang mungkin tidak kalian sadari saat itu, untuk momen persis seperti ini: duduk di samping ranjang rumah sakit pasangan, mengatur obat-obatannya, atau sekadar menggenggam tangannya melewati diagnosis yang berat, dengan ketenangan yang datang dari suatu tempat.
+
+Hari ini, pertimbangkan di mana kalian mungkin perlu menerima penghiburan sebelum bisa terus memberikannya. Itu bisa berarti telepon kepada teman, doa yang tenang di mana kalian akhirnya mengatakan betapa lelahnya kalian, atau sekadar membiarkan diri menangis tanpa segera beralih ke tugas berikutnya. Penghiburan yang diterima bukanlah penghiburan yang sia-sia — itu penghiburan yang sedang dipersiapkan untuk mengalir melalui kalian kepada orang lain yang membutuhkannya.',
+     'Where do you need to receive comfort yourself right now, rather than only trying to give it?', 'Di mana kalian sendiri perlu menerima penghiburan sekarang, bukan hanya berusaha terus memberikannya?',
+     'Father of all comfort, refill what has been poured out in us during this season of caring for one another. Teach us to receive comfort as freely as we try to give it, and let the comfort we''ve known before become strength for today. Amen.', 'Bapa sumber segala penghiburan, isilah kembali apa yang telah tercurah dari kami selama musim saling merawat ini. Ajar kami menerima penghiburan sebebas kami berusaha memberikannya, dan biarlah penghiburan yang pernah kami kenal menjadi kekuatan untuk hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 1:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 1:3-4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Do Not Fear, I Will Help You', 'Jangan Takut, Aku Akan Menolongmu',
+     'Fear takes up enormous space in a marriage touched by illness — fear of test results, fear of a bad night, fear of what the future holds, fear of saying the wrong thing to a spouse who is suffering, fear of admitting you''re afraid at all because you don''t want to add to their burden. Isaiah 41 was spoken to a people facing real, tangible threats, and God''s response wasn''t to explain away the danger. It was simply, repeatedly: do not fear, for I am with you; I will strengthen you and help you.
+
+Notice what this promise does not say. It does not say the danger isn''t real, or that the outcome will certainly be the one you''re hoping for. What it promises is presence and help in the midst of the real thing — a hand that upholds, not a guarantee that removes the need for courage in the first place. That distinction matters enormously for a couple facing illness, because pretending the fear isn''t valid rarely helps, but knowing you are held while afraid genuinely does.
+
+In a marriage, this promise can be lived out concretely: naming your fears to each other instead of hiding them, praying them out loud even when they sound frightening spoken aloud, and reminding each other, on the hardest nights, that neither of you has to face the fear alone. Sometimes the most faithful thing a spouse can do is simply stay in the room during the fear, rather than trying to talk the other person out of feeling it.
+
+Whatever specific fear is loudest for you today — a diagnosis, a decline, an unknown that keeps you up at night — bring it honestly before God and before each other. He has not promised the fear will never come. He has promised His hand will be there, upholding you, when it does.', 'Rasa takut mengambil ruang yang sangat besar dalam pernikahan yang tersentuh sakit — takut akan hasil tes, takut akan malam yang buruk, takut akan apa yang akan terjadi di masa depan, takut mengatakan hal yang salah kepada pasangan yang sedang menderita, takut mengakui bahwa diri sendiri pun takut karena tidak ingin menambah beban pasangannya. Yesaya 41 disampaikan kepada umat yang menghadapi ancaman nyata dan konkret, dan jawaban Allah bukanlah menjelaskan bahwa bahaya itu tidak ada. Jawaban-Nya sederhana, diulang berkali-kali: janganlah takut, sebab Aku menyertai engkau, Aku akan meneguhkan, bahkan akan menolong engkau.
+
+Perhatikan apa yang tidak dikatakan oleh janji ini. Janji ini tidak mengatakan bahwa bahaya itu tidak nyata, atau bahwa hasilnya pasti akan seperti yang diharapkan. Yang dijanjikan adalah kehadiran dan pertolongan di tengah kenyataan itu — tangan yang menopang, bukan jaminan yang menghapus kebutuhan akan keberanian sejak awal. Perbedaan ini sangat penting bagi pasangan yang menghadapi sakit, karena berpura-pura ketakutan itu tidak sah jarang membantu, tetapi mengetahui bahwa kalian dipegang saat takut benar-benar membantu.
+
+Dalam pernikahan, janji ini bisa dihidupi secara konkret: menyebut ketakutan kalian satu sama lain alih-alih menyembunyikannya, mendoakannya dengan bersuara meski terdengar menakutkan saat diucapkan, dan saling mengingatkan, di malam-malam paling berat, bahwa tak satu pun dari kalian harus menghadapi ketakutan itu sendirian. Kadang hal paling setia yang bisa dilakukan seorang pasangan hanyalah tetap berada di ruangan itu selama rasa takut berlangsung, alih-alih berusaha membujuk yang lain agar berhenti merasakannya.
+
+Apa pun ketakutan spesifik yang paling nyaring hari ini — sebuah diagnosis, sebuah kemunduran, sebuah ketidakpastian yang membuat kalian terjaga di malam hari — bawalah itu dengan jujur di hadapan Tuhan dan di hadapan satu sama lain. Ia tidak berjanji ketakutan itu tidak akan pernah datang. Ia berjanji tangan-Nya akan ada di sana, menopang kalian, ketika itu datang.',
+     'What fear have you been hiding from your spouse to protect them, and could naming it together tonight actually bring you closer?', 'Ketakutan apa yang selama ini kalian sembunyikan dari pasangan demi melindunginya, dan bisakah menyebutnya bersama malam ini justru mendekatkan kalian?',
+     'God, our fears are real, and we won''t pretend otherwise tonight. Thank You that You do not ask us to stop being afraid before You draw near — You come near in the fear itself. Uphold us both with Your strong hand, and let us hold each other while we wait for Your help. Amen.', 'Ya Allah, ketakutan kami nyata, dan malam ini kami tidak akan berpura-pura sebaliknya. Terima kasih karena Engkau tidak menuntut kami berhenti takut sebelum Engkau mendekat — Engkau datang mendekat justru di dalam ketakutan itu sendiri. Topanglah kami berdua dengan tangan-Mu yang kuat, dan biarlah kami saling memeluk selagi menanti pertolongan-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 41:10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 41:10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Carrying Each Other''s Burdens', 'Bertolong-tolonganlah Menanggung Beban',
+     'Paul''s instruction to the Galatians to carry each other''s burdens, and so fulfill the law of Christ, was written for the whole church, but it reads almost as if it were written directly for a married couple in a season of illness. Illness has a way of making burdens visible in a new way — medications to track, appointments to manage, physical limitations that require real, practical help. But the burdens worth naming aren''t only the practical ones; there are emotional burdens too, ones that are much easier to carry silently and much harder to hand to someone else.
+
+There''s a particular vulnerability in letting your spouse carry an emotional burden with you, especially if you are usually the strong one, the planner, the one who holds things together. Illness can flip roles in a marriage in ways that feel disorienting — a spouse who has always been the caregiver may suddenly need to be cared for, or a spouse who has never managed finances or medical logistics may need to learn quickly. Both directions require real humility: the humility to ask for help, and the humility to offer it without resentment.
+
+Carrying each other''s burdens does not mean either spouse has to carry everything alone, and it does not mean pretending the load is light. It means dividing what can be divided, sharing what can be shared, and being honest when a burden has become too heavy for one person to bear quietly. This is, in a very real sense, what marriage vows were preparing you for all along — not a hypothetical future hardship, but this one, right now.
+
+Take an honest inventory today: is there a burden — practical or emotional — that one of you has been carrying alone that could be shared? Naming it out loud, even if the other spouse can''t fix it, is itself a form of carrying it together, and it is exactly what the law of Christ, love in action, looks like in a hard season.', 'Perintah Paulus kepada jemaat di Galatia untuk bertolong-tolongan menanggung beban, dan dengan demikian menggenapi hukum Kristus, ditulis untuk seluruh gereja, tetapi terbaca hampir seperti ditulis langsung untuk pasangan suami-istri di musim sakit. Sakit punya cara membuat beban menjadi terlihat dengan cara baru — obat-obatan yang harus dipantau, janji temu yang harus diatur, keterbatasan fisik yang membutuhkan bantuan nyata dan praktis. Namun beban yang layak disebut bukan hanya yang praktis; ada juga beban emosional, yang jauh lebih mudah dipikul diam-diam dan jauh lebih sulit diserahkan kepada orang lain.
+
+Ada kerentanan tersendiri dalam membiarkan pasangan ikut memikul beban emosional bersama kalian, terutama jika kalian biasanya adalah yang kuat, yang merencanakan, yang menjaga segalanya tetap utuh. Sakit bisa membalik peran dalam pernikahan dengan cara yang terasa membingungkan — pasangan yang selama ini selalu menjadi pemberi perawatan mungkin tiba-tiba perlu dirawat, atau pasangan yang belum pernah mengurus keuangan atau logistik medis mungkin perlu belajar dengan cepat. Kedua arah itu membutuhkan kerendahan hati yang nyata: kerendahan hati untuk meminta tolong, dan kerendahan hati untuk menawarkannya tanpa kekesalan.
+
+Bertolong-tolongan menanggung beban tidak berarti salah satu pasangan harus memikul semuanya sendiri, dan tidak berarti berpura-pura bebannya ringan. Ini berarti membagi apa yang bisa dibagi, berbagi apa yang bisa dibagikan, dan jujur ketika sebuah beban telah menjadi terlalu berat untuk dipikul diam-diam oleh satu orang. Ini, dalam arti yang sangat nyata, adalah apa yang selama ini dipersiapkan oleh janji pernikahan — bukan kesulitan hipotetis di masa depan, melainkan kesulitan ini, sekarang.
+
+Lakukan penilaian jujur hari ini: adakah beban — praktis atau emosional — yang selama ini dipikul salah satu dari kalian sendirian yang sebenarnya bisa dibagi? Menyebutnya dengan lantang, bahkan jika pasangan tidak bisa memperbaikinya, adalah bentuk memikulnya bersama, dan itu persis seperti apa hukum Kristus, kasih dalam tindakan, terlihat di musim yang berat.',
+     'Is there a burden, practical or emotional, that one of you has quietly been carrying alone? What would it take to share it today?', 'Adakah beban, praktis atau emosional, yang diam-diam dipikul salah satu dari kalian sendirian? Apa yang dibutuhkan untuk membagikannya hari ini?',
+     'Lord, teach us to carry each other''s burdens without resentment and without pride, humble enough to ask for help and humble enough to give it freely. Where roles have shifted in ways that feel strange, give us grace for the adjustment. Amen.', 'Tuhan, ajar kami bertolong-tolongan menanggung beban tanpa kekesalan dan tanpa kesombongan, cukup rendah hati untuk meminta tolong dan cukup rendah hati untuk memberikannya dengan lapang dada. Di mana peran telah bergeser dengan cara yang terasa asing, berilah kami kasih karunia untuk penyesuaian ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:2', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'The Valley We Walk Through', 'Lembah yang Kami Lalui',
+     'Psalm 23 is often read at funerals, which can make it feel like a verse reserved for the end of life rather than for the long middle of a hard season. But the psalm itself doesn''t describe an ending — it describes walking through a valley, a place you pass through on the way to somewhere else, even when you cannot yet see where that somewhere else is. "Even though I walk through the darkest valley, I will fear no evil, for you are with me" is not a statement made from safety looking back; it''s a statement made mid-valley, in the dark, by someone who cannot yet see the other side.
+
+Illness and caregiving often feel exactly like this — a valley with no visible end, walked one day, one appointment, one long night at a time, without the reassurance of knowing how long the path continues. What steadies the psalmist isn''t a map of the valley or a guarantee about its length. It''s a person: You are with me. Your rod and your staff, they comfort me. Presence, not information, is what makes the walking through possible.
+
+For a couple walking this valley together, this psalm offers a quiet permission: you don''t have to know how long this will last in order to keep walking it faithfully. You don''t have to have answers about the future to have real comfort in the present. What you need, day by day, is the presence of God and the presence of each other — a hand to hold, a rod and staff of steady companionship that doesn''t require certainty about the path ahead in order to keep moving forward on it.
+
+If you are deep in this valley today, let the psalm''s confidence become your own, even if you have to borrow it: I will fear no evil, for You are with me. Not because the valley isn''t real, but because you were never meant to walk it, or watch someone else walk it, without company — divine and human both.', 'Mazmur 23 sering dibacakan pada pemakaman, yang bisa membuatnya terasa seperti ayat yang khusus untuk akhir kehidupan, bukan untuk masa panjang di tengah musim yang berat. Namun mazmur ini sendiri tidak menggambarkan sebuah akhir — ia menggambarkan berjalan melalui lembah, sebuah tempat yang dilalui dalam perjalanan menuju tempat lain, bahkan ketika belum bisa dilihat di mana tempat lain itu. "Sekalipun aku berjalan dalam lembah kekelaman, aku tidak takut bahaya, sebab Engkau besertaku" bukanlah pernyataan yang dibuat dari tempat aman sambil menoleh ke belakang; ini pernyataan yang dibuat di tengah lembah, dalam kegelapan, oleh seseorang yang belum bisa melihat sisi lainnya.
+
+Sakit dan perawatan sering terasa persis seperti ini — lembah tanpa akhir yang terlihat, dilalui sehari demi sehari, satu janji temu demi satu janji temu, satu malam panjang demi satu malam panjang, tanpa kepastian mengetahui berapa lama jalan itu akan berlanjut. Yang meneguhkan pemazmur bukanlah peta lembah atau jaminan tentang panjangnya. Itu adalah pribadi: Engkau besertaku, gada-Mu dan tongkat-Mu, itulah yang menghibur aku. Kehadiran, bukan informasi, adalah yang membuat perjalanan melintasi lembah itu mungkin.
+
+Bagi pasangan yang melalui lembah ini bersama, mazmur ini menawarkan izin yang tenang: kalian tidak perlu tahu berapa lama ini akan berlangsung untuk terus melaluinya dengan setia. Kalian tidak perlu punya jawaban tentang masa depan untuk memiliki penghiburan nyata di masa kini. Yang kalian butuhkan, hari demi hari, adalah kehadiran Tuhan dan kehadiran satu sama lain — tangan untuk digenggam, gada dan tongkat berupa persahabatan yang teguh yang tidak menuntut kepastian tentang jalan di depan untuk terus melangkah maju di atasnya.
+
+Jika kalian sedang berada jauh di dalam lembah ini hari ini, biarkan keyakinan mazmur ini menjadi milik kalian, bahkan jika kalian harus meminjamnya: aku tidak takut bahaya, sebab Engkau besertaku. Bukan karena lembah itu tidak nyata, tetapi karena kalian tidak pernah dimaksudkan untuk melaluinya, atau menyaksikan orang lain melaluinya, tanpa teman — baik ilahi maupun manusiawi.',
+     'What would it look like to stop needing a timeline for this valley and instead focus only on today''s presence — God''s and each other''s?', 'Seperti apa jika kalian berhenti membutuhkan garis waktu untuk lembah ini dan sebaliknya fokus hanya pada kehadiran hari ini — kehadiran Tuhan dan kehadiran satu sama lain?',
+     'Shepherd God, we don''t know how long this valley is, but we know You are walking it with us. Comfort us with Your presence today, and remind us that we don''t walk it alone — not You, and not each other. Amen.', 'Allah Gembala kami, kami tidak tahu seberapa panjang lembah ini, tetapi kami tahu Engkau berjalan bersama kami di dalamnya. Hiburlah kami dengan kehadiran-Mu hari ini, dan ingatkan kami bahwa kami tidak melaluinya sendirian — bukan Engkau, dan bukan pula satu sama lain.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 23:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 23:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'Mercies New Every Morning', 'Kasih Setia yang Baru Setiap Pagi',
+     'By the seventh day of sitting with the reality of illness in a marriage, exhaustion is honest and real. Long seasons of caregiving or chronic illness don''t run on the energy of a single good week; they run on something that has to be renewed daily, because yesterday''s strength is rarely enough for today''s needs. Lamentations, of all books, gives us one of Scripture''s most tender promises: because of the Lord''s great love we are not consumed, for His compassions never fail; they are new every morning.
+
+It''s striking that this promise comes from the book of Lamentations, written in the aftermath of genuine devastation, not from a season of ease. The writer isn''t claiming things are fine. He''s claiming that in the middle of real loss, God''s mercy doesn''t run out — it resets, every single morning, regardless of how depleted yesterday left you. This is not a promise that today will be easy. It''s a promise that today comes with its own fresh supply of mercy, not simply whatever was left over from yesterday.
+
+For a couple who has walked through illness together — whether this specific season is ending, continuing, or entering a new phase — this is a good place to land: not on a resolution of the hardship, but on the daily faithfulness that has carried you this far and will keep carrying you. Some days that faithfulness looked like a good report from a doctor. Other days it looked like simply making it through, exhausted but still together, still choosing each other again the next morning.
+
+As this week closes, consider what "new mercies" have looked like for you specifically — a small kindness, an unexpected strength, a moment of laughter that surprised you both in the middle of a hard week. Whatever tomorrow holds, it comes with its own portion of grace, sufficient for whatever tomorrow asks of you, given fresh, the way it always has been.', 'Pada hari ketujuh benar-benar bergumul dengan kenyataan sakit dalam pernikahan, kelelahan itu jujur dan nyata. Musim panjang perawatan atau sakit kronis tidak berjalan dengan energi dari satu minggu yang baik saja; ia berjalan dengan sesuatu yang harus diperbarui setiap hari, karena kekuatan kemarin jarang cukup untuk kebutuhan hari ini. Kitab Ratapan, dari semua kitab, memberi kita salah satu janji Alkitab yang paling menyentuh: kasih setia TUHAN tidak berkesudahan, rahmat-Nya tidak habis-habisnya, selalu baru tiap pagi.
+
+Sungguh menarik bahwa janji ini datang dari kitab Ratapan, yang ditulis setelah kehancuran yang nyata, bukan dari musim yang mudah. Penulisnya tidak mengklaim bahwa segalanya baik-baik saja. Ia mengklaim bahwa di tengah kehilangan yang nyata, kasih setia Tuhan tidak habis — ia diperbarui, setiap pagi, tidak peduli seberapa terkurasnya kalian ditinggalkan oleh hari kemarin. Ini bukan janji bahwa hari ini akan mudah. Ini janji bahwa hari ini datang dengan pasokan kasih setianya sendiri yang segar, bukan sekadar sisa dari hari kemarin.
+
+Bagi pasangan yang telah melalui sakit bersama — entah musim spesifik ini sedang berakhir, berlanjut, atau memasuki babak baru — ini adalah tempat yang baik untuk berhenti sejenak: bukan pada penyelesaian kesulitan itu, tetapi pada kesetiaan harian yang telah menuntun kalian sejauh ini dan akan terus menuntun. Ada hari ketika kesetiaan itu terlihat seperti hasil pemeriksaan dokter yang baik. Ada hari lain ketika ia terlihat seperti sekadar berhasil melaluinya, lelah tetapi tetap bersama, tetap memilih satu sama lain lagi di pagi berikutnya.
+
+Saat minggu ini berakhir, renungkan seperti apa "kasih setia yang baru" itu bagi kalian secara spesifik — sebuah kebaikan kecil, kekuatan tak terduga, momen tawa yang mengejutkan kalian berdua di tengah minggu yang berat. Apa pun yang dibawa esok hari, ia datang dengan bagian kasih karunianya sendiri, cukup untuk apa pun yang dituntut esok dari kalian, diberikan segar, sebagaimana selalu terjadi.',
+     'What has ''new mercy'' looked like for you this week, even in a small way, and can you thank God for it together tonight?', 'Seperti apa ''kasih setia yang baru'' itu bagi kalian minggu ini, meski dalam cara kecil, dan bisakah kalian bersyukur kepada Tuhan untuk itu bersama malam ini?',
+     'Faithful God, thank You that Your mercies did not run out this week, and thank You that tomorrow''s mercies are already waiting for us, fresh and sufficient. Carry us through whatever comes next in this journey, together, one renewed morning at a time. Amen.', 'Allah yang setia, terima kasih karena kasih setia-Mu tidak habis minggu ini, dan terima kasih karena kasih setia esok hari sudah menanti kami, segar dan cukup. Tuntunlah kami melalui apa pun yang akan datang dalam perjalanan ini, bersama-sama, satu pagi yang diperbarui demi satu pagi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
+
+  RAISE NOTICE 'Seed done: % categories, % plans, % days, % verses',
+    (SELECT count(*) FROM public.devotion_categories),
+    (SELECT count(*) FROM public.devotion_plans),
+    (SELECT count(*) FROM public.devotion_plan_days),
+    (SELECT count(*) FROM public.devotion_day_verses);
+END $$;
+
+-- --- Verification (shown in the Supabase SQL editor) ----------------------
+SELECT p.name AS parent, c.name AS category, c.name_id
+  FROM public.devotion_categories c
+  LEFT JOIN public.devotion_categories p ON p.id = c.parent_id
+ ORDER BY p.name NULLS FIRST, c.name;
+
+SELECT count(*) AS plans_in_this_batch, sum(duration_days) AS days_in_this_batch
+  FROM public.devotion_plans
+ WHERE title IN (
+    'Laying the Cornerstone',
+    'The First Year Foundation',
+    'Rebuilding on the Rock',
+    'Speak Truth in Love',
+    'Breaking the Silence',
+    'After the Harsh Words',
+    'Finding Each Other Again',
+    'Guarding the Flame',
+    'Trust Restored',
+    'When Money Is Tight',
+    'Waiting Together',
+    'In Sickness and In Health'
+ );

@@ -1,0 +1,3968 @@
+-- 038_seed_devotions_love.sql
+-- Seeds the "Love" devotion category tree and 26 plans (130 days)
+-- from Gallery/Devotional/All_26_Devotions_Master.csv.
+--
+-- Self-contained: adds every column it needs if a prior migration was skipped,
+-- so the seed cannot fail (and silently roll back) on a missing column.
+--
+-- Re-runnable: every plan is deleted by title and re-inserted. Because
+-- user_devotion_progress references devotion_plans ON DELETE CASCADE, re-running
+-- this after users have started a plan will reset their progress for it.
+
+-- --- Guard: make sure every column this seed writes exists -------------------
+ALTER TABLE public.devotion_categories ADD COLUMN IF NOT EXISTS parent_id UUID
+  REFERENCES public.devotion_categories(id) ON DELETE CASCADE;
+ALTER TABLE public.devotion_categories ADD COLUMN IF NOT EXISTS name_id TEXT;
+
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS title_id TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS subtitle TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS subtitle_id TEXT;
+ALTER TABLE public.devotion_plans ADD COLUMN IF NOT EXISTS description_id TEXT;
+
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS devotional_title_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS devotional_content_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS reflection TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS reflection_id TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS prayer TEXT;
+ALTER TABLE public.devotion_plan_days ADD COLUMN IF NOT EXISTS prayer_id TEXT;
+
+DO $$
+DECLARE
+  v_love_id UUID;
+  v_cat_id UUID;
+  v_plan_id UUID;
+  v_day_id UUID;
+BEGIN
+  -- Top-level category ------------------------------------------------------
+  SELECT id INTO v_love_id FROM public.devotion_categories
+    WHERE name = 'Love' AND parent_id IS NULL
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_love_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Love', 'Kasih', NULL)
+      RETURNING id INTO v_love_id;
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Kasih'
+      WHERE id = v_love_id;
+  END IF;
+
+  -- Sub-categories --------------------------------------------------------
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Love of God', 'Kasih kepada Allah', v_love_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Kasih kepada Allah'
+      WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Family Love', 'Kasih Keluarga', v_love_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Kasih Keluarga'
+      WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for Neighbor' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Love for Neighbor', 'Kasih kepada Sesama', v_love_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Kasih kepada Sesama'
+      WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for the Poor & Suffering' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Love for the Poor & Suffering', 'Kasih bagi yang Miskin dan Menderita', v_love_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Kasih bagi yang Miskin dan Menderita'
+      WHERE id = v_cat_id;
+  END IF;
+
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Partner Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Partner Love', 'Kasih Pasangan', v_love_id);
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Kasih Pasangan'
+      WHERE id = v_cat_id;
+  END IF;
+
+  -- ===================================================================
+  -- Plan: With All Your Heart  (Love of God, 5 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'With All Your Heart';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'With All Your Heart', 'Dengan Segenap Hati',
+     'Loving God with everything we are', 'Mengasihi Allah dengan segenap diri kita',
+     'Five days to rediscover the first and greatest commandment: to love God with everything we are. Whether your faith feels brand new, worn tired, or somewhere in between, this plan gently turns your heart back toward the God who loved you first — one devotion, one verse, and one prayer at a time.', 'Lima hari untuk menemukan kembali perintah yang pertama dan terutama: mengasihi Allah dengan segenap diri kita. Entah imanmu terasa baru, lelah, atau di antara keduanya, devosi ini dengan lembut mengarahkan hatimu kembali kepada Allah yang lebih dahulu mengasihimu — satu renungan, satu ayat, dan satu doa setiap kali.', 5)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'He Loved First', 'Ia Mengasihi Lebih Dahulu',
+     'We spend so much of our lives trying to earn love — from parents, from friends, from the people whose approval we crave. And quietly, without ever quite admitting it, many of us try to earn it from God too. We assume that if we pray hard enough, behave well enough, and show up often enough, then perhaps God will finally love us. But Scripture takes that whole exhausting project and turns it upside down: "We love because he first loved us." (1 John 4:19)
+
+Notice the order carefully, because everything depends on it. Before we lifted a single finger, before we understood the first thing about faith, before we had earned anything at all, we were already loved. Our love is not the cause of God''s love; it is only the echo of it. God did not stand back to see whether we would prove worthwhile. "This is love: not that we loved God, but that he loved us and sent his Son as an atoning sacrifice for our sins." (1 John 4:10) The cross came before our first prayer.
+
+I have come to believe that most of our spiritual tiredness flows from forgetting this one truth. When I approach God as Someone I must impress, prayer becomes a performance and faith becomes a weight I carry. But when I remember that I am already held — that the God of the whole universe moved toward me first — something in me finally exhales. I am not auditioning for a love I already have.
+
+So if you come to this plan weary, start here. Not with a resolution to try harder, but with the quiet, staggering fact that you were loved first. Everything else across these five days — every call to love God with heart, soul, mind, and strength — grows out of this single root. We are never doing more than loving Him back.', 'Kita menghabiskan begitu banyak hidup kita untuk berusaha memperoleh kasih — dari orang tua, dari teman, dari orang-orang yang pengakuannya kita dambakan. Dan diam-diam, tanpa pernah benar-benar mengakuinya, banyak dari kita berusaha memperolehnya dari Allah juga. Kita mengira bahwa jika kita berdoa cukup keras, berperilaku cukup baik, dan hadir cukup sering, barangkali Allah akhirnya akan mengasihi kita. Namun Kitab Suci mengambil seluruh proyek yang melelahkan itu dan membaliknya: "Kita mengasihi, karena Allah lebih dahulu mengasihi kita." (1 Yohanes 4:19)
+
+Perhatikan urutannya dengan saksama, karena segalanya bergantung padanya. Sebelum kita mengangkat satu jari pun, sebelum kita memahami hal pertama tentang iman, sebelum kita mengusahakan apa pun, kita sudah dikasihi. Kasih kita bukanlah penyebab kasih Allah; ia hanyalah gema darinya. Allah tidak berdiri menjauh untuk melihat apakah kita akan terbukti berharga. "Inilah kasih itu: Bukan kita yang telah mengasihi Allah, tetapi Allah yang telah mengasihi kita dan yang telah mengutus Anak-Nya sebagai pendamaian bagi dosa-dosa kita." (1 Yohanes 4:10) Salib datang sebelum doa kita yang pertama.
+
+Aku semakin percaya bahwa sebagian besar kelelahan rohani kita mengalir dari melupakan satu kebenaran ini. Ketika aku mendekati Allah sebagai Seseorang yang harus kukesankan, doa menjadi pertunjukan dan iman menjadi beban yang kupikul. Namun ketika aku ingat bahwa aku sudah dipeluk — bahwa Allah seluruh alam semesta lebih dahulu bergerak mendekatiku — sesuatu di dalam diriku akhirnya menghela napas lega. Aku tidak sedang mengikuti audisi untuk kasih yang sudah kumiliki.
+
+Maka jika engkau datang ke devosi ini dengan lelah, mulailah di sini. Bukan dengan tekad untuk berusaha lebih keras, melainkan dengan kenyataan yang tenang dan mengguncang bahwa engkau lebih dahulu dikasihi. Segala hal lain sepanjang lima hari ini — setiap panggilan untuk mengasihi Allah dengan hati, jiwa, akal budi, dan kekuatan — bertumbuh dari satu akar ini. Kita tak pernah melakukan lebih dari sekadar membalas kasih-Nya.',
+     'Before you do anything else today, receive how deeply you are already loved. Your love for God is only ever a response to His — never the price of it.', 'Sebelum melakukan hal lain hari ini, terimalah betapa dalamnya engkau sudah dikasihi. Kasihmu kepada Allah tak pernah lebih dari tanggapan atas kasih-Nya — bukan harga untuk mendapatkannya.',
+     'Father, before I offer You anything, let me rest in the truth that You loved me first. Teach my heart that my love is only an echo of Yours, and let that echo grow louder in me today. Amen.', 'Bapa, sebelum aku mempersembahkan apa pun kepada-Mu, biarkan aku berdiam dalam kebenaran bahwa Engkau lebih dahulu mengasihiku. Ajarilah hatiku bahwa kasihku hanyalah gema dari kasih-Mu, dan biarlah gema itu makin nyaring dalam diriku hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 John 4:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 John 4:10', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Yohanes 4:19', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Yohanes 4:10', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'With All You Are', 'Dengan Segenap Dirimu',
+     'When Jesus was asked to name the greatest commandment, He did not hesitate: "Love the Lord your God with all your heart and with all your soul and with all your mind and with all your strength." (Mark 12:30) He was quoting words His people had prayed for over a thousand years already (Deut. 6:5). Of all the things God could ask of us first, this is it — not perfect behavior, not flawless theology, but love, offered with everything we are.
+
+The word that should stop us is "all." It appears four times in a single sentence: all your heart, all your soul, all your mind, all your strength. God is not asking for a slice of our attention or the leftover hour at the end of a tiring day. He asks for the whole self, because in Christ He has already given the whole of Himself to us.
+
+For most of us this feels impossible, and in a sense it is — no one loves God perfectly with all four faculties at once. But I have learned not to let that discourage me. Some days it is my mind that leads, wrestling honestly with a hard question. Other days it is my strength — my hands serving, my knees on the floor — while my feelings lag far behind. And on the hardest days, all I can offer is a tired heart that simply refuses to walk away. God receives each of these. He is not waiting for the perfect offering; He is waiting for a real one.
+
+So today, do not try to summon all four at once. Take the one that is available to you — the anxious mind, the weary body, the divided heart — and turn just that one toward God. Offer Him the part you actually have, and let it become the door the rest of you slowly walks through.', 'Ketika Yesus diminta menyebutkan perintah yang terutama, Ia tak ragu: "Kasihilah Tuhan, Allahmu, dengan segenap hatimu dan dengan segenap jiwamu dan dengan segenap akal budimu dan dengan segenap kekuatanmu." (Markus 12:30) Ia sedang mengutip kata-kata yang telah didoakan umat-Nya selama lebih dari seribu tahun (Ul. 6:5). Dari segala hal yang dapat Allah minta dari kita lebih dahulu, inilah dia — bukan perilaku yang sempurna, bukan teologi yang tanpa cela, melainkan kasih, yang dipersembahkan dengan segenap diri kita.
+
+Kata yang seharusnya menghentikan kita adalah "segenap." Ia muncul empat kali dalam satu kalimat: segenap hati, segenap jiwa, segenap akal budi, segenap kekuatan. Allah tidak meminta sepotong dari perhatian kita atau sisa jam di penghujung hari yang melelahkan. Ia meminta seluruh diri, karena di dalam Kristus Ia sudah memberikan seluruh diri-Nya kepada kita.
+
+Bagi kebanyakan kita ini terasa mustahil, dan dalam satu arti memang demikian — tak seorang pun mengasihi Allah dengan sempurna melalui keempat daya itu sekaligus. Namun aku belajar untuk tidak membiarkan itu membuatku putus asa. Sebagian hari akal budikulah yang memimpin, bergumul dengan jujur atas pertanyaan yang sulit. Hari-hari lain kekuatankulah — tanganku melayani, lututku di lantai — sementara perasaanku tertinggal jauh di belakang. Dan pada hari-hari tersulit, yang bisa kupersembahkan hanyalah hati yang lelah yang sekadar menolak untuk pergi. Allah menerima masing-masing dari ini. Ia tidak menunggu persembahan yang sempurna; Ia menunggu persembahan yang sungguh.
+
+Maka hari ini, jangan mencoba menghimpun keempatnya sekaligus. Ambillah yang tersedia bagimu — pikiran yang cemas, tubuh yang lelah, hati yang terbagi — dan arahkanlah hanya yang satu itu kepada Allah. Persembahkan kepada-Nya bagian yang sungguh kaumiliki, dan biarkan ia menjadi pintu yang perlahan dilalui sisa dirimu.',
+     'You will not offer all four — heart, soul, mind, strength — perfectly today. Offer the one you can, and let it open a door for the rest.', 'Hari ini engkau tak akan mempersembahkan keempatnya — hati, jiwa, akal budi, kekuatan — dengan sempurna. Persembahkanlah yang satu yang kaubisa, dan biarkan ia membuka pintu bagi yang lain.',
+     'Lord, I cannot give You all of myself perfectly today. So I give You the part I can — my tired body, my anxious mind, my divided heart — and I ask You to gather the rest of me behind it. Amen.', 'Tuhan, hari ini aku tak mampu memberikan seluruh diriku dengan sempurna. Maka kupersembahkan bagian yang kubisa — tubuhku yang lelah, pikiranku yang cemas, hatiku yang terbagi — dan kumohon Engkau menghimpun sisa diriku di belakangnya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 12:30', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 6:5', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 12:30', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 6:5', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Remain in My Love', 'Tinggallah dalam Kasih-Ku',
+     'On the last night before He died, with everything He most wanted to say pressing in, Jesus told His friends: "As the Father has loved me, so have I loved you. Now remain in my love." (John 15:9) He did not say achieve my love, or earn my love, or work your way up to my love. He said remain — stay, abide, make your home there. It is a word about dwelling, not striving.
+
+This quietly changes what loving God looks like day to day. We often imagine that a strong love for God must feel like a constant emotional fire, and then we feel like failures when the fire dies down. But Jesus offers a gentler and more durable picture: a dwelling place we keep returning to. A house we leave each morning and come back to each night. Love that abides is less about intensity and more about not wandering too far from home.
+
+How do we remain? Almost always through small, repeatable things. A few honest minutes of prayer that anchor the day. The Eucharist, where He feeds us with His own life. An honest confession that clears the air between us. A single verse carried in the pocket of the mind. None of these are dramatic. All of them are ways of coming home again. Over a lifetime, it is these small returns — made again and again, especially on the days we don''t feel like it — that quietly build a soul that truly loves God.
+
+You do not need to manufacture a feeling today. You only need to come home. Choose one small return you can make — one prayer, one pause, one turning of your attention back toward Him — and simply remain there for a moment. That is what He asked for.', 'Pada malam terakhir sebelum Ia wafat, dengan segala yang paling ingin Ia katakan mendesak keluar, Yesus berkata kepada para sahabat-Nya: "Seperti Bapa telah mengasihi Aku, demikianlah juga Aku telah mengasihi kamu; tinggallah di dalam kasih-Ku itu." (Yohanes 15:9) Ia tidak berkata raihlah kasih-Ku, atau perolehlah kasih-Ku, atau usahakanlah dirimu naik hingga ke kasih-Ku. Ia berkata tinggallah — menetaplah, berdiamlah, jadikanlah itu rumahmu. Ini kata tentang berdiam, bukan berjuang.
+
+Ini dengan tenang mengubah rupa mengasihi Allah dari hari ke hari. Kita sering membayangkan bahwa kasih yang kuat akan Allah pasti terasa seperti api emosi yang terus-menerus, lalu kita merasa gagal ketika api itu meredup. Namun Yesus menawarkan gambaran yang lebih lembut dan lebih tahan lama: sebuah tempat tinggal yang terus kita datangi kembali. Sebuah rumah yang kita tinggalkan tiap pagi dan kita datangi lagi tiap malam. Kasih yang berdiam bukan terutama soal intensitas, melainkan soal tidak mengembara terlalu jauh dari rumah.
+
+Bagaimana kita tinggal? Hampir selalu melalui hal-hal kecil yang dapat diulang. Beberapa menit doa yang jujur yang menambatkan hari. Ekaristi, tempat Ia memberi kita makan dengan hidup-Nya sendiri. Pengakuan yang jujur yang menjernihkan udara di antara kita. Satu ayat yang dibawa dalam saku pikiran. Tak satu pun dramatis. Semuanya adalah cara untuk pulang lagi. Sepanjang seumur hidup, kepulangan-kepulangan kecil inilah — yang dilakukan berulang kali, terutama pada hari-hari ketika kita tak ingin melakukannya — yang dengan tenang membangun jiwa yang sungguh mengasihi Allah.
+
+Engkau tak perlu memaksakan sebuah perasaan hari ini. Engkau hanya perlu pulang. Pilihlah satu kepulangan kecil yang bisa kaulakukan — satu doa, satu jeda, satu pengalihan perhatianmu kembali kepada-Nya — dan sekadar tinggallah di sana sejenak. Itulah yang Ia minta.',
+     'Loving God is less a burst of feeling than a home you keep returning to. Choose one small return you can make today.', 'Mengasihi Allah bukan terutama ledakan perasaan, melainkan rumah yang terus kaudatangi kembali. Pilihlah satu kepulangan kecil yang bisa kaulakukan hari ini.',
+     'Jesus, You made a home for me in Your love. Keep me from wandering far today; and whenever I drift, draw me gently back to the place where I always belong. Amen.', 'Yesus, Engkau menyediakan rumah bagiku dalam kasih-Mu. Jagalah aku agar tak mengembara jauh hari ini; dan setiap kali aku menyimpang, tariklah aku dengan lembut kembali ke tempat aku selalu menjadi milik. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 15:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 15:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'The One Thing Needed', 'Satu Hal yang Perlu',
+     'There is a small scene in the Gospels that quietly exposes many of us. Jesus visits the home of two sisters. Mary sits at His feet, listening. Martha is in the kitchen, doing the honorable, necessary work of hospitality — and growing more resentful by the minute that she is doing it alone. When she finally complains, Jesus answers with startling tenderness: "Martha, Martha, you are worried and upset about many things, but few things are needed — or indeed only one. Mary has chosen what is better." (Luke 10:41-42)
+
+It is important to see that Martha was not doing anything wrong. She was serving. Her work was good and needed. But somewhere along the way, the serving had crowded out the one thing that mattered most: simply being with Jesus while He was there. This is the quiet danger for those of us who love God — we can get so busy working for Him that we forget to be with Him.
+
+The psalmist knew where the center had to be: "One thing I ask from the Lord, this only do I seek: that I may dwell in the house of the Lord all the days of my life." (Psalm 27:4) One thing. Not a hundred good activities, but one steady desire underneath them all — to be near God. Love of God is not another task to add to an overcrowded list; it is the still center the whole busy day is meant to turn around.
+
+So before you launch into the doing today — and there is real doing to be done — sit with Him for a moment first, like Mary did. Let your work flow out of your time with Him, rather than replacing it. The one thing needed will not be taken away from you, but it does have to be chosen.', 'Ada sebuah adegan kecil dalam Injil yang dengan tenang menyingkapkan banyak dari kita. Yesus mengunjungi rumah dua saudari. Maria duduk di kaki-Nya, mendengarkan. Marta ada di dapur, melakukan pekerjaan keramahan yang terhormat dan perlu — dan makin bertambah kesal dari menit ke menit karena ia melakukannya sendirian. Ketika akhirnya ia mengeluh, Yesus menjawab dengan kelembutan yang mengejutkan: "Marta, Marta, engkau kuatir dan menyusahkan diri dengan banyak perkara, tetapi hanya satu saja yang perlu: Maria telah memilih bagian yang terbaik." (Lukas 10:41-42)
+
+Penting untuk melihat bahwa Marta tidak melakukan sesuatu yang salah. Ia sedang melayani. Pekerjaannya baik dan perlu. Namun di suatu titik, pelayanan itu telah menyingkirkan satu hal yang paling penting: sekadar bersama Yesus selagi Ia ada di sana. Inilah bahaya yang tenang bagi kita yang mengasihi Allah — kita bisa menjadi begitu sibuk bekerja bagi-Nya hingga lupa untuk bersama-Nya.
+
+Sang pemazmur tahu di mana pusatnya harus berada: "Satu hal telah kuminta kepada TUHAN, itulah yang kuingini: diam di rumah TUHAN seumur hidupku." (Mazmur 27:4) Satu hal. Bukan seratus kegiatan baik, melainkan satu kerinduan yang teguh di bawah semuanya — untuk dekat dengan Allah. Kasih akan Allah bukanlah tugas tambahan untuk dimasukkan ke dalam daftar yang sudah sesak; ia adalah pusat yang hening, yang seharusnya menjadi poros dari seluruh hari yang sibuk.
+
+Maka sebelum engkau terjun ke dalam perbuatan hari ini — dan memang ada perbuatan yang perlu dikerjakan — duduklah bersama-Nya sejenak lebih dahulu, seperti Maria. Biarkan pekerjaanmu mengalir dari waktumu bersama-Nya, alih-alih menggantikannya. Satu hal yang perlu itu tidak akan diambil darimu, tetapi ia memang harus dipilih.',
+     'Love of God is not one more task on the list; it is the still center the busy day revolves around. Sit with Him a moment before you serve.', 'Kasih akan Allah bukanlah satu tugas tambahan dalam daftar; ia adalah pusat hening yang menjadi poros hari yang sibuk. Duduklah bersama-Nya sejenak sebelum engkau melayani.',
+     'Lord, I am worried and busy about many things. Draw me back to the one thing needed — simply to be with You. Let my doing flow from my being with You, not the other way around. Amen.', 'Tuhan, aku kuatir dan sibuk dengan banyak perkara. Tariklah aku kembali kepada satu hal yang perlu — sekadar bersama-Mu. Biarlah perbuatanku mengalir dari kebersamaanku dengan-Mu, bukan sebaliknya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 10:41-42', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 27:4', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 10:41-42', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 27:4', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'First Love Rekindled', 'Kasih Semula Dinyalakan Kembali',
+     'In the book of Revelation, Jesus speaks to a church that, from the outside, was doing everything right — working hard, enduring, holding to sound teaching. And yet He says something that should make all of us pause: "You have forsaken the love you had at first. Consider how far you have fallen! Repent and do the things you did at first." (Revelation 2:4-5) Their problem was not scandal. It was cooling. The fire that once warmed their faith had quietly settled into routine.
+
+Many of us know exactly what that feels like. There was a season when faith felt alive — when prayer came easily, when worship moved us, when God felt close. And then, without any single dramatic moment, it faded into habit. If that is you, take heart: Jesus does not respond with condemnation, but with a remarkably practical instruction. He does not say "try to feel it again." He says do the things you did at first.
+
+This is such freeing wisdom. We often think love must be rekindled from the inside out — that we must first feel it and only then act. But Jesus reverses the order: return to the actions that once carried the fire, and very often the heart follows the hands back home. Go back to the prayer you have let slip, the worship you have skipped, the generosity you have quietly stopped. Do the first things, and watch the first love begin to warm again.
+
+And here is the deepest comfort of all: even the softening of our hearts is not finally up to us. God promised His people, "The Lord your God will circumcise your hearts... so that you may love him with all your heart and with all your soul, and live." (Deut. 30:6) He does what we cannot. Your part is simply to turn back and do one first thing again. His part is to rekindle the rest.', 'Dalam kitab Wahyu, Yesus berbicara kepada sebuah jemaat yang, dari luar, melakukan segala hal dengan benar — bekerja keras, bertekun, berpegang pada ajaran yang sehat. Namun Ia mengatakan sesuatu yang seharusnya membuat kita semua terhenti: "Engkau telah meninggalkan kasihmu yang semula. Sebab itu ingatlah betapa dalamnya engkau telah jatuh! Bertobatlah dan lakukanlah lagi apa yang semula engkau lakukan." (Wahyu 2:4-5) Masalah mereka bukanlah skandal. Melainkan mendinginnya kasih. Api yang dahulu menghangatkan iman mereka diam-diam telah mengendap menjadi rutinitas.
+
+Banyak dari kita tahu persis bagaimana rasanya itu. Ada suatu musim ketika iman terasa hidup — ketika doa datang dengan mudah, ketika ibadah menggerakkan kita, ketika Allah terasa dekat. Lalu, tanpa satu momen dramatis pun, semuanya memudar menjadi kebiasaan. Jika itu dirimu, berbesarhatilah: Yesus tidak menanggapi dengan penghukuman, melainkan dengan petunjuk yang luar biasa praktis. Ia tidak berkata "cobalah merasakannya lagi." Ia berkata lakukanlah lagi apa yang semula engkau lakukan.
+
+Ini hikmat yang begitu membebaskan. Kita sering mengira kasih harus dinyalakan kembali dari dalam ke luar — bahwa kita harus lebih dahulu merasakannya barulah bertindak. Namun Yesus membalik urutannya: kembalilah kepada tindakan-tindakan yang dahulu mengusung api itu, dan sangat sering hati mengikuti tangan pulang ke rumah. Kembalilah kepada doa yang telah kaubiarkan pudar, ibadah yang telah kaulewatkan, kemurahan hati yang diam-diam telah kauhentikan. Lakukanlah hal-hal yang semula, dan saksikanlah kasih yang semula mulai menghangat kembali.
+
+Dan inilah penghiburan yang terdalam: bahkan melembutnya hati kita pun pada akhirnya bukan bergantung pada kita. Allah berjanji kepada umat-Nya, "TUHAN, Allahmu, akan menyunat hatimu... sehingga engkau mengasihi TUHAN, Allahmu, dengan segenap hatimu dan dengan segenap jiwamu, supaya engkau hidup." (Ul. 30:6) Ia melakukan apa yang tak sanggup kita lakukan. Bagianmu hanyalah berbalik dan melakukan satu hal yang semula lagi. Bagian-Nya adalah menyalakan kembali sisanya.',
+     'When love for God cools, don''t wait for the feeling — do the things you did at first, and trust Him to soften the heart you cannot soften alone.', 'Ketika kasih akan Allah mendingin, jangan menunggu perasaan — lakukanlah hal-hal yang semula, dan percayalah Ia akan melembutkan hati yang tak sanggup kaulembutkan sendiri.',
+     'Lord, my love for You has quietly cooled. Remind me of what I used to do when it was warm, give me the humility to do it again, and soften my heart in the way only You can. Amen.', 'Tuhan, kasihku kepada-Mu diam-diam telah mendingin. Ingatkanlah aku akan apa yang dahulu kulakukan ketika ia masih hangat, berilah aku kerendahan hati untuk melakukannya lagi, dan lembutkanlah hatiku dengan cara yang hanya Engkau bisa. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Revelation 2:4-5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 30:6', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Wahyu 2:4-5', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 30:6', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Brothers and Sisters in the Same House  (Family Love, 3 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Brothers and Sisters in the Same House';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Brothers and Sisters in the Same House', 'Saudara Sekandung dalam Satu Rumah',
+     'A short devotion on the bond, wounds, and loyalty of siblings', 'Renungan singkat tentang ikatan, luka, dan kesetiaan antar-saudara',
+     'A brief three-day devotion exploring sibling love in all its complexity — the gift of growing up together, the pain of sibling conflict, and the loyalty God calls us to choose again and again.', 'Renungan singkat tiga hari yang menjelajahi kasih persaudaraan dalam segala kerumitannya — anugerah tumbuh bersama, sakitnya konflik antar-saudara, dan kesetiaan yang Allah panggil untuk kita pilih berulang kali.', 3)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Gift of Growing Up Together', 'Anugerah Tumbuh Bersama',
+     'There is a particular kind of intimacy that only siblings share — the shorthand jokes no one else understands, the shared memory of the same table, the same arguments, the same parents on their best and worst days. No friend, however close, quite occupies that seat. Siblings knew us before we became who we are now, in the raw and unfinished years, and that history is its own quiet gift.
+
+Proverbs 17:17 says a friend loves at all times, and a brother is born for a time of adversity. There is something almost prophetic in that phrase — born for adversity, as if the very purpose woven into a sibling relationship is to be there specifically when things go wrong, not just when things are easy and celebratory.
+
+Ecclesiastes adds a practical picture: two are better than one, for if either of them falls down, one can help the other up. Siblings are often our first experience of this kind of partnership — the person who notices when we''ve fallen before we''ve even said a word, simply because they''ve watched us long enough to know our face when something is wrong.
+
+If your sibling relationship is a source of joy, thank God for it today, and don''t take the ease of it for granted. If it isn''t easy right now, hold onto this truth anyway: the bond was built for adversity, which means it was built to survive exactly the kind of hard season you might be in.', 'Ada keintiman tertentu yang hanya dimiliki oleh saudara kandung — candaan singkat yang hanya dipahami mereka berdua, kenangan yang sama tentang meja makan yang sama, pertengkaran yang sama, orang tua yang sama pada hari terbaik dan terburuk mereka. Tidak ada sahabat, sedekat apa pun, yang benar-benar menempati posisi itu. Saudara kandung mengenal kita sebelum kita menjadi diri kita yang sekarang, di tahun-tahun mentah dan belum sempurna, dan sejarah itu adalah anugerah tersendiri yang sunyi.
+
+Amsal 17:17 berkata seorang sahabat menaruh kasih setiap waktu, dan menjadi seorang saudara dalam kesukaran. Ada sesuatu yang hampir seperti nubuat dalam frasa itu — lahir untuk kesukaran, seolah tujuan yang tertenun dalam hubungan persaudaraan justru untuk hadir tepat ketika keadaan menjadi buruk, bukan hanya ketika segalanya mudah dan penuh perayaan.
+
+Pengkhotbah menambahkan gambaran yang praktis: berdua lebih baik dari pada seorang diri, karena jika mereka jatuh, yang seorang mengangkat temannya. Saudara kandung sering menjadi pengalaman pertama kita akan jenis kemitraan ini — orang yang menyadari kita telah jatuh bahkan sebelum kita mengucapkan sepatah kata pun, semata karena mereka telah cukup lama memperhatikan kita hingga mengenal wajah kita saat ada yang salah.
+
+Jika hubunganmu dengan saudara kandungmu adalah sumber sukacita, bersyukurlah kepada Allah untuk itu hari ini, dan jangan menganggap kemudahannya sebagai hal yang biasa. Jika hubungan itu tidak mudah saat ini, tetaplah pegang kebenaran ini: ikatan itu dibangun untuk kesukaran, artinya ikatan itu dibangun untuk bertahan justru dalam musim sulit seperti yang mungkin sedang kau alami.',
+     'A sibling relationship was built for hard seasons, not just easy ones. Whatever season yours is in, God has not wasted the bond He gave you.', 'Hubungan persaudaraan dibangun untuk musim yang sulit, bukan hanya yang mudah. Apa pun musim yang sedang dijalani hubunganmu, Allah tidak pernah menyia-nyiakan ikatan yang telah Ia berikan.',
+     'Lord, thank You for the gift of my siblings and the history we share. Help me treasure that bond, and lean on it in the hard seasons too. Amen.', 'Tuhan, terima kasih atas anugerah saudara-saudaraku dan sejarah yang kami bagikan bersama. Tolong aku menghargai ikatan itu, dan bersandar padanya juga di musim-musim yang sulit. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 17:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-10', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 17:17', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-10', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'When Siblings Hurt Each Other', 'Ketika Saudara Saling Melukai',
+     'The very first family in Scripture ends not in harmony but in tragedy — Cain, consumed by jealousy over his brother Abel, becomes the first murderer in human history. It is a sobering reminder that sibling relationships, so full of potential for closeness, are just as full of potential for wounding. Jealousy, comparison, old rivalries over a parent''s attention — these are ancient patterns, not modern ones.
+
+When God asks Cain where his brother is, Cain''s answer is a question that has echoed through every fractured sibling relationship since: ''Am I my brother''s keeper?'' It is the question we ask when we want permission to stop caring, to walk away from responsibility for someone who shares our blood but has become, in our hurt, a stranger or even an enemy.
+
+Many of us carry sibling wounds that never made headlines but shaped us all the same — words said in anger that were never taken back, a favoritism that left scars, a betrayal of trust between people who were supposed to be safe with each other. These wounds are real, and pretending otherwise does not heal them. Naming them honestly is often the first step toward any kind of repair.
+
+If there is a wound between you and a sibling today, you do not have to fix it in a single day, and some relationships take years, or may never fully mend on this side of heaven. But you can ask God to soften what jealousy or hurt has hardened in you, and to show you one small, honest step forward, even if it is only a prayer for them tonight.', 'Keluarga pertama dalam Alkitab tidak berakhir dengan keharmonisan, melainkan dengan tragedi — Kain, dikuasai kecemburuan terhadap adiknya Habel, menjadi pembunuh pertama dalam sejarah manusia. Ini adalah pengingat yang mengguncang bahwa hubungan persaudaraan, yang begitu penuh potensi untuk kedekatan, juga sama penuhnya dengan potensi untuk melukai. Kecemburuan, perbandingan, persaingan lama memperebutkan perhatian orang tua — ini adalah pola kuno, bukan pola modern.
+
+Ketika Allah bertanya kepada Kain di mana adiknya, jawaban Kain adalah pertanyaan yang terus bergema dalam setiap hubungan persaudaraan yang retak sejak saat itu: ''Apakah aku penjaga adikku?'' Inilah pertanyaan yang kita ajukan ketika kita ingin izin untuk berhenti peduli, untuk menjauh dari tanggung jawab terhadap seseorang yang berbagi darah dengan kita namun, dalam luka kita, telah menjadi orang asing atau bahkan musuh.
+
+Banyak dari kita membawa luka dari saudara kandung yang tidak pernah menjadi berita besar namun tetap membentuk kita — kata-kata yang diucapkan dalam amarah yang tidak pernah ditarik kembali, favoritisme yang meninggalkan bekas luka, pengkhianatan kepercayaan antara orang-orang yang seharusnya merasa aman satu sama lain. Luka-luka ini nyata, dan berpura-pura sebaliknya tidak akan menyembuhkannya. Menamai luka itu dengan jujur seringkali menjadi langkah pertama menuju pemulihan.
+
+Jika ada luka antara engkau dan saudaramu hari ini, engkau tidak harus memperbaikinya dalam satu hari, dan beberapa hubungan membutuhkan waktu bertahun-tahun, atau mungkin tidak akan pernah sepenuhnya pulih di dunia ini. Namun engkau dapat meminta Allah melunakkan apa yang telah dikeraskan oleh kecemburuan atau luka di dalam dirimu, dan menunjukkan satu langkah kecil dan jujur ke depan, bahkan jika itu hanya sebuah doa bagi mereka malam ini.',
+     'Naming a sibling wound honestly is not disloyalty — it is often the first honest step toward healing. Bring your wound to God today, whatever it is.', 'Menamai luka dari saudara dengan jujur bukanlah ketidaksetiaan — itu seringkali menjadi langkah jujur pertama menuju pemulihan. Bawalah lukamu kepada Allah hari ini, apa pun itu.',
+     'Lord, You see the wounds between me and my siblings that no one else sees. Soften what has hardened in me, and show me one honest step toward peace. Amen.', 'Tuhan, Engkau melihat luka antara aku dan saudara-saudaraku yang tidak dilihat orang lain. Lunakkanlah apa yang telah mengeras dalam diriku, dan tunjukkan aku satu langkah jujur menuju damai. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 4:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 4:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Choosing Loyalty and Love', 'Memilih Kesetiaan dan Kasih',
+     'Solomon''s proverb draws a striking distinction: one who has unreliable friends soon comes to ruin, but there is a friend who sticks closer than a brother. Read that carefully — it doesn''t say siblings are automatically closer than friends. It says the standard we should hold friendship to is measured against what a sibling ought to be: someone who sticks close no matter what.
+
+That word ''sticks'' matters. It implies choice, not just biology. Being born into the same family gives us a starting point, but it does not automatically produce loyalty — that has to be chosen, day after day, especially in the years when distance, disagreement, or old grievances make sticking close the harder path rather than the easier one.
+
+Paul''s instruction to the early church applies powerfully within families too: be devoted to one another in love; honor one another above yourselves. Devotion is an active verb. It is not a feeling that arrives on its own, but a decision renewed again and again — to call, to forgive, to show up, to choose the relationship even when it would be simpler to let it drift.
+
+As this short devotion closes, consider one sibling relationship you want to invest in more intentionally. It might mean initiating a hard conversation, or it might simply mean sending a message today that says, plainly, I''m grateful you''re my brother, my sister. Loyalty like that does not happen by accident. Choose it today.', 'Amsal Salomo membuat perbedaan yang mencolok: ada teman yang mendatangkan kecelakaan, tetapi ada juga sahabat yang lebih karib dari pada seorang saudara. Perhatikan baik-baik — ayat ini tidak mengatakan bahwa saudara kandung secara otomatis lebih dekat daripada sahabat. Ayat ini mengatakan standar yang harus kita pegang untuk persahabatan diukur dari apa yang seharusnya menjadi ciri seorang saudara: seseorang yang tetap dekat apa pun yang terjadi.
+
+Kata ''karib'' atau ''melekat'' itu penting. Ia menyiratkan pilihan, bukan sekadar hubungan darah. Terlahir dalam keluarga yang sama memberi kita titik awal, tetapi itu tidak secara otomatis menghasilkan kesetiaan — kesetiaan harus dipilih, hari demi hari, terutama pada tahun-tahun ketika jarak, perselisihan, atau kekesalan lama membuat tetap dekat menjadi jalan yang lebih sulit ketimbang yang lebih mudah.
+
+Instruksi Paulus kepada jemaat mula-mula juga berlaku dengan kuat dalam keluarga: hendaklah kamu saling mengasihi sebagai saudara dan saling mendahului dalam memberi hormat. Kasih yang setia adalah kata kerja yang aktif. Ia bukan perasaan yang datang dengan sendirinya, melainkan keputusan yang diperbarui berulang kali — untuk menelepon, memaafkan, hadir, memilih hubungan itu bahkan ketika lebih mudah untuk membiarkannya menjauh.
+
+Saat renungan singkat ini berakhir, pikirkan satu hubungan dengan saudara kandung yang ingin kau investasikan dengan lebih sungguh-sungguh. Mungkin itu berarti memulai percakapan yang sulit, atau mungkin sesederhana mengirim pesan hari ini yang berkata, dengan sederhana, aku bersyukur engkau adalah saudaraku. Kesetiaan seperti itu tidak terjadi secara kebetulan. Pilihlah itu hari ini.',
+     'Loyalty between siblings is chosen, not automatic. Pick one small act of devotion today and follow through on it.', 'Kesetiaan antar-saudara adalah sebuah pilihan, bukan sesuatu yang otomatis. Pilihlah satu tindakan kesetiaan kecil hari ini dan lakukanlah.',
+     'Lord, help me choose loyalty and love toward my siblings, even when it''s hard. Make me the kind of family member who sticks close. Amen.', 'Tuhan, tolong aku memilih kesetiaan dan kasih terhadap saudara-saudaraku, bahkan ketika itu sulit. Jadikanlah aku anggota keluarga yang tetap dekat dan setia. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 18:24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:10', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 18:24', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:10', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Honoring the Ones Who Came Before  (Family Love, 4 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Honoring the Ones Who Came Before';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Honoring the Ones Who Came Before', 'Menghormati Mereka yang Mendahului Kita',
+     'A devotion on loving parents and grandparents well', 'Renungan tentang mengasihi orang tua dan kakek-nenek dengan sepenuh hati',
+     'A four-day devotion for anyone learning to honor the parents and grandparents who shaped them — including the hard, quiet work of caring for aging loved ones and carrying their faith forward.', 'Renungan empat hari bagi siapa saja yang belajar menghormati orang tua dan kakek-nenek yang telah membentuk mereka — termasuk kerja yang berat dan sunyi dalam merawat orang tercinta yang menua serta meneruskan iman mereka.', 4)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Weight of Honor', 'Bobot Sebuah Penghormatan',
+     'In a culture that often treats aging as something to hide or apologize for, Scripture asks something countercultural of us: stand up. Show respect. Leviticus commands God''s people to rise in the presence of the elderly, to physically demonstrate honor with their bodies, not just their words. It is a small gesture with enormous meaning — the willingness to interrupt our own comfort to honor someone whose years have earned it.
+
+This kind of honor is not about pretending our parents or grandparents were perfect. Most of us know exactly where they failed us, sometimes deeply. Honor is not the same as denial. It is choosing to see the whole person — their sacrifices alongside their shortcomings — and still extend the dignity that is theirs simply because they are made in God''s image and carried a weight we may not fully understand.
+
+Proverbs adds a tender, practical edge to this command: listen to your father who gave you life, and do not despise your mother when she is old. There is something particularly pointed about that phrase ''when she is old'' — it is easy to honor parents in their strength, harder when they grow forgetful, slow, dependent. That is precisely when honor is tested and proven real.
+
+Today, consider one concrete way to show honor — a call, a visit, a moment of patience with a story you''ve heard a hundred times before. Let your body, not just your heart, say what Scripture asks: I see you, I respect what your years have carried, and you matter to me still.', 'Dalam budaya yang sering memperlakukan penuaan sebagai sesuatu yang harus disembunyikan atau dimintakan maaf, Alkitab meminta sesuatu yang berlawanan dari kita: berdirilah. Hormatilah. Kitab Imamat memerintahkan umat Allah untuk berdiri di hadapan orang yang lanjut usia, menunjukkan penghormatan secara nyata dengan tubuh mereka, bukan hanya dengan kata-kata. Ini adalah gestur kecil dengan makna yang sangat besar — kesediaan mengganggu kenyamanan diri sendiri demi menghormati seseorang yang usianya telah pantas dihormati.
+
+Penghormatan semacam ini bukan berarti berpura-pura bahwa orang tua atau kakek-nenek kita sempurna. Kebanyakan dari kita tahu persis di mana mereka pernah mengecewakan kita, terkadang dengan cukup dalam. Menghormati bukan sama dengan menyangkal. Ini adalah memilih untuk melihat pribadi itu secara utuh — pengorbanan mereka bersama kekurangan mereka — dan tetap memberikan martabat yang menjadi hak mereka, semata-mata karena mereka diciptakan menurut gambar Allah dan memikul beban yang mungkin belum sepenuhnya kita pahami.
+
+Amsal menambahkan sisi yang lembut dan praktis pada perintah ini: dengarkanlah ayahmu yang memperanakkan engkau, dan janganlah menghina ibumu kalau ia sudah tua. Ada sesuatu yang sangat tajam dari frasa ''kalau ia sudah tua'' — mudah menghormati orang tua ketika mereka masih kuat, lebih sulit ketika mereka mulai pelupa, lambat, bergantung. Justru saat itulah penghormatan diuji dan dibuktikan nyata.
+
+Hari ini, pikirkanlah satu cara nyata untuk menunjukkan penghormatan — sebuah telepon, kunjungan, momen kesabaran mendengarkan cerita yang sudah kau dengar seratus kali. Biarkan tubuhmu, bukan hanya hatimu, mengatakan apa yang diminta Alkitab: aku melihatmu, aku menghormati apa yang telah dipikul oleh usiamu, dan engkau masih berarti bagiku.',
+     'Honor is proven not in a parent''s strong years but in their weak ones. Where can you show it today, in a small and concrete way?', 'Penghormatan dibuktikan bukan pada masa kuat orang tua kita, melainkan pada masa lemah mereka. Di mana engkau bisa menunjukkannya hari ini, dengan cara yang kecil dan nyata?',
+     'Lord, teach me to honor my parents and elders with more than words — with patience, presence, and respect they can feel. Amen.', 'Tuhan, ajari aku menghormati orang tua dan orang yang lebih tua dariku bukan hanya dengan kata-kata — tetapi dengan kesabaran, kehadiran, dan rasa hormat yang dapat mereka rasakan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Leviticus 19:32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 23:22', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Imamat 19:32', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 23:22', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Remembering Their Faith', 'Mengenang Iman Mereka',
+     'Behind almost every strong faith is a quiet chain of people who believed before we did. A grandmother who prayed in a language we didn''t yet understand. A father who never missed church, even exhausted. A mother whose faith looked more like endurance than excitement, but was faith all the same. We rarely arrive at belief alone; we inherit it, thread by thread, from those who came before.
+
+Paul reminds Timothy of exactly this inheritance: I have been reminded of your sincere faith, which first lived in your grandmother Lois and in your mother Eunice, and now lives in you also. There is something moving about naming them specifically — not a vague ''faithful ancestors,'' but Lois and Eunice, real women whose faith had a face and a history.
+
+The psalmist prays something similar for himself in old age: even when I am old and gray, do not forsake me, until I declare your power to the next generation. This is the deep hope of every aging believer — not just to survive to the end, but to hand something on before they go, to make sure the story of God''s faithfulness does not end with them.
+
+Today, think of the Lois or Eunice in your own family — the one whose faith, however imperfect, planted something in you. Consider thanking them, if they are still living, or thanking God for them if they are not. And ask what part of that inheritance you are responsible to pass on.', 'Di balik hampir setiap iman yang kuat, ada rantai orang-orang yang sunyi yang telah percaya sebelum kita. Seorang nenek yang berdoa dalam bahasa yang belum kita pahami. Seorang ayah yang tidak pernah absen ke gereja, bahkan saat kelelahan. Seorang ibu yang imannya lebih terlihat seperti ketahanan daripada semangat berapi-api, namun tetap saja itu adalah iman. Kita jarang sampai pada iman sendirian; kita mewarisinya, benang demi benang, dari mereka yang mendahului kita.
+
+Paulus mengingatkan Timotius akan warisan ini persis: aku teringat akan imanmu yang tulus ikhlas, iman yang pertama-tama hidup di dalam nenekmu Lois dan di dalam ibumu Eunike, dan kini hidup juga di dalam dirimu. Ada sesuatu yang menggerakkan dari menyebut nama mereka secara spesifik — bukan ''leluhur yang beriman'' yang samar, melainkan Lois dan Eunike, perempuan-perempuan nyata yang imannya punya wajah dan sejarah.
+
+Pemazmur mendoakan hal yang serupa bagi dirinya sendiri di usia tua: sekalipun sampai masa tua dan putih rambut, ya Allah, janganlah meninggalkan aku, sampai aku memberitakan kuasa-Mu kepada angkatan ini. Inilah harapan terdalam setiap orang percaya yang menua — bukan sekadar bertahan hidup sampai akhir, tetapi mewariskan sesuatu sebelum mereka pergi, memastikan kisah kesetiaan Allah tidak berakhir bersama mereka.
+
+Hari ini, pikirkan sosok Lois atau Eunike dalam keluargamu sendiri — orang yang imannya, betapa pun tidak sempurna, telah menanamkan sesuatu di dalam dirimu. Pertimbangkan untuk berterima kasih kepada mereka, jika mereka masih hidup, atau bersyukur kepada Allah atas mereka jika sudah tiada. Dan tanyakan bagian warisan mana yang menjadi tanggung jawabmu untuk diteruskan.',
+     'Your faith has a history and a face. Name the person who first showed it to you, and thank God for them today.', 'Imanmu memiliki sejarah dan wajah. Sebutkan nama orang yang pertama kali menunjukkannya kepadamu, dan bersyukurlah kepada Allah atas mereka hari ini.',
+     'Lord, thank You for the faith I inherited from those who came before me. Help me carry it faithfully and pass it on to those who come after. Amen.', 'Tuhan, terima kasih atas iman yang kuwarisi dari mereka yang mendahuluiku. Tolong aku membawanya dengan setia dan mewariskannya kepada mereka yang datang setelahku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 71:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timothy 1:5', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 71:18', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timotius 1:5', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Caring for Aging Parents', 'Merawat Orang Tua yang Menua',
+     'There is a particular kind of grief in watching a parent who once carried you slowly need to be carried themselves. The role reversal is disorienting — the hands that once fixed your scraped knee now need help buttoning a shirt; the voice that once had all the answers now asks the same question three times in an hour. It can feel like losing them twice: once to time, and again to the slow erosion of who they used to be.
+
+Paul''s instruction to Timothy is direct and unromantic: if a widow has children or grandchildren, these should learn to put their religion into practice by caring for their own family, repaying their parents and grandparents, for this is pleasing to God. It is striking that Paul frames caregiving as an act of worship — not merely a family obligation, but something that pleases God Himself.
+
+This is not easy work, and no devotion should pretend it is. Caregiving often comes with exhaustion, grief, financial strain, and the ache of watching decline you cannot stop. But there is dignity in it that the world rarely acknowledges — you are repaying, in small and tangible ways, a debt of love that began before you can even remember, when someone else''s hands were the ones doing the carrying.
+
+If you are in a caregiving season today, you do not have to feel strong to be faithful. Ask God for endurance for the practical tasks and tenderness for the emotional weight. And if you are watching from a distance, ask how you might carry some of the load — a phone call, a visit, an offer of relief for the one doing the daily work.', 'Ada duka tersendiri saat menyaksikan orang tua yang dulu menggendong kita perlahan-lahan justru membutuhkan bantuan untuk berjalan sendiri. Pertukaran peran ini terasa membingungkan — tangan yang dulu mengobati luka di lututmu kini butuh dibantu mengancingkan baju; suara yang dulu punya semua jawaban kini bertanya pertanyaan yang sama tiga kali dalam satu jam. Rasanya seperti kehilangan mereka dua kali: pertama karena waktu, dan kedua karena erosi perlahan dari sosok yang dulu mereka kenal.
+
+Instruksi Paulus kepada Timotius langsung dan tidak dibuat-buat manis: jikalau seorang janda mempunyai anak atau cucu, hendaklah mereka itu pertama-tama belajar berbakti kepada kaum keluarganya sendiri dan mengasihi orang tua serta nenek-neneknya, karena itulah yang berkenan kepada Allah. Sangat mencolok bahwa Paulus membingkai perawatan sebagai tindakan ibadah — bukan sekadar kewajiban keluarga, melainkan sesuatu yang berkenan kepada Allah sendiri.
+
+Ini bukan pekerjaan yang mudah, dan renungan ini tidak akan berpura-pura demikian. Merawat sering datang bersama kelelahan, duka, tekanan finansial, dan sakit hati menyaksikan kemunduran yang tidak dapat kau hentikan. Namun ada martabat di dalamnya yang jarang diakui dunia — engkau sedang membalas, dengan cara yang kecil dan nyata, utang kasih yang dimulai sebelum engkau bahkan bisa mengingatnya, ketika tangan orang lainlah yang menggendongmu.
+
+Jika engkau sedang berada dalam musim merawat orang tua hari ini, engkau tidak perlu merasa kuat untuk tetap setia. Mintalah kepada Allah ketahanan untuk tugas-tugas praktis dan kelembutan untuk beban emosional. Dan jika engkau menyaksikan dari kejauhan, tanyakan bagaimana engkau bisa ikut memikul sebagian beban itu — sebuah telepon, kunjungan, atau tawaran istirahat bagi mereka yang mengerjakan tugas harian itu.',
+     'Caring for an aging parent is worship in disguise. If this is your season, ask God for strength for today only — not for the whole road ahead.', 'Merawat orang tua yang menua adalah ibadah yang menyamar. Jika ini musimmu, mintalah kekuatan dari Allah hanya untuk hari ini — bukan untuk seluruh jalan ke depan.',
+     'Lord, give me strength and tenderness for the work of caring for those who once cared for me. When I am weary, remind me this labor pleases You. Amen.', 'Tuhan, berilah aku kekuatan dan kelembutan untuk pekerjaan merawat mereka yang dulu merawatku. Saat aku lelah, ingatkanlah aku bahwa jerih payah ini berkenan di hadapan-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timothy 5:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timotius 5:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'A Legacy Worth Telling', 'Warisan yang Layak Diceritakan',
+     'Ruth''s words to her mother-in-law Naomi are some of the most quoted in Scripture, and for good reason: where you go I will go, your people will be my people, and your God my God. What is easy to miss is the context — Ruth had every reason to leave. Naomi was old, poor, grieving, with nothing left to offer her daughter-in-law but companionship. Ruth stayed anyway, out of love that asked nothing in return.
+
+Not every family story looks like Ruth and Naomi''s. Some of us carry complicated relationships with the parents and grandparents who raised us — love tangled together with disappointment, gratitude mixed with grief over what was missing. Honoring their legacy does not require pretending the story was simple. It means choosing to tell it honestly, and choosing gratitude for what was good, even alongside what was hard.
+
+The psalmist writes that one generation will commend God''s works to another; they will tell of His mighty acts. Every family has a story of God''s faithfulness woven through it, even in families that never used those words for it — a provision that came just in time, a strength found in a crisis, a forgiveness that shouldn''t have been possible but was. These stories deserve to be told, not lost.
+
+Today, consider what story you want to tell about the parents or grandparents who shaped you — and what story you are living, that someone younger than you might one day tell about your own faithfulness. Legacy is not built in a single grand moment; it is built in the accumulation of ordinary days lived with love.', 'Perkataan Rut kepada mertuanya, Naomi, adalah salah satu yang paling sering dikutip dalam Alkitab, dan bukan tanpa alasan: ke mana engkau pergi, ke situ jugalah aku pergi; bangsamu adalah bangsaku dan Allahmu adalah Allahku. Yang mudah terlewat adalah konteksnya — Rut punya segala alasan untuk pergi. Naomi sudah tua, miskin, berduka, dan tidak punya apa pun lagi untuk ditawarkan kepada menantunya selain persahabatan. Rut tetap tinggal, karena kasih yang tidak meminta balasan apa pun.
+
+Tidak semua kisah keluarga terlihat seperti Rut dan Naomi. Sebagian dari kita membawa hubungan yang rumit dengan orang tua dan kakek-nenek yang membesarkan kita — kasih yang terjalin dengan kekecewaan, syukur yang bercampur duka atas apa yang hilang. Menghormati warisan mereka tidak berarti berpura-pura bahwa kisahnya sederhana. Itu berarti memilih untuk menceritakannya dengan jujur, dan memilih bersyukur atas apa yang baik, bahkan bersamaan dengan apa yang berat.
+
+Pemazmur menulis bahwa angkatan demi angkatan akan memegahkan pekerjaan-pekerjaan Allah, dan akan memberitakan keperkasaan-Nya. Setiap keluarga memiliki kisah kesetiaan Allah yang terjalin di dalamnya, bahkan dalam keluarga yang tidak pernah menyebutnya dengan kata-kata itu — pemeliharaan yang datang tepat waktu, kekuatan yang ditemukan dalam krisis, pengampunan yang seharusnya mustahil namun tetap terjadi. Kisah-kisah ini layak diceritakan, bukan dihilangkan.
+
+Hari ini, pikirkan kisah apa yang ingin kau ceritakan tentang orang tua atau kakek-nenek yang membentukmu — dan kisah apa yang sedang kau jalani, yang suatu hari mungkin diceritakan oleh seseorang yang lebih muda darimu tentang kesetiaanmu sendiri. Warisan tidak dibangun dalam satu momen besar; ia dibangun dari kumpulan hari-hari biasa yang dijalani dengan kasih.',
+     'Every family carries a story of God''s faithfulness, even the complicated ones. Tell it honestly, and let it become part of the legacy you pass on.', 'Setiap keluarga membawa kisah kesetiaan Allah, bahkan yang rumit sekalipun. Ceritakanlah dengan jujur, dan biarkan itu menjadi bagian dari warisan yang kau wariskan.',
+     'Lord, thank You for the story You have woven through my family, even the hard parts. Help me tell it honestly, and live a legacy worth passing on. Amen.', 'Tuhan, terima kasih atas kisah yang telah Engkau rajut dalam keluargaku, bahkan bagian yang berat sekalipun. Tolong aku menceritakannya dengan jujur, dan menjalani warisan yang layak diwariskan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ruth 1:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 145:4', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Rut 1:16', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 145:4', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Raising Hearts That Know God  (Family Love, 5 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Raising Hearts That Know God';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Raising Hearts That Know God', 'Membesarkan Hati yang Mengenal Tuhan',
+     'A devotion for parents planting faith deep in their children''s hearts', 'Renungan bagi orang tua yang menanamkan iman di hati anak-anak mereka',
+     'A five-day journey for mothers and fathers who long to raise children whose hearts belong to God. Each day pairs Scripture with honest reflection on the everyday work of parenting — teaching, disciplining, welcoming, and letting go.', 'Perjalanan lima hari bagi para ibu dan ayah yang merindukan anak-anak dengan hati yang berkenan kepada Allah. Setiap hari memadukan Firman Tuhan dengan renungan jujur tentang kerja harian mengasuh — mengajar, mendisiplin, menyambut, dan melepaskan.', 5)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Weight and Wonder of the Task', 'Beban dan Keajaiban Sebuah Tugas',
+     'Every parent knows the moment: holding a newborn, or watching a child sleep, and feeling the sudden weight of it all settle in — this small person has been entrusted to me. It is a wonder and a weight at once, this task of raising a human soul. Long before we worry about report cards or curfews, God has already given us the deeper assignment: to raise a heart that knows Him.
+
+Psalm 127 calls children a heritage from the Lord, a reward — not a burden we happen to carry, but a gift we have been handed. That word matters. It reframes the sleepless nights and the endless questions not as interruptions to our real life, but as the very shape our calling has taken. For many of us, parenting is not a distraction from ministry; it is the ministry.
+
+And Proverbs 22:6 gives us both a promise and a responsibility: start children off on the way they should go. Not force them, not merely inform them, but start them — walk the first steps alongside them, point the direction, and trust that a seed planted early has a way of taking root even through the years when it seems forgotten or ignored.
+
+Today, let the weight settle into wonder. You do not need to have this perfectly figured out by tonight. You only need to begin, faithfully, one ordinary day at a time, trusting the God who gave you this child to also give you what you need to raise them well.', 'Setiap orang tua mengenal momen itu: menggendong bayi yang baru lahir, atau memandangi anak yang sedang tidur, lalu tiba-tiba merasakan beratnya semua ini — pribadi kecil ini telah dipercayakan kepadaku. Ini adalah keajaiban sekaligus beban, tugas membesarkan sebuah jiwa manusia. Jauh sebelum kita mengkhawatirkan rapor atau jam malam, Allah sudah memberi kita tugas yang lebih dalam: membesarkan hati yang mengenal Dia.
+
+Mazmur 127 menyebut anak-anak sebagai milik pusaka dari Tuhan, sebuah upah — bukan beban yang kebetulan kita pikul, melainkan pemberian yang dipercayakan kepada kita. Kata itu penting. Ia mengubah cara kita memandang malam tanpa tidur dan pertanyaan tanpa henti, bukan sebagai gangguan atas hidup kita yang sesungguhnya, melainkan sebagai bentuk nyata dari panggilan kita. Bagi banyak dari kita, mengasuh anak bukan pengalih perhatian dari pelayanan; inilah pelayanan itu sendiri.
+
+Amsal 22:6 memberi kita janji sekaligus tanggung jawab: didiklah anak menurut jalan yang patut baginya. Bukan memaksa, bukan sekadar memberi tahu, tetapi memulai — berjalan bersama mereka pada langkah-langkah pertama, menunjukkan arah, dan percaya bahwa benih yang ditanam sejak dini akan berakar, bahkan melewati tahun-tahun ketika benih itu tampak terlupakan atau diabaikan.
+
+Hari ini, biarkan beban itu berubah menjadi keajaiban. Engkau tidak perlu memahami semuanya dengan sempurna malam ini juga. Engkau hanya perlu memulai, dengan setia, satu hari biasa demi satu hari biasa, percaya bahwa Allah yang memberikan anak ini kepadamu juga akan memberimu apa yang kau perlukan untuk membesarkannya dengan baik.',
+     'You don''t have to parent perfectly today — only faithfully. Let today''s small, ordinary moments be the ground where your child''s faith begins to grow.', 'Engkau tidak perlu menjadi orang tua yang sempurna hari ini — cukup setia. Biarkan momen-momen kecil dan biasa hari ini menjadi tanah tempat iman anakmu mulai bertumbuh.',
+     'Lord, thank You for entrusting this child to me. I don''t carry this alone — walk beside me today, and let my ordinary moments become soil for their faith to grow in. Amen.', 'Tuhan, terima kasih telah mempercayakan anak ini kepadaku. Aku tidak memikul ini sendirian — berjalanlah bersamaku hari ini, dan jadikanlah momen-momen biasaku sebagai tanah bagi tumbuhnya iman mereka. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 22:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 127:3', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 22:6', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 127:3', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Teaching Without a Textbook', 'Mengajar Tanpa Buku Pelajaran',
+     'Some of the most important lessons our children learn from us are never announced. They happen in the car on the way to school, at the dinner table when someone is tired and short-tempered, in the way we talk about a neighbor when we think no one important is listening. Faith is not only taught in a lesson; it is caught in a life.
+
+Moses told the people of Israel to be careful not to forget what they had seen God do, and to tell their children and grandchildren about it. Notice the order — first, do not let it fade from your own heart; only then can you hand it on. We cannot give our children a faith we ourselves have quietly let go cold.
+
+This is both freeing and convicting. Freeing, because it means we do not need a curriculum or a perfect script — we simply need to keep our own hearts awake to God and let our children see it. Convicting, because our children are always watching, even on the days we wish they weren''t, and they will remember far more of what we did than what we said.
+
+So today, do not wait for a special moment to teach. Let your ordinary hours — the errands, the meals, the small disappointments handled with grace — become the classroom. Ask God to keep your own heart tender toward Him, so that what spills over onto your children is real.', 'Sebagian pelajaran paling penting yang dipelajari anak-anak dari kita tidak pernah diumumkan. Itu terjadi di dalam mobil dalam perjalanan ke sekolah, di meja makan ketika seseorang sedang lelah dan mudah marah, dalam cara kita membicarakan tetangga saat mengira tidak ada orang penting yang mendengar. Iman tidak hanya diajarkan lewat pelajaran; iman itu tertular lewat sebuah kehidupan.
+
+Musa berkata kepada bangsa Israel untuk berhati-hati agar tidak melupakan apa yang telah mereka lihat Allah lakukan, dan untuk menceritakannya kepada anak-anak dan cucu-cucu mereka. Perhatikan urutannya — pertama, jangan biarkan hal itu pudar dari hatimu sendiri; barulah setelah itu engkau dapat mewariskannya. Kita tidak dapat memberikan kepada anak-anak kita sebuah iman yang diam-diam telah kita biarkan menjadi dingin.
+
+Ini membebaskan sekaligus menegur. Membebaskan, karena artinya kita tidak memerlukan kurikulum atau naskah yang sempurna — kita hanya perlu menjaga hati kita sendiri tetap terjaga bagi Allah dan membiarkan anak-anak kita melihatnya. Menegur, karena anak-anak kita selalu memperhatikan, bahkan pada hari-hari kita berharap mereka tidak melakukannya, dan mereka akan mengingat jauh lebih banyak apa yang kita lakukan daripada apa yang kita katakan.
+
+Jadi hari ini, jangan menunggu momen khusus untuk mengajar. Biarkan jam-jam biasamu — urusan rumah tangga, waktu makan, kekecewaan kecil yang ditangani dengan anggun — menjadi ruang kelas. Mintalah Allah menjaga hatimu sendiri tetap lembut kepada-Nya, sehingga apa yang tercurah kepada anak-anakmu adalah sesuatu yang nyata.',
+     'Faith is more caught than taught. Ask God to keep your own heart alive to Him, and let that be what your children learn from you today.', 'Iman lebih banyak tertular daripada diajarkan. Mintalah Allah menjaga hatimu sendiri tetap hidup bagi-Nya, dan biarkan itulah yang dipelajari anak-anakmu darimu hari ini.',
+     'Father, keep my own heart from growing cold toward You. Let my children see You in the way I live, not just hear about You in the things I say. Amen.', 'Bapa, jagalah hatiku agar tidak menjadi dingin terhadap-Mu. Biarlah anak-anakku melihat-Mu dalam cara aku hidup, bukan hanya mendengar tentang-Mu dari apa yang aku katakan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 4:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 4:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Discipline That Looks Like Love', 'Disiplin yang Berwajah Kasih',
+     'Few parts of parenting feel less like love in the moment than discipline. The tears, the pushback, the exhausting repetition of the same boundary night after night — none of it feels like the tender love we imagined when we first held our child. And yet Scripture insists that real love disciplines, because love is concerned with who a child becomes, not just how a moment feels.
+
+Paul''s instruction to fathers is a careful balance: do not exasperate your children, but bring them up in the training and instruction of the Lord. Discipline without relationship becomes harshness that provokes anger and shuts a heart down. But relationship without discipline becomes a house with no walls, where a child never learns the shape of safety.
+
+Proverbs 29:17 promises something worth holding onto on the hard days: discipline your children, and they will give you peace; they will bring you the delights you desire. This is not a promise that today''s correction will feel peaceful. It is a promise that consistent, loving discipline is planting something that will bear fruit later, even years later.
+
+If you are weary of correcting the same behavior again today, take heart. You are not failing; you are farming. The seasons of discipline that feel most fruitless are often doing quiet, unseen work in a child''s heart, work that only becomes visible with time and patience.', 'Sedikit sekali bagian dari mengasuh anak yang terasa kurang seperti kasih dibandingkan disiplin, di saat itu terjadi. Tangisan, perlawanan, pengulangan batasan yang sama malam demi malam yang melelahkan — semuanya tidak terasa seperti kasih lembut yang kita bayangkan ketika pertama kali menggendong anak kita. Namun Alkitab menegaskan bahwa kasih yang sejati mendisiplin, karena kasih peduli pada akan menjadi apa seorang anak, bukan hanya bagaimana perasaan pada saat itu.
+
+Instruksi Paulus kepada para bapa adalah keseimbangan yang hati-hati: jangan bangkitkan amarah di dalam hati anak-anakmu, tetapi didiklah mereka di dalam ajaran dan nasihat Tuhan. Disiplin tanpa relasi menjadi kekerasan yang memicu amarah dan menutup hati. Namun relasi tanpa disiplin menjadi rumah tanpa dinding, tempat seorang anak tidak pernah belajar bentuk dari rasa aman.
+
+Amsal 29:17 memberi janji yang layak dipegang pada hari-hari yang berat: didiklah anakmu, maka ia akan memberikan ketenteraman kepadamu, dan mendatangkan sukacita kepadamu. Ini bukan janji bahwa koreksi hari ini akan terasa tenteram. Ini adalah janji bahwa disiplin yang konsisten dan penuh kasih sedang menanam sesuatu yang akan berbuah kelak, bahkan bertahun-tahun kemudian.
+
+Jika hari ini engkau lelah mengoreksi perilaku yang sama lagi, kuatkanlah hatimu. Engkau tidak gagal; engkau sedang bertani. Musim-musim disiplin yang terasa paling tidak berbuah seringkali sedang mengerjakan sesuatu yang diam-diam dan tak terlihat di dalam hati seorang anak, sesuatu yang baru tampak seiring waktu dan kesabaran.',
+     'Loving discipline is not the opposite of tenderness — it is one of its truest forms. Keep planting, even on the days you see no fruit yet.', 'Disiplin yang penuh kasih bukanlah lawan dari kelembutan — itu adalah salah satu bentuknya yang paling nyata. Teruslah menanam, bahkan pada hari-hari engkau belum melihat buahnya.',
+     'Lord, give me wisdom to discipline with love, not frustration. Help me trust that the boundaries I set today are planting peace for tomorrow. Amen.', 'Tuhan, berilah aku hikmat untuk mendisiplin dengan kasih, bukan dengan frustrasi. Tolong aku percaya bahwa batasan yang aku tetapkan hari ini sedang menanam ketenteraman untuk hari esok. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 6:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 29:17', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 6:4', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 29:17', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Letting Them Come Close', 'Membiarkan Mereka Datang Mendekat',
+     'There is a small, sharp moment in the Gospels where the disciples try to shoo children away from Jesus, thinking He is too busy, too important, for their interruptions. Jesus''s response is immediate and unmistakable: let the little children come to me, and do not hinder them. He does not tolerate children; He welcomes them, delights in them, makes room for them.
+
+It is worth asking ourselves honestly: do we sometimes act like the disciples? Busy with what feels urgent, we wave off the small voice asking to be heard one more time, the tug on our sleeve, the request to watch, again, the same thing we''ve already watched ten times. None of it feels important in the moment. All of it is, to a child, the whole world.
+
+When we make room for our children the way Jesus made room, we are not just being good parents — we are teaching them something true about God''s own heart toward them. A child who is welcomed close by an earthly parent finds it easier, later, to believe in a heavenly Father who welcomes them too.
+
+You cannot say yes to every request today, and you don''t need to. But choose one moment to stop, kneel down, and give your full attention. Let your child feel, in that small moment, what it means to belong to a kingdom where they are never in the way.', 'Ada satu momen kecil namun tajam dalam Injil ketika para murid mencoba mengusir anak-anak dari hadapan Yesus, mengira Dia terlalu sibuk, terlalu penting, untuk diganggu oleh mereka. Tanggapan Yesus langsung dan jelas: biarkan anak-anak itu datang kepada-Ku, jangan menghalang-halangi mereka. Dia tidak sekadar menoleransi anak-anak; Dia menyambut mereka, bersukacita atas mereka, memberi ruang bagi mereka.
+
+Ada baiknya kita bertanya dengan jujur pada diri sendiri: apakah kadang kita bertindak seperti para murid itu? Sibuk dengan hal yang terasa mendesak, kita mengibaskan suara kecil yang minta didengar sekali lagi, tarikan di lengan baju kita, permintaan untuk menonton lagi hal yang sama yang sudah ditonton sepuluh kali. Tidak satu pun terasa penting pada saat itu. Namun bagi seorang anak, semuanya itu adalah seluruh dunianya.
+
+Ketika kita memberi ruang bagi anak-anak kita seperti Yesus memberi ruang, kita tidak sekadar menjadi orang tua yang baik — kita sedang mengajarkan sesuatu yang benar tentang hati Allah sendiri terhadap mereka. Anak yang disambut dekat oleh orang tua duniawinya akan lebih mudah, kelak, percaya kepada Bapa surgawi yang juga menyambutnya.
+
+Engkau tidak dapat mengatakan ya untuk setiap permintaan hari ini, dan engkau tidak perlu melakukannya. Namun pilihlah satu momen untuk berhenti, berlutut, dan memberi perhatian penuh. Biarkan anakmu merasakan, dalam momen kecil itu, apa artinya menjadi bagian dari kerajaan di mana mereka tidak pernah menjadi penghalang.',
+     'The way you welcome your child today teaches them something about the way God welcomes them. Make room, even in the small moments.', 'Cara engkau menyambut anakmu hari ini mengajarkan sesuatu tentang cara Allah menyambut mereka. Berilah ruang, bahkan dalam momen-momen kecil.',
+     'Jesus, thank You for welcoming children so freely. Teach me to slow down and make room for mine today, so they learn what it feels like to belong. Amen.', 'Yesus, terima kasih telah menyambut anak-anak dengan begitu bebas. Ajari aku untuk melambat dan memberi ruang bagi anakku hari ini, agar mereka belajar bagaimana rasanya diterima. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 10:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 10:14', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Praying Them Forward', 'Mendoakan Mereka Melangkah Maju',
+     'There comes a point in every parent''s journey where our hands must open. We cannot walk every step for our children forever; we can only walk with them for a while, and then release them to walk with God on their own. This is one of parenting''s hardest and holiest transitions — from directing to releasing, from controlling to entrusting.
+
+John writes with such simple honesty about what brings him the greatest joy: hearing that his spiritual children are walking in the truth. Not that they are successful, not that they are comfortable, but that they are walking in the truth. That is a different measure of success than the world offers, and it is worth letting it reshape what we hope for our own children.
+
+Proverbs 17:6 reminds us that children''s children are a crown to the aged, and parents are the pride of their children — a picture of generations honoring each other across time. The faith we plant today may not fully bloom until we are grandparents, or until after we are gone. That is not a failure of our labor; it is simply how deeply rooted things grow.
+
+So today, let go a little more into prayer. Whatever step your child is taking — toward independence, toward a decision you cannot make for them, toward a future you cannot see — release them into God''s hands. He was faithful before you held this child, and He will be faithful long after your hands can no longer reach.', 'Ada satu titik dalam perjalanan setiap orang tua ketika tangan kita harus terbuka. Kita tidak dapat berjalan di setiap langkah untuk anak-anak kita selamanya; kita hanya dapat berjalan bersama mereka untuk sementara, lalu melepaskan mereka untuk berjalan bersama Allah sendiri. Ini adalah salah satu transisi tersulit sekaligus paling kudus dalam mengasuh anak — dari mengarahkan menjadi melepaskan, dari mengendalikan menjadi mempercayakan.
+
+Yohanes menulis dengan kejujuran sederhana tentang apa yang mendatangkan sukacita terbesar baginya: mendengar bahwa anak-anak rohaninya hidup dalam kebenaran. Bukan bahwa mereka sukses, bukan bahwa mereka nyaman, melainkan bahwa mereka hidup dalam kebenaran. Itu adalah ukuran keberhasilan yang berbeda dari yang ditawarkan dunia, dan layak membentuk ulang apa yang kita harapkan bagi anak-anak kita sendiri.
+
+Amsal 17:6 mengingatkan kita bahwa mahkota orang-orang tua adalah anak cucu, dan kehormatan anak-anak ialah nenek moyang mereka — gambaran generasi yang saling menghormati sepanjang waktu. Iman yang kita tanam hari ini mungkin baru sepenuhnya berbunga ketika kita menjadi kakek-nenek, atau bahkan setelah kita tiada. Itu bukan kegagalan kerja kita; itu hanyalah cara sesuatu yang berakar dalam tumbuh.
+
+Jadi hari ini, lepaskanlah sedikit lebih banyak ke dalam doa. Apa pun langkah yang sedang diambil anakmu — menuju kemandirian, menuju keputusan yang tidak dapat kau buat untuknya, menuju masa depan yang tidak dapat kau lihat — serahkanlah mereka ke tangan Allah. Dia telah setia sebelum engkau menggendong anak ini, dan Dia akan tetap setia jauh setelah tanganmu tidak lagi dapat menjangkau.',
+     'Your goal was never to control your child''s story, but to hand them, faithfully, to the God who authored it. Let prayer be how you release them today.', 'Tujuanmu bukanlah mengendalikan kisah anakmu, melainkan menyerahkan mereka, dengan setia, kepada Allah yang menulis kisah itu. Biarlah doa menjadi caramu melepaskan mereka hari ini.',
+     'Father, I release my child into Your keeping. Let them walk in Your truth long after my hands can no longer guide them. I trust You with what I cannot control. Amen.', 'Bapa, aku menyerahkan anakku ke dalam pemeliharaan-Mu. Biarlah mereka hidup dalam kebenaran-Mu, jauh setelah tanganku tidak lagi bisa membimbing. Aku mempercayakan kepada-Mu apa yang tidak dapat kukendalikan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 John 1:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 17:6', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 Yohanes 1:4', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 17:6', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Rebuilding: Healing for Wounded Families  (Family Love, 7 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Rebuilding: Healing for Wounded Families';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Rebuilding: Healing for Wounded Families', 'Membangun Kembali: Pemulihan bagi Keluarga yang Terluka',
+     'A seven-day devotion for blended, broken, and healing families', 'Renungan tujuh hari bagi keluarga campuran, retak, dan yang sedang dipulihkan',
+     'A seven-day journey for families reshaped by divorce, remarriage, estrangement, or deep wounds — walking through betrayal, restoration, forgiveness, and the hope of becoming a new kind of family under God''s care.', 'Perjalanan tujuh hari bagi keluarga yang dibentuk ulang oleh perceraian, pernikahan kembali, keretakan, atau luka yang dalam — melewati pengkhianatan, pemulihan, pengampunan, dan pengharapan untuk menjadi keluarga baru dalam pemeliharaan Allah.', 7)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'You Meant It for Harm', 'Kamu Bermaksud Jahat',
+     'Joseph''s story is one of the most dramatic family wounds in Scripture — sold into slavery by his own brothers, out of jealousy so sharp it nearly turned to murder. Years later, when those same brothers stand before him, powerless and afraid, Joseph could have used his position to destroy them. Instead, he says something that has become an anchor for wounded families ever since: you intended to harm me, but God intended it for good.
+
+Notice what Joseph does not say. He does not say the harm didn''t happen, or that it didn''t matter, or that his brothers were secretly good people all along. He names the wound plainly — you intended to harm me — before he speaks a single word about redemption. Healing that skips past naming the harm honestly is not really healing; it is avoidance wearing healing''s clothes.
+
+If your family has been reshaped by betrayal, divorce, addiction, abandonment, or any wound that left real damage, this is where rebuilding begins — not by pretending it didn''t happen or rushing to forgiveness before the wound has even been acknowledged, but by telling the truth about what was intended for harm, exactly as Joseph did, out loud, without flinching.
+
+Today, if you are able, name your family''s wound honestly, at least to God, even if you are not ready to say it to anyone else yet. This is not the end of the journey toward healing. It is the necessary beginning of it.', 'Kisah Yusuf adalah salah satu luka keluarga paling dramatis dalam Alkitab — dijual sebagai budak oleh saudara-saudaranya sendiri, karena kecemburuan yang begitu tajam sehingga hampir berubah menjadi pembunuhan. Bertahun-tahun kemudian, ketika saudara-saudaranya berdiri di hadapannya, tak berdaya dan ketakutan, Yusuf bisa saja menggunakan posisinya untuk menghancurkan mereka. Sebaliknya, ia berkata sesuatu yang telah menjadi sauh bagi keluarga yang terluka sejak saat itu: kamu telah mereka-rekakan kejahatan terhadap aku, tetapi Allah telah mereka-rekakannya untuk kebaikan.
+
+Perhatikan apa yang tidak dikatakan Yusuf. Ia tidak berkata bahwa kejahatan itu tidak terjadi, atau bahwa itu tidak penting, atau bahwa saudara-saudaranya sebenarnya orang baik selama ini. Ia menamai luka itu dengan jelas — kamu bermaksud jahat terhadapku — sebelum ia mengucapkan satu kata pun tentang pemulihan. Pemulihan yang melewatkan pengakuan luka secara jujur bukanlah pemulihan sejati; itu adalah penghindaran yang mengenakan pakaian pemulihan.
+
+Jika keluargamu telah dibentuk ulang oleh pengkhianatan, perceraian, kecanduan, ditinggalkan, atau luka apa pun yang meninggalkan kerusakan nyata, di sinilah pembangunan kembali dimulai — bukan dengan berpura-pura itu tidak terjadi atau tergesa-gesa menuju pengampunan sebelum luka itu bahkan diakui, tetapi dengan mengatakan kebenaran tentang apa yang dimaksudkan untuk mencelakai, persis seperti yang dilakukan Yusuf, dengan lantang, tanpa gentar.
+
+Hari ini, jika engkau mampu, namailah luka keluargamu dengan jujur, setidaknya kepada Allah, meskipun engkau belum siap mengatakannya kepada siapa pun yang lain. Ini bukan akhir dari perjalanan menuju pemulihan. Ini adalah permulaan yang diperlukan darinya.',
+     'Real healing begins with naming the wound honestly, not skipping past it. Bring the truth of what happened to God today, without flinching.', 'Pemulihan sejati dimulai dengan menamai luka secara jujur, bukan melewatinya. Bawalah kebenaran tentang apa yang terjadi kepada Allah hari ini, tanpa gentar.',
+     'Lord, give me courage to name what has truly harmed my family, without minimizing or rushing past it. Meet me honestly in this first step. Amen.', 'Tuhan, berilah aku keberanian untuk menamai apa yang benar-benar telah mencelakai keluargaku, tanpa meremehkan atau tergesa-gesa melewatinya. Jumpailah aku dengan jujur dalam langkah pertama ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 50:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 50:20', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Beauty From Ashes', 'Keindahan dari Abu',
+     'Isaiah''s prophecy paints a picture that feels almost too tender to be true for a family sitting in the ashes of what once was: God will bestow on them a crown of beauty instead of ashes, the oil of joy instead of mourning, a garment of praise instead of a spirit of despair. This is not a promise of forgetting what burned. It is a promise of transformation, of something genuinely beautiful being formed from the very material of loss.
+
+The image is deliberately physical — ashes traded for a crown, mourning clothes traded for festive oil, despair traded for praise. God does not ask the family to manufacture their own beauty out of willpower. He is the one who bestows it, who does the exchanging, in His timing, not according to a schedule we can rush.
+
+Isaiah adds something equally important elsewhere: forget the former things; do not dwell on the past. See, I am doing a new thing! This does not contradict the honesty of naming our wounds from yesterday. It simply means that naming the wound is not the same as living there permanently. There comes a point where dwelling shifts from honest grief into a refusal to let God do something new.
+
+If your family feels like it is sitting in ashes today — from a broken marriage, a fractured relationship, years that felt wasted — ask God specifically what new thing He might want to grow there. Not a return to what was, but something new, shaped by everything you have survived, that could not have existed any other way.', 'Nubuat Yesaya melukiskan gambaran yang terasa hampir terlalu lembut untuk menjadi nyata bagi sebuah keluarga yang duduk di antara abu dari apa yang pernah ada: Allah akan mengganti abu dengan mahkota, minyak tangis dengan minyak sukaria, kain kabung dengan pakaian puji-pujian. Ini bukan janji untuk melupakan apa yang telah terbakar. Ini adalah janji transformasi, sesuatu yang benar-benar indah dibentuk dari bahan kehilangan itu sendiri.
+
+Gambaran ini secara sengaja bersifat nyata — abu ditukar dengan mahkota, pakaian berkabung ditukar dengan minyak perayaan, keputusasaan ditukar dengan puji-pujian. Allah tidak meminta keluarga untuk menciptakan keindahan mereka sendiri dari kemauan keras. Dialah yang memberikannya, yang melakukan pertukaran itu, pada waktu-Nya, bukan menurut jadwal yang bisa kita tergesa-gesakan.
+
+Yesaya menambahkan sesuatu yang sama pentingnya di ayat lain: janganlah ingat-ingat hal-hal yang dahulu, dan janganlah perhatikan hal-hal yang dari zaman purbakala! Lihat, Aku hendak membuat sesuatu yang baru. Ini tidak bertentangan dengan kejujuran menamai luka kita kemarin. Ini hanya berarti bahwa menamai luka bukanlah sama dengan tinggal di dalamnya secara permanen. Ada titik ketika berdiam diri berubah dari duka yang jujur menjadi penolakan untuk membiarkan Allah melakukan sesuatu yang baru.
+
+Jika keluargamu terasa seperti sedang duduk di antara abu hari ini — dari pernikahan yang retak, hubungan yang pecah, tahun-tahun yang terasa sia-sia — tanyakan kepada Allah secara khusus hal baru apa yang mungkin ingin Ia tumbuhkan di sana. Bukan kembali ke keadaan semula, melainkan sesuatu yang baru, dibentuk oleh segala hal yang telah kau lalui, yang tidak mungkin ada dengan cara lain.',
+     'God doesn''t ask you to manufacture beauty from your family''s ashes — He bestows it, in His timing. Ask Him what new thing He wants to grow there.', 'Allah tidak meminta engkau menciptakan keindahan dari abu keluargamu — Dia yang memberikannya, pada waktu-Nya. Tanyakan kepada-Nya hal baru apa yang ingin Ia tumbuhkan di sana.',
+     'Lord, exchange the ashes of my family''s past for something beautiful. Help me trust Your timing, and show me the new thing You are doing. Amen.', 'Tuhan, tukarlah abu dari masa lalu keluargaku dengan sesuatu yang indah. Tolong aku mempercayai waktu-Mu, dan tunjukkanlah hal baru yang sedang Engkau kerjakan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 61:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 43:18-19', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 61:3', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 43:18-19', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'The Years the Locusts Ate', 'Tahun-Tahun yang Dimakan Belalang',
+     'The prophet Joel speaks to a people who had watched swarms of locusts strip their land bare, year after year, leaving nothing behind but devastation. Into that ruin, God makes a striking promise: I will repay you for the years the locusts have eaten. Not just comfort for the current loss, but restoration of the years themselves — the time that felt wasted, stolen, devoured by something destructive.
+
+For a wounded family, this promise reaches somewhere very specific. Perhaps there were years lost to conflict, years a parent was absent, years a marriage limped along in silence, years a child grew up faster than they should have because the adults around them were consumed by crisis. Those years feel unrecoverable, like locusts have already eaten them and there is no getting them back.
+
+God''s promise through Joel is not that time will reverse, but that He specializes in restoration that feels, from the inside, like getting something back that was thought permanently lost. This might look like a relationship rebuilt more honestly than it ever was before, or a family finding a closeness in the healing that they never had in the years that were ''eaten.'' Restoration rarely looks identical to what was lost — it often looks different, and sometimes even deeper.
+
+Today, name specifically what feels like your family''s ''eaten years'' — what season, what relationship, what years of connection you feel you cannot get back. Bring that specific loss to God, and ask Him to do what only He can: repay what feels unrecoverable, in whatever form His restoration takes.', 'Nabi Yoel berbicara kepada umat yang telah menyaksikan kawanan belalang melahap habis tanah mereka, tahun demi tahun, tidak meninggalkan apa pun selain kehancuran. Ke dalam reruntuhan itu, Allah membuat janji yang mencolok: Aku akan mengganti bagimu tahun-tahun yang telah dimakan habis oleh belalang. Bukan hanya penghiburan untuk kehilangan saat ini, melainkan pemulihan atas tahun-tahun itu sendiri — waktu yang terasa sia-sia, dicuri, dilahap oleh sesuatu yang merusak.
+
+Bagi keluarga yang terluka, janji ini menjangkau sesuatu yang sangat spesifik. Mungkin ada tahun-tahun yang hilang karena konflik, tahun-tahun ketika seorang orang tua tidak hadir, tahun-tahun pernikahan yang bertahan dalam kesunyian, tahun-tahun seorang anak tumbuh lebih cepat dari seharusnya karena orang dewasa di sekitarnya tenggelam dalam krisis. Tahun-tahun itu terasa tidak dapat dipulihkan, seolah belalang sudah melahapnya dan tidak ada cara mendapatkannya kembali.
+
+Janji Allah melalui Yoel bukanlah bahwa waktu akan berbalik, melainkan bahwa Dia ahli dalam pemulihan yang terasa, dari dalam, seperti mendapatkan kembali sesuatu yang dikira hilang selamanya. Ini mungkin terlihat seperti hubungan yang dibangun ulang dengan lebih jujur daripada sebelumnya, atau keluarga menemukan kedekatan dalam pemulihan yang tidak pernah mereka miliki di tahun-tahun yang ''dimakan'' itu. Pemulihan jarang terlihat identik dengan apa yang hilang — seringkali terlihat berbeda, dan kadang bahkan lebih dalam.
+
+Hari ini, namailah secara spesifik apa yang terasa seperti ''tahun-tahun yang dimakan'' bagi keluargamu — musim apa, hubungan apa, tahun-tahun keterhubungan apa yang kau rasa tidak bisa kau dapatkan kembali. Bawalah kehilangan spesifik itu kepada Allah, dan mintalah Dia melakukan apa yang hanya bisa Dia lakukan: mengganti apa yang terasa tidak dapat dipulihkan, dalam bentuk apa pun pemulihan-Nya itu datang.',
+     'God specializes in restoring what feels permanently lost — though His restoration may look different than what was taken. Name your ''eaten years'' to Him today.', 'Allah ahli dalam memulihkan apa yang terasa hilang selamanya — meski pemulihan-Nya mungkin terlihat berbeda dari apa yang telah diambil. Namailah ''tahun-tahun yang dimakan'' itu kepada-Nya hari ini.',
+     'Lord, I bring You the years my family feels we lost. I don''t know how You will restore them, but I trust You are able. Repay what feels unrecoverable. Amen.', 'Tuhan, aku membawa kepada-Mu tahun-tahun yang terasa hilang bagi keluargaku. Aku tidak tahu bagaimana Engkau akan memulihkannya, tetapi aku percaya Engkau sanggup. Gantilah apa yang terasa tidak dapat dipulihkan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Joel 2:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yoel 2:25', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Working All Things Together', 'Mendatangkan Kebaikan dari Segala Sesuatu',
+     'Romans 8:28 is one of the most quoted verses in Scripture, and also one of the most easily misused: we know that in all things God works for the good of those who love him, who have been called according to his purpose. This verse is not a promise that everything that happens is good in itself. A blended family formed through painful divorce, a relationship fractured by betrayal — these things are not good. The verse promises something different: that God works, actively and continually, within all of it toward good.
+
+This distinction matters enormously for wounded families, because it protects you from a shallow theology that pressures you to call your pain good, or to rush toward gratitude for things that genuinely hurt. You do not have to thank God for the divorce, the addiction, the years of dysfunction. You can grieve those honestly while trusting that God is working, even now, weaving something good through the wreckage.
+
+Jeremiah''s promise to Israel in exile carries a similar weight: I know the plans I have for you, plans to prosper you and not to harm you, plans to give you hope and a future. It''s worth remembering this was spoken to a people in captivity, far from home, with every reason to believe their story was over. God spoke a future into a situation that looked, by every measure, hopeless.
+
+Today, hold both truths without letting either cancel the other: your family''s wounds were not good, and were never God''s desire for you, and God is nonetheless actively working within them toward a future with hope. Ask Him to show you even one small sign of that work today.', 'Roma 8:28 adalah salah satu ayat yang paling sering dikutip dalam Alkitab, sekaligus salah satu yang paling mudah disalahgunakan: kita tahu bahwa Allah turut bekerja dalam segala sesuatu untuk mendatangkan kebaikan bagi mereka yang mengasihi Dia, yang terpanggil sesuai dengan rencana Allah. Ayat ini bukan janji bahwa segala sesuatu yang terjadi itu baik dengan sendirinya. Keluarga campuran yang terbentuk melalui perceraian yang menyakitkan, hubungan yang retak karena pengkhianatan — hal-hal ini tidak baik. Ayat ini menjanjikan sesuatu yang berbeda: bahwa Allah bekerja, secara aktif dan terus-menerus, di dalam semuanya itu menuju kebaikan.
+
+Perbedaan ini sangat penting bagi keluarga yang terluka, karena ini melindungimu dari teologi dangkal yang menekanmu untuk menyebut rasa sakitmu baik, atau untuk tergesa-gesa menuju rasa syukur atas hal-hal yang benar-benar menyakitkan. Engkau tidak perlu bersyukur kepada Allah atas perceraian, kecanduan, tahun-tahun disfungsi itu. Engkau bisa berduka atas semua itu dengan jujur sambil tetap percaya bahwa Allah sedang bekerja, bahkan sekarang, merajut sesuatu yang baik melalui reruntuhan itu.
+
+Janji Yeremia kepada Israel di pembuangan membawa bobot yang serupa: Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan. Perlu diingat bahwa ini diucapkan kepada bangsa yang berada dalam pembuangan, jauh dari rumah, dengan segala alasan untuk percaya bahwa kisah mereka telah berakhir. Allah mengucapkan sebuah masa depan ke dalam situasi yang, menurut segala ukuran, tampak tanpa harapan.
+
+Hari ini, peganglah kedua kebenaran ini tanpa membiarkan salah satunya membatalkan yang lain: luka keluargamu tidak baik, dan tidak pernah menjadi kehendak Allah bagimu, namun Allah tetap secara aktif bekerja di dalamnya menuju masa depan yang penuh harapan. Mintalah Dia menunjukkan kepadamu setidaknya satu tanda kecil dari pekerjaan itu hari ini.',
+     'You don''t have to call your family''s pain good. You only have to trust that God is working good within it, even now, toward a hopeful future.', 'Engkau tidak perlu menyebut rasa sakit keluargamu sebagai sesuatu yang baik. Engkau hanya perlu percaya bahwa Allah sedang mengerjakan kebaikan di dalamnya, bahkan sekarang, menuju masa depan yang penuh harapan.',
+     'Lord, I don''t understand all the reasons for my family''s pain, but I trust You are working within it. Show me a sign of hope today. Amen.', 'Tuhan, aku tidak memahami semua alasan di balik rasa sakit keluargaku, tetapi aku percaya Engkau sedang bekerja di dalamnya. Tunjukkanlah aku tanda pengharapan hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:28', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Jeremiah 29:11', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:28', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yeremia 29:11', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Forgiving as We''ve Been Forgiven', 'Mengampuni Seperti Kita Telah Diampuni',
+     'Of all the steps toward rebuilding a wounded family, forgiveness is often the hardest and most misunderstood. Paul''s instruction is simple to read and difficult to live: be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you. Notice the standard — not forgiveness because the other person deserves it, or has fully repented, or has changed. Forgiveness modeled on how God forgave us, which was never dependent on our having earned it first.
+
+This does not mean forgiveness requires pretending the harm was small, or reopening yourself to ongoing abuse, or reconciling a relationship that isn''t safe. Forgiveness and reconciliation are not the same thing — you can release someone from the debt they owe you in your own heart, before God, while still setting firm boundaries about what closeness, if any, is wise going forward.
+
+For many wounded families, forgiveness is not a single decision but a door you walk through again and again, sometimes daily, especially when memory reopens the wound unexpectedly. This is not a sign you have failed to forgive. Forgiveness is often less like flipping a switch and more like tending a wound that reopens — you clean it and bind it again, as many times as it needs.
+
+Today, ask God plainly who you still need to forgive, even partially, even just in this moment. You do not have to have the whole road mapped out. You only need to take one honest step of release today, trusting that the same God who forgave you completely is walking with you through every repetition of this hard, holy work.', 'Dari semua langkah menuju pembangunan kembali keluarga yang terluka, pengampunan seringkali menjadi yang paling sulit dan paling disalahpahami. Instruksi Paulus mudah dibaca namun sulit dijalani: hendaklah kamu ramah seorang terhadap yang lain, penuh kasih mesra dan saling mengampuni, sebagaimana Allah di dalam Kristus telah mengampuni kamu. Perhatikan standarnya — bukan mengampuni karena orang itu pantas menerimanya, atau telah sepenuhnya bertobat, atau telah berubah. Pengampunan yang dicontohkan dari bagaimana Allah mengampuni kita, yang tidak pernah bergantung pada apakah kita telah mendapatkannya terlebih dahulu.
+
+Ini tidak berarti pengampunan menuntut berpura-pura bahwa luka itu kecil, atau membuka diri kembali terhadap perlakuan buruk yang terus berlanjut, atau merekonsiliasi hubungan yang tidak aman. Pengampunan dan rekonsiliasi bukanlah hal yang sama — engkau bisa melepaskan seseorang dari utang yang mereka miliki kepadamu di dalam hatimu sendiri, di hadapan Allah, sambil tetap menetapkan batasan yang tegas tentang kedekatan macam apa, jika ada, yang bijak ke depannya.
+
+Bagi banyak keluarga yang terluka, pengampunan bukanlah satu keputusan tunggal melainkan sebuah pintu yang dilalui berulang kali, kadang setiap hari, terutama ketika ingatan membuka kembali luka itu secara tak terduga. Ini bukan tanda bahwa engkau gagal mengampuni. Pengampunan seringkali lebih mirip merawat luka yang terbuka kembali daripada menekan sebuah saklar — engkau membersihkannya dan membalutnya lagi, sebanyak yang dibutuhkan.
+
+Hari ini, tanyakan kepada Allah dengan jelas siapa yang masih perlu kau ampuni, meski sebagian, meski hanya pada momen ini. Engkau tidak perlu memiliki seluruh jalan yang sudah terpetakan. Engkau hanya perlu mengambil satu langkah pelepasan yang jujur hari ini, percaya bahwa Allah yang sama, yang telah mengampunimu sepenuhnya, berjalan bersamamu melewati setiap pengulangan dari kerja yang berat dan kudus ini.',
+     'Forgiveness is often less a single decision and more a door you walk through again and again. Take one honest step of release today.', 'Pengampunan seringkali bukan satu keputusan tunggal, melainkan sebuah pintu yang dilalui berulang kali. Ambillah satu langkah pelepasan yang jujur hari ini.',
+     'Lord, help me forgive as You have forgiven me — not because it''s deserved, but because You first released me. Walk with me through this, again and again. Amen.', 'Tuhan, tolong aku mengampuni seperti Engkau telah mengampuniku — bukan karena itu pantas, melainkan karena Engkau lebih dulu melepaskanku. Berjalanlah bersamaku melewati ini, berulang kali. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:32', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'A Home for the Lonely', 'Rumah bagi yang Kesepian',
+     'Psalm 68:6 carries a promise that feels almost tailor-made for blended and reshaped families: God sets the lonely in families. Not the tidy, unbroken families the world sometimes idealizes, but families formed on purpose, by God''s own hand, as a home for people who did not fit neatly anywhere else. If your family looks different than the one you once pictured — stepparents and stepchildren, half-siblings, chosen family, a household stitched together after loss — this verse says God specializes in exactly that kind of building.
+
+There is something important in the word ''sets.'' It is active, intentional. God is not merely tolerating the unconventional shape of your family; He is the one placing people into it, doing the work of building a home out of what might otherwise have remained scattered and alone. Blended families are not God''s second-best plan, quietly permitted. They can be, and often are, exactly where He sets the lonely to find belonging.
+
+Paul''s words to the Corinthians add a further layer: if anyone is in Christ, the new creation has come — the old has gone, the new is here. This applies to families as much as individuals. A family does not have to be identical to what it once was to be genuinely new and good. The old shape may be gone, truly gone, and grieved as such, while something new, blessed in its own right, is here.
+
+Today, look at your family exactly as it is — not as you once imagined it, not as you wish it had turned out — and ask God to help you see it the way He does: a home He is actively building for people who needed one, new creation rather than a broken copy of something else.', 'Mazmur 68:6 membawa janji yang terasa hampir dirancang khusus bagi keluarga campuran dan yang dibentuk ulang: Allah memberi tempat tinggal kepada orang yang kesepian. Bukan keluarga yang rapi dan utuh yang kadang diidealkan dunia, melainkan keluarga yang dibentuk dengan sengaja, oleh tangan Allah sendiri, sebagai rumah bagi orang-orang yang tidak cocok dengan rapi di tempat lain mana pun. Jika keluargamu terlihat berbeda dari yang pernah kau bayangkan — orang tua tiri dan anak tiri, saudara tiri, keluarga pilihan, rumah tangga yang dijahit kembali setelah kehilangan — ayat ini berkata bahwa Allah ahli persis dalam pembangunan semacam itu.
+
+Ada sesuatu yang penting dalam kata ''memberi tempat tinggal''. Itu aktif, disengaja. Allah tidak sekadar mentolerir bentuk tak lazim dari keluargamu; Dialah yang menempatkan orang-orang ke dalamnya, mengerjakan pembangunan sebuah rumah dari apa yang mungkin sebaliknya tetap tercerai-berai dan sendirian. Keluarga campuran bukanlah rencana cadangan Allah yang diam-diam diizinkan. Mereka bisa, dan seringkali memang, tepat di tempat Dia menempatkan orang yang kesepian untuk menemukan rasa memiliki.
+
+Kata-kata Paulus kepada jemaat di Korintus menambahkan satu lapisan lagi: siapa yang ada di dalam Kristus, ia adalah ciptaan baru — yang lama sudah berlalu, sesungguhnya yang baru sudah datang. Ini berlaku bagi keluarga sama seperti bagi individu. Sebuah keluarga tidak harus identik dengan apa yang pernah ada untuk benar-benar menjadi baru dan baik. Bentuk lama itu mungkin telah pergi, benar-benar pergi, dan berduka karenanya, sementara sesuatu yang baru, diberkati dengan haknya sendiri, kini ada.
+
+Hari ini, pandanglah keluargamu persis seperti apa adanya — bukan seperti yang pernah kau bayangkan, bukan seperti yang kau harapkan seharusnya jadi — dan mintalah Allah menolongmu melihatnya sebagaimana Dia melihatnya: sebuah rumah yang sedang aktif Dia bangun bagi orang-orang yang membutuhkannya, ciptaan baru, bukan salinan yang rusak dari sesuatu yang lain.',
+     'Your family does not have to match the shape you once imagined to be genuinely good. God specializes in setting the lonely into homes exactly like yours.', 'Keluargamu tidak harus sesuai dengan bentuk yang pernah kau bayangkan untuk benar-benar menjadi baik. Allah ahli dalam menempatkan orang yang kesepian ke dalam rumah persis seperti milikmu.',
+     'Lord, help me see my family the way You see it — a home You are building, new creation rather than a broken copy of something else. Amen.', 'Tuhan, tolong aku melihat keluargaku sebagaimana Engkau melihatnya — sebuah rumah yang sedang Engkau bangun, ciptaan baru, bukan salinan yang rusak dari sesuatu yang lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 68:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 5:17', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 68:6', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 5:17', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'Welcome One Another', 'Terimalah Satu Sama Lain',
+     'As this journey of rebuilding comes to a close, Paul offers instruction that feels like a fitting final word for any reshaped family: accept one another, then, just as Christ accepted you, in order to bring praise to God. Acceptance here is not passive tolerance. It is active welcome, the same generous welcome Christ extended to us while we were still far from Him, still unfinished, still capable of disappointing Him.
+
+For a blended or wounded family, this instruction carries specific weight. A stepparent learning to welcome a child who did not choose them. A child learning to welcome a new sibling who arrived through circumstances they never wanted. An adult learning to welcome a parent back into trust after years of distance. None of this welcome has to be instant or effortless — it can be a practice, chosen daily, imperfectly, and still counted as real.
+
+Paul writes elsewhere of clothing ourselves with compassion, kindness, humility, gentleness, and patience — as God''s chosen and dearly loved people. This is a wardrobe we put on deliberately each morning, not a personality trait we either have or don''t. On the hard days, when old wounds flare or new tensions rise, the practical question is simply: what am I choosing to wear today toward this family God has given me?
+
+As you close this week, take stock of how far you have come — from naming the wound honestly, through grief and restoration and forgiveness, to this: choosing welcome. Your family may still be under construction, and that is not a failure. Ask God to keep building, and ask Him to let you be part of the welcome He is extending, one imperfect, faithful day at a time.', 'Saat perjalanan pembangunan kembali ini mendekati akhir, Paulus memberi instruksi yang terasa seperti kata penutup yang pas bagi keluarga mana pun yang telah dibentuk ulang: terimalah satu akan yang lain, sama seperti Kristus juga telah menerima kita, untuk kemuliaan Allah. Penerimaan di sini bukanlah toleransi pasif. Ini adalah sambutan aktif, sambutan murah hati yang sama yang Kristus berikan kepada kita ketika kita masih jauh dari-Nya, masih belum sempurna, masih mampu mengecewakan-Nya.
+
+Bagi keluarga campuran atau yang terluka, instruksi ini membawa bobot yang khusus. Seorang orang tua tiri belajar menyambut anak yang tidak memilihnya. Seorang anak belajar menyambut saudara baru yang datang melalui keadaan yang tidak pernah mereka inginkan. Seorang dewasa belajar menyambut kembali orang tua ke dalam kepercayaan setelah bertahun-tahun berjarak. Tidak satu pun dari penyambutan ini harus instan atau tanpa usaha — ia bisa menjadi sebuah latihan, dipilih setiap hari, dengan tidak sempurna, dan tetap dihitung sebagai nyata.
+
+Paulus menulis di tempat lain tentang mengenakan belas kasihan, kemurahan, kerendahan hati, kelemahlembutan, dan kesabaran — sebagai orang-orang pilihan Allah yang dikasihi-Nya. Ini adalah pakaian yang kita kenakan dengan sengaja setiap pagi, bukan sifat kepribadian yang entah kita miliki atau tidak. Pada hari-hari yang sulit, ketika luka lama kambuh atau ketegangan baru muncul, pertanyaan praktisnya sederhana: apa yang aku pilih untuk kukenakan hari ini terhadap keluarga yang telah Allah berikan kepadaku?
+
+Saat engkau menutup minggu ini, hitunglah seberapa jauh engkau telah melangkah — dari menamai luka dengan jujur, melewati duka dan pemulihan serta pengampunan, hingga sampai ke sini: memilih untuk menyambut. Keluargamu mungkin masih dalam proses pembangunan, dan itu bukan kegagalan. Mintalah Allah terus membangun, dan mintalah Dia mengizinkanmu menjadi bagian dari sambutan yang sedang Dia perluas, satu hari yang tidak sempurna namun setia, demi satu hari.',
+     'Welcome is a practice, not a feeling that arrives automatically. Choose today, imperfectly and faithfully, to extend the welcome Christ gave you.', 'Menyambut adalah sebuah latihan, bukan perasaan yang datang secara otomatis. Pilihlah hari ini, dengan tidak sempurna namun setia, untuk memberikan sambutan yang telah Kristus berikan kepadamu.',
+     'Lord, thank You for accepting me while I was still far from You. Help me extend that same welcome to my family, one imperfect, faithful day at a time. Amen.', 'Tuhan, terima kasih telah menerimaku ketika aku masih jauh dari-Mu. Tolong aku memberikan sambutan yang sama kepada keluargaku, satu hari yang tidak sempurna namun setia, demi satu hari. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 15:7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:12', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 15:7', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:12', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: When Love Grieves  (Family Love, 6 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'When Love Grieves';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'When Love Grieves', 'Ketika Kasih Berduka',
+     'A devotion for families walking through loss together', 'Renungan bagi keluarga yang berjalan bersama melewati kehilangan',
+     'A six-day devotion for families grieving the loss of a loved one — honest reflections on tears, comfort, hope, and the promise that grief, though real, does not have the final word.', 'Renungan enam hari bagi keluarga yang berduka atas kehilangan orang terkasih — renungan jujur tentang air mata, penghiburan, pengharapan, dan janji bahwa duka, meski nyata, bukanlah kata terakhir.', 6)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Permission to Weep', 'Izin untuk Menangis',
+     'There is a single sentence in John''s Gospel that has comforted grieving families for two thousand years: Jesus wept. Two words, and yet they carry the weight of an entire theology of grief. Jesus, standing at the tomb of His friend Lazarus, a man He was about to raise from the dead only minutes later, wept anyway. He did not skip past the sorrow because He knew the ending. He let Himself feel the loss fully, in the moment it was real.
+
+This matters enormously for grieving families, especially those who carry faith and wonder if grief and belief can coexist. If Jesus, who held resurrection power in His very hands, still wept at a grave, then our tears are not a failure of faith. They are, in fact, an act deeply consistent with who God is — a God who enters sorrow rather than standing apart from it.
+
+Psalm 34:18 offers a promise worth holding through this whole week: the Lord is close to the brokenhearted and saves those who are crushed in spirit. Not distant during grief, waiting for it to pass before drawing near — close, present, near precisely in the crushing. This is not a God who requires us to compose ourselves before we''re allowed near Him.
+
+Today, whatever stage of grief you or your family are in, give yourself permission to weep without shame. Let today be a day where sorrow is not something to manage or hide from the people around you, but something to bring honestly into the presence of a God who wept too.', 'Ada satu kalimat tunggal dalam Injil Yohanes yang telah menghibur keluarga yang berduka selama dua ribu tahun: Maka menangislah Yesus. Dua kata, namun membawa bobot dari seluruh teologi tentang duka. Yesus, berdiri di kubur sahabat-Nya Lazarus, seorang laki-laki yang beberapa menit kemudian akan Ia bangkitkan dari kematian, tetap menangis. Ia tidak melewati kesedihan itu karena Ia tahu akhir ceritanya. Ia membiarkan diri-Nya merasakan kehilangan itu sepenuhnya, pada momen ketika kehilangan itu nyata.
+
+Ini sangat berarti bagi keluarga yang berduka, terutama mereka yang membawa iman namun bertanya-tanya apakah duka dan iman dapat berdampingan. Jika Yesus, yang memegang kuasa kebangkitan di tangan-Nya sendiri, tetap menangis di kubur, maka air mata kita bukanlah kegagalan iman. Sebaliknya, itu adalah tindakan yang sangat selaras dengan siapa Allah itu — Allah yang masuk ke dalam kesedihan, bukan berdiri terpisah darinya.
+
+Mazmur 34:18 memberi janji yang layak dipegang sepanjang minggu ini: TUHAN itu dekat kepada orang-orang yang patah hati, dan Ia menyelamatkan orang-orang yang remuk jiwanya. Bukan menjauh selama masa duka, menunggu duka itu berlalu sebelum mendekat — melainkan dekat, hadir, tepat di tengah keremukan itu. Ini bukan Allah yang menuntut kita mengumpulkan diri sebelum diperbolehkan mendekat kepada-Nya.
+
+Hari ini, apa pun tahap duka yang sedang kau atau keluargamu jalani, berilah dirimu izin untuk menangis tanpa rasa malu. Biarlah hari ini menjadi hari di mana kesedihan bukan sesuatu yang harus dikelola atau disembunyikan dari orang-orang di sekitarmu, melainkan sesuatu yang dibawa dengan jujur ke hadapan Allah yang juga pernah menangis.',
+     'Your tears are not a lack of faith. Jesus wept too, and He is close to you now, in the crushing, not waiting for it to pass.', 'Air matamu bukan tanda kurangnya iman. Yesus juga pernah menangis, dan Dia dekat denganmu sekarang, di tengah keremukan ini, bukan menunggu itu berlalu.',
+     'Lord, thank You for weeping with us. Be close to my family today in our sorrow, and let us feel Your nearness even in the crushing. Amen.', 'Tuhan, terima kasih telah menangis bersama kami. Dekatlah dengan keluargaku hari ini dalam kesedihan kami, dan biarlah kami merasakan kehadiran-Mu bahkan di tengah keremukan ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 11:35', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 34:18', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 11:35', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 34:18', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Empty Chair', 'Kursi yang Kosong',
+     'Grief has a way of making itself known in the smallest, most ordinary moments — a chair at the table no one sits in, a voice you reach to call before remembering, a holiday that used to feel simple and now feels like something to survive. Loss does not just take a person; it reshapes the shape of every ordinary day that follows, for the whole family, often in different ways for each member.
+
+Jesus said something that seems, at first, almost contradictory: blessed are those who mourn, for they will be comforted. How can mourning be a blessing? Not because sorrow itself is good, but because Jesus refuses to leave grieving people outside the reach of blessing. He does not say blessed are those who move on quickly, or those who don''t cry. He blesses the mourning itself, promising comfort will meet it.
+
+Families often grieve differently and on different timelines, which can create its own quiet tension — one person ready to talk, another needing silence; one still crying easily, another seeming, on the outside, to have moved forward. None of these is wrong. Grief does not move through a family in unison, and patience with each other''s pace is its own act of love.
+
+If today holds a reminder of the empty chair, let it be a place of blessing rather than only ache. Bring that reminder honestly to God, and if you share this grief with others in your family, consider sharing today how the empty chair feels to you — not to burden them, but to let comfort move between you.', 'Duka memiliki cara untuk menyatakan dirinya dalam momen-momen paling kecil dan biasa — sebuah kursi di meja makan yang tidak lagi diduduki siapa pun, suara yang hendak kau telepon sebelum teringat, hari raya yang dulu terasa sederhana kini terasa seperti sesuatu yang harus dilalui. Kehilangan tidak hanya mengambil seseorang; ia mengubah bentuk setiap hari biasa yang mengikutinya, bagi seluruh keluarga, seringkali dengan cara yang berbeda bagi setiap anggotanya.
+
+Yesus mengatakan sesuatu yang pada awalnya terdengar hampir kontradiktif: berbahagialah orang yang berdukacita, karena mereka akan dihibur. Bagaimana bisa berduka menjadi sebuah berkat? Bukan karena kesedihan itu sendiri baik, melainkan karena Yesus menolak meninggalkan orang yang berduka di luar jangkauan berkat. Ia tidak berkata berbahagialah mereka yang cepat melupakan, atau yang tidak menangis. Ia memberkati dukacita itu sendiri, menjanjikan penghiburan akan menjumpainya.
+
+Keluarga sering berduka dengan cara dan waktu yang berbeda, yang dapat menciptakan ketegangan yang halus — satu orang siap untuk berbicara, yang lain membutuhkan kesunyian; satu orang masih mudah menangis, yang lain tampak, dari luar, sudah melangkah maju. Tidak ada satu pun dari ini yang salah. Duka tidak bergerak melalui sebuah keluarga secara serentak, dan kesabaran terhadap ritme masing-masing adalah tindakan kasih tersendiri.
+
+Jika hari ini membawa pengingat tentang kursi yang kosong, biarlah itu menjadi tempat berkat, bukan hanya sakit. Bawalah pengingat itu dengan jujur kepada Allah, dan jika engkau berbagi duka ini dengan anggota keluarga lainnya, pertimbangkan untuk berbagi hari ini bagaimana rasanya kursi kosong itu bagimu — bukan untuk membebani mereka, melainkan agar penghiburan dapat mengalir di antara kalian.',
+     'Grief moves differently through each member of a family. Be patient with each other''s pace today, and let the empty chair be a place God meets you.', 'Duka bergerak berbeda melalui setiap anggota keluarga. Bersabarlah dengan ritme masing-masing hari ini, dan biarlah kursi kosong itu menjadi tempat Allah menjumpaimu.',
+     'Lord, meet me in the small reminders of what I''ve lost. Comfort my whole family, each in the way and the pace we need it. Amen.', 'Tuhan, jumpailah aku dalam pengingat-pengingat kecil tentang apa yang telah kuhilangan. Hiburlah seluruh keluargaku, masing-masing dengan cara dan ritme yang kami perlukan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 5:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 5:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Comfort That Comes From Comfort Received', 'Penghiburan yang Lahir dari Penghiburan yang Diterima',
+     'Paul opens his second letter to the Corinthians with words that read almost like a chain reaction: God is the Father of compassion and the God of all comfort, who comforts us in all our troubles, so that we can comfort those in any trouble with the comfort we ourselves have received. Comfort, in this picture, is never meant to end with us. It is given so it can be passed on.
+
+For a grieving family, this can feel like a strange comfort itself — the idea that the very comfort you desperately need right now might one day become something you offer to someone else walking a similar road. You do not need to feel ready for that yet. Right now, simply receiving comfort, without any pressure to immediately transform it into ministry to others, is enough.
+
+Psalm 147:3 puts it with beautiful simplicity: He heals the brokenhearted and binds up their wounds. Notice the tenderness of that image — not a quick fix, not a demand to move on, but binding, the slow and careful work of a healer wrapping a wound so it can mend at its own pace.
+
+Today, let yourself receive comfort wherever it comes — from God directly in prayer, from a family member''s quiet presence, from a friend''s simple willingness to sit with you in the hard silence. You are not meant to generate your own healing. You are meant to receive it, the way a wound receives a bandage, gently and without rushing.', 'Paulus membuka surat keduanya kepada jemaat di Korintus dengan kata-kata yang hampir seperti reaksi berantai: Allah, Bapa yang penuh belas kasihan dan Allah sumber segala penghiburan, yang menghibur kami dalam segala penderitaan kami, sehingga kami sanggup menghibur mereka yang berada dalam penderitaan dengan penghiburan yang kami terima sendiri dari Allah. Penghiburan, dalam gambaran ini, tidak pernah dimaksudkan untuk berhenti pada diri kita. Ia diberikan agar dapat diteruskan.
+
+Bagi keluarga yang berduka, ini bisa terasa seperti penghiburan yang aneh dengan sendirinya — gagasan bahwa penghiburan yang sangat kau butuhkan sekarang ini mungkin suatu hari akan menjadi sesuatu yang kau tawarkan kepada orang lain yang menjalani jalan yang serupa. Engkau tidak perlu merasa siap untuk itu sekarang. Sekarang ini, sekadar menerima penghiburan, tanpa tekanan untuk segera mengubahnya menjadi pelayanan bagi orang lain, sudah cukup.
+
+Mazmur 147:3 mengungkapkannya dengan kesederhanaan yang indah: Ia menyembuhkan orang-orang yang patah hati dan membalut luka-luka mereka. Perhatikan kelembutan dari gambaran itu — bukan solusi cepat, bukan tuntutan untuk segera melangkah maju, melainkan membalut, kerja seorang penyembuh yang perlahan dan hati-hati membungkus luka agar dapat sembuh sesuai ritmenya sendiri.
+
+Hari ini, biarkan dirimu menerima penghiburan dari mana pun datangnya — dari Allah secara langsung dalam doa, dari kehadiran diam seorang anggota keluarga, dari kesediaan sederhana seorang sahabat untuk duduk bersamamu dalam kesunyian yang berat. Engkau tidak dituntut untuk menciptakan penyembuhanmu sendiri. Engkau dimaksudkan untuk menerimanya, seperti sebuah luka menerima perban, dengan lembut dan tanpa tergesa-gesa.',
+     'You don''t have to turn your grief into ministry yet. Right now, simply let yourself be comforted — the healing will come at its own gentle pace.', 'Engkau belum harus mengubah dukamu menjadi pelayanan. Sekarang ini, biarkan dirimu dihibur — penyembuhan akan datang sesuai ritmenya sendiri yang lembut.',
+     'Father of all comfort, bind up what is broken in me and in my family today. Let us receive Your healing slowly, without rushing. Amen.', 'Bapa sumber segala penghiburan, balutlah apa yang patah dalam diriku dan keluargaku hari ini. Biarlah kami menerima penyembuhan-Mu secara perlahan, tanpa tergesa-gesa. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 1:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 147:3', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 1:3-4', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 147:3', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Held Even in the Dark', 'Dipeluk Bahkan dalam Kegelapan',
+     'Grief has its own kind of nighttime — moments, sometimes long stretches, where the loss feels less like a wound and more like a fog, where fear about the future presses in alongside sadness about the past. Will our family be okay? Will this ache ever soften? Isaiah 41:10 speaks directly into exactly this kind of dark: do not fear, for I am with you; do not be dismayed, for I am your God.
+
+Notice what God does not promise in this verse. He does not promise the fear will feel irrational, or that dismay is somehow wrong to feel. He simply promises His presence and His strength inside the fear, not instead of it. I will strengthen you and help you; I will uphold you with my righteous right hand. This is a picture of being physically held up, carried through, not lifted out and away from the difficulty.
+
+For a grieving family, this matters practically. You may still feel afraid tonight, still feel the weight of what has changed. That is not a failure to trust God. It is simply being human in a hard season, while trusting that a strong hand is holding you up even as you feel the weight.
+
+If today is a dark day for you or someone in your family, do not rush past it toward forced hope. Instead, picture that steady, righteous right hand under you right now — not removing the darkness, but making sure you do not fall through it alone.', 'Duka memiliki malamnya sendiri — momen-momen, terkadang rentang waktu yang panjang, ketika kehilangan terasa kurang seperti luka dan lebih seperti kabut, ketika ketakutan akan masa depan menekan bersamaan dengan kesedihan akan masa lalu. Akankah keluarga kami baik-baik saja? Akankah sakit ini pernah mereda? Yesaya 41:10 berbicara langsung ke dalam kegelapan semacam ini: janganlah takut, sebab Aku menyertai engkau, janganlah bimbang, sebab Aku ini Allahmu.
+
+Perhatikan apa yang tidak dijanjikan Allah dalam ayat ini. Ia tidak menjanjikan bahwa rasa takut itu akan terasa tidak masuk akal, atau bahwa kecemasan itu salah untuk dirasakan. Ia sekadar menjanjikan kehadiran-Nya dan kekuatan-Nya di dalam ketakutan itu, bukan menggantikannya. Aku akan meneguhkan, bahkan akan menolong engkau; Aku akan memegang engkau dengan tangan kanan-Ku yang membawa kemenangan. Ini adalah gambaran dipegang secara nyata, dibawa melewati, bukan diangkat keluar dan menjauh dari kesulitan itu.
+
+Bagi keluarga yang berduka, ini penting secara praktis. Engkau mungkin masih merasa takut malam ini, masih merasakan beratnya apa yang telah berubah. Itu bukan kegagalan untuk percaya kepada Allah. Itu hanyalah menjadi manusia dalam musim yang berat, sambil tetap percaya bahwa sebuah tangan yang kuat sedang memegangmu bahkan saat engkau merasakan beratnya.
+
+Jika hari ini adalah hari yang gelap bagimu atau bagi seseorang dalam keluargamu, jangan tergesa-gesa melewatinya menuju harapan yang dipaksakan. Sebaliknya, bayangkan tangan kanan yang teguh dan membawa kemenangan itu ada di bawahmu sekarang — bukan menghilangkan kegelapan, melainkan memastikan engkau tidak jatuh menembusnya sendirian.',
+     'God doesn''t promise to remove the dark night of grief, only to hold you steady inside it. You are not falling through this alone.', 'Allah tidak menjanjikan untuk menghilangkan malam gelap dari duka, hanya untuk memegangmu teguh di dalamnya. Engkau tidak jatuh menembus ini sendirian.',
+     'God, hold me steady tonight. I don''t need the darkness to disappear — I only need to know Your hand is under me. Amen.', 'Tuhan, peganglah aku teguh malam ini. Aku tidak butuh kegelapan ini menghilang — aku hanya perlu tahu tangan-Mu ada di bawahku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 41:10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 41:10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Nothing Can Separate Us', 'Tidak Ada yang Dapat Memisahkan Kita',
+     'One of the deepest fears grief can awaken is a fear of separation — not only from the one we''ve lost, but from love itself, as if losing someone might mean love has failed or run out. Paul''s words in Romans 8 speak directly against that fear: neither death nor life, nor angels nor demons, nor anything else in all creation, will be able to separate us from the love of God in Christ Jesus our Lord.
+
+Death is named specifically in that list — not as something outside God''s reach, but as something that, even at its most powerful, cannot touch the love that holds us. This does not undo the reality of loss. It does not make death painless. But it does mean death does not have the final authority over love, over your family, over the one you''ve lost.
+
+Paul writes similarly to the Thessalonians about those who have died in Christ, urging believers not to grieve like people who have no hope. This is not a command to skip grief — the same letter assumes grief will happen. It is a promise that grief for a believing family carries something within it that grief without hope does not: the confidence that this separation, however real and painful now, is not the end of the story.
+
+Today, let this truth settle slowly rather than trying to feel it all at once. Love has not failed. It has not run out. It remains, held securely in the hands of a God whom nothing — not even death — can separate you from.', 'Salah satu ketakutan terdalam yang dapat dibangkitkan oleh duka adalah ketakutan akan perpisahan — bukan hanya dari orang yang telah kita kehilangan, tetapi dari kasih itu sendiri, seolah kehilangan seseorang berarti kasih telah gagal atau habis. Kata-kata Paulus dalam Roma 8 berbicara langsung melawan ketakutan itu: baik maut, maupun hidup, baik malaikat-malaikat, maupun kuasa-kuasa lain, ataupun sesuatu makhluk lain, tidak akan dapat memisahkan kita dari kasih Allah, yang ada dalam Kristus Yesus, Tuhan kita.
+
+Maut disebutkan secara khusus dalam daftar itu — bukan sebagai sesuatu di luar jangkauan Allah, melainkan sebagai sesuatu yang, bahkan pada puncak kekuatannya, tidak dapat menyentuh kasih yang memegang kita. Ini tidak menghapus kenyataan kehilangan. Ini tidak membuat kematian menjadi tanpa rasa sakit. Namun ini berarti kematian tidak memiliki otoritas terakhir atas kasih, atas keluargamu, atas orang yang telah kau kehilangan.
+
+Paulus menulis hal yang serupa kepada jemaat di Tesalonika tentang mereka yang telah meninggal dalam Kristus, mendorong orang percaya untuk tidak berdukacita seperti orang-orang yang tidak mempunyai pengharapan. Ini bukan perintah untuk melewatkan duka — surat yang sama mengasumsikan duka akan terjadi. Ini adalah janji bahwa duka bagi keluarga yang percaya membawa sesuatu di dalamnya yang tidak dimiliki duka tanpa pengharapan: keyakinan bahwa perpisahan ini, betapa pun nyata dan menyakitkan sekarang, bukanlah akhir dari kisah.
+
+Hari ini, biarkan kebenaran ini meresap perlahan, alih-alih mencoba merasakannya sekaligus. Kasih tidak gagal. Kasih tidak habis. Kasih itu tetap ada, dipegang dengan aman di tangan Allah yang tidak ada satu pun — bahkan maut sekalipun — dapat memisahkanmu dari-Nya.',
+     'Death has power to separate us for a time, but not the final power to separate us from love. Let that truth settle slowly today.', 'Maut memiliki kuasa untuk memisahkan kita untuk sementara, tetapi bukan kuasa terakhir untuk memisahkan kita dari kasih. Biarkan kebenaran itu meresap perlahan hari ini.',
+     'Lord, thank You that nothing, not even death, can separate my family from Your love. Help that truth become an anchor for us today. Amen.', 'Tuhan, terima kasih bahwa tidak ada apa pun, bahkan maut sekalipun, yang dapat memisahkan keluargaku dari kasih-Mu. Tolong kebenaran itu menjadi sauh bagi kami hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:38-39', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Thessalonians 4:13-14', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:38-39', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Tesalonika 4:13-14', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'The Hope of a Mended World', 'Pengharapan akan Dunia yang Dipulihkan',
+     'Job''s response to catastrophic loss is one of the most startling in all of Scripture. Having lost his children, his wealth, everything in a single devastating day, he says: naked I came from my mother''s womb, and naked I will depart. The Lord gave and the Lord has taken away; may the name of the Lord be praised. This is not denial or forced positivity. It is grief spoken honestly in the very presence of God, worship offered from the bottom of the deepest loss imaginable.
+
+Job''s words do not resolve the mystery of suffering — the rest of his story wrestles with exactly that for chapters. But they model something families can hold onto: it is possible to grieve honestly and still turn toward God rather than away from Him, to bring our raw ''why'' directly into worship rather than saving worship for easier days.
+
+And Scripture does not leave us only with Job''s ancient wrestling. Revelation gives us a picture of where the story ultimately leads: God will wipe every tear from their eyes. There will be no more death or mourning or crying or pain, for the old order of things has passed away. This is not a promise that minimizes today''s grief. It is a promise that today''s grief is not the permanent state of things — a mended world is coming, where loss itself will finally be undone.
+
+As this week closes, hold both truths together: today''s sorrow is real and does not need to be rushed, and a day is coming when it will be wiped away completely, tear by tear, by the same hands that hold you now. Let your family carry that hope together, not as an escape from grief, but as light at the far end of it.', 'Tanggapan Ayub terhadap kehilangan yang dahsyat adalah salah satu yang paling mengejutkan dalam seluruh Alkitab. Setelah kehilangan anak-anaknya, kekayaannya, segalanya dalam satu hari yang menghancurkan, ia berkata: dengan telanjang aku keluar dari kandungan ibuku, dengan telanjang pula aku akan kembali ke dalamnya. TUHAN yang memberi, TUHAN yang mengambil, terpujilah nama TUHAN! Ini bukan penyangkalan atau optimisme yang dipaksakan. Ini adalah duka yang diucapkan dengan jujur di hadapan Allah sendiri, ibadah yang dipersembahkan dari dasar kehilangan paling dalam yang dapat dibayangkan.
+
+Kata-kata Ayub tidak menyelesaikan misteri penderitaan — sisa kisahnya bergumul persis dengan hal itu selama berpasal-pasal. Namun kata-kata itu memberi teladan yang dapat dipegang oleh keluarga: memungkinkan untuk berduka dengan jujur dan tetap berpaling kepada Allah, bukannya menjauh dari-Nya, membawa ''mengapa'' kita yang mentah langsung ke dalam ibadah, bukan menyimpan ibadah hanya untuk hari-hari yang lebih mudah.
+
+Dan Alkitab tidak meninggalkan kita hanya dengan pergumulan kuno Ayub. Kitab Wahyu memberi kita gambaran ke mana kisah ini pada akhirnya menuju: Allah akan menghapus segala air mata dari mata mereka, dan maut tidak akan ada lagi; tidak akan ada lagi perkabungan, atau ratap tangis, atau dukacita, sebab segala sesuatu yang lama itu telah berlalu. Ini bukan janji yang meremehkan duka hari ini. Ini adalah janji bahwa duka hari ini bukanlah keadaan yang permanen — sebuah dunia yang dipulihkan sedang datang, di mana kehilangan itu sendiri pada akhirnya akan ditiadakan.
+
+Saat minggu ini berakhir, peganglah kedua kebenaran ini bersama-sama: kesedihan hari ini nyata dan tidak perlu tergesa-gesa dilewati, dan sebuah hari sedang datang ketika kesedihan itu akan dihapuskan sepenuhnya, air mata demi air mata, oleh tangan yang sama yang memegangmu sekarang. Biarlah keluargamu membawa pengharapan itu bersama-sama, bukan sebagai pelarian dari duka, melainkan sebagai cahaya di ujung jalannya.',
+     'Grief today does not need to be rushed toward hope. But hope is real, and a day is coming when every tear will be wiped away for good.', 'Duka hari ini tidak perlu tergesa-gesa dibawa menuju pengharapan. Namun pengharapan itu nyata, dan sebuah hari akan datang ketika setiap air mata akan dihapuskan untuk selamanya.',
+     'Lord, thank You for the hope of a day when every tear will be wiped away. Until then, hold my family close, and let us grieve honestly in Your presence. Amen.', 'Tuhan, terima kasih atas pengharapan akan hari ketika setiap air mata akan dihapuskan. Sampai hari itu tiba, dekaplah keluargaku, dan biarkan kami berduka dengan jujur di hadapan-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Revelation 21:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Job 1:21', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Wahyu 21:4', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ayub 1:21', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Bound Together  (Love for Neighbor, 5 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for Neighbor' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Bound Together';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Bound Together', 'Terikat Bersama',
+     'Finding Christ in Community and Friendship', 'Menemukan Kristus dalam Komunitas dan Persahabatan',
+     'A five-day plan on the gift and responsibility of friendship and community. From the wisdom of two being better than one, to the early church breaking bread together, this plan explores how love for neighbor is often lived out closest to home, among the people we see every week.', 'Rencana lima hari tentang anugerah dan tanggung jawab persahabatan serta komunitas. Dari hikmat bahwa berdua lebih baik daripada seorang diri, hingga jemaat mula-mula yang memecahkan roti bersama, rencana ini menelusuri bagaimana kasih akan sesama sering kali paling nyata dihidupi di dekat rumah, di antara orang-orang yang kita temui setiap minggu.', 5)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Two Are Better Than One', 'Berdua Lebih Baik daripada Seorang Diri',
+     'There is a particular kind of exhaustion that comes from trying to carry life entirely alone. We live in a culture that often praises independence as the highest virtue, as though needing other people were a weakness to be outgrown rather than the way we were designed to live. Scripture, however, has never shared that assumption. From its earliest pages, it insists that it is not good for us to be alone.
+
+The writer of Ecclesiastes, a book often preoccupied with the futility of life under the sun, pauses here to state something plainly practical: two are better than one, because when one falls, the other can help them up. This is not romantic language. It is the language of ordinary, unglamorous friendship — the kind that shows up with a hand extended when you have stumbled, literally or otherwise.
+
+Many of us can name a season when a friend''s presence made an unbearable situation bearable, not because they fixed anything, but because we were not facing it alone. That is the quiet power of community: it rarely removes our burdens entirely, but it changes what it feels like to carry them. Love for neighbor, in this sense, is as simple and as demanding as choosing to be present.
+
+Today, consider whether you have been trying to carry something alone that was never meant to be carried that way. Consider, too, who around you might be doing the same. Community begins with small, honest admissions: I need help, or, I see that you might.', 'Ada jenis kelelahan tertentu yang muncul dari mencoba menjalani hidup sepenuhnya sendirian. Kita hidup dalam budaya yang sering memuji kemandirian sebagai kebajikan tertinggi, seolah-olah membutuhkan orang lain adalah kelemahan yang harus ditinggalkan, bukan cara kita memang dirancang untuk hidup. Namun Alkitab tidak pernah berbagi asumsi itu. Sejak halaman-halaman awalnya, Alkitab menegaskan bahwa tidak baik bagi kita untuk sendirian.
+
+Penulis kitab Pengkhotbah, sebuah kitab yang sering direpotkan dengan kesia-siaan hidup di bawah matahari, berhenti sejenak untuk menyatakan sesuatu yang sangat praktis: berdua lebih baik daripada seorang diri, sebab jika salah satu jatuh, yang lain dapat membantunya bangun. Ini bukan bahasa romantis. Ini adalah bahasa persahabatan yang biasa dan sederhana — jenis persahabatan yang hadir dengan tangan terulur ketika Anda tersandung, secara harfiah maupun kiasan.
+
+Banyak dari kita dapat menyebut satu musim ketika kehadiran seorang sahabat membuat situasi yang tak tertahankan menjadi bisa ditanggung, bukan karena mereka memperbaiki apa pun, melainkan karena kita tidak menghadapinya sendirian. Itulah kekuatan diam-diam dari komunitas: ia jarang menghilangkan beban kita sepenuhnya, tetapi ia mengubah rasanya memikul beban itu. Kasih akan sesama, dalam pengertian ini, sesederhana sekaligus setuntut memilih untuk hadir.
+
+Hari ini, pertimbangkan apakah Anda telah mencoba memikul sesuatu sendirian yang sebenarnya tidak pernah dimaksudkan untuk dipikul seperti itu. Pertimbangkan juga, siapa di sekitar Anda yang mungkin mengalami hal yang sama. Komunitas dimulai dari pengakuan kecil dan jujur: aku butuh bantuan, atau, aku melihat bahwa kamu mungkin membutuhkannya.',
+     'Needing other people is not a weakness to overcome. It is how God designed us to live and love.', 'Membutuhkan orang lain bukanlah kelemahan yang harus diatasi. Itulah cara Allah merancang kita untuk hidup dan mengasihi.',
+     'Lord, forgive me for the times I have tried to carry everything alone out of pride or fear. Bring people into my life who will help me up, and show me who needs my hand extended too. Amen.', 'Tuhan, ampunilah aku untuk saat-saat aku mencoba memikul segalanya sendirian karena kesombongan atau ketakutan. Bawalah orang-orang ke dalam hidupku yang akan membantuku bangun, dan tunjukkan padaku siapa yang juga membutuhkan uluran tanganku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'A Friend Loves at All Times', 'Sahabat Mengasihi Setiap Waktu',
+     'Proverbs is a book built for ordinary life, full of short, memorable sayings meant to be carried into daily decisions. One of its shortest lines carries an enormous claim about friendship: a friend loves at all times. Not only when it is convenient, not only when the friendship is easy, not only during the seasons of laughter, but at all times, including the hard, awkward, or costly ones.
+
+This kind of steady love is rare enough that we usually remember, in vivid detail, the handful of friends who have actually lived it out toward us. The friend who stayed on the phone during a hard season. The friend who showed up without being asked. The friend who did not disappear when things got complicated. Their loyalty becomes a small, tangible picture of the way God himself loves us.
+
+It is worth asking honestly whether we are that kind of friend to others, or whether our love tends to be seasonal, present when things are easy and quietly absent when they are not. Loving at all times does not mean having no boundaries or never needing rest from a difficult relationship. It means our commitment to someone''s good does not evaporate the moment love becomes inconvenient.
+
+Today, think of one friend you could love more consistently, whether by simply reaching out, checking in during a hard week, or showing up for something small that matters to them. Steady, ordinary faithfulness is often the clearest evidence of real love.', 'Amsal adalah kitab yang dibangun untuk kehidupan sehari-hari, penuh ungkapan singkat dan mudah diingat yang dimaksudkan untuk dibawa ke dalam keputusan sehari-hari. Salah satu barisnya yang paling singkat membawa klaim yang sangat besar tentang persahabatan: seorang sahabat mengasihi setiap waktu. Bukan hanya saat nyaman, bukan hanya saat persahabatan itu mudah, bukan hanya di masa-masa tawa, melainkan setiap waktu, termasuk masa-masa yang sulit, canggung, atau menuntut pengorbanan.
+
+Kasih yang teguh semacam ini cukup langka sehingga kita biasanya mengingat, dengan sangat jelas, segelintir sahabat yang benar-benar menghidupinya bagi kita. Sahabat yang tetap menemani lewat telepon di masa sulit. Sahabat yang hadir tanpa diminta. Sahabat yang tidak menghilang ketika keadaan menjadi rumit. Kesetiaan mereka menjadi gambaran kecil dan nyata tentang cara Allah sendiri mengasihi kita.
+
+Layak untuk bertanya dengan jujur apakah kita menjadi sahabat semacam itu bagi orang lain, atau apakah kasih kita cenderung musiman, hadir ketika segalanya mudah dan diam-diam absen ketika tidak. Mengasihi setiap waktu tidak berarti tidak memiliki batasan atau tidak pernah membutuhkan istirahat dari hubungan yang sulit. Ini berarti komitmen kita terhadap kebaikan seseorang tidak menguap begitu saja saat kasih mulai merepotkan.
+
+Hari ini, pikirkan satu sahabat yang bisa Anda kasihi dengan lebih konsisten, entah dengan sekadar menghubungi mereka, menanyakan kabar di minggu yang berat, atau hadir untuk hal kecil yang penting bagi mereka. Kesetiaan yang tetap dan biasa sering kali menjadi bukti paling jelas dari kasih yang sungguh nyata.',
+     'Real friendship is proven not in easy seasons but in inconvenient ones. Ask God to make you that kind of steady friend.', 'Persahabatan yang sejati dibuktikan bukan di masa yang mudah, melainkan di masa yang merepotkan. Mohonlah kepada Allah untuk menjadikan Anda sahabat yang teguh seperti itu.',
+     'Father, make me a friend who loves at all times, not only when it is easy. Bring to mind someone I can love more faithfully starting today. Amen.', 'Bapa, jadikanlah aku sahabat yang mengasihi setiap waktu, bukan hanya ketika mudah. Ingatkanlah aku pada seseorang yang dapat kukasihi dengan lebih setia mulai hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 17:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 17:17', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Iron Sharpens Iron', 'Besi Menajamkan Besi',
+     'Not all love for our neighbor looks gentle. Some of it looks like honest words spoken to a friend for their good, even when those words are hard to give or hard to receive. Proverbs offers a striking image for this kind of relationship: as iron sharpens iron, so one person sharpens another. Iron does not sharpen iron through softness; it requires friction, contact, even a little resistance.
+
+This kind of friendship, the kind willing to challenge us, is increasingly rare in a culture that often prizes affirmation over honesty. It is easy to find people who will tell us what we want to hear. It is much harder to find, and to be, a friend who will lovingly tell us the truth, who cares more about our growth than about our comfort or their own popularity with us.
+
+This sharpening goes both directions. Sometimes we are the one offering a hard but loving word; other times we are the one who needs to receive it with humility rather than defensiveness. Community that is only ever comfortable rarely produces much growth. Community willing to sharpen, gently but honestly, tends to shape us into people who more closely resemble Christ.
+
+Today, consider whether you have a friend who sharpens you in this way, and whether you thank God for them. Consider, too, whether there is a loving word you have been avoiding giving someone, out of fear of discomfort rather than genuine wisdom about timing.', 'Tidak semua kasih akan sesama tampak lembut. Sebagian di antaranya tampak seperti kata-kata jujur yang diucapkan kepada seorang sahabat demi kebaikannya, bahkan ketika kata-kata itu sulit diberikan atau sulit diterima. Amsal memberikan gambaran yang mencolok untuk hubungan semacam ini: besi menajamkan besi, orang menajamkan sesamanya. Besi tidak menajamkan besi melalui kelembutan; ia membutuhkan gesekan, kontak, bahkan sedikit tahanan.
+
+Persahabatan semacam ini, yang bersedia menantang kita, semakin langka dalam budaya yang sering mengutamakan pengakuan di atas kejujuran. Mudah menemukan orang-orang yang akan mengatakan apa yang ingin kita dengar. Jauh lebih sulit menemukan, dan menjadi, seorang sahabat yang dengan kasih akan mengatakan kebenaran, yang lebih peduli pada pertumbuhan kita daripada kenyamanan kita atau popularitas mereka sendiri di mata kita.
+
+Penajaman ini berjalan dua arah. Kadang kita adalah yang memberi kata yang keras namun penuh kasih; kadang kita adalah yang perlu menerimanya dengan rendah hati alih-alih sikap defensif. Komunitas yang selalu hanya nyaman jarang menghasilkan banyak pertumbuhan. Komunitas yang bersedia menajamkan, dengan lembut namun jujur, cenderung membentuk kita menjadi orang yang semakin menyerupai Kristus.
+
+Hari ini, pertimbangkan apakah Anda memiliki sahabat yang menajamkan Anda dengan cara ini, dan apakah Anda bersyukur kepada Allah atas mereka. Pertimbangkan juga, apakah ada kata penuh kasih yang selama ini Anda hindari untuk sampaikan kepada seseorang, karena takut akan ketidaknyamanan, bukan karena hikmat yang sungguh tentang waktu yang tepat.',
+     'Loving a friend sometimes means telling them the truth, gently, even when it is uncomfortable. Real love cares more about growth than comfort.', 'Mengasihi seorang sahabat kadang berarti mengatakan kebenaran kepada mereka, dengan lembut, bahkan ketika itu tidak nyaman. Kasih yang sejati lebih peduli pada pertumbuhan daripada kenyamanan.',
+     'Lord, thank you for friends who have sharpened me, even when it was uncomfortable. Give me the courage to speak truth in love, and the humility to receive it. Amen.', 'Tuhan, terima kasih untuk sahabat-sahabat yang telah menajamkan aku, bahkan ketika itu tidak nyaman. Berilah aku keberanian untuk berkata benar dalam kasih, dan kerendahan hati untuk menerimanya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 27:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 27:17', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Rejoice and Mourn Together', 'Bersukacita dan Menangis Bersama',
+     'Paul''s instruction to the Roman church is deceptively simple: rejoice with those who rejoice, mourn with those who mourn. In practice, this is harder than it sounds. It is often easier to show up for someone''s grief than for their joy, especially if their joy touches an area of our own disappointment. And it is often easier to celebrate someone''s good news than to sit quietly with them in real sorrow, where we cannot fix anything.
+
+Genuine community asks us to do both well. It asks us to set aside our own envy long enough to celebrate a friend''s promotion, engagement, or answered prayer without quietly resenting that it was not us. And it asks us to stay present in someone''s grief without rushing to explain it away, offer easy answers, or change the subject because their pain makes us uncomfortable.
+
+This kind of shared life is one of the clearest, most concrete ways we love our neighbor. It says, in effect, your life is not separate from mine; what happens to you matters to me. Many of the deepest friendships we carry were forged exactly here, in a moment of shared joy or shared sorrow where someone chose to show up fully rather than at a comfortable distance.
+
+Today, think of someone currently celebrating something, and someone currently grieving something. Consider one specific way you could rejoice with the first and mourn with the second, not from a distance, but up close.', 'Instruksi Paulus kepada jemaat di Roma tampak sederhana: bersukacitalah dengan orang yang bersukacita, dan menangislah dengan orang yang menangis. Dalam praktiknya, ini lebih sulit daripada kedengarannya. Sering kali lebih mudah hadir untuk kedukaan seseorang daripada untuk sukacita mereka, terutama jika sukacita mereka menyentuh area kekecewaan kita sendiri. Dan sering kali lebih mudah merayakan kabar baik seseorang daripada duduk diam bersama mereka dalam duka yang nyata, di mana kita tidak bisa memperbaiki apa pun.
+
+Komunitas yang sejati meminta kita melakukan keduanya dengan baik. Ia meminta kita menyingkirkan iri hati kita cukup lama untuk merayakan promosi, pertunangan, atau doa yang terjawab dari seorang sahabat tanpa diam-diam merasa kesal bahwa itu bukan kita. Dan ia meminta kita tetap hadir dalam kedukaan seseorang tanpa terburu-buru menjelaskannya, memberi jawaban yang mudah, atau mengalihkan pembicaraan karena rasa sakit mereka membuat kita tidak nyaman.
+
+Kehidupan yang saling berbagi seperti ini adalah salah satu cara paling jelas dan nyata kita mengasihi sesama. Ini berkata, pada intinya, hidupmu tidak terpisah dari hidupku; apa yang terjadi padamu penting bagiku. Banyak persahabatan terdalam yang kita miliki ditempa justru di sini, dalam momen sukacita atau duka bersama di mana seseorang memilih untuk hadir sepenuhnya, bukan dari jarak yang nyaman.
+
+Hari ini, pikirkan seseorang yang sedang merayakan sesuatu, dan seseorang yang sedang berduka atas sesuatu. Pertimbangkan satu cara konkret Anda dapat bersukacita dengan yang pertama dan menangis bersama yang kedua, bukan dari jarak jauh, tetapi dari dekat.',
+     'Showing up fully for someone''s joy or sorrow, without envy or discomfort getting in the way, is one of love''s clearest expressions.', 'Hadir sepenuhnya dalam sukacita atau duka seseorang, tanpa dihalangi iri hati atau rasa tidak nyaman, adalah salah satu ungkapan kasih yang paling jelas.',
+     'Lord, teach me to celebrate others without envy, and to sit with others in grief without rushing to fix it. Help me love people through their whole life, not just the easy parts. Amen.', 'Tuhan, ajarlah aku merayakan orang lain tanpa iri hati, dan duduk bersama orang lain dalam duka tanpa terburu-buru memperbaikinya. Tolong aku mengasihi orang lain sepanjang hidup mereka, bukan hanya bagian yang mudah. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Not Giving Up Meeting Together', 'Tidak Meninggalkan Kebiasaan Berkumpul',
+     'Acts describes the early church in a way that still sounds almost impossibly close-knit: believers together constantly, sharing everything they had, breaking bread in their homes, eating together with glad and sincere hearts. It was not merely a weekly gathering for a service; it was a shared life, woven through ordinary meals, ordinary homes, and ordinary days.
+
+That kind of community rarely happens by accident. It happens because people choose, repeatedly, to keep showing up for one another, even when other things compete for their time. The writer of Hebrews later urges believers not to give up meeting together, precisely because that habit had already started slipping for some in the early church, the way it easily slips for us now in a culture full of competing demands.
+
+It can be tempting to think community will happen naturally, that friendships will simply deepen on their own over time. In practice, deep community is almost always the fruit of intentional, unglamorous choices: showing up on a tired week, staying in the group chat, hosting the meal even when the house is not perfectly tidy, choosing presence over convenience again and again.
+
+As this plan closes, consider one community you could invest in more intentionally, and one specific way you could show up this week rather than simply intend to. Love for neighbor, at its most ordinary and most durable, often looks exactly like this: bread broken together, again and again, with glad and sincere hearts.', 'Kitab Kisah Para Rasul menggambarkan jemaat mula-mula dengan cara yang masih terdengar hampir mustahil begitu erat: orang-orang percaya bersama-sama terus-menerus, berbagi segala yang mereka miliki, memecahkan roti di rumah-rumah mereka, makan bersama dengan hati yang gembira dan tulus. Ini bukan sekadar pertemuan mingguan untuk ibadah; ini adalah kehidupan yang saling berbagi, tertenun melalui makan bersama yang biasa, rumah yang biasa, dan hari-hari yang biasa.
+
+Komunitas semacam itu jarang terjadi secara kebetulan. Itu terjadi karena orang-orang memilih, berulang kali, untuk terus hadir bagi satu sama lain, bahkan ketika hal-hal lain bersaing memperebutkan waktu mereka. Penulis kitab Ibrani kemudian mendesak orang percaya untuk tidak meninggalkan kebiasaan berkumpul bersama, justru karena kebiasaan itu sudah mulai luntur bagi sebagian orang di jemaat mula-mula, sebagaimana ia dengan mudah luntur bagi kita sekarang di tengah budaya yang penuh tuntutan yang saling bersaing.
+
+Mudah untuk berpikir bahwa komunitas akan terjadi secara alami, bahwa persahabatan akan dengan sendirinya semakin dalam seiring waktu. Dalam praktiknya, komunitas yang dalam hampir selalu merupakan buah dari pilihan-pilihan yang disengaja dan sederhana: tetap hadir di minggu yang melelahkan, tetap ada dalam grup percakapan, menjamu makan bersama meski rumah tidak sepenuhnya rapi, memilih kehadiran daripada kenyamanan, berulang kali.
+
+Saat rencana ini ditutup, pertimbangkan satu komunitas yang dapat Anda perhatikan dengan lebih sungguh-sungguh, dan satu cara konkret Anda dapat hadir minggu ini, bukan sekadar berniat untuk hadir. Kasih akan sesama, dalam bentuknya yang paling biasa dan paling bertahan lama, sering kali tampak persis seperti ini: roti yang dipecahkan bersama, berulang kali, dengan hati yang gembira dan tulus.',
+     'Deep community rarely happens by accident. It grows from small, repeated choices to show up for one another.', 'Komunitas yang dalam jarang terjadi secara kebetulan. Ia bertumbuh dari pilihan-pilihan kecil yang berulang untuk hadir bagi satu sama lain.',
+     'Lord, thank you for the people you have placed around me. Help me choose presence over convenience, and to keep showing up, meal after meal, week after week, with a glad and sincere heart. Amen.', 'Tuhan, terima kasih untuk orang-orang yang telah Engkau tempatkan di sekitarku. Tolong aku memilih kehadiran daripada kenyamanan, dan terus hadir, makan demi makan, minggu demi minggu, dengan hati yang gembira dan tulus. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Acts 2:46', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 10:24-25', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kisah Para Rasul 2:46', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 10:24-25', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Love at Work  (Love for Neighbor, 6 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for Neighbor' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Love at Work';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Love at Work', 'Kasih di Tempat Kerja',
+     'Bringing Christ Into Your Workplace', 'Menghadirkan Kristus di Tempat Kerja',
+     'A six-day plan for the neighbors we spend the most waking hours with: our coworkers. This plan explores what it means to work with integrity, speak with grace, and love the people at the next desk, in the next cubicle, or on the other end of the meeting.', 'Rencana enam hari untuk sesama yang paling banyak menghabiskan waktu bersama kita saat terjaga: rekan-rekan kerja. Rencana ini menelusuri makna bekerja dengan integritas, berbicara dengan penuh kasih karunia, dan mengasihi orang-orang di meja sebelah, di bilik sebelah, atau di ujung rapat yang sama.', 6)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Working as unto the Lord', 'Bekerja Seperti untuk Tuhan',
+     'For most of us, the workplace is where love for neighbor gets tested in the smallest, most repetitive ways: the coworker who is slow to respond, the boss whose expectations shift constantly, the client who is never quite satisfied. It is easy to imagine love for neighbor as something reserved for dramatic moments, while forgetting that most of our lives are made of ordinary Tuesdays at a desk.
+
+Paul''s instruction to work at everything with all our heart, as though working for the Lord rather than for people, quietly reframes the entire workday. It suggests that the way we handle a frustrating email, a missed deadline, or a difficult meeting is not separate from our spiritual life; it is one of the primary places our spiritual life gets lived out.
+
+This does not mean pretending our jobs are always meaningful or our coworkers are always easy. It means bringing the same integrity, effort, and care to our work whether or not anyone notices, because ultimately we are not just working for a paycheck or a performance review, but offering our labor to God himself. That reframing changes how we treat the people our work touches.
+
+Today, consider one task or one working relationship you have been coasting through, and ask what it would look like to bring genuine care to it, as an offering to God rather than merely an obligation to your employer.', 'Bagi kebanyakan dari kita, tempat kerja adalah tempat kasih akan sesama diuji dalam cara-cara terkecil dan paling berulang: rekan kerja yang lambat membalas, atasan yang harapannya terus berubah, klien yang tidak pernah benar-benar puas. Mudah membayangkan kasih akan sesama sebagai sesuatu yang hanya diperuntukkan bagi momen-momen dramatis, sambil melupakan bahwa sebagian besar hidup kita terdiri dari hari Selasa biasa di meja kerja.
+
+Instruksi Paulus untuk bekerja dengan segenap hati dalam segala hal, seolah-olah bekerja untuk Tuhan dan bukan untuk manusia, diam-diam membingkai ulang seluruh hari kerja. Ini menyiratkan bahwa cara kita menangani email yang membuat frustrasi, tenggat waktu yang terlewat, atau rapat yang sulit, bukanlah sesuatu yang terpisah dari kehidupan rohani kita; itu adalah salah satu tempat utama di mana kehidupan rohani kita benar-benar dihidupi.
+
+Ini bukan berarti berpura-pura bahwa pekerjaan kita selalu bermakna atau rekan kerja kita selalu mudah dihadapi. Ini berarti membawa integritas, usaha, dan kepedulian yang sama ke dalam pekerjaan kita, entah ada yang memperhatikan atau tidak, karena pada akhirnya kita tidak hanya bekerja demi gaji atau penilaian kinerja, melainkan mempersembahkan jerih payah kita kepada Allah sendiri. Pembingkaian ulang ini mengubah cara kita memperlakukan orang-orang yang tersentuh oleh pekerjaan kita.
+
+Hari ini, pikirkan satu tugas atau satu hubungan kerja yang selama ini Anda jalani seadanya, dan tanyakan seperti apa rasanya membawa kepedulian yang sungguh-sungguh ke dalamnya, sebagai persembahan bagi Allah, bukan sekadar kewajiban kepada atasan Anda.',
+     'The way you handle an ordinary workday is not separate from your faith. It is one of the clearest places your faith gets practiced.', 'Cara Anda menjalani hari kerja yang biasa bukanlah hal yang terpisah dari iman Anda. Itu adalah salah satu tempat yang paling nyata di mana iman Anda dipraktikkan.',
+     'Lord, help me see my work as offered to you, not just to an employer. Give me integrity and genuine care in the small, unnoticed tasks of today. Amen.', 'Tuhan, tolong aku melihat pekerjaanku sebagai persembahan bagi-Mu, bukan hanya bagi atasan. Berilah aku integritas dan kepedulian yang sungguh-sungguh dalam tugas-tugas kecil hari ini yang tidak diperhatikan orang. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:23', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Valuing Others Above Yourself', 'Menganggap Orang Lain Lebih Utama',
+     'Few environments reward humility quite like a competitive workplace tends to punish it. Promotions, recognition, and credit often go to whoever advocates loudest for themselves. Against that backdrop, Paul''s words to the Philippians land almost countercultural: do nothing out of selfish ambition, but in humility value others above yourselves, looking not only to your own interests but to the interests of others.
+
+This is not a call to be a pushover at work, or to never advocate for fair treatment. It is a call to examine our motives: are we pursuing success because it genuinely serves the good of the team and the mission, or because we are chasing recognition for its own sake? Selfish ambition has a way of quietly turning coworkers into competitors rather than neighbors.
+
+Valuing others above ourselves might look like genuinely celebrating a colleague''s success instead of feeling threatened by it, giving credit generously instead of hoarding it, or taking the less glamorous task so someone else can shine. None of this requires pretending we have no ambitions of our own. It simply means our ambition does not get to run over the people beside us.
+
+Today, notice a moment where selfish ambition and genuine humility pull in different directions, whether in a meeting, an email, or a private thought about a coworker''s success. Choose, in that small moment, to value the other person''s interest as seriously as your own.', 'Sedikit lingkungan yang menghargai kerendahan hati sebagaimana tempat kerja yang kompetitif cenderung menghukumnya. Promosi, pengakuan, dan pujian sering kali jatuh kepada siapa pun yang paling lantang membela dirinya sendiri. Di tengah latar itu, kata-kata Paulus kepada jemaat Filipi terdengar hampir melawan arus: jangan mencari kepentingan sendiri, tetapi dengan rendah hati anggaplah orang lain lebih utama dari dirimu sendiri, jangan hanya memperhatikan kepentinganmu sendiri, tetapi juga kepentingan orang lain.
+
+Ini bukan ajakan untuk menjadi lemah di tempat kerja, atau untuk tidak pernah memperjuangkan perlakuan yang adil. Ini ajakan untuk memeriksa motif kita: apakah kita mengejar kesuksesan karena itu benar-benar melayani kebaikan tim dan misi bersama, atau karena kita mengejar pengakuan demi pengakuan itu sendiri? Ambisi diri sendiri memiliki cara diam-diam mengubah rekan kerja menjadi pesaing, bukan sesama.
+
+Menganggap orang lain lebih utama dari diri sendiri bisa tampak seperti benar-benar merayakan keberhasilan seorang kolega alih-alih merasa terancam olehnya, memberi pujian dengan murah hati alih-alih menyimpannya untuk diri sendiri, atau mengambil tugas yang kurang menonjol agar orang lain bisa bersinar. Semua ini tidak menuntut kita berpura-pura tidak memiliki ambisi sendiri. Ini hanya berarti ambisi kita tidak boleh menggilas orang-orang di sekitar kita.
+
+Hari ini, perhatikan satu momen di mana ambisi diri sendiri dan kerendahan hati yang tulus menarik ke arah yang berbeda, entah dalam rapat, email, atau pikiran pribadi tentang keberhasilan seorang rekan kerja. Pilihlah, pada momen kecil itu, untuk menghargai kepentingan orang lain sama seriusnya dengan kepentingan Anda sendiri.',
+     'Humility at work is not the absence of ambition. It is ambition that refuses to run over the people beside you.', 'Kerendahan hati di tempat kerja bukanlah ketiadaan ambisi. Itu adalah ambisi yang menolak untuk menggilas orang-orang di sekitar Anda.',
+     'Lord, examine my motives at work. Where I have chased recognition at someone else''s expense, forgive me, and teach me to genuinely celebrate the success of those around me. Amen.', 'Tuhan, periksalah motifku di tempat kerja. Di mana aku telah mengejar pengakuan dengan mengorbankan orang lain, ampunilah aku, dan ajarlah aku untuk sungguh-sungguh merayakan keberhasilan orang-orang di sekitarku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 2:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 2:3-4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Clothed with Compassion', 'Berpakaian Belas Kasihan',
+     'Paul describes a kind of spiritual wardrobe in his letter to the Colossians: compassion, kindness, humility, gentleness, and patience, worn like clothing chosen deliberately each morning. It is a helpful image for the workplace, where the temptation to leave compassion at home and put on something sharper, more guarded, or more transactional can feel almost necessary to survive the day.
+
+Yet clothing ourselves in compassion at work does not mean becoming naive about difficult people or unfair situations. It means choosing, deliberately, which qualities we let shape how we show up, rather than letting stress, deadlines, or office politics dress us instead. A patient response to an irritating email, a gentle word to a struggling colleague, a kind tone in a tense meeting, these are small but real acts of putting on what Paul describes.
+
+Many workplaces run on urgency and short tempers, which makes ordinary kindness stand out more than we might expect. A coworker who is consistently gentle and patient, even under pressure, often becomes someone others trust instinctively, not because they are naive, but because their character has been visibly, repeatedly chosen rather than merely convenient.
+
+Today, before you begin work, take a moment to consciously ''put on'' compassion, kindness, and patience, the way you would put on a coat before stepping outside. Let that be your deliberate choice for how you show up to the people you will work alongside.', 'Paulus menggambarkan semacam lemari pakaian rohani dalam suratnya kepada jemaat Kolose: belas kasihan, kemurahan, kerendahan hati, kelemahlembutan, dan kesabaran, dikenakan seperti pakaian yang dipilih dengan sengaja setiap pagi. Ini gambaran yang berguna untuk tempat kerja, di mana godaan untuk meninggalkan belas kasihan di rumah dan mengenakan sesuatu yang lebih tajam, lebih waspada, atau lebih transaksional bisa terasa hampir diperlukan untuk bertahan sepanjang hari.
+
+Namun mengenakan belas kasihan di tempat kerja tidak berarti menjadi naif terhadap orang-orang yang sulit atau situasi yang tidak adil. Ini berarti memilih, dengan sengaja, sifat-sifat mana yang membentuk cara kita hadir, alih-alih membiarkan stres, tenggat waktu, atau politik kantor yang mendandani kita. Jawaban yang sabar terhadap email yang menjengkelkan, kata-kata lembut kepada kolega yang sedang bergumul, nada suara yang ramah dalam rapat yang tegang, semua ini adalah tindakan kecil namun nyata dari mengenakan apa yang digambarkan Paulus.
+
+Banyak tempat kerja berjalan dengan urgensi dan temperamen yang pendek, yang membuat kebaikan biasa justru lebih menonjol daripada yang kita duga. Rekan kerja yang secara konsisten lembut dan sabar, bahkan di bawah tekanan, sering kali menjadi orang yang secara naluriah dipercaya oleh orang lain, bukan karena mereka naif, melainkan karena karakter mereka telah terlihat, dipilih berulang kali, bukan sekadar kebetulan nyaman.
+
+Hari ini, sebelum Anda mulai bekerja, luangkan waktu sejenak untuk dengan sadar ''mengenakan'' belas kasihan, kemurahan, dan kesabaran, sebagaimana Anda mengenakan jaket sebelum keluar rumah. Biarkan itu menjadi pilihan yang Anda sengaja untuk bagaimana Anda hadir bagi orang-orang yang akan bekerja bersama Anda.',
+     'Compassion at work is a daily choice, not a personality trait. Choose deliberately what you ''wear'' into each interaction.', 'Belas kasihan di tempat kerja adalah pilihan harian, bukan sifat bawaan. Pilihlah dengan sengaja apa yang Anda ''kenakan'' dalam setiap interaksi.',
+     'Lord, clothe me today with compassion, kindness, and patience. When the day gets stressful, remind me to choose these deliberately rather than letting pressure dress me instead. Amen.', 'Tuhan, kenakanlah aku hari ini dengan belas kasihan, kemurahan, dan kesabaran. Ketika hari menjadi penuh tekanan, ingatkanlah aku untuk memilih ini dengan sengaja, bukan membiarkan tekanan yang mendandaniku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:12', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'The One Who Refreshes Others', 'Orang yang Menyegarkan Orang Lain',
+     'Workplaces run on an unspoken economy of favors, credit, and effort, and it is tempting to keep careful track of what we give versus what we receive. Proverbs offers a different picture of how generosity actually works: whoever refreshes others will be refreshed, and a generous person will prosper. This is not a formula guaranteeing reward for every kind act, but it is a consistent pattern woven through Scripture: generosity has a way of coming back around, even if not always from the same source or in the same form.
+
+At work, this might look like sharing knowledge instead of hoarding it to stay indispensable, mentoring a newer colleague without resentment about the time it costs, or offering encouragement to someone who is struggling even when no one would notice if you didn''t. Generosity in a competitive environment can feel risky, almost naive. But it tends to build the kind of trust and goodwill that scarcity mindset never can.
+
+There is also something quietly restorative about being a generous presence at work. People who consistently refresh others, through encouragement, practical help, or simple attentiveness, often find their own work more meaningful, not because of any reward they receive, but because generosity has a way of pulling us out of our own anxieties and reminding us why the work matters in the first place.
+
+Today, think of one way you could ''refresh'' a coworker: sharing credit, offering help without being asked, or simply telling someone specifically what you appreciate about their work. Let generosity, not scarcity, shape how you move through today.', 'Tempat kerja berjalan dengan ekonomi tak terucap berupa bantuan, pujian, dan usaha, dan menggoda untuk mencatat dengan cermat apa yang kita berikan dibanding apa yang kita terima. Amsal menawarkan gambaran yang berbeda tentang bagaimana kemurahan hati sebenarnya bekerja: siapa memberi minum, akan diberi minum juga, siapa banyak memberi berkat, diberi kelimpahan. Ini bukan rumus yang menjamin imbalan untuk setiap tindakan baik, tetapi ini adalah pola yang konsisten tertenun sepanjang Alkitab: kemurahan hati memiliki cara untuk kembali, meski tidak selalu dari sumber atau bentuk yang sama.
+
+Di tempat kerja, ini bisa tampak seperti berbagi pengetahuan alih-alih menyimpannya agar tetap merasa tak tergantikan, membimbing kolega yang lebih baru tanpa kekesalan atas waktu yang dikorbankan, atau memberi dorongan semangat kepada seseorang yang sedang bergumul bahkan ketika tidak ada yang akan menyadari jika Anda tidak melakukannya. Kemurahan hati dalam lingkungan yang kompetitif bisa terasa berisiko, hampir naif. Namun ia cenderung membangun jenis kepercayaan dan itikad baik yang tidak akan pernah dibangun oleh pola pikir kelangkaan.
+
+Ada juga sesuatu yang diam-diam memulihkan dari menjadi kehadiran yang murah hati di tempat kerja. Orang-orang yang secara konsisten menyegarkan orang lain, lewat dorongan semangat, bantuan praktis, atau sekadar perhatian yang tulus, sering kali menemukan pekerjaan mereka sendiri menjadi lebih bermakna, bukan karena imbalan yang mereka terima, melainkan karena kemurahan hati memiliki cara menarik kita keluar dari kecemasan kita sendiri dan mengingatkan kita mengapa pekerjaan ini penting sejak awal.
+
+Hari ini, pikirkan satu cara Anda dapat ''menyegarkan'' seorang rekan kerja: berbagi pujian, menawarkan bantuan tanpa diminta, atau sekadar memberi tahu seseorang secara spesifik apa yang Anda hargai dari pekerjaan mereka. Biarkan kemurahan hati, bukan kelangkaan, membentuk cara Anda menjalani hari ini.',
+     'Generosity at work, even shared credit or a genuine word of encouragement, builds a kind of trust that scarcity never can.', 'Kemurahan hati di tempat kerja, bahkan sekadar berbagi pujian atau kata-kata dorongan yang tulus, membangun kepercayaan yang tidak akan pernah dibangun oleh pola pikir kelangkaan.',
+     'Lord, free me from a scarcity mindset at work. Help me share knowledge, credit, and encouragement generously, trusting you with what I might feel I am giving up. Amen.', 'Tuhan, bebaskanlah aku dari pola pikir kelangkaan di tempat kerja. Tolong aku berbagi pengetahuan, pujian, dan dorongan semangat dengan murah hati, memercayakan kepada-Mu apa yang mungkin kurasa sedang kukorbankan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 11:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 11:25', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Grace-Seasoned Words', 'Perkataan yang Penuh Kasih Karunia',
+     'Few things shape a workplace culture as powerfully as the way people talk to one another. Sharp emails, cutting remarks in meetings, gossip in the break room, all of these leave residue long after the words are spoken. Paul''s instruction to the Colossians offers a simple but demanding standard: let your conversation always be full of grace, seasoned with salt, so that you know how to answer everyone.
+
+Salt was valued in the ancient world for preserving and flavoring food, and the image suggests speech that is both wholesome and genuinely useful, not bland niceness that avoids anything real, but words that are seasoned with wisdom, kindness, and care for the person listening. Grace-filled speech does not mean never disagreeing or never delivering hard feedback. It means doing so in a way that honors the other person''s dignity.
+
+Many of us can recall a manager or colleague whose words consistently built us up, even during correction, and contrast them with someone whose words, even when technically accurate, left us feeling small. The difference was rarely the content of what was said. It was almost always the grace, or lack of it, seasoning how it was said.
+
+Today, pay unusual attention to your own words at work: in emails, in meetings, in casual conversation. Ask God to season your speech with grace, so that even correction or disagreement leaves the other person feeling respected rather than diminished.', 'Sedikit hal membentuk budaya tempat kerja sekuat cara orang berbicara satu sama lain. Email yang tajam, sindiran dalam rapat, gosip di ruang istirahat, semuanya meninggalkan bekas jauh setelah kata-kata itu diucapkan. Instruksi Paulus kepada jemaat Kolose menawarkan standar yang sederhana namun menuntut: hendaklah perkataanmu senantiasa penuh kasih, jangan hambar, sehingga kamu tahu bagaimana kamu harus memberi jawab kepada setiap orang.
+
+Garam dihargai di dunia kuno karena mengawetkan dan memberi rasa pada makanan, dan gambaran ini menyiratkan perkataan yang sehat sekaligus benar-benar berguna, bukan kebaikan hampa yang menghindari segala sesuatu yang nyata, melainkan kata-kata yang diberi rasa dengan hikmat, kebaikan, dan kepedulian terhadap orang yang mendengarkan. Perkataan yang penuh kasih karunia tidak berarti tidak pernah berbeda pendapat atau tidak pernah menyampaikan masukan yang sulit. Ini berarti melakukannya dengan cara yang menghormati martabat orang lain.
+
+Banyak dari kita mungkin mengingat seorang atasan atau kolega yang perkataannya secara konsisten membangun kita, bahkan saat mengoreksi, dan membandingkannya dengan seseorang yang perkataannya, meskipun secara teknis benar, membuat kita merasa kecil. Perbedaannya jarang terletak pada isi apa yang dikatakan. Hampir selalu terletak pada kasih karunia, atau ketiadaannya, yang memberi rasa pada cara hal itu dikatakan.
+
+Hari ini, perhatikan dengan lebih saksama kata-kata Anda sendiri di tempat kerja: dalam email, dalam rapat, dalam percakapan santai. Mohonlah kepada Allah untuk memberi rasa kasih karunia pada perkataan Anda, sehingga bahkan koreksi atau ketidaksetujuan membuat orang lain merasa dihormati, bukan direndahkan.',
+     'Grace-filled words can carry hard truths without crushing the person hearing them. Let your speech build people up, even in disagreement.', 'Perkataan yang penuh kasih karunia dapat membawa kebenaran yang sulit tanpa menghancurkan orang yang mendengarnya. Biarlah perkataan Anda membangun orang lain, bahkan dalam ketidaksetujuan.',
+     'Lord, season my words with grace today, in every email, every meeting, every hallway conversation. Let no one walk away from talking with me feeling smaller than before. Amen.', 'Tuhan, berilah rasa kasih karunia pada perkataanku hari ini, dalam setiap email, setiap rapat, setiap percakapan di lorong. Jangan biarkan ada orang yang meninggalkan percakapan denganku merasa lebih kecil dari sebelumnya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 4:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 4:6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Building Each Other Up', 'Saling Membangun',
+     'As this plan closes, it is worth stepping back to consider the cumulative weight of small workplace interactions. No single conversation, encouragement, or kindness transforms a workplace on its own. But Paul''s instruction to the Thessalonians to encourage one another and build each other up describes exactly the kind of steady, repeated practice that, over time, genuinely does.
+
+James adds a striking description of heavenly wisdom that fits naturally alongside this: pure, then peace-loving, considerate, submissive, full of mercy and good fruit. Read against the backdrop of office politics, credit-grabbing, and workplace tension, this list reads almost like a countercultural manifesto. It describes people who choose peace over winning, mercy over score-keeping, good fruit over self-promotion.
+
+It can be discouraging to imagine transforming an entire workplace culture single-handedly, and that discouragement is not entirely misplaced; we are usually not able to change a whole system alone. But we are able to be one consistent source of encouragement, one person whose presence tends to build others up rather than tear them down. That is not a small thing. Cultures shift, slowly, through exactly this kind of faithful, unglamorous presence.
+
+As you finish this plan, consider what kind of presence you want to be known for at work over the coming months: someone who builds up or someone who tears down, someone marked by heavenly wisdom or by the ordinary anxieties of office life. Ask God to make you, quietly and consistently, one who builds others up.', 'Saat rencana ini ditutup, ada baiknya kita mundur sejenak untuk mempertimbangkan bobot kumulatif dari interaksi-interaksi kecil di tempat kerja. Tidak ada satu percakapan, dorongan semangat, atau kebaikan yang sendirian mengubah sebuah tempat kerja. Namun instruksi Paulus kepada jemaat Tesalonika untuk saling menasihati dan saling membangun menggambarkan persis jenis praktik yang tetap dan berulang, yang seiring waktu, sungguh-sungguh mampu melakukannya.
+
+Yakobus menambahkan gambaran yang mencolok tentang hikmat dari surga yang cocok berdampingan dengan ini: murni, kemudian pendamai, peramah, penurut, penuh belas kasihan dan buah-buah yang baik. Dibaca dengan latar belakang politik kantor, perebutan pujian, dan ketegangan di tempat kerja, daftar ini terdengar hampir seperti manifesto yang melawan arus. Ini menggambarkan orang-orang yang memilih kedamaian daripada kemenangan, belas kasihan daripada perhitungan skor, buah yang baik daripada promosi diri.
+
+Bisa terasa mengecilkan hati untuk membayangkan mengubah seluruh budaya tempat kerja seorang diri, dan rasa kecil hati itu tidak sepenuhnya keliru; kita biasanya tidak mampu mengubah seluruh sistem sendirian. Namun kita mampu menjadi satu sumber dorongan semangat yang konsisten, satu orang yang kehadirannya cenderung membangun orang lain, bukan menjatuhkan mereka. Itu bukan hal yang kecil. Budaya berubah, perlahan-lahan, justru lewat kehadiran yang setia dan sederhana semacam ini.
+
+Saat Anda menyelesaikan rencana ini, pertimbangkan jenis kehadiran seperti apa yang ingin Anda dikenal di tempat kerja dalam bulan-bulan mendatang: seseorang yang membangun atau seseorang yang menjatuhkan, seseorang yang ditandai dengan hikmat dari surga atau dengan kecemasan biasa kehidupan kantor. Mohonlah kepada Allah untuk menjadikan Anda, dengan diam-diam dan konsisten, seorang yang membangun orang lain.',
+     'You may not be able to change a whole workplace culture, but you can be one consistent source of encouragement within it.', 'Anda mungkin tidak dapat mengubah seluruh budaya tempat kerja, tetapi Anda dapat menjadi satu sumber dorongan semangat yang konsisten di dalamnya.',
+     'Lord, let heavenly wisdom, not office anxiety, shape how I treat my coworkers. Make me someone whose presence consistently builds others up, in small ways, day after day. Amen.', 'Tuhan, biarlah hikmat dari surga, bukan kecemasan kantor, membentuk cara aku memperlakukan rekan-rekan kerjaku. Jadikanlah aku seorang yang kehadirannya secara konsisten membangun orang lain, dalam hal-hal kecil, hari demi hari. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Thessalonians 5:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 3:17', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Tesalonika 5:11', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 3:17', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Love for the Difficult Neighbor  (Love for Neighbor, 3 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for Neighbor' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Love for the Difficult Neighbor';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Love for the Difficult Neighbor', 'Kasih bagi Sesama yang Sulit',
+     'Praying for Those Who Are Hard to Love', 'Mendoakan Mereka yang Sulit Dikasihi',
+     'A short, honest plan for the neighbor, relative, or coworker who tests your patience every single time. Over three days you will look at what Jesus actually asks of us regarding enemies and difficult people, and practice praying for them instead of simply enduring them.', 'Rencana singkat dan jujur untuk tetangga, kerabat, atau rekan kerja yang selalu menguji kesabaran Anda. Selama tiga hari, Anda akan melihat apa yang sebenarnya Yesus minta dari kita mengenai musuh dan orang-orang yang sulit, serta berlatih mendoakan mereka, bukan sekadar menahan diri terhadap mereka.', 3)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Command That Costs Something', 'Perintah yang Menuntut Pengorbanan',
+     'There is a particular kind of neighbor most of us know well: the one whose name alone makes our shoulders tighten. Maybe it is a relative who criticizes everything we do, a coworker who takes credit for our work, or a person next door who seems to specialize in making life harder. Love, in cases like this, stops being a warm feeling and becomes something closer to a decision we have to keep making, over and over, often through gritted teeth.
+
+Jesus never pretended this kind of love would be easy. He did not tell us to love only the people who are pleasant to us, because, as he pointed out, even people who want nothing to do with God manage that much. Instead he gave a command that still unsettles anyone who reads it honestly: love your enemies, and pray for the very people who cause you pain. It is one of the most demanding sentences in all of Scripture, precisely because it refuses to let us off the hook for the hard cases.
+
+Notice that Jesus does not ask us to pretend the hurt isn''t real, or to feel warm affection on command. He asks us to pray for the person. Prayer is where this command becomes possible, because prayer changes the one praying before it ever changes the situation. When we bring a difficult person before God honestly, naming what they have done and how it has affected us, something in our own heart begins to loosen, even if the other person never changes at all.
+
+This is the invitation for today: not to fix the relationship, not to force reconciliation, but simply to name one difficult person before God and ask him to bless them. It may feel forced at first, even hollow. That is all right. Obedience often precedes feeling. Start small, start honest, and let God do the slow work of softening what years of friction have hardened.', 'Ada satu jenis tetangga yang hampir semua orang kenal: sosok yang namanya saja sudah membuat bahu kita menegang. Mungkin itu kerabat yang selalu mengkritik apa pun yang kita lakukan, rekan kerja yang mengklaim jerih payah kita sebagai miliknya, atau orang di sebelah rumah yang seolah ahli membuat hidup terasa lebih berat. Kasih, dalam situasi seperti ini, berhenti menjadi perasaan hangat dan berubah menjadi sebuah keputusan yang harus terus-menerus kita ambil, kadang sambil menahan geram.
+
+Yesus tidak pernah berpura-pura bahwa kasih semacam ini itu mudah. Ia tidak menyuruh kita mengasihi hanya orang-orang yang menyenangkan bagi kita, sebab, seperti yang Ia tunjukkan, bahkan orang yang tidak mengenal Allah pun mampu melakukan itu. Sebaliknya Ia memberi perintah yang tetap mengusik siapa pun yang membacanya dengan jujur: kasihilah musuhmu, dan doakanlah orang-orang yang justru menyakiti kita. Ini salah satu kalimat paling menuntut dalam seluruh Alkitab, justru karena tidak memberi kita jalan keluar untuk kasus-kasus yang sulit.
+
+Perhatikan bahwa Yesus tidak meminta kita berpura-pura luka itu tidak nyata, atau merasa sayang atas perintah begitu saja. Ia meminta kita mendoakan orang itu. Doa adalah tempat di mana perintah ini menjadi mungkin, sebab doa mengubah orang yang berdoa jauh sebelum mengubah keadaan. Ketika kita membawa orang yang sulit itu di hadapan Allah dengan jujur, menyebut apa yang telah mereka lakukan dan bagaimana itu memengaruhi kita, sesuatu dalam hati kita mulai melunak, bahkan jika orang itu tidak pernah berubah sama sekali.
+
+Inilah ajakan hari ini: bukan memperbaiki hubungan, bukan memaksakan pemulihan, melainkan sekadar menyebut satu nama orang yang sulit di hadapan Allah dan memohon berkat baginya. Mungkin awalnya terasa dipaksakan, bahkan hampa. Tidak apa-apa. Ketaatan sering kali mendahului perasaan. Mulailah dari yang kecil, mulailah dengan jujur, dan biarkan Allah mengerjakan pekerjaan-Nya yang perlahan melunakkan apa yang telah mengeras selama bertahun-tahun karena gesekan.',
+     'Naming a difficult person before God, out loud or in writing, is often the hardest and most freeing first step. You are not excusing what they did; you are handing it to God.', 'Menyebut nama orang yang sulit di hadapan Allah, entah dengan suara atau tulisan, sering kali menjadi langkah pertama yang tersulit sekaligus paling membebaskan. Anda bukan sedang memaafkan tindakan mereka, melainkan menyerahkannya kepada Allah.',
+     'Lord, you know the name I am thinking of right now. I don''t feel ready to love this person well, but I am willing to obey. Soften what is hard in me before you ask me to soften anything in them. Amen.', 'Tuhan, Engkau tahu nama yang sedang kupikirkan sekarang. Aku belum merasa siap mengasihi orang ini dengan baik, tetapi aku bersedia taat. Lembutkanlah dahulu apa yang keras dalam diriku, sebelum Engkau memintaku melembutkan sesuatu dalam diri mereka. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 5:44', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 5:44', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Overcoming Evil with Good', 'Mengalahkan Kejahatan dengan Kebaikan',
+     'There is a strange kind of freedom in refusing to fight fire with fire. Most of us, when wronged, feel a natural pull toward evening the score, or at least toward withdrawing our kindness as punishment. It feels fair. It even feels righteous. But Paul, writing to a church full of ordinary people navigating ordinary grudges, offers a different strategy entirely: meet hostility with practical kindness, and let that kindness do the work that arguing never could.
+
+Feeding an enemy who is hungry, offering water to one who is thirsty, is not about being a doormat. It is about refusing to let another person''s cruelty determine the shape of your own character. When we respond to unkindness with genuine goodness, we are not pretending nothing happened; we are declaring, in a very concrete way, that we will not let someone else''s worst moment define our own behavior.
+
+Many of us have watched this principle work in small, unglamorous ways: a kind word offered to a difficult coworker, a plate of food brought to a neighbor who has never once been friendly, a patient answer given instead of a sharp one. These gestures rarely transform the other person instantly. But they do something to us. They keep bitterness from taking root, and they leave room for God to work in ways we cannot orchestrate ourselves.
+
+Today, consider one concrete act of good you could offer the person who has been difficult toward you. It does not need to be dramatic. A message, a small kindness, a genuine compliment. Let it be your quiet refusal to be overcome by evil, and your equally quiet insistence on overcoming it with good instead.', 'Ada kebebasan yang aneh dalam menolak untuk membalas api dengan api. Kebanyakan dari kita, ketika disakiti, secara alami tertarik untuk membalas setimpal, atau setidaknya menarik kembali kebaikan kita sebagai hukuman. Rasanya adil. Bahkan terasa benar. Namun Paulus, yang menulis kepada jemaat yang penuh orang biasa dengan dendam-dendam biasa, menawarkan strategi yang sama sekali berbeda: hadapi permusuhan dengan kebaikan yang nyata, dan biarkan kebaikan itu melakukan pekerjaan yang tidak pernah bisa dilakukan oleh perdebatan.
+
+Memberi makan musuh yang lapar, memberi minum kepada yang haus, bukanlah soal menjadi orang yang selalu tunduk. Ini soal menolak membiarkan kekejaman orang lain menentukan bentuk karakter kita sendiri. Ketika kita menanggapi ketidakramahan dengan kebaikan yang tulus, kita tidak berpura-pura bahwa tidak terjadi apa-apa; kita menyatakan, dengan cara yang sangat nyata, bahwa kita tidak akan membiarkan momen terburuk orang lain menentukan perilaku kita sendiri.
+
+Banyak dari kita pernah menyaksikan prinsip ini bekerja dengan cara yang kecil dan sederhana: kata-kata ramah yang diberikan kepada rekan kerja yang sulit, sepiring makanan yang diantarkan kepada tetangga yang tidak pernah bersikap bersahabat, jawaban sabar yang diberikan alih-alih kata tajam. Gestur-gestur ini jarang mengubah orang lain secara instan. Namun gestur itu mengerjakan sesuatu dalam diri kita. Ia menahan akar kepahitan agar tidak tumbuh, dan memberi ruang bagi Allah untuk bekerja dengan cara yang tidak bisa kita atur sendiri.
+
+Hari ini, pikirkan satu tindakan kebaikan yang konkret yang dapat Anda tawarkan kepada orang yang telah bersikap sulit terhadap Anda. Tidak perlu dramatis. Sebuah pesan, kebaikan kecil, pujian yang tulus. Biarkan itu menjadi penolakan diam-diam Anda untuk dikalahkan oleh kejahatan, dan sekaligus ketetapan hati diam-diam Anda untuk mengalahkannya dengan kebaikan.',
+     'Kindness toward a difficult person is not weakness. It is a declaration that their behavior does not get to write the story of who you become.', 'Kebaikan kepada orang yang sulit bukanlah kelemahan. Itu adalah pernyataan bahwa perilaku mereka tidak berhak menulis kisah tentang siapa Anda menjadi.',
+     'Father, my instinct is to protect myself by withdrawing kindness. Teach me instead to overcome evil with good, not because it is easy, but because it is your way. Show me one small kindness I can offer today. Amen.', 'Bapa, nalurikku adalah melindungi diri dengan menarik kembali kebaikan. Ajarlah aku sebaliknya untuk mengalahkan kejahatan dengan kebaikan, bukan karena itu mudah, melainkan karena itu jalan-Mu. Tunjukkan padaku satu kebaikan kecil yang bisa kuberikan hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:20-21', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 3:9', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:20-21', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 3:9', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Blessing Instead of Cursing', 'Memberkati, Bukan Mengutuk',
+     'By the third day of thinking honestly about a difficult neighbor, most of us have discovered something uncomfortable: our mouths tend to leak our hearts. When someone has wronged us, it becomes strangely satisfying to speak about them sharply, to recount their faults to anyone who will listen, to let our words carry a little venom. Jesus, however, described a different posture entirely, one where blessing replaces cursing even for the people who least seem to deserve it.
+
+Blessing someone who has hurt you does not require pretending they were right, or minimizing real harm. It means choosing, in your speech and in your prayers, to speak life over them rather than curse. It is asking God''s genuine good for a person even while you are still working through your own pain. This is not weakness dressed up as spirituality; it is one of the most courageous postures a person can take.
+
+There is also something clarifying about this practice. When we bless someone in prayer, even a person we find genuinely difficult, we place ourselves under God''s authority rather than our own need to be vindicated. We stop carrying the full weight of making things right, because we hand that weight to a God who sees everything we cannot. This does not mean the relationship magically heals. But it means we are no longer carrying it alone.
+
+As this short plan closes, consider writing down one blessing you can genuinely ask God to give the difficult person in your life: patience for them, peace, wisdom, even joy. Speak it as a prayer rather than a performance. You may find that blessing someone, even quietly, does something to loosen a grip that resentment has held on your own heart for far too long.', 'Pada hari ketiga merenungkan dengan jujur tentang tetangga yang sulit, kebanyakan dari kita menemukan sesuatu yang tidak nyaman: mulut kita cenderung membocorkan isi hati kita. Ketika seseorang menyakiti kita, ada kepuasan aneh dalam membicarakan mereka dengan tajam, menceritakan kesalahan mereka kepada siapa pun yang mau mendengar, membiarkan kata-kata kita membawa sedikit racun. Namun Yesus menggambarkan sikap yang sama sekali berbeda, sebuah sikap di mana berkat menggantikan kutukan bahkan bagi orang-orang yang tampaknya paling tidak layak menerimanya.
+
+Memberkati seseorang yang telah menyakiti Anda tidak berarti berpura-pura bahwa mereka benar, atau meremehkan luka yang nyata. Ini berarti memilih, dalam ucapan dan doa kita, untuk mengucapkan kehidupan atas mereka, bukan kutukan. Ini adalah memohon kebaikan sejati dari Allah bagi seseorang bahkan ketika kita masih bergumul dengan luka kita sendiri. Ini bukan kelemahan yang dibungkus rohani; ini salah satu sikap paling berani yang bisa diambil seseorang.
+
+Ada juga sesuatu yang menjernihkan dalam praktik ini. Ketika kita memberkati seseorang dalam doa, bahkan orang yang benar-benar kita anggap sulit, kita menempatkan diri kita di bawah otoritas Allah, bukan di bawah kebutuhan kita sendiri untuk dibenarkan. Kita berhenti memikul seluruh beban untuk membereskan segalanya, sebab kita menyerahkan beban itu kepada Allah yang melihat segala sesuatu yang tidak bisa kita lihat. Ini tidak berarti hubungan itu langsung sembuh secara ajaib. Tetapi ini berarti kita tidak lagi memikulnya sendirian.
+
+Saat rencana singkat ini ditutup, cobalah menuliskan satu berkat yang dapat Anda mohonkan dengan tulus dari Allah bagi orang yang sulit dalam hidup Anda: kesabaran bagi mereka, damai sejahtera, hikmat, bahkan sukacita. Ucapkan itu sebagai doa, bukan sekadar pertunjukan. Anda mungkin akan menemukan bahwa memberkati seseorang, bahkan secara diam-diam, mengerjakan sesuatu yang melonggarkan cengkeraman kepahitan yang telah terlalu lama menguasai hati Anda sendiri.',
+     'Speaking blessing instead of complaint over a difficult person is a quiet act of surrender. You are trusting God with what your own strength cannot fix.', 'Mengucapkan berkat alih-alih keluhan atas orang yang sulit adalah tindakan penyerahan diri yang diam-diam. Anda memercayakan kepada Allah apa yang tidak bisa dibereskan oleh kekuatan Anda sendiri.',
+     'Lord, I choose today to bless rather than curse. I ask you to give this person real peace and real good, even as I am still healing. Untangle my heart from bitterness, one small prayer at a time. Amen.', 'Tuhan, hari ini aku memilih untuk memberkati, bukan mengutuk. Aku memohon Engkau memberi orang ini damai sejahtera dan kebaikan yang sungguh nyata, sementara aku sendiri masih dalam proses pemulihan. Uraikanlah hatiku dari kepahitan, sedikit demi sedikit lewat doa. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 6:27-28', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 6:27-28', 'TB', 1);
+
+  -- ===================================================================
+  -- Plan: The Open Door  (Love for Neighbor, 4 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for Neighbor' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'The Open Door';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'The Open Door', 'Pintu yang Terbuka',
+     'A Journey Into Hospitality', 'Perjalanan Menuju Keramahtamahan',
+     'A four-day exploration of hospitality as an act of love for neighbor: welcoming strangers, opening our homes and tables, and seeing Christ himself in the people we are tempted to overlook. Practical and warm, this plan invites you to make room for someone this week.', 'Eksplorasi empat hari tentang keramahtamahan sebagai tindakan kasih akan sesama: menyambut orang asing, membuka rumah dan meja kita, serta melihat Kristus sendiri dalam diri orang-orang yang sering kita abaikan. Praktis dan hangat, rencana ini mengajak Anda memberi ruang bagi seseorang minggu ini.', 4)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Angels Unaware', 'Malaikat yang Tidak Dikenali',
+     'Hospitality has fallen out of fashion in a world that prizes privacy and convenience. We plan our schedules tightly, guard our homes as retreats from the world, and often reserve our tables only for people we already know well. Yet Scripture keeps circling back to a stubborn idea: welcoming the stranger is not an optional extra for the especially generous among us. It is woven into what it means to love our neighbor at all.
+
+The writer of Hebrews gives an almost startling reason to keep our doors open: some who showed hospitality to strangers turned out, without realizing it, to have entertained angels. Whether we take that literally or as a vivid way of saying we never fully know who stands at our door, the point lands the same way. Every stranger carries a dignity we cannot always see at first glance, and every act of welcome is bigger than it appears.
+
+Many of us can remember a time when someone welcomed us in when we felt like outsiders — a new neighborhood, a new church, a new season of loneliness. We remember the relief of being included, the specific kindness of someone making room. That memory is worth returning to whenever hospitality feels inconvenient, because it reminds us what is actually at stake: not just a meal or a spare room, but someone''s sense that they matter.
+
+Today, simply notice who around you might be a stranger in some sense: new to the neighborhood, new to the office, sitting alone somewhere you pass by often. You don''t need a grand gesture yet. Just notice. Ask God to open your eyes to the people hospitality is meant for, the ones easy to walk past and easy to forget.', 'Keramahtamahan telah memudar di dunia yang mengutamakan privasi dan kenyamanan. Kita mengatur jadwal dengan ketat, menjaga rumah kita sebagai tempat pelarian dari dunia, dan sering kali hanya menyediakan meja makan bagi orang-orang yang sudah kita kenal baik. Namun Alkitab terus kembali pada gagasan yang tidak mau hilang: menyambut orang asing bukanlah tambahan pilihan bagi mereka yang secara khusus dermawan. Itu tertenun dalam makna mengasihi sesama itu sendiri.
+
+Penulis kitab Ibrani memberikan alasan yang hampir mengejutkan untuk tetap membuka pintu kita: beberapa orang yang memberi tumpangan kepada orang asing, tanpa mereka sadari, ternyata telah menjamu malaikat. Entah kita memahaminya secara harfiah atau sebagai cara yang hidup untuk mengatakan bahwa kita tidak pernah benar-benar tahu siapa yang berdiri di depan pintu kita, intinya tetap sama. Setiap orang asing membawa martabat yang tidak selalu bisa kita lihat sekilas, dan setiap tindakan sambutan lebih besar daripada yang tampak.
+
+Banyak dari kita mungkin mengingat saat ketika seseorang menyambut kita saat kita merasa menjadi orang luar — lingkungan baru, gereja baru, musim kesepian yang baru. Kita mengingat kelegaan karena disertakan, kebaikan khusus dari seseorang yang membuat ruang bagi kita. Kenangan itu layak untuk kita kembali setiap kali keramahtamahan terasa merepotkan, sebab itu mengingatkan kita apa yang sebenarnya dipertaruhkan: bukan sekadar makanan atau kamar cadangan, melainkan perasaan seseorang bahwa dirinya berarti.
+
+Hari ini, cukup perhatikan siapa di sekitar Anda yang mungkin dalam arti tertentu adalah orang asing: baru pindah ke lingkungan, baru di kantor, duduk sendirian di tempat yang sering Anda lewati. Anda belum perlu melakukan gestur besar. Cukup perhatikan. Mohonlah kepada Allah untuk membuka mata Anda kepada orang-orang yang menjadi tujuan keramahtamahan, mereka yang mudah dilewati begitu saja dan mudah dilupakan.',
+     'You never fully know who stands at your door. Treat every stranger as someone worth the dignity of a genuine welcome.', 'Anda tidak pernah benar-benar tahu siapa yang berdiri di depan pintu Anda. Perlakukan setiap orang asing sebagai seseorang yang layak menerima sambutan yang tulus.',
+     'Lord, open my eyes to the people around me who could use a genuine welcome. Help me see them the way you see them, not as inconveniences, but as your own. Amen.', 'Tuhan, bukalah mataku terhadap orang-orang di sekitarku yang membutuhkan sambutan yang tulus. Tolong aku melihat mereka sebagaimana Engkau melihat mereka, bukan sebagai gangguan, melainkan sebagai milik-Mu sendiri. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 13:2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 13:2', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Practicing Hospitality', 'Mempraktikkan Keramahtamahan',
+     'Paul''s instruction to the church in Rome uses an interesting word: practice hospitality. Not simply feel warmly toward strangers, not simply admire the idea of welcome, but practice it, the way you would practice any skill you want to grow in. This small phrase quietly dismantles the excuse many of us reach for, the idea that hospitality is a natural gift some people have and others simply lack.
+
+Like any practice, hospitality gets easier and more natural the more we do it. The first time we invite a new coworker to lunch, or knock on a new neighbor''s door with a plate of food, it can feel awkward and effortful. But practice has a way of turning awkward gestures into second nature. Churches and homes that are known for warmth did not become that way by accident; someone kept practicing, meal after meal, guest after guest.
+
+It also matters that Paul places this instruction right alongside sharing with those in need. Hospitality, in the biblical sense, was never only about entertaining people we enjoy. It included meeting real needs: food, shelter, a listening ear, practical help. This widens hospitality beyond the dinner party into something closer to a daily posture of generosity toward whoever God places in our path.
+
+Consider one small, doable way to practice hospitality this week. It might be inviting someone to a meal, offering a ride, or simply pulling up a chair for someone standing at the edge of a conversation. Do not wait until you feel like an expert. Practice begins with the next small, slightly uncomfortable step.', 'Instruksi Paulus kepada jemaat di Roma menggunakan kata yang menarik: praktikkanlah keramahtamahan. Bukan sekadar merasa hangat terhadap orang asing, bukan sekadar mengagumi gagasan tentang menyambut, melainkan mempraktikkannya, sebagaimana Anda akan berlatih keterampilan apa pun yang ingin Anda kembangkan. Frasa kecil ini secara diam-diam meruntuhkan alasan yang sering kita pakai, gagasan bahwa keramahtamahan adalah karunia alami yang dimiliki sebagian orang dan tidak dimiliki orang lain.
+
+Seperti latihan apa pun, keramahtamahan menjadi lebih mudah dan lebih alami semakin sering kita melakukannya. Kali pertama kita mengajak rekan kerja baru makan siang, atau mengetuk pintu tetangga baru dengan sepiring makanan, rasanya bisa canggung dan menuntut usaha. Namun latihan memiliki cara mengubah gestur yang canggung menjadi kebiasaan kedua. Gereja dan rumah yang dikenal hangat tidak menjadi seperti itu secara kebetulan; seseorang terus berlatih, makan demi makan, tamu demi tamu.
+
+Penting juga bahwa Paulus menempatkan instruksi ini tepat berdampingan dengan berbagi kepada mereka yang berkekurangan. Keramahtamahan, dalam pengertian Alkitab, tidak pernah hanya soal menjamu orang-orang yang kita nikmati kebersamaannya. Itu mencakup memenuhi kebutuhan yang nyata: makanan, tempat tinggal, telinga yang mau mendengar, bantuan praktis. Ini memperluas keramahtamahan melampaui sekadar jamuan makan menjadi lebih dekat pada sikap kemurahan hati sehari-hari terhadap siapa pun yang Allah tempatkan di jalan kita.
+
+Pikirkan satu cara kecil dan dapat dilakukan untuk mempraktikkan keramahtamahan minggu ini. Bisa berupa mengajak seseorang makan bersama, menawarkan tumpangan, atau sekadar menarik kursi bagi seseorang yang berdiri di tepi sebuah percakapan. Jangan menunggu sampai Anda merasa ahli. Latihan dimulai dari langkah kecil berikutnya yang sedikit tidak nyaman.',
+     'Hospitality is a practice, not a personality trait. It grows through repetition, one small welcome at a time.', 'Keramahtamahan adalah sebuah praktik, bukan sifat bawaan. Ia bertumbuh lewat pengulangan, satu sambutan kecil demi satu sambutan kecil.',
+     'Lord, teach me to practice hospitality rather than wait to feel naturally gifted at it. Give me courage for the small, slightly awkward first steps. Amen.', 'Tuhan, ajarlah aku mempraktikkan keramahtamahan, bukan menunggu sampai aku merasa memiliki bakat alami untuknya. Berilah aku keberanian untuk langkah-langkah kecil pertama yang sedikit canggung. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Without Grumbling', 'Tanpa Bersungut-sungut',
+     'Peter''s short instruction on hospitality includes a phrase that quietly convicts anyone who has ever welcomed a guest while secretly wishing they would go home: offer hospitality without grumbling. It is possible, apparently, to open your door and your table and still fall short of what love asks, if the whole time you are inwardly resentful of the inconvenience.
+
+This matters because hospitality is meant to communicate something true: that the person in front of us is genuinely welcome, not merely tolerated. Grumbling hospitality, the kind offered with a sigh and a glance at the clock, tends to leak out anyway, no matter how polite our words remain. People can usually sense whether they are wanted or endured, and that sense shapes whether they feel truly loved.
+
+None of this means hospitality should exhaust us or come at the cost of healthy limits. Even Jesus withdrew to rest. But it does mean examining our heart before we examine our schedule. Sometimes the obstacle to hospitality is not a lack of time but a lack of willingness, a quiet resentment we have never brought honestly before God.
+
+Today, if you have already made room for someone this week, pause and check your heart rather than only your calendar. Ask God to replace any grumbling with genuine gladness, so that your welcome communicates what it is meant to: this person matters, and I am glad they are here.', 'Instruksi singkat Petrus tentang keramahtamahan memuat frasa yang secara diam-diam menegur siapa pun yang pernah menyambut tamu sambil diam-diam berharap mereka segera pulang: berilah tumpangan tanpa bersungut-sungut. Ternyata mungkin saja seseorang membuka pintu dan mejanya namun tetap belum memenuhi apa yang diminta oleh kasih, jika sepanjang waktu ia diam-diam kesal karena merasa direpotkan.
+
+Ini penting karena keramahtamahan dimaksudkan untuk menyampaikan sesuatu yang benar: bahwa orang di hadapan kita sungguh-sungguh disambut, bukan sekadar ditoleransi. Keramahtamahan yang disertai sungut-sungut, jenis yang diberikan dengan helaan napas dan lirikan ke jam, cenderung tetap terlihat, betapapun sopan kata-kata kita. Orang biasanya bisa merasakan apakah mereka diinginkan atau sekadar ditahan, dan perasaan itu membentuk apakah mereka merasa benar-benar dikasihi.
+
+Semua ini bukan berarti keramahtamahan harus menghabiskan tenaga kita atau mengorbankan batasan yang sehat. Bahkan Yesus pun mengundurkan diri untuk beristirahat. Namun ini berarti memeriksa hati kita sebelum memeriksa jadwal kita. Kadang penghalang keramahtamahan bukanlah kurangnya waktu, melainkan kurangnya kerelaan, kekesalan diam-diam yang belum pernah kita bawa dengan jujur di hadapan Allah.
+
+Hari ini, jika Anda sudah memberi ruang bagi seseorang minggu ini, berhentilah sejenak dan periksa hati Anda, bukan hanya kalender Anda. Mohonlah kepada Allah untuk mengganti segala sungut-sungut dengan sukacita yang tulus, sehingga sambutan Anda menyampaikan apa yang seharusnya: orang ini berarti, dan aku senang mereka ada di sini.',
+     'A welcome offered with a resentful heart still leaves people feeling merely tolerated. Ask God to change your heart, not only your schedule.', 'Sambutan yang diberikan dengan hati yang kesal tetap membuat orang merasa hanya ditoleransi. Mohonlah kepada Allah untuk mengubah hati Anda, bukan hanya jadwal Anda.',
+     'Lord, forgive the times my welcome has been polite on the outside and resentful within. Give me a genuinely glad heart toward the people you bring across my path. Amen.', 'Tuhan, ampunilah saat-saat sambutanku sopan di luar namun kesal di dalam. Berilah aku hati yang sungguh-sungguh bersukacita terhadap orang-orang yang Engkau bawa melintasi jalanku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 4:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 4:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Whatever You Did for the Least of These', 'Apa yang Kamu Lakukan bagi yang Paling Hina',
+     'On this final day, Jesus takes hospitality somewhere startling. In his description of final judgment, he does not describe a religious quiz, but a series of ordinary acts of welcome: feeding the hungry, giving drink to the thirsty, inviting in the stranger. And then he says something that has quietly reshaped how many believers understand hospitality ever since: whatever you did for one of the least of these, you did for me.
+
+This means that every plate handed to a hungry neighbor, every glass of water offered, every door opened to a stranger, is somehow received by Christ himself. Hospitality is not simply a nice social virtue; it is a form of worship, a way of loving God by loving the person standing in front of us who is easy to overlook precisely because they seem unimportant.
+
+It is worth sitting with how surprised the righteous are in this passage. They ask, essentially, when did we ever do this for you? They were not performing hospitality for reward or recognition. They simply saw someone in need and responded, without realizing the weight of what they were doing. That is often how the deepest hospitality looks: unglamorous, unnoticed, and entirely sincere.
+
+As this plan closes, consider who in your life resembles ''the least of these'' — someone easy to walk past, someone whose welcome would cost you something real. Ask God for the grace to see Christ in them, and to open your door, your table, or simply your attention, as an offering to him.', 'Pada hari terakhir ini, Yesus membawa keramahtamahan ke tempat yang mengejutkan. Dalam gambaran-Nya tentang penghakiman akhir, Ia tidak menggambarkan sebuah tes rohani, melainkan serangkaian tindakan sambutan yang biasa: memberi makan yang lapar, memberi minum yang haus, mengundang masuk orang asing. Dan kemudian Ia mengatakan sesuatu yang sejak itu diam-diam membentuk kembali cara banyak orang percaya memahami keramahtamahan: apa yang kamu lakukan bagi salah satu dari saudara-Ku yang paling hina ini, kamu telah melakukannya untuk-Ku.
+
+Ini berarti setiap piring yang diserahkan kepada tetangga yang lapar, setiap gelas air yang ditawarkan, setiap pintu yang dibuka bagi orang asing, entah bagaimana diterima oleh Kristus sendiri. Keramahtamahan bukan sekadar kebajikan sosial yang baik; itu adalah bentuk ibadah, cara mengasihi Allah dengan mengasihi orang yang berdiri di hadapan kita, yang mudah diabaikan justru karena mereka tampak tidak penting.
+
+Layak untuk merenungkan betapa terkejutnya orang-orang benar dalam bagian ini. Mereka bertanya, pada dasarnya, kapan kami pernah melakukan ini bagi-Mu? Mereka tidak melakukan keramahtamahan demi imbalan atau pengakuan. Mereka hanya melihat seseorang yang membutuhkan dan menanggapinya, tanpa menyadari betapa besar bobot dari apa yang sedang mereka lakukan. Begitulah sering kali rupa keramahtamahan yang paling dalam: tidak mencolok, tidak diperhatikan, dan sepenuhnya tulus.
+
+Saat rencana ini ditutup, pikirkan siapa dalam hidup Anda yang menyerupai ''yang paling hina'' — seseorang yang mudah dilewati, seseorang yang menyambutnya akan menuntut sesuatu yang nyata dari Anda. Mohonlah anugerah dari Allah untuk melihat Kristus dalam diri mereka, dan untuk membuka pintu Anda, meja Anda, atau sekadar perhatian Anda, sebagai persembahan bagi-Nya.',
+     'Every small act of hospitality you offer is quietly received by Christ himself. Nothing done for ''the least of these'' is ever wasted.', 'Setiap tindakan kecil keramahtamahan yang Anda berikan diam-diam diterima oleh Kristus sendiri. Tidak ada yang dilakukan bagi ''yang paling hina'' yang pernah sia-sia.',
+     'Jesus, help me see you in the people I am tempted to overlook. Let my table, my door, and my attention become small offerings of love to you. Amen.', 'Yesus, tolong aku melihat Engkau dalam diri orang-orang yang tergoda untuk kuabaikan. Biarlah mejaku, pintuku, dan perhatianku menjadi persembahan kasih yang kecil bagi-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 25:35', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 25:40', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 25:35', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 25:40', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: When Love Forgives  (Love for Neighbor, 7 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for Neighbor' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'When Love Forgives';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'When Love Forgives', 'Ketika Kasih Mengampuni',
+     'A Week of Releasing What Weighs You Down', 'Seminggu Melepaskan Beban yang Membebani',
+     'A seven-day journey through forgiveness toward a neighbor who has wronged you. Walking through the words and example of Jesus, this plan gently but honestly addresses the weight of unforgiveness and the slow, grace-filled path toward releasing it.', 'Perjalanan tujuh hari melalui pengampunan terhadap sesama yang telah menyakiti Anda. Menelusuri perkataan dan teladan Yesus, rencana ini dengan lembut namun jujur membahas beban dari sikap tidak mau mengampuni dan jalan yang perlahan, penuh anugerah, menuju pelepasannya.', 7)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Weight We Carry', 'Beban yang Kita Pikul',
+     'Unforgiveness rarely announces itself as dramatically as we might expect. It tends to arrive quietly, in the form of a name we avoid saying, a memory we keep replaying, a story we tell ourselves about someone who wronged us, a story that grows sharper every time we retell it. Over time, without our fully realizing it, that unresolved hurt can settle into our chest like a low, constant weight.
+
+This week is not about pretending that weight isn''t real, or rushing past genuine pain toward a tidy resolution. Forgiveness, in the way Jesus describes it, is costly precisely because the hurt it addresses is real. He does not ask us to say the wrong did not happen, or that it did not matter. He asks us to release the grip it has on us, which is an entirely different thing than pretending it never happened.
+
+Jesus ties forgiveness to something startling: our own experience of being forgiven by God. If we forgive others, our heavenly Father will forgive us; if we withhold forgiveness, we block something in ourselves from receiving what we most need. This is not a transactional threat so much as an honest description of how unforgiveness works in the human heart. A closed fist cannot receive a gift.
+
+Today, simply name honestly, before God, one person and one wound you have been carrying. You do not need to forgive fully today. You only need to bring it into the light, admitting the weight of it rather than minimizing or hiding it any longer.', 'Sikap tidak mau mengampuni jarang mengumumkan dirinya sedramatis yang kita duga. Ia cenderung datang secara diam-diam, dalam bentuk nama yang kita hindari untuk sebut, kenangan yang terus kita putar ulang, kisah yang kita ceritakan pada diri sendiri tentang seseorang yang menyakiti kita, kisah yang semakin tajam setiap kali kita ceritakan ulang. Seiring waktu, tanpa kita sadari sepenuhnya, luka yang belum terselesaikan itu bisa mengendap di dada kita seperti beban yang rendah namun terus-menerus.
+
+Minggu ini bukan tentang berpura-pura bahwa beban itu tidak nyata, atau terburu-buru melewati rasa sakit yang sungguh menuju penyelesaian yang rapi. Pengampunan, sebagaimana digambarkan Yesus, itu mahal justru karena luka yang ditanganinya nyata. Ia tidak meminta kita mengatakan bahwa kesalahan itu tidak pernah terjadi, atau tidak penting. Ia meminta kita melepaskan cengkeraman yang dimilikinya atas kita, yang sama sekali berbeda dari berpura-pura bahwa itu tidak pernah terjadi.
+
+Yesus mengaitkan pengampunan dengan sesuatu yang mengejutkan: pengalaman kita sendiri diampuni oleh Allah. Jika kita mengampuni orang lain, Bapa surgawi kita akan mengampuni kita; jika kita menahan pengampunan, kita menghalangi sesuatu dalam diri kita sendiri untuk menerima apa yang paling kita butuhkan. Ini bukan ancaman transaksional, melainkan lebih merupakan gambaran jujur tentang bagaimana sikap tidak mau mengampuni bekerja dalam hati manusia. Tangan yang terkepal tidak dapat menerima pemberian.
+
+Hari ini, sebutlah dengan jujur, di hadapan Allah, satu orang dan satu luka yang telah Anda pikul. Anda tidak perlu mengampuni sepenuhnya hari ini. Anda hanya perlu membawanya ke dalam terang, mengakui bobotnya alih-alih terus meremehkan atau menyembunyikannya.',
+     'Naming a hurt honestly before God is not weakness. It is the first real step toward setting it down.', 'Mengakui luka dengan jujur di hadapan Allah bukanlah kelemahan. Itu adalah langkah pertama yang sungguh nyata menuju meletakkannya.',
+     'Lord, you know the weight I have been carrying, even the parts I have not admitted out loud. I bring it honestly before you today. I am not ready to let it go completely, but I am willing to begin. Amen.', 'Tuhan, Engkau tahu beban yang telah kupikul, bahkan bagian-bagian yang belum kuakui dengan suara. Hari ini aku membawanya dengan jujur di hadapan-Mu. Aku belum siap melepaskannya sepenuhnya, tetapi aku bersedia untuk memulai. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 6:14-15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 6:14-15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'What You Hold Against Anyone', 'Apa yang Kamu Tahan terhadap Seseorang',
+     'Mark records a small but pointed instruction from Jesus about prayer: when you stand praying, if you hold anything against anyone, forgive them. Notice where Jesus places this. He does not tuck it into a separate teaching about relationships; he puts it directly inside instructions about prayer itself, as though our ability to connect honestly with God is tangled up with whatever we are still holding against another person.
+
+Many of us have experienced this tangle without naming it. We come to prayer wanting to feel close to God, wanting peace, wanting clarity, and instead we find our minds circling back to the same old grievance, the same rehearsed argument with someone who is not even in the room. Unforgiveness has a way of crowding out the very space we need for prayer to do its work in us.
+
+This is not about forcing forgiveness through gritted teeth the moment we notice the grudge. It is about bringing that grudge honestly into our prayer rather than pretending it isn''t there while we try to pray around it. Jesus seems to suggest that naming what we are holding, right there in prayer, is itself part of the process of releasing it.
+
+Today, before you pray about anything else, pause and ask yourself honestly what you might be holding against someone. Bring it directly into your prayer, not as a confession of failure, but as the starting point Jesus himself points to.', 'Markus mencatat instruksi Yesus yang singkat namun tajam tentang doa: ketika kamu berdiri untuk berdoa, jika ada sesuatu yang kamu tahan terhadap seseorang, ampunilah dia. Perhatikan di mana Yesus menempatkan ini. Ia tidak menyisipkannya sebagai pengajaran terpisah tentang hubungan antarmanusia; Ia menempatkannya langsung di dalam instruksi tentang doa itu sendiri, seolah kemampuan kita untuk terhubung dengan jujur kepada Allah terkait erat dengan apa pun yang masih kita tahan terhadap orang lain.
+
+Banyak dari kita pernah mengalami keterkaitan ini tanpa menamainya. Kita datang berdoa ingin merasa dekat dengan Allah, ingin damai sejahtera, ingin kejernihan, dan sebaliknya kita mendapati pikiran kita kembali berputar pada keluhan lama yang sama, argumen yang sama yang telah kita latih dengan seseorang yang bahkan tidak ada di ruangan itu. Sikap tidak mau mengampuni memiliki cara untuk menyesakkan ruang yang justru kita butuhkan agar doa bekerja dalam diri kita.
+
+Ini bukan tentang memaksakan pengampunan sambil menggeretakkan gigi begitu kita menyadari adanya dendam. Ini tentang membawa dendam itu dengan jujur ke dalam doa kita, alih-alih berpura-pura itu tidak ada sementara kita berusaha berdoa mengelilinginya. Yesus tampaknya menyiratkan bahwa menyebut apa yang kita tahan, tepat di dalam doa, itu sendiri merupakan bagian dari proses melepaskannya.
+
+Hari ini, sebelum Anda berdoa tentang hal lain, berhentilah sejenak dan tanyakan pada diri sendiri dengan jujur apa yang mungkin Anda tahan terhadap seseorang. Bawalah itu langsung ke dalam doa Anda, bukan sebagai pengakuan kegagalan, melainkan sebagai titik awal yang ditunjukkan Yesus sendiri.',
+     'Prayer and forgiveness are more connected than we often realize. Bringing a grudge honestly into prayer is where release often begins.', 'Doa dan pengampunan lebih terkait erat daripada yang sering kita sadari. Membawa dendam dengan jujur ke dalam doa sering kali menjadi awal dari pelepasan.',
+     'Father, as I come to you today, I bring what I have been holding against someone. I don''t want it to block what you want to do in me. Help me release it, even slowly. Amen.', 'Bapa, saat aku datang kepada-Mu hari ini, aku membawa apa yang telah kutahan terhadap seseorang. Aku tidak ingin itu menghalangi apa yang ingin Engkau kerjakan dalam diriku. Tolong aku melepaskannya, meski secara perlahan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 11:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 11:25', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Forgive as the Lord Forgave You', 'Ampunilah sebagaimana Tuhan Telah Mengampunimu',
+     'Paul''s instruction to the Colossians offers both a command and a measuring stick: bear with one another, and forgive whatever grievances you may have against one another, forgiving as the Lord forgave you. That last phrase changes everything. We are not asked to forgive according to our own natural capacity, which for most wounds would run out quickly. We are asked to forgive according to the pattern of how we ourselves have been forgiven.
+
+This is a sobering standard once we actually sit with it. If we are honest about the ways we have needed forgiveness, the ways we have hurt others carelessly or deliberately and still received grace, the gap between what has been extended to us and what we are often reluctant to extend to others becomes uncomfortably visible.
+
+Bearing with one another, mentioned right alongside forgiveness, is worth noticing too. Forgiveness is not always a single dramatic moment. Often it is a posture we return to again and again, bearing with someone''s ongoing flaws or the lingering pain of an old wound, choosing patience rather than resentment on the days when the hurt resurfaces unexpectedly.
+
+Today, consider the forgiveness you yourself have received, from God and from people in your life. Let that memory soften the resistance you may feel toward extending forgiveness of your own. You are not forgiving from an empty well; you are forgiving out of a well that has already been filled.', 'Instruksi Paulus kepada jemaat Kolose menawarkan sekaligus perintah dan tolok ukur: sabarlah seorang terhadap yang lain, dan ampunilah seorang akan yang lain apabila ada keberatan terhadap yang lain, sama seperti Tuhan telah mengampunimu. Frasa terakhir itu mengubah segalanya. Kita tidak diminta mengampuni sesuai kapasitas alami kita sendiri, yang untuk sebagian besar luka akan cepat habis. Kita diminta mengampuni sesuai pola bagaimana kita sendiri telah diampuni.
+
+Ini menjadi standar yang menyadarkan begitu kita benar-benar merenungkannya. Jika kita jujur tentang cara-cara kita membutuhkan pengampunan, cara-cara kita menyakiti orang lain baik secara sembrono maupun sengaja dan tetap menerima anugerah, jurang antara apa yang telah diberikan kepada kita dan apa yang sering kali enggan kita berikan kepada orang lain menjadi terlihat dengan tidak nyaman.
+
+Bersabar terhadap satu sama lain, yang disebut tepat berdampingan dengan pengampunan, juga layak diperhatikan. Pengampunan tidak selalu berupa satu momen dramatis. Sering kali itu adalah sikap yang terus kita kembalikan berulang kali, bersabar terhadap kekurangan seseorang yang berkelanjutan atau rasa sakit yang masih tertinggal dari luka lama, memilih kesabaran alih-alih kepahitan pada hari-hari ketika luka itu muncul kembali secara tak terduga.
+
+Hari ini, pertimbangkan pengampunan yang telah Anda terima sendiri, dari Allah maupun dari orang-orang dalam hidup Anda. Biarkan kenangan itu melunakkan penolakan yang mungkin Anda rasakan terhadap memberikan pengampunan Anda sendiri. Anda tidak sedang mengampuni dari sumur yang kosong; Anda sedang mengampuni dari sumur yang telah terisi penuh.',
+     'We do not forgive from an empty well. We forgive out of the abundant forgiveness we have already received from God.', 'Kita tidak mengampuni dari sumur yang kosong. Kita mengampuni dari kelimpahan pengampunan yang telah kita terima dari Allah.',
+     'Lord, thank you for the forgiveness you have already given me, more than I deserve. Let that memory soften my heart today toward the person I am struggling to forgive. Amen.', 'Tuhan, terima kasih atas pengampunan yang telah Engkau berikan kepadaku, jauh lebih dari yang layak kuterima. Biarlah kenangan itu melunakkan hatiku hari ini terhadap orang yang sedang kuperjuangkan untuk kuampuni. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Seventy-Seven Times', 'Tujuh Puluh Kali Tujuh Kali',
+     'Peter''s question to Jesus sounds almost generous by ordinary standards: how many times should I forgive someone who sins against me, as many as seven times? Peter likely expected praise for proposing a number well beyond what the religious teachers of his day required. Instead, Jesus answers with a number that dismantles the whole idea of counting: not seven times, but seventy-seven times.
+
+Jesus is not handing us a new arithmetic to track carefully, as though forgiveness runs out precisely at the seventy-eighth offense. He is dismantling the scorekeeping mindset altogether. Real forgiveness, the kind Jesus describes, refuses to keep a ledger. The moment we start counting offenses, we have already stopped forgiving in the way he means.
+
+This is especially relevant when a neighbor''s wrong is not a single event but a recurring pattern: the relative who repeats the same hurtful behavior, the friend who apologizes and then does it again, the coworker whose thoughtlessness never seems to change. Jesus''s answer does not mean we must remain naive or without boundaries. It means our default posture toward the person stays open to forgiveness rather than closing after some private tally is reached.
+
+Today, consider whether you have been quietly keeping score with someone, tracking offenses the way Peter initially wanted to. Ask God to help you release the ledger itself, not just this one offense, trusting him with what feels impossible to release on your own strength.', 'Pertanyaan Petrus kepada Yesus terdengar hampir murah hati menurut standar biasa: berapa kali aku harus mengampuni saudaraku yang berbuat dosa terhadapku, sampai tujuh kali? Petrus mungkin mengharapkan pujian karena mengusulkan angka yang jauh melampaui apa yang dituntut oleh para pengajar agama pada zamannya. Sebaliknya, Yesus menjawab dengan angka yang meruntuhkan seluruh gagasan tentang menghitung: bukan sampai tujuh kali, melainkan sampai tujuh puluh kali tujuh kali.
+
+Yesus tidak memberi kita rumus hitungan baru untuk dilacak dengan cermat, seolah pengampunan habis tepat pada pelanggaran ke tujuh puluh delapan. Ia sedang meruntuhkan seluruh pola pikir perhitungan skor. Pengampunan yang sejati, yang digambarkan Yesus, menolak untuk menyimpan catatan. Saat kita mulai menghitung pelanggaran, kita sebenarnya sudah berhenti mengampuni dalam pengertian yang Ia maksud.
+
+Ini sangat relevan ketika kesalahan seorang sesama bukan satu kejadian tunggal melainkan pola yang berulang: kerabat yang mengulangi perilaku menyakitkan yang sama, sahabat yang meminta maaf lalu melakukannya lagi, rekan kerja yang kecerobohannya tampaknya tidak pernah berubah. Jawaban Yesus bukan berarti kita harus tetap naif atau tanpa batasan. Ini berarti sikap dasar kita terhadap orang itu tetap terbuka pada pengampunan, bukannya tertutup setelah mencapai hitungan pribadi tertentu.
+
+Hari ini, pertimbangkan apakah Anda selama ini diam-diam menyimpan catatan skor dengan seseorang, melacak pelanggaran seperti yang awalnya diinginkan Petrus. Mohonlah kepada Allah untuk membantu Anda melepaskan catatan itu sendiri, bukan hanya satu pelanggaran ini, memercayakan kepada-Nya apa yang terasa mustahil dilepaskan dengan kekuatan Anda sendiri.',
+     'Real forgiveness refuses to keep a ledger. The moment we start counting offenses, we have stopped forgiving the way Jesus describes.', 'Pengampunan yang sejati menolak untuk menyimpan catatan. Saat kita mulai menghitung pelanggaran, kita sebenarnya sudah berhenti mengampuni sebagaimana yang digambarkan Yesus.',
+     'Jesus, I confess I have been keeping a private count. Help me release the ledger itself, not just one offense, and trust you with the pattern I cannot forgive on my own strength. Amen.', 'Yesus, aku mengaku bahwa aku telah diam-diam menyimpan catatan pribadi. Tolong aku melepaskan catatan itu sendiri, bukan hanya satu pelanggaran, dan memercayakan kepada-Mu pola yang tidak dapat kuampuni dengan kekuatanku sendiri. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 18:21-22', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 18:21-22', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Leaving Room for God', 'Memberi Tempat bagi Allah',
+     'One of the quiet obstacles to forgiveness is the fear that letting go means the wrong simply goes unaddressed, that the person who hurt us gets away with it entirely. Paul speaks directly into that fear: do not take revenge, but leave room for God''s wrath, because vengeance belongs to him, not to us. This is not a dismissal of justice. It is a relocation of it.
+
+Choosing not to take revenge does not mean pretending the wrong did not matter or that consequences should never follow. It means releasing our grip on being the one who metes out justice, trusting instead that God sees clearly what we cannot, and that he is both more just and more merciful than we could ever manage to be on our own.
+
+This can feel like relinquishing control, because in a sense it is. Many of us hold onto anger partly because it feels like the only leverage we have left, the only way to ensure the wrong is not simply forgotten. Leaving room for God''s justice asks us to trust that he does not forget, even when we let go of trying to enforce accountability ourselves.
+
+Today, notice any place where you have been quietly trying to play judge and jury toward someone who wronged you. Practice, even briefly, handing that role back to God, trusting his justice enough to set down your own.', 'Salah satu penghalang diam-diam terhadap pengampunan adalah rasa takut bahwa melepaskan berarti kesalahan itu sama sekali tidak ditangani, bahwa orang yang menyakiti kita lolos begitu saja. Paulus berbicara langsung ke dalam ketakutan itu: janganlah menuntut pembalasan, tetapi berilah tempat kepada murka Allah, sebab pembalasan adalah hak-Nya, bukan hak kita. Ini bukan penolakan terhadap keadilan. Ini adalah pemindahan keadilan itu.
+
+Memilih untuk tidak membalas dendam tidak berarti berpura-pura kesalahan itu tidak penting atau bahwa konsekuensi tidak boleh mengikutinya. Ini berarti melepaskan cengkeraman kita untuk menjadi pihak yang menjatuhkan keadilan, dan sebaliknya memercayai bahwa Allah melihat dengan jelas apa yang tidak dapat kita lihat, dan bahwa Ia jauh lebih adil sekaligus lebih penuh belas kasihan daripada yang pernah bisa kita capai sendiri.
+
+Ini bisa terasa seperti melepaskan kendali, karena dalam artian tertentu memang demikian. Banyak dari kita berpegang pada kemarahan sebagian karena itu terasa seperti satu-satunya kekuatan yang tersisa, satu-satunya cara memastikan kesalahan itu tidak begitu saja dilupakan. Memberi tempat bagi keadilan Allah meminta kita untuk memercayai bahwa Ia tidak lupa, bahkan ketika kita melepaskan usaha kita sendiri untuk menuntut pertanggungjawaban.
+
+Hari ini, perhatikan bagian mana pun di mana Anda diam-diam mencoba berperan sebagai hakim dan juri terhadap seseorang yang menyakiti Anda. Berlatihlah, bahkan sebentar saja, menyerahkan peran itu kembali kepada Allah, memercayai keadilan-Nya cukup untuk meletakkan keadilan Anda sendiri.',
+     'Letting go of revenge is not letting go of justice. It is trusting justice to someone more capable of carrying it than we are.', 'Melepaskan dendam bukan berarti melepaskan keadilan. Itu adalah memercayakan keadilan kepada seseorang yang jauh lebih mampu memikulnya daripada kita.',
+     'Lord, I release my grip on making this right myself. I trust you to see clearly what I cannot, and to be both just and merciful in ways I could never manage alone. Amen.', 'Tuhan, aku melepaskan cengkeramanku untuk membereskan ini sendiri. Aku memercayai Engkau melihat dengan jelas apa yang tidak dapat kulihat, dan menjadi adil sekaligus penuh belas kasihan dengan cara yang tidak pernah bisa kucapai sendirian. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Father, Forgive Them', 'Bapa, Ampunilah Mereka',
+     'There is no more searching example of forgiveness in all of Scripture than Jesus on the cross, in the middle of unjust suffering, praying: Father, forgive them, for they do not know what they are doing. He did not wait for an apology. He did not wait for the people who wronged him to understand the weight of what they had done. He forgave in the very moment of the wound, while it was still open.
+
+This example can feel almost unreachable, and in a sense it is meant to. We are not asked to forgive by our own strength alone, mustering enough willpower to imitate Jesus perfectly. We are invited into a forgiveness that flows from him, asking for his grace to do in us what we cannot manufacture ourselves.
+
+Notice, too, what Jesus says about the people who wronged him: they do not know what they are doing. This is not an excuse for real harm, but it is an honest observation many of us can recognize in our own experience of being hurt. People who wound us are often acting out of their own blindness, brokenness, or pain, in ways that do not erase the harm but can, slowly, help loosen our grip on hatred toward them.
+
+Today, look honestly at the person you have been walking through this plan with in your mind. Consider praying, even haltingly, a version of Jesus''s own prayer over them: Father, forgive them. Let it be a prayer you grow into rather than one you must feel fully before you speak it.', 'Tidak ada teladan pengampunan yang lebih mendalam dalam seluruh Alkitab selain Yesus di kayu salib, di tengah penderitaan yang tidak adil, berdoa: Ya Bapa, ampunilah mereka, sebab mereka tidak tahu apa yang mereka perbuat. Ia tidak menunggu permintaan maaf. Ia tidak menunggu orang-orang yang menyakiti-Nya memahami bobot dari apa yang telah mereka lakukan. Ia mengampuni tepat pada saat luka itu terjadi, ketika luka itu masih terbuka.
+
+Teladan ini bisa terasa hampir tak terjangkau, dan dalam artian tertentu memang dimaksudkan demikian. Kita tidak diminta mengampuni dengan kekuatan kita sendiri saja, mengumpulkan cukup kemauan untuk meniru Yesus dengan sempurna. Kita diundang ke dalam pengampunan yang mengalir dari-Nya, memohon anugerah-Nya untuk mengerjakan dalam diri kita apa yang tidak dapat kita hasilkan sendiri.
+
+Perhatikan juga apa yang Yesus katakan tentang orang-orang yang menyakiti-Nya: mereka tidak tahu apa yang mereka perbuat. Ini bukan alasan untuk membenarkan luka yang nyata, tetapi ini adalah pengamatan jujur yang dapat dikenali banyak dari kita dalam pengalaman kita sendiri terluka. Orang-orang yang menyakiti kita sering kali bertindak dari kebutaan, keretakan, atau luka mereka sendiri, dengan cara yang tidak menghapus luka itu tetapi dapat, perlahan-lahan, membantu melonggarkan cengkeraman kebencian kita terhadap mereka.
+
+Hari ini, lihatlah dengan jujur orang yang telah Anda pikirkan sepanjang rencana ini. Pertimbangkan untuk berdoa, bahkan dengan tersendat, versi doa Yesus sendiri atas mereka: Bapa, ampunilah mereka. Biarlah itu menjadi doa yang Anda tumbuh ke dalamnya, bukan doa yang harus Anda rasakan sepenuhnya sebelum Anda mengucapkannya.',
+     'Jesus forgave before an apology ever came. You do not need to wait for someone to deserve forgiveness before you begin releasing it.', 'Yesus mengampuni bahkan sebelum permintaan maaf pernah datang. Anda tidak perlu menunggu seseorang layak menerima pengampunan sebelum Anda mulai melepaskannya.',
+     'Father, forgive them. I pray those words even before I fully feel them. Let your grace do in me what I cannot do on my own strength alone. Amen.', 'Bapa, ampunilah mereka. Aku mendoakan kata-kata ini bahkan sebelum aku sepenuhnya merasakannya. Biarlah anugerah-Mu mengerjakan dalam diriku apa yang tidak dapat kulakukan dengan kekuatanku sendiri. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 23:34', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 23:34', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'What Was Meant for Harm', 'Apa yang Dimaksudkan untuk Kejahatan',
+     'This plan closes with two stories woven together: an old one from Genesis and a simple line from Peter''s letter. Joseph, betrayed and sold into slavery by his own brothers, eventually stands before them with the power to destroy them, and instead says something remarkable: you intended to harm me, but God intended it for good, to accomplish what is now being done, the saving of many lives. He does not minimize what they did. He names it plainly. And he still releases it.
+
+Joseph''s forgiveness did not erase decades of pain, exile, or injustice. It did not undo what his brothers had done. But it freed him from carrying their sin as the defining weight of his own life, and it opened a future neither he nor they could have written on their own. Forgiveness rarely rewrites the past. What it can do is free us to move forward without dragging that past into every future relationship.
+
+Peter''s words offer a fitting close to this whole week: above all, love each other deeply, because love covers over a multitude of sins. Love does not pretend sin does not exist. But love, the kind Christ modeled and calls us into, has a way of covering wrongs rather than cataloguing them, of choosing to build a future together rather than replaying an unchangeable past.
+
+As this plan ends, you may not be fully finished forgiving the person you have been carrying through this week. That is all right; forgiveness is often a road walked slowly rather than a door closed in a single moment. Ask God to keep doing in you what you cannot finish on your own, trusting that even what was meant for harm, God is able to work toward good.', 'Rencana ini ditutup dengan dua kisah yang tertenun bersama: kisah lama dari Kejadian dan sebaris kalimat sederhana dari surat Petrus. Yusuf, yang dikhianati dan dijual menjadi budak oleh saudara-saudaranya sendiri, akhirnya berdiri di hadapan mereka dengan kuasa untuk menghancurkan mereka, dan sebaliknya mengatakan sesuatu yang luar biasa: kamu telah mereka-rekakan yang jahat terhadapku, tetapi Allah telah mereka-rekakannya untuk kebaikan, untuk memelihara hidup suatu bangsa yang besar seperti yang terjadi sekarang ini. Ia tidak meremehkan apa yang mereka lakukan. Ia menyebutnya dengan jelas. Dan ia tetap melepaskannya.
+
+Pengampunan Yusuf tidak menghapus puluhan tahun rasa sakit, pengasingan, atau ketidakadilan. Itu tidak membatalkan apa yang telah dilakukan saudara-saudaranya. Tetapi itu membebaskannya dari memikul dosa mereka sebagai beban yang menentukan hidupnya sendiri, dan itu membuka masa depan yang tidak dapat ditulis sendiri baik olehnya maupun oleh mereka. Pengampunan jarang menulis ulang masa lalu. Yang dapat dilakukannya adalah membebaskan kita untuk melangkah maju tanpa menyeret masa lalu itu ke dalam setiap hubungan di masa depan.
+
+Kata-kata Petrus menawarkan penutup yang tepat bagi seluruh minggu ini: yang terutama, kasihilah sungguh-sungguh seorang akan yang lain, sebab kasih menutupi banyak sekali dosa. Kasih tidak berpura-pura dosa tidak ada. Tetapi kasih, jenis yang diteladankan Kristus dan yang Ia panggil kita masuki, memiliki cara menutupi kesalahan alih-alih mendaftarnya, memilih membangun masa depan bersama alih-alih memutar ulang masa lalu yang tidak dapat diubah.
+
+Saat rencana ini berakhir, Anda mungkin belum sepenuhnya selesai mengampuni orang yang telah Anda pikul sepanjang minggu ini. Tidak apa-apa; pengampunan sering kali adalah jalan yang ditempuh perlahan, bukan pintu yang ditutup dalam satu momen. Mohonlah kepada Allah untuk terus mengerjakan dalam diri Anda apa yang tidak dapat Anda selesaikan sendiri, memercayai bahwa bahkan apa yang dimaksudkan untuk kejahatan, Allah mampu mengerjakannya menuju kebaikan.',
+     'Forgiveness rarely rewrites the past, but it frees you to walk into the future without dragging that past into every relationship ahead.', 'Pengampunan jarang menulis ulang masa lalu, tetapi ia membebaskan Anda untuk melangkah ke masa depan tanpa menyeret masa lalu itu ke dalam setiap hubungan yang akan datang.',
+     'Lord, what was meant for harm, you are able to work toward good. Keep doing in me what I cannot finish alone, and let love cover what I am still learning to release. Amen.', 'Tuhan, apa yang dimaksudkan untuk kejahatan, Engkau mampu mengerjakannya menuju kebaikan. Teruslah mengerjakan dalam diriku apa yang tidak dapat kuselesaikan sendiri, dan biarlah kasih menutupi apa yang masih kupelajari untuk kulepaskan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 50:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 4:8', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 50:20', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 4:8', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: At the Bedside  (Love for the Poor & Suffering, 6 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for the Poor & Suffering' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'At the Bedside';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'At the Bedside', 'Di Sisi Ranjang',
+     'A six-day guide to loving those who are sick', 'Panduan enam hari untuk mengasihi mereka yang sakit',
+     'Six days on the sacred, often awkward work of caring for the sick — how to show up, what to say, how to pray, and how to sustain the long haul of caregiving without losing heart.', 'Enam hari merenungkan pekerjaan yang suci dan sering kali canggung dalam merawat orang sakit — bagaimana hadir, apa yang harus dikatakan, bagaimana berdoa, dan bagaimana bertahan dalam perjalanan panjang merawat tanpa kehilangan semangat.', 6)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Anointed and Prayed Over', 'Diminyaki dan Didoakan',
+     'James gives the early church remarkably concrete instructions for what to do when someone is sick: call the elders, let them pray over the person and anoint them with oil in the Lord''s name, and trust that the prayer of faith will make them well. This is one of the few places in the New Testament where care for the sick is given an actual liturgy — a shape, a set of physical actions, not just a vague suggestion to ''be there.''
+
+In the Catholic tradition, this passage grew into the Sacrament of the Anointing of the Sick, a formal, sacred moment where the Church gathers around someone in illness and asks God, tangibly, to strengthen and heal. Whether or not your own tradition practices anointing this way, the underlying instinct is worth carrying with you: sickness deserves a response that is deliberate, physical, and communal — not just private worry kept to ourselves.
+
+There is something important in the fact that James does not tell the sick person to simply pray alone and wait it out. He tells the community to come to them. Illness can be deeply isolating; it shrinks a person''s world down to a bed, a room, a body that no longer cooperates. The instruction to ''call the elders'' is really an instruction against isolation — bring people close, on purpose, in the middle of suffering.
+
+Today, think of someone who is sick and ask yourself whether your care for them has been mostly private — a fleeting thought, a silent prayer — or whether it has actually reached them in a tangible way. Consider one concrete step: a visit, a call, an offer to pray with them directly rather than only for them from a distance.', 'Yakobus memberi jemaat mula-mula instruksi yang sangat konkret tentang apa yang harus dilakukan ketika seseorang sakit: panggillah para penatua, biarkan mereka mendoakan orang itu dan mengolesnya dengan minyak dalam nama Tuhan, dan percayalah bahwa doa yang lahir dari iman akan menyembuhkannya. Ini salah satu bagian langka dalam Perjanjian Baru di mana perhatian bagi orang sakit diberi liturgi yang nyata — sebuah bentuk, serangkaian tindakan fisik, bukan sekadar saran samar untuk ''hadir bersama mereka.''
+
+Dalam tradisi Katolik, bagian ini berkembang menjadi Sakramen Pengurapan Orang Sakit, sebuah momen resmi dan suci di mana Gereja berkumpul di sekitar seseorang yang sakit dan memohon kepada Allah, secara nyata, untuk menguatkan dan menyembuhkan. Terlepas dari apakah tradisi Anda sendiri mempraktikkan pengurapan seperti ini, naluri yang mendasarinya layak Anda bawa: sakit membutuhkan tanggapan yang disengaja, fisik, dan bersama-sama — bukan hanya kekhawatiran pribadi yang dipendam sendiri.
+
+Ada sesuatu yang penting dalam fakta bahwa Yakobus tidak menyuruh orang sakit untuk sekadar berdoa sendiri dan menunggu. Ia menyuruh komunitas untuk datang kepada mereka. Sakit bisa sangat mengisolasi; ia menyusutkan dunia seseorang menjadi hanya sebuah ranjang, sebuah kamar, sebuah tubuh yang tidak lagi bekerja sama. Instruksi untuk ''memanggil para penatua'' sesungguhnya adalah instruksi melawan keterasingan — mendekatkan orang-orang, dengan sengaja, di tengah penderitaan.
+
+Hari ini, pikirkan seseorang yang sedang sakit dan tanyakan pada diri Anda apakah perhatian Anda kepada mereka sebagian besar bersifat pribadi — sebuah pikiran sekilas, doa dalam hati — atau apakah perhatian itu benar-benar telah menjangkau mereka secara nyata. Pertimbangkan satu langkah konkret: sebuah kunjungan, sebuah telepon, tawaran untuk berdoa bersama mereka secara langsung, bukan hanya untuk mereka dari kejauhan.',
+     'Sickness deserves a response that is deliberate, physical, and communal — care for the sick was never meant to stay private and silent.', 'Sakit membutuhkan tanggapan yang disengaja, fisik, dan bersama-sama — perhatian bagi orang sakit tidak pernah dimaksudkan untuk tetap pribadi dan diam.',
+     'Lord, show me how to bring my care for the sick out of private worry into tangible action. Give me the courage to visit, to call, to pray with someone face to face. Amen.', 'Tuhan, tunjukkanlah kepadaku bagaimana membawa perhatianku bagi orang sakit keluar dari kekhawatiran pribadi menjadi tindakan yang nyata. Berikanlah aku keberanian untuk berkunjung, menelepon, dan berdoa bersama seseorang secara langsung. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 5:14-15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 5:14-15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'I Was Sick and You Looked After Me', 'Aku Sakit dan Kamu Melawat Aku',
+     'In Jesus''s teaching about the final judgment, he lists visiting the sick alongside feeding the hungry and clothing the naked, as one of the concrete ways his followers would either serve him or neglect him without even realizing it. ''I was sick and you looked after me'' sits right there in the list, not as a minor footnote but as one of the defining marks of a life that has actually followed Christ.
+
+What strikes me about this teaching is how ordinary the actions are. Nobody in the story performed miracles or gave dramatic speeches. They simply showed up for people in physical distress — bringing food, offering clothing, sitting with the sick. Jesus identifies himself so closely with suffering people that caring for them becomes, mysteriously, a direct encounter with him.
+
+Visiting someone who is sick can feel awkward. We often don''t know what to say, we worry about intruding, we fear seeing someone we love diminished by illness. These hesitations are understandable, but Jesus''s words suggest they should not be the final word. The visit matters more than getting it perfectly right. Presence, even clumsy presence, is what he asked for.
+
+Consider today whether there is someone sick you have been meaning to visit but have kept postponing, waiting to feel more ready or more equipped. According to Jesus, the readiness is not really the point. Showing up is.', 'Dalam pengajaran Yesus tentang penghakiman akhir, Ia menyebutkan melawat orang sakit di samping memberi makan orang lapar dan memberi pakaian orang telanjang, sebagai salah satu cara nyata para pengikut-Nya akan melayani-Nya atau mengabaikan-Nya tanpa mereka sadari sekalipun. ''Ketika Aku sakit, kamu melawat Aku'' berada tepat di daftar itu, bukan sebagai catatan kaki kecil, melainkan sebagai salah satu tanda penentu dari kehidupan yang sungguh-sungguh mengikut Kristus.
+
+Yang mengesankan dari pengajaran ini adalah betapa sederhananya tindakan-tindakan itu. Tidak ada seorang pun dalam kisah itu melakukan mukjizat atau memberikan pidato yang dramatis. Mereka hanya hadir bagi orang-orang yang mengalami penderitaan fisik — membawa makanan, menawarkan pakaian, duduk bersama orang sakit. Yesus mengidentifikasikan diri-Nya begitu dekat dengan orang-orang yang menderita sehingga merawat mereka menjadi, secara misterius, perjumpaan langsung dengan-Nya.
+
+Melawat seseorang yang sakit bisa terasa canggung. Kita sering tidak tahu harus berkata apa, kita khawatir mengganggu, kita takut melihat seseorang yang kita kasihi berkurang karena sakit. Keraguan-keraguan ini bisa dimengerti, namun kata-kata Yesus menunjukkan bahwa itu seharusnya bukan kata akhir. Kunjungan itu lebih penting daripada melakukannya dengan sempurna. Kehadiran, bahkan kehadiran yang canggung, adalah apa yang Ia minta.
+
+Renungkan hari ini apakah ada seseorang yang sakit yang selama ini ingin Anda kunjungi namun terus Anda tunda, menunggu merasa lebih siap atau lebih mampu. Menurut Yesus, kesiapan itu bukanlah intinya. Hadir sajalah yang menjadi intinya.',
+     'The visit matters more than getting it perfectly right — Jesus asked for presence, even clumsy presence, not polished words.', 'Kunjungan itu lebih penting daripada melakukannya dengan sempurna — Yesus meminta kehadiran, bahkan kehadiran yang canggung, bukan kata-kata yang sempurna.',
+     'Jesus, help me stop waiting to feel ready before I visit those who are sick. Let me trust that my imperfect presence is still an encounter with you. Amen.', 'Yesus, tolonglah aku berhenti menunggu merasa siap sebelum melawat mereka yang sakit. Biarlah aku percaya bahwa kehadiranku yang tidak sempurna sekalipun tetap merupakan perjumpaan dengan-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 25:36', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 25:36', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Sustained on the Sickbed', 'Ditopang di Ranjang Sakit',
+     'The psalmist offers a tender image of God''s care for the ill: the Lord sustains them on their sickbed and restores them from their bed of illness. There is something almost domestic about this picture — not a distant deity issuing decrees, but a God who draws close to an actual bed, an actual body worn down by illness, and provides sustaining strength in the smallest, most intimate way.
+
+This verse matters just as much for caregivers as for the sick themselves. Sitting at a bedside, we often feel powerless, painfully aware that we cannot heal the person we love. But this psalm reminds us that our presence is not the only thing at work in that room. God himself sustains the sick, even in moments when we have run out of things to offer.
+
+Praying this verse over someone who is sick can become a quiet, steady practice — not asking God to perform something dramatic every time, but simply asking him to sustain, to hold, to restore in whatever measure and timing is right. Sometimes healing is instant. Often it is slow, uneven, or simply not what we hoped for. Sustaining, though, is a promise we can lean on even in uncertainty.
+
+Today, if you are caring for someone sick, try praying this psalm specifically over them — not as a formula, but as an honest request for God''s sustaining nearness in their particular bed, their particular illness, their particular fear. And if you yourself are unwell, let this verse be spoken directly over you as well.', 'Pemazmur menawarkan gambaran yang lembut tentang perhatian Allah bagi orang sakit: TUHAN membantu dia di atas ranjang sakitnya; Engkau mengubah seluruh tempat tidurnya waktu ia sakit. Ada sesuatu yang hampir terasa rumah tangga dalam gambaran ini — bukan sosok ilahi yang jauh sedang mengeluarkan dekret, melainkan Allah yang mendekat ke sebuah ranjang yang nyata, sebuah tubuh nyata yang lelah karena sakit, dan memberikan kekuatan penopang dalam cara yang paling kecil dan intim.
+
+Ayat ini sama pentingnya bagi para pendamping seperti halnya bagi orang sakit itu sendiri. Duduk di sisi ranjang, kita sering merasa tidak berdaya, sangat menyadari bahwa kita tidak bisa menyembuhkan orang yang kita kasihi. Namun mazmur ini mengingatkan kita bahwa kehadiran kita bukanlah satu-satunya yang bekerja di ruangan itu. Allah sendiri menopang orang yang sakit, bahkan pada saat-saat kita sudah kehabisan apa yang bisa kita tawarkan.
+
+Mendoakan ayat ini bagi seseorang yang sakit bisa menjadi kebiasaan yang tenang dan tetap — bukan meminta Allah melakukan sesuatu yang dramatis setiap kali, melainkan sekadar meminta Dia untuk menopang, menahan, memulihkan dalam ukuran dan waktu yang tepat. Kadang penyembuhan terjadi seketika. Sering kali ia lambat, tidak merata, atau bukan seperti yang kita harapkan. Namun penopangan adalah janji yang bisa kita andalkan bahkan di tengah ketidakpastian.
+
+Hari ini, jika Anda sedang merawat seseorang yang sakit, cobalah mendoakan mazmur ini secara khusus atas mereka — bukan sebagai rumus, melainkan sebagai permohonan yang jujur akan kedekatan Allah yang menopang di ranjang mereka yang khusus, sakit mereka yang khusus, ketakutan mereka yang khusus. Dan jika Anda sendiri sedang tidak sehat, biarlah ayat ini juga diucapkan langsung atas diri Anda.',
+     'At a bedside, your presence is not the only thing at work in the room — God himself sustains the sick, even when you feel you have nothing left to offer.', 'Di sisi ranjang, kehadiran Anda bukanlah satu-satunya yang bekerja di ruangan itu — Allah sendiri menopang orang yang sakit, bahkan ketika Anda merasa tidak punya apa-apa lagi untuk diberikan.',
+     'Lord, sustain the ones I love who are sick on their beds today. Where I feel powerless, let me trust your nearness to do what I cannot. Amen.', 'Tuhan, topanglah orang-orang yang kukasihi yang sedang sakit di ranjang mereka hari ini. Di mana aku merasa tidak berdaya, biarlah aku percaya kedekatan-Mu melakukan apa yang tidak bisa kulakukan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 41:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 41:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Bearing One Another''s Burdens', 'Menanggung Beban Satu Sama Lain',
+     'Paul''s instruction to the Galatians is brief but weighty: carry each other''s burdens, and in this way you will fulfill the law of Christ. Caring for someone who is sick, especially over weeks or months, is precisely this kind of burden-carrying — practical, repetitive, often unglamorous work that has nothing to do with heroics and everything to do with faithfulness.
+
+Long-term caregiving rarely looks like the dramatic moments we imagine when we think of ''serving the sick.'' It looks like driving someone to another appointment, managing medications, doing laundry, answering the same worried question for the fifth time, being patient when illness makes someone irritable or withdrawn. This is burden-bearing in its most literal form, and Paul says it fulfills nothing less than the law of Christ.
+
+Caregivers often carry a quiet exhaustion that others don''t fully see, because the work is ongoing rather than a single visible event. If you are the one carrying this kind of burden right now, know that Scripture does not treat your fatigue as a failure of faith. It names the work itself as holy — hard, costly, and deeply Christlike.
+
+Today, if you are a caregiver, ask God for endurance rather than intensity — the strength to keep showing up tomorrow, not just today. And if you know someone who is quietly carrying this burden for another person, consider how you might carry a small piece of it for them, even briefly, so they can rest.', 'Instruksi Paulus kepada jemaat Galatia singkat namun berbobot: bertolong-tolonglah menanggung bebanmu, dan dengan demikian kamu memenuhi hukum Kristus. Merawat seseorang yang sakit, terutama selama berminggu-minggu atau berbulan-bulan, adalah persis jenis penanggungan beban ini — pekerjaan praktis, berulang, sering kali tanpa kemewahan yang tidak ada hubungannya dengan kepahlawanan dan segalanya berhubungan dengan kesetiaan.
+
+Perawatan jangka panjang jarang terlihat seperti momen-momen dramatis yang kita bayangkan ketika memikirkan ''melayani orang sakit.'' Ia terlihat seperti mengantar seseorang ke janji temu berikutnya, mengatur obat-obatan, mencuci pakaian, menjawab pertanyaan cemas yang sama untuk kelima kalinya, bersabar ketika sakit membuat seseorang mudah tersinggung atau menarik diri. Ini adalah penanggungan beban dalam bentuknya yang paling harfiah, dan Paulus berkata ini memenuhi tidak kurang dari hukum Kristus.
+
+Para pendamping sering memikul kelelahan diam-diam yang tidak sepenuhnya terlihat oleh orang lain, karena pekerjaan ini berkelanjutan, bukan satu peristiwa yang tampak. Jika Anda adalah orang yang sedang memikul beban semacam ini sekarang, ketahuilah bahwa Kitab Suci tidak memperlakukan kelelahan Anda sebagai kegagalan iman. Ia menyebut pekerjaan itu sendiri sebagai kudus — berat, mahal, dan sangat menyerupai Kristus.
+
+Hari ini, jika Anda seorang pendamping, mintalah kepada Allah ketekunan, bukan sekadar kekuatan sesaat — kekuatan untuk terus hadir besok, bukan hanya hari ini. Dan jika Anda mengenal seseorang yang diam-diam sedang memikul beban ini untuk orang lain, pertimbangkan bagaimana Anda bisa memikul sepotong kecil dari beban itu untuk mereka, meski sebentar, agar mereka bisa beristirahat.',
+     'Long-term caregiving rarely looks heroic — it looks like ordinary, repeated faithfulness, and Scripture calls that holy work.', 'Perawatan jangka panjang jarang terlihat heroik — ia terlihat seperti kesetiaan yang biasa dan berulang, dan Kitab Suci menyebut itu sebagai pekerjaan yang kudus.',
+     'Lord, give endurance to those who carry the daily, unglamorous weight of caring for the sick. Help me carry a piece of someone''s burden this week, however small. Amen.', 'Tuhan, berikanlah ketekunan bagi mereka yang memikul beban sehari-hari dan tanpa kemewahan dalam merawat orang sakit. Tolonglah aku memikul sepotong kecil beban seseorang minggu ini, sekecil apa pun itu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:2', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'The God Who Binds Up Wounds', 'Allah yang Membalut Luka',
+     'The psalm declares plainly that God heals the brokenhearted and binds up their wounds. It places emotional and physical suffering side by side, as though God does not separate the two the way we sometimes do. He tends to broken hearts and broken bodies with the same careful, personal attention — like a physician who does not merely diagnose from a distance but actually kneels down and wraps the wound.
+
+Illness is rarely only physical. It carries fear, grief over lost independence, frustration, sometimes shame. Someone who is sick is often also, quietly, brokenhearted — about what the illness has taken, about an uncertain future, about feeling like a burden to people they love. Caring well for the sick means attending to both layers, not just the visible symptoms.
+
+This is where simple companionship becomes as important as any practical help. Sitting with someone''s fear, letting them voice what illness has cost them emotionally, without rushing to reassure them out of it too quickly — this too is a form of binding up wounds. We participate in God''s healing work not only through casseroles and rides to appointments, but by making room for the fuller, harder conversation underneath.
+
+Today, if you visit or speak with someone who is sick, try asking not just ''how are you feeling physically'' but something closer to ''how is your heart in all of this.'' Be ready to simply listen. You may not be able to bind every wound. But you can help carry it into the light, where God''s healing has room to work.', 'Mazmur menyatakan dengan jelas bahwa Allah menyembuhkan orang-orang yang patah hati dan membalut luka-luka mereka. Ia menempatkan penderitaan emosional dan fisik berdampingan, seolah-olah Allah tidak memisahkan keduanya seperti yang kadang kita lakukan. Ia merawat hati yang patah dan tubuh yang rusak dengan perhatian yang sama teliti dan pribadinya — seperti seorang tabib yang tidak sekadar mendiagnosis dari kejauhan, tetapi benar-benar berlutut dan membalut luka itu.
+
+Sakit jarang hanya bersifat fisik. Ia membawa ketakutan, duka atas kemandirian yang hilang, frustrasi, kadang rasa malu. Seseorang yang sakit sering kali juga, diam-diam, patah hati — tentang apa yang telah diambil oleh sakitnya, tentang masa depan yang tidak pasti, tentang perasaan menjadi beban bagi orang-orang yang mereka kasihi. Merawat orang sakit dengan baik berarti memperhatikan kedua lapisan ini, bukan hanya gejala yang terlihat.
+
+Di sinilah kebersamaan yang sederhana menjadi sama pentingnya dengan bantuan praktis apa pun. Duduk bersama ketakutan seseorang, membiarkan mereka menyuarakan apa yang telah dirampas sakit dari mereka secara emosional, tanpa terburu-buru menenangkan mereka keluar dari itu terlalu cepat — ini pun adalah bentuk membalut luka. Kita mengambil bagian dalam karya penyembuhan Allah bukan hanya melalui makanan dan tumpangan ke janji temu, tetapi dengan memberi ruang bagi percakapan yang lebih penuh dan lebih berat di baliknya.
+
+Hari ini, jika Anda mengunjungi atau berbicara dengan seseorang yang sakit, cobalah bertanya bukan hanya ''bagaimana perasaanmu secara fisik'' tetapi sesuatu yang lebih dekat dengan ''bagaimana hatimu dalam semua ini.'' Bersiaplah untuk sekadar mendengarkan. Anda mungkin tidak bisa membalut setiap luka. Tetapi Anda bisa membantu membawanya ke dalam terang, di mana penyembuhan Allah punya ruang untuk bekerja.',
+     'Illness is rarely only physical — caring well for the sick means attending to the brokenhearted layer underneath, not just the visible symptoms.', 'Sakit jarang hanya bersifat fisik — merawat orang sakit dengan baik berarti memperhatikan lapisan hati yang patah di baliknya, bukan hanya gejala yang terlihat.',
+     'God who binds up wounds, help me see the whole person when I care for someone sick — the fear and grief, not just the diagnosis. Give me ears ready to listen. Amen.', 'Allah yang membalut luka, tolonglah aku melihat seluruh pribadi ketika aku merawat seseorang yang sakit — ketakutan dan dukanya, bukan hanya diagnosisnya. Berikanlah aku telinga yang siap mendengarkan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 147:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 147:3', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'A Blessing for the Whole Person', 'Berkat bagi Seluruh Pribadi',
+     'The apostle John closes his short third letter with a simple, warm blessing for a friend: that he would enjoy good health and that all would go well with him, even as his soul was getting along well. It is easy to skim past this as a pleasant greeting, but it carries a beautifully whole picture of what we should hope for the people we love — health of body woven together with health of soul.
+
+This blessing reminds us that caring for the sick is not only about the body. Someone can be physically frail and spiritually thriving, or physically healthy and spiritually starved. John''s prayer holds both together, refusing to treat either as more important than the other. When we pray for someone who is sick, we can ask boldly for physical healing while also praying just as earnestly for peace, faith, and comfort for their soul.
+
+As this six-day plan comes to a close, think back over the people you have carried in your heart these days — the ones you visited, the ones you prayed for, perhaps the ones you are still learning how to approach. Caring for the sick, we''ve seen, involves silence and presence, practical burden-bearing, honest conversation about the heart, and steady trust in a God who sustains.
+
+Let John''s simple blessing become your own closing prayer today, spoken over whoever comes to mind: that they would know good health where possible, and that whatever happens to the body, their soul would be getting along well, held safely in a God who never stops caring for the whole person.', 'Rasul Yohanes menutup surat ketiganya yang singkat dengan sebuah berkat yang sederhana dan hangat bagi seorang sahabat: bahwa ia akan sehat-sehat saja dan segala sesuatu berjalan baik baginya, sama seperti jiwanya baik-baik saja. Mudah untuk melewati ini begitu saja sebagai salam yang menyenangkan, tetapi ini membawa gambaran yang indah dan utuh tentang apa yang seharusnya kita harapkan bagi orang-orang yang kita kasihi — kesehatan tubuh yang tertenun bersama kesehatan jiwa.
+
+Berkat ini mengingatkan kita bahwa merawat orang sakit bukan hanya tentang tubuh. Seseorang bisa lemah secara fisik namun berkembang secara rohani, atau sehat secara fisik namun kelaparan secara rohani. Doa Yohanes memegang keduanya bersama-sama, menolak memperlakukan salah satunya lebih penting dari yang lain. Ketika kita berdoa bagi seseorang yang sakit, kita bisa dengan berani meminta kesembuhan fisik sambil juga berdoa dengan sama sungguh-sungguhnya bagi damai, iman, dan penghiburan bagi jiwa mereka.
+
+Saat rencana enam hari ini berakhir, kenanglah orang-orang yang telah Anda pikul dalam hati selama hari-hari ini — mereka yang Anda kunjungi, mereka yang Anda doakan, mungkin mereka yang masih Anda pelajari cara mendekatinya. Merawat orang sakit, seperti yang telah kita lihat, melibatkan keheningan dan kehadiran, penanggungan beban yang praktis, percakapan hati yang jujur, dan kepercayaan yang tetap kepada Allah yang menopang.
+
+Biarlah berkat sederhana Yohanes ini menjadi doa penutup Anda hari ini, diucapkan atas siapa pun yang terlintas di pikiran: bahwa mereka akan mengalami kesehatan yang baik jika memungkinkan, dan apa pun yang terjadi pada tubuh mereka, jiwa mereka akan baik-baik saja, dipegang dengan aman oleh Allah yang tidak pernah berhenti merawat seluruh pribadi mereka.',
+     'Care for the sick was never meant to stop at the body — hold both physical healing and the health of the soul together in your prayers for them.', 'Perhatian bagi orang sakit tidak pernah dimaksudkan berhenti pada tubuh — peganglah baik kesembuhan fisik maupun kesehatan jiwa bersama-sama dalam doa Anda bagi mereka.',
+     'Lord, I pray for those who are sick that I carry in my heart — grant health to their bodies where you will, and let their souls be getting along well no matter what. Amen.', 'Tuhan, aku mendoakan mereka yang sakit yang kupikul dalam hatiku — berikanlah kesehatan bagi tubuh mereka sesuai kehendak-Mu, dan biarlah jiwa mereka baik-baik saja apa pun yang terjadi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 John 1:2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 Yohanes 1:2', 'TB', 1);
+
+  -- ===================================================================
+  -- Plan: Christ in Disguise  (Love for the Poor & Suffering, 3 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for the Poor & Suffering' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Christ in Disguise';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Christ in Disguise', 'Kristus yang Menyamar',
+     'Learning to see the poor with new eyes', 'Belajar memandang orang miskin dengan mata yang baru',
+     'A short three-day journey into the Christian conviction that the poor are not projects to be managed but people who carry the very face of Christ. Drawing on the witness of saints like Mother Teresa, this plan invites you to slow down and truly see.', 'Perjalanan singkat tiga hari untuk merenungkan keyakinan Kristen bahwa orang miskin bukan sekadar proyek yang harus dikelola, melainkan pribadi yang membawa wajah Kristus sendiri. Terinspirasi oleh teladan orang-orang kudus seperti Bunda Teresa, rencana ini mengajak Anda untuk berhenti sejenak dan benar-benar melihat.', 3)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Face We Overlook', 'Wajah yang Sering Kita Lewati',
+     'There is a particular kind of blindness that has nothing to do with our eyes. We can walk past a person sitting on a curb, a family in a shelter, a neighbor whose life has quietly fallen apart, and see them perfectly well without ever really looking at them. We register the outline of a problem — someone to avoid, someone to pity from a distance, someone whose need makes us uncomfortable — but we do not see a person. This is the blindness Scripture keeps trying to heal in us.
+
+The Christian faith makes an audacious claim: that God did not stay hidden in glory but chose to be born poor, to work with his hands, to depend on the kindness of others, and eventually to suffer and die exposed and humiliated. Because of this, the poor and suffering carry a dignity that the world''s categories cannot capture. They are not simply ''the needy.'' They are bearers of an image that was, at least once, worn by God himself.
+
+Proverbs puts it with startling directness — kindness to the poor is not charity extended downward, it is a loan extended upward, to the Lord himself. That single image should unsettle our usual arithmetic. We tend to think of giving to the poor as something we do for them, a transaction where we hold the power. Scripture flips it: when we are kind to someone in need, we are, in some mysterious way, doing business with God.
+
+Today, before you plan any grand gesture of charity, simply ask for new eyes. Ask God to interrupt your ordinary blindness — at the traffic light, in the grocery store line, in the face of someone whose story you don''t know. You don''t need a strategy yet. You need to actually see the next poor or suffering person who crosses your path, and let that seeing cost you something.', 'Ada satu jenis kebutaan yang tidak ada hubungannya dengan mata kita. Kita bisa melewati seseorang yang duduk di trotoar, sebuah keluarga di tempat penampungan, tetangga yang hidupnya diam-diam sedang hancur, dan melihat mereka dengan sempurna tanpa pernah benar-benar memandang mereka. Kita hanya menangkap garis besar sebuah masalah — seseorang yang harus dihindari, dikasihani dari kejauhan, yang kebutuhannya membuat kita tidak nyaman — tetapi kita tidak melihat seorang pribadi. Inilah kebutaan yang terus-menerus coba disembuhkan oleh Kitab Suci dalam diri kita.
+
+Iman Kristen membuat sebuah klaim yang berani: bahwa Allah tidak tinggal tersembunyi dalam kemuliaan, tetapi memilih untuk dilahirkan miskin, bekerja dengan tangan-Nya sendiri, bergantung pada kebaikan orang lain, dan akhirnya menderita serta mati dalam keadaan telanjang dan terhina. Karena itu, orang miskin dan yang menderita membawa martabat yang tidak dapat ditangkap oleh kategori dunia. Mereka bukan sekadar ''orang yang membutuhkan.'' Mereka adalah pembawa gambar yang, setidaknya sekali, pernah dikenakan oleh Allah sendiri.
+
+Amsal mengatakannya dengan sangat lugas — kebaikan kepada orang miskin bukanlah amal yang diberikan ke bawah, melainkan pinjaman yang diberikan ke atas, kepada TUHAN sendiri. Gambaran tunggal itu seharusnya mengguncang perhitungan biasa kita. Kita cenderung berpikir bahwa memberi kepada orang miskin adalah sesuatu yang kita lakukan untuk mereka, sebuah transaksi di mana kita memegang kendali. Kitab Suci membaliknya: ketika kita berbuat baik kepada seseorang yang membutuhkan, kita, dengan cara yang misterius, sedang berurusan langsung dengan Allah.
+
+Hari ini, sebelum merencanakan tindakan amal yang besar, mintalah saja mata yang baru. Mintalah Allah untuk menghentikan kebutaan biasa kita — di lampu merah, di antrean toko, di hadapan wajah seseorang yang kisahnya tidak kita ketahui. Anda belum perlu strategi. Anda perlu benar-benar melihat orang miskin atau yang menderita berikutnya yang melintas di jalan Anda, dan membiarkan pandangan itu menuntut sesuatu dari Anda.',
+     'Seeing the poor as Christ-bearers changes everything about how we approach them — not as problems to solve from a distance, but as persons to meet face to face.', 'Memandang orang miskin sebagai pembawa Kristus mengubah segalanya dalam cara kita mendekati mereka — bukan sebagai masalah yang diselesaikan dari kejauhan, melainkan sebagai pribadi yang kita temui muka dengan muka.',
+     'Lord, heal the blindness in my heart. Give me eyes that see the person and not just the problem, and a heart willing to let that seeing change me. Amen.', 'Tuhan, sembuhkanlah kebutaan dalam hatiku. Berikanlah aku mata yang melihat pribadi, bukan hanya masalah, dan hati yang bersedia dibentuk oleh apa yang kulihat. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 19:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 25:35', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 19:17', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 25:35', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'The Cost of Closing Our Hearts', 'Harga dari Hati yang Tertutup',
+     'It is one thing to fail to notice the poor. It is another thing entirely to notice them and then, quite deliberately, look away. Most of us have done this — seen a need clearly, felt the small tug of conscience, and then found a reason to keep walking. We tell ourselves we are busy, or that someone else is better equipped to help, or that our small gesture wouldn''t really matter anyway. These excuses are rarely lies exactly, but they are rarely the whole truth either.
+
+John''s first letter names this pattern with uncomfortable precision. He does not ask whether we have resources; he assumes many of us do. His question is sharper: when we see a brother or sister in need and we have what would help them, and we close our hearts anyway, what does that say about the love of God actually living in us? It is a hard question because it refuses to let love remain merely a feeling. Love, in John''s vocabulary, has hands.
+
+Many of us know the particular discomfort of scrolling past an appeal, stepping past someone asking for help, or hearing about a friend''s hardship and simply not following up. None of these moments feel dramatic in the instant. But John suggests that our small, repeated closings of the heart accumulate into something spiritually serious — a slow atrophy of the very love we claim defines us as Christians.
+
+The good news is that hearts which have closed can be reopened. Today is not about guilt for the doors we''ve shut before; it''s about noticing, gently and honestly, where our heart tends to close first — toward a certain kind of need, a certain kind of person, a certain kind of inconvenience — and asking God to soften exactly that spot.', 'Satu hal jika kita gagal menyadari keberadaan orang miskin. Hal lain sama sekali jika kita menyadarinya, lalu dengan sengaja memalingkan wajah. Sebagian besar dari kita pernah melakukan ini — melihat kebutuhan dengan jelas, merasakan sentilan kecil dari hati nurani, lalu menemukan alasan untuk terus berjalan. Kita meyakinkan diri bahwa kita sibuk, atau bahwa orang lain lebih mampu menolong, atau bahwa uluran tangan kecil kita toh tidak akan berarti apa-apa. Alasan-alasan ini jarang berupa kebohongan murni, tetapi juga jarang menjadi kebenaran yang utuh.
+
+Surat pertama Yohanes menyebut pola ini dengan ketepatan yang tidak nyaman. Ia tidak bertanya apakah kita memiliki sumber daya; ia menganggap banyak dari kita memilikinya. Pertanyaannya lebih tajam: ketika kita melihat saudara yang berkekurangan dan kita memiliki apa yang bisa menolongnya, namun kita tetap menutup hati kita, apa artinya itu bagi kasih Allah yang sungguh-sungguh hidup dalam diri kita? Ini pertanyaan yang berat karena menolak membiarkan kasih hanya menjadi perasaan. Dalam kosakata Yohanes, kasih memiliki tangan.
+
+Banyak dari kita mengenal ketidaknyamanan tertentu saat menggulir lewat sebuah seruan bantuan, melangkahi seseorang yang meminta pertolongan, atau mendengar tentang kesulitan seorang teman dan sekadar tidak menindaklanjutinya. Tidak satu pun dari momen ini terasa dramatis saat itu terjadi. Namun Yohanes menunjukkan bahwa penutupan hati kita yang kecil dan berulang itu menumpuk menjadi sesuatu yang serius secara rohani — pengeringan perlahan dari kasih yang justru kita klaim mendefinisikan kita sebagai orang Kristen.
+
+Kabar baiknya, hati yang telah tertutup bisa dibuka kembali. Hari ini bukan tentang rasa bersalah atas pintu-pintu yang pernah kita tutup; ini tentang menyadari, dengan lembut dan jujur, di titik mana hati kita cenderung menutup lebih dulu — terhadap jenis kebutuhan tertentu, jenis orang tertentu, jenis ketidaknyamanan tertentu — dan meminta Allah melembutkan tepat di titik itu.',
+     'Notice, without shame, the specific places your heart tends to close — that awareness is the first step toward a love that finally has hands.', 'Sadari, tanpa rasa malu, tempat-tempat spesifik di mana hatimu cenderung menutup — kesadaran itulah langkah pertama menuju kasih yang akhirnya memiliki tangan.',
+     'Father, forgive the times I have seen a need and turned away. Soften the exact places where my heart closes, and teach me to love with more than words. Amen.', 'Bapa, ampunilah saat-saat aku melihat kebutuhan namun berpaling. Lembutkanlah tepat di titik-titik hatiku cenderung tertutup, dan ajarilah aku mengasihi dengan lebih dari sekadar kata-kata. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 John 3:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Yohanes 3:17', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Remembering the Poor, On Purpose', 'Mengingat Orang Miskin, dengan Sengaja',
+     'The apostle Paul had a remarkable life of ideas — theology, church planting, missionary strategy across an empire. Yet when the other apostles in Jerusalem gave him their blessing to go do all of that, they attached one condition, almost as an afterthought: remember the poor. And Paul''s response is telling. He does not treat it as a minor addendum to his real work. He says it was the very thing he was already eager to do.
+
+That phrase — ''the very thing I had been eager to do'' — deserves to sit with us. It suggests that remembering the poor was not a duty layered on top of Paul''s calling; it was woven into the fabric of what following Christ actually meant to him. Theology without a concern for the poor, in Paul''s world, would have been a strange and hollow theology indeed.
+
+This is where the witness of people like Mother Teresa becomes so instructive. She did not build an elaborate philosophy first and then apply it to the poor of Calcutta. She simply kept showing up, day after day, to remember — actively, physically, unglamorously — the people the world had decided to forget. Her genius was not complexity; it was fidelity to something very simple, repeated for decades.
+
+As you close this short plan, ask yourself what it would mean to ''remember the poor'' as a standing commitment rather than an occasional impulse — a person you check on, an organization you support steadily, a habit of attention you build into an ordinary week. Christ does not usually ask us for a single grand gesture. He asks for a memory that becomes a practice.', 'Rasul Paulus memiliki kehidupan pemikiran yang luar biasa — teologi, penanaman jemaat, strategi misi lintas kekaisaran. Namun ketika para rasul lain di Yerusalem memberkati kepergiannya untuk melakukan semua itu, mereka menambahkan satu syarat, hampir seperti catatan tambahan: ingatlah orang-orang miskin. Dan tanggapan Paulus sangat bermakna. Ia tidak memperlakukannya sebagai lampiran kecil dari pekerjaan utamanya. Ia berkata bahwa itu memang telah menjadi hal yang sejak awal ingin ia usahakan dengan sungguh-sungguh.
+
+Ungkapan itu — ''hal yang memang telah kuusahakan dengan sungguh-sungguh'' — layak untuk kita renungkan lebih lama. Ini menunjukkan bahwa mengingat orang miskin bukanlah kewajiban tambahan di atas panggilan Paulus; itu tertenun dalam anyaman apa yang sesungguhnya berarti mengikut Kristus baginya. Teologi tanpa kepedulian terhadap orang miskin, di dunia Paulus, akan menjadi teologi yang aneh dan hampa.
+
+Di sinilah kesaksian orang-orang seperti Bunda Teresa menjadi begitu mengajarkan. Ia tidak membangun filosofi rumit terlebih dahulu lalu menerapkannya pada orang miskin di Kalkuta. Ia hanya terus hadir, hari demi hari, untuk mengingat — secara aktif, secara fisik, tanpa kemewahan — orang-orang yang telah diputuskan dunia untuk dilupakan. Kejeniusannya bukan pada kerumitan; melainkan pada kesetiaan terhadap sesuatu yang sangat sederhana, yang diulang selama puluhan tahun.
+
+Saat Anda menutup rencana singkat ini, tanyakan pada diri sendiri apa artinya ''mengingat orang miskin'' sebagai komitmen tetap, bukan sekadar dorongan sesekali — seseorang yang Anda kabari secara rutin, organisasi yang Anda dukung secara konsisten, kebiasaan perhatian yang Anda bangun dalam minggu yang biasa. Kristus biasanya tidak meminta kita satu tindakan besar. Ia meminta ingatan yang berubah menjadi kebiasaan.',
+     'Turn remembering the poor from an occasional impulse into a standing practice woven into your ordinary week.', 'Ubahlah mengingat orang miskin dari dorongan sesekali menjadi kebiasaan tetap yang tertenun dalam minggu Anda yang biasa.',
+     'Lord, make remembering the poor part of the fabric of my faith, not an occasional afterthought. Give me one concrete way to remember them this week, and the follow-through to keep it. Amen.', 'Tuhan, jadikanlah mengingat orang miskin bagian dari anyaman imanku, bukan sekadar tambahan sesekali. Berikanlah aku satu cara nyata untuk mengingat mereka minggu ini, dan ketekunan untuk menjalankannya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 2:10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 14:31', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 2:10', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 14:31', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Open Hands  (Love for the Poor & Suffering, 5 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for the Poor & Suffering' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Open Hands';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Open Hands', 'Tangan yang Terbuka',
+     'A five-day path into generous, joyful giving', 'Lima hari menuju kemurahan hati yang penuh sukacita',
+     'Five days exploring what Scripture actually says about generosity — from the widow''s two small coins to Christ''s own self-emptying poverty. A practical, heart-level plan for anyone who wants their giving to become less anxious and more free.', 'Lima hari menyelami apa yang sesungguhnya dikatakan Kitab Suci tentang kemurahan hati — mulai dari dua keping uang janda miskin hingga kemiskinan yang dipilih Kristus sendiri. Rencana yang praktis dan menyentuh hati bagi siapa pun yang ingin memberi dengan lebih bebas dan tidak cemas.', 5)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Refreshed Giver', 'Pemberi yang Disegarkan',
+     'There is a strange promise tucked into the book of Proverbs: the generous person will prosper, and whoever refreshes others will be refreshed. Notice the shape of that sentence. It is not a promise about the person receiving the gift. It is a promise about the giver. Generosity, according to this ancient wisdom, does not just help the person on the receiving end — it does something restorative to the one who gives.
+
+This runs against much of what our culture teaches about money and resources: that they are scarce, that holding tightly is safety, that generosity is a noble but ultimately depleting act. Scripture suggests the opposite dynamic entirely. Open hands, somehow, end up fuller than closed fists. This is not a formula for getting rich; it is a description of how love actually works when we let it flow rather than trapping it.
+
+Many of us know the small, surprising lift that comes after giving something away — not because we expect a return, but because generosity connects us back to the God who is himself endlessly generous. Refreshing someone else has a way of watering something dry in our own soul at the same time. Stinginess, by contrast, tends to shrink us, even when it protects our bank balance.
+
+Today, notice your first instinct the next time an opportunity to give appears — is it openness or calculation? You don''t need to give recklessly or without wisdom. But start paying attention to the refreshment Proverbs promises, and see whether it proves true in your own life this week.', 'Ada sebuah janji yang unik terselip dalam Kitab Amsal: orang yang murah hati akan menjadi makmur, dan siapa yang menyegarkan orang lain akan disegarkan pula. Perhatikan bentuk kalimat itu. Ini bukan janji tentang orang yang menerima pemberian. Ini adalah janji tentang si pemberi. Kemurahan hati, menurut hikmat kuno ini, tidak hanya menolong orang yang menerima — ia melakukan sesuatu yang memulihkan bagi orang yang memberi.
+
+Ini bertentangan dengan banyak hal yang diajarkan budaya kita tentang uang dan sumber daya: bahwa semuanya langka, bahwa menggenggam erat adalah keamanan, bahwa kemurahan hati adalah tindakan mulia namun pada akhirnya menguras. Kitab Suci justru menyarankan dinamika yang sepenuhnya berbeda. Tangan yang terbuka, entah bagaimana, berakhir lebih penuh daripada kepalan tangan yang tertutup. Ini bukan rumus untuk menjadi kaya; ini gambaran tentang bagaimana kasih sesungguhnya bekerja ketika kita membiarkannya mengalir, bukan menjebaknya.
+
+Banyak dari kita mengenal dorongan kecil yang mengejutkan setelah memberi sesuatu — bukan karena kita mengharapkan balasan, tetapi karena kemurahan hati menghubungkan kita kembali kepada Allah yang sendiri tidak pernah kehabisan kemurahan. Menyegarkan orang lain memiliki cara untuk sekaligus menyirami sesuatu yang kering dalam jiwa kita sendiri. Sebaliknya, kekikiran cenderung menyusutkan diri kita, bahkan ketika ia melindungi saldo rekening kita.
+
+Hari ini, perhatikan dorongan pertama Anda saat kesempatan untuk memberi muncul — apakah itu keterbukaan atau perhitungan? Anda tidak perlu memberi secara sembrono atau tanpa hikmat. Tetapi mulailah memperhatikan penyegaran yang dijanjikan Amsal, dan lihat apakah itu terbukti benar dalam hidup Anda minggu ini.',
+     'Generosity doesn''t just help the receiver — it restores something in the giver too, watering a dry place in our own soul.', 'Kemurahan hati bukan hanya menolong penerima — ia juga memulihkan sesuatu dalam diri si pemberi, menyirami tempat yang kering dalam jiwa kita sendiri.',
+     'Generous God, teach my hands to open before they close. Let me discover the refreshment that comes from giving freely, without fear of scarcity. Amen.', 'Allah yang murah hati, ajarilah tanganku untuk terbuka sebelum menutup. Biarlah aku menemukan penyegaran yang datang dari memberi dengan bebas, tanpa takut akan kekurangan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 11:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 11:25', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'There Will Always Be Poor Among You', 'Orang Miskin Akan Selalu Ada',
+     'Moses tells Israel something that could sound discouraging at first: there will always be poor people in the land. It can read like a resignation, an admission that poverty is simply an unsolvable fact of life. But that is not how the verse is used. It is not offered as an excuse to stop trying. It is offered as the reason to keep our hands open, permanently, as a way of life.
+
+''Therefore,'' the command continues, ''be openhanded toward your fellow Israelites who are poor and needy in your land.'' The permanence of poverty in a fallen world does not lead to despair in Scripture; it leads to an ongoing, unending posture of generosity. Because need will not disappear on its own, generosity cannot be a one-time event. It has to become a lifestyle.
+
+Paul echoes the same logic to Timothy centuries later, urging those who are rich in this present world to be rich also in good deeds, generous and willing to share. Notice that generosity here is described almost like wealth itself — something to be rich in, something to accumulate and grow, not merely a single transaction to check off a list.
+
+Think today about the difference between an occasional act of charity and an openhanded way of life. What would it look like for generosity to become a settled habit for you — something built into your budget, your calendar, your instincts — rather than something you do only when moved by a particularly striking need?', 'Musa mengatakan sesuatu kepada bangsa Israel yang pada awalnya bisa terdengar mengecewakan: orang-orang miskin tidak akan pernah berhenti ada di negeri itu. Ini bisa dibaca seperti sebuah penyerahan, pengakuan bahwa kemiskinan hanyalah fakta hidup yang tidak dapat dipecahkan. Namun bukan begitu ayat ini digunakan. Ini tidak diberikan sebagai alasan untuk berhenti berusaha. Ini diberikan sebagai alasan untuk terus membuka tangan, secara permanen, sebagai gaya hidup.
+
+''Itulah sebabnya,'' lanjut perintah itu, ''haruslah engkau membuka tangan lebar-lebar bagi saudaramu, yang tertindas dan yang miskin di negerimu.'' Kelanggengan kemiskinan dalam dunia yang jatuh tidak membawa pada keputusasaan dalam Kitab Suci; ia membawa pada sikap kemurahan hati yang terus-menerus dan tak berkesudahan. Karena kebutuhan tidak akan hilang dengan sendirinya, kemurahan hati tidak boleh menjadi peristiwa satu kali. Ia harus menjadi gaya hidup.
+
+Paulus menggemakan logika yang sama kepada Timotius berabad-abad kemudian, mendesak mereka yang kaya di dunia ini untuk menjadi kaya juga dalam perbuatan baik, suka memberi dan membagi. Perhatikan bahwa kemurahan hati di sini digambarkan hampir seperti kekayaan itu sendiri — sesuatu untuk dikayakan, dikumpulkan, dan ditumbuhkan, bukan sekadar satu transaksi untuk dicoret dari daftar.
+
+Renungkan hari ini perbedaan antara tindakan amal sesekali dan gaya hidup bertangan terbuka. Seperti apa jadinya jika kemurahan hati menjadi kebiasaan yang mapan bagi Anda — sesuatu yang tertanam dalam anggaran, jadwal, dan naluri Anda — bukan sesuatu yang Anda lakukan hanya ketika tergerak oleh kebutuhan yang sangat mencolok?',
+     'Because need never fully disappears, generosity was never meant to be a single event — it is meant to become a lifestyle we grow rich in.', 'Karena kebutuhan tidak pernah benar-benar hilang, kemurahan hati tidak pernah dimaksudkan sebagai satu peristiwa — ia dimaksudkan untuk menjadi gaya hidup yang kita kayakan.',
+     'Lord, turn my occasional generosity into an ongoing way of life. Help me build open hands into my everyday habits, not just my special moments. Amen.', 'Tuhan, ubahlah kemurahan hatiku yang sesekali menjadi gaya hidup yang berkelanjutan. Tolonglah aku membangun tangan yang terbuka ke dalam kebiasaan sehari-hariku, bukan hanya pada saat-saat istimewa. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 15:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timothy 6:18', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 15:11', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timotius 6:18', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'The Widow''s Two Coins', 'Dua Keping Uang Sang Janda',
+     'Jesus sat down opposite the temple treasury one day and simply watched people give. Rich people dropped in large amounts, and presumably it was an impressive sight — the clink of substantial sums. Then a poor widow came and put in two tiny coins, worth almost nothing. Most observers would have dismissed her contribution as negligible, barely worth noticing next to the wealthy donors.
+
+Jesus saw it entirely differently. He called his disciples over and told them this poor widow had put in more than all the others combined. His math was not about the actual amount of money. It was about proportion, sacrifice, and trust. The rich gave out of their surplus, money they would never miss. The widow gave out of her poverty — everything she had to live on.
+
+This story quietly dismantles our usual way of measuring generosity by the size of the gift. God''s accounting works differently. He weighs what a gift costs the giver, not merely what it''s worth on paper. A small act of sacrifice from someone with little can outweigh, in the economy of heaven, a large donation from someone who never felt the pinch.
+
+This does not mean bigger gifts don''t matter, or that we should give recklessly beyond our means without wisdom. But it does mean that no one is excused from generosity by having little, and no one should measure their giving only against what wealthier people around them are doing. Ask yourself today: not ''how much can I afford to give without feeling it,'' but ''what would it look like to give in a way that actually costs me something, in trust that God sees and honors it?''', 'Suatu hari Yesus duduk berhadapan dengan peti persembahan Bait Allah dan hanya mengamati orang-orang memberi. Orang-orang kaya memasukkan jumlah besar, dan tampaknya itu pemandangan yang mengesankan — dentingan jumlah yang cukup besar. Lalu datanglah seorang janda miskin dan memasukkan dua keping uang kecil, yang nilainya nyaris tidak berarti. Kebanyakan orang yang melihat akan menganggap sumbangannya tidak berarti, nyaris tak terlihat di samping para penyumbang kaya.
+
+Yesus melihatnya sama sekali berbeda. Ia memanggil murid-murid-Nya dan mengatakan bahwa janda miskin ini telah memberi lebih banyak daripada semua orang lain yang lain digabungkan. Hitungan-Nya bukan tentang jumlah uang yang sebenarnya. Itu tentang proporsi, pengorbanan, dan kepercayaan. Orang kaya memberi dari kelebihan mereka, uang yang tidak akan pernah mereka rindukan. Janda itu memberi dari kemiskinannya — semua yang ia miliki untuk hidup.
+
+Kisah ini dengan tenang membongkar cara kita biasanya mengukur kemurahan hati berdasarkan besar kecilnya pemberian. Perhitungan Allah bekerja secara berbeda. Ia menimbang apa yang dikorbankan sebuah pemberian bagi si pemberi, bukan sekadar nilainya di atas kertas. Sebuah pengorbanan kecil dari seseorang yang hanya memiliki sedikit bisa mengungguli, dalam ekonomi surga, sebuah sumbangan besar dari seseorang yang tidak pernah merasakan kekurangan.
+
+Ini bukan berarti pemberian besar tidak penting, atau bahwa kita harus memberi secara sembrono melampaui kemampuan kita tanpa hikmat. Tetapi ini berarti tidak ada orang yang dibebaskan dari kemurahan hati karena hanya memiliki sedikit, dan tidak ada orang yang seharusnya mengukur pemberiannya hanya dengan membandingkannya dengan orang-orang kaya di sekitarnya. Tanyakan pada diri Anda hari ini: bukan ''berapa banyak yang bisa kuberikan tanpa merasa kehilangan,'' tetapi ''seperti apa memberi dengan cara yang benar-benar mengorbankan sesuatu bagiku, dengan percaya bahwa Allah melihat dan menghargainya?''',
+     'God weighs generosity by what it costs the giver, not by its size on paper — a small sacrifice can outweigh a large surplus gift.', 'Allah menimbang kemurahan hati berdasarkan apa yang dikorbankan si pemberi, bukan besarnya di atas kertas — pengorbanan kecil bisa mengungguli pemberian besar dari kelebihan.',
+     'Lord, teach me to give in a way that costs me something, trusting that you see what the world overlooks. Free me from measuring myself against others. Amen.', 'Tuhan, ajarilah aku memberi dengan cara yang benar-benar mengorbankan sesuatu, percaya bahwa Engkau melihat apa yang dilewatkan dunia. Bebaskanlah aku dari mengukur diri dengan orang lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 12:43', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 12:43', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Sharing Our Bread', 'Membagi Roti Kita',
+     'Proverbs draws a simple, tangible picture of generosity: the generous will themselves be blessed, for they share their food with the poor. Food is one of the most basic, intimate things we can give someone — not a symbolic gesture from a distance, but something that directly sustains a body, meal by meal, day by day. Sharing bread is generosity at its most concrete.
+
+The psalmist adds a further layer: blessed are those who have regard for the weak, for the Lord delivers them in times of trouble. Notice the word ''regard'' — it implies more than a passing donation. It suggests ongoing attention, a habit of noticing the weak and continuing to think of them, not just a single moment of generosity followed by forgetting.
+
+It is worth asking what ''sharing bread'' looks like in our own context, where hunger is not always as visible as it once was. It might mean an actual meal cooked and delivered to someone struggling. It might mean regular, practical support to a food pantry or a family you know personally. It might mean simply inviting someone who is isolated to your table, because loneliness, too, is a kind of hunger.
+
+Today, consider one concrete, physical way you could ''share bread'' this week — not an abstract donation, but something tangible, personal, and immediate. Generosity grows more real the closer it gets to an actual table.', 'Amsal menggambarkan kemurahan hati dengan gambaran yang sederhana dan nyata: orang yang baik hati akan diberkati, karena ia membagi-bagikan rezekinya kepada orang yang lemah. Makanan adalah salah satu hal paling dasar dan intim yang bisa kita berikan kepada seseorang — bukan gestur simbolis dari kejauhan, melainkan sesuatu yang langsung menopang tubuh, sepiring demi sepiring, hari demi hari. Berbagi roti adalah kemurahan hati dalam bentuknya yang paling nyata.
+
+Pemazmur menambahkan lapisan lain: berbahagialah orang yang memperhatikan orang yang lemah, sebab TUHAN meluputkan dia pada hari kemalangan. Perhatikan kata ''memperhatikan'' — ini menyiratkan lebih dari sekadar sumbangan sekilas. Ini menyiratkan perhatian yang berkelanjutan, kebiasaan menyadari keberadaan orang yang lemah dan terus memikirkan mereka, bukan hanya satu momen kemurahan hati yang lalu dilupakan.
+
+Layak untuk bertanya seperti apa ''membagi roti'' dalam konteks kita sendiri, di mana kelaparan tidak selalu sekasatmata dulu. Bisa berarti masakan sungguhan yang dimasak dan diantar kepada seseorang yang kesulitan. Bisa berarti dukungan praktis dan rutin kepada dapur umum atau keluarga yang Anda kenal secara pribadi. Bisa berarti sekadar mengundang seseorang yang terisolasi ke meja Anda, karena kesepian pun, adalah semacam kelaparan.
+
+Hari ini, pikirkan satu cara nyata dan fisik Anda dapat ''membagi roti'' minggu ini — bukan sumbangan yang abstrak, melainkan sesuatu yang konkret, pribadi, dan segera. Kemurahan hati menjadi semakin nyata semakin dekat ia dengan meja yang sesungguhnya.',
+     'Generosity grows most real the closer it gets to an actual table — a cooked meal, a shared seat, ongoing attention rather than a single forgotten gesture.', 'Kemurahan hati menjadi paling nyata semakin dekat ia dengan meja yang sesungguhnya — masakan yang dimasak, kursi yang dibagikan, perhatian yang berkelanjutan, bukan satu gestur yang lalu dilupakan.',
+     'Lord, show me one tangible way to share my bread this week. Give me the kind of regard for the weak that doesn''t fade after a single kind moment. Amen.', 'Tuhan, tunjukkanlah kepadaku satu cara nyata untuk membagi rotiku minggu ini. Berikanlah aku perhatian kepada orang yang lemah yang tidak pudar setelah satu momen kebaikan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 22:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 41:1', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 22:9', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 41:2', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Rich, Yet He Became Poor', 'Kaya, Namun Ia Menjadi Miskin',
+     'At the heart of every act of Christian generosity stands a single staggering fact: Christ, who was rich beyond measure, became poor for our sake, so that through his poverty we might become rich. Paul offers this not as a lofty theological aside but as the actual motivation for the Corinthians'' giving. Their generosity was meant to flow directly out of gratitude for what Christ had already given them.
+
+This changes the whole posture of giving. It is not a burden laid on us from outside, a rule we grudgingly obey. It is an overflow, a natural response to having received something we could never have earned. We give, ultimately, because we were first given to — extravagantly, sacrificially, at a cost we can barely comprehend.
+
+The letter to the Hebrews puts the practical outworking of this simply: do not forget to do good and to share with others, for such sacrifices please God. Notice the word ''sacrifices'' — placing our giving in the same category as worship. When we share generously, we are not merely being nice; we are offering something to God himself, an act of praise made tangible through open hands.
+
+As this five-day plan closes, take a moment to sit with the scale of what has already been given to you in Christ. Let gratitude, rather than obligation, be what moves your hands open this week. Generosity rooted in grace received rarely feels heavy for long — it starts, instead, to feel like the most natural response there is.', 'Di jantung setiap tindakan kemurahan hati Kristen berdiri satu fakta yang luar biasa: Kristus, yang kaya tak terhingga, menjadi miskin demi kita, supaya melalui kemiskinan-Nya kita menjadi kaya. Paulus menyampaikan ini bukan sebagai catatan teologis yang jauh, melainkan sebagai motivasi nyata bagi pemberian jemaat Korintus. Kemurahan hati mereka dimaksudkan untuk mengalir langsung dari rasa syukur atas apa yang telah diberikan Kristus kepada mereka.
+
+Ini mengubah seluruh sikap dalam memberi. Ini bukan beban yang dipaksakan dari luar, aturan yang kita taati dengan enggan. Ini adalah luapan, tanggapan alami karena telah menerima sesuatu yang tidak pernah bisa kita peroleh sendiri. Kita memberi, pada akhirnya, karena kita lebih dulu diberi — secara berlimpah, secara berkorban, dengan harga yang nyaris tidak dapat kita pahami.
+
+Surat Ibrani menyampaikan penerapan praktis dari ini dengan sederhana: janganlah kamu lupa berbuat baik dan memberi bantuan, sebab korban-korban yang demikianlah yang berkenan kepada Allah. Perhatikan kata ''korban'' — menempatkan pemberian kita dalam kategori yang sama dengan penyembahan. Ketika kita berbagi dengan murah hati, kita bukan sekadar bersikap baik; kita sedang mempersembahkan sesuatu kepada Allah sendiri, sebuah tindakan pujian yang menjadi nyata melalui tangan yang terbuka.
+
+Saat rencana lima hari ini berakhir, luangkan waktu sejenak untuk merenungkan besarnya apa yang telah diberikan kepada Anda dalam Kristus. Biarkan rasa syukur, bukan kewajiban, yang menggerakkan tangan Anda terbuka minggu ini. Kemurahan hati yang berakar pada anugerah yang telah diterima jarang terasa berat untuk waktu yang lama — sebaliknya, ia mulai terasa seperti tanggapan paling alami yang ada.',
+     'Generosity flows best not from obligation but from gratitude for the far greater gift Christ already gave in becoming poor for our sake.', 'Kemurahan hati mengalir paling baik bukan dari kewajiban, melainkan dari rasa syukur atas pemberian yang jauh lebih besar yang telah diberikan Kristus dengan menjadi miskin demi kita.',
+     'Lord Jesus, thank you for becoming poor so that I could become rich in you. Let gratitude, not obligation, be what keeps my hands open to others. Amen.', 'Tuhan Yesus, terima kasih karena Engkau menjadi miskin supaya aku menjadi kaya di dalam-Mu. Biarlah rasa syukur, bukan kewajiban, yang menjaga tanganku tetap terbuka bagi orang lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 8:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 13:16', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 8:9', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 13:16', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Sitting in the Ashes  (Love for the Poor & Suffering, 4 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for the Poor & Suffering' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Sitting in the Ashes';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Sitting in the Ashes', 'Duduk di Antara Abu',
+     'How to be present with someone who is grieving', 'Belajar hadir bagi mereka yang sedang berduka',
+     'A four-day plan for anyone who wants to comfort a grieving friend but doesn''t know what to say or do. Rooted in the honest grief of Scripture — Job''s friends, Jesus at Lazarus''s tomb — it teaches presence over platitudes.', 'Rencana empat hari bagi siapa pun yang ingin menghibur teman yang berduka namun tidak tahu harus berkata atau berbuat apa. Berakar pada kejujuran duka dalam Kitab Suci — sahabat-sahabat Ayub, Yesus di makam Lazarus — rencana ini mengajarkan kehadiran, bukan kata-kata basa-basi.', 4)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Ministry of Silence', 'Pelayanan Diam',
+     'When Job lost nearly everything — his children, his wealth, his health — three friends heard about it and made the journey to sit with him. What they did first is often skipped over when we tell this story, but it may be the most important detail in the whole account. They saw him from a distance and barely recognized him. They wept aloud. They tore their robes. And then, for seven days and seven nights, they simply sat with him on the ground and said nothing, because they saw how great his suffering was.
+
+Seven days of silence is almost unimaginable to us now. We are trained to fill silence, to fix things, to offer the right words at the right moment. But Job''s friends understood something we often forget: that some suffering is too large for language, and that showing up with our mouths closed can be a far greater gift than showing up with advice, verses, or explanations.
+
+I have learned, slowly and sometimes clumsily, that the instinct to say something profound when someone is grieving is usually about easing our own discomfort more than theirs. Silence feels unbearable to the comforter long before it feels unbearable to the grieving person. Learning to sit in that discomfort, without rushing to fill it, is itself an act of love.
+
+Today, if you know someone who is suffering, resist the urge to arrive with a solution or a speech. Consider simply arriving — and staying. Let your presence, not your words, be the first offering. Job''s friends would eventually speak, and much of what they said would turn out to be wrong. But their first ministry, the wordless one, was exactly right.', 'Ketika Ayub kehilangan hampir segalanya — anak-anaknya, hartanya, kesehatannya — tiga orang sahabat mendengar kabar itu dan melakukan perjalanan untuk duduk bersamanya. Apa yang mereka lakukan pertama kali sering dilewatkan ketika kita menceritakan kisah ini, padahal mungkin itulah detail terpenting dalam seluruh catatan tersebut. Mereka melihatnya dari kejauhan dan hampir tidak mengenalinya. Mereka menangis dengan suara nyaring. Mereka mengoyakkan jubah mereka. Dan kemudian, selama tujuh hari tujuh malam, mereka hanya duduk bersamanya di tanah tanpa berkata apa-apa, sebab mereka melihat betapa berat penderitaannya.
+
+Tujuh hari dalam diam hampir tidak terbayangkan bagi kita sekarang. Kita terlatih untuk mengisi keheningan, memperbaiki keadaan, menawarkan kata-kata yang tepat pada waktu yang tepat. Namun sahabat-sahabat Ayub memahami sesuatu yang sering kita lupakan: bahwa sebagian penderitaan terlalu besar untuk kata-kata, dan bahwa hadir dengan mulut yang tertutup bisa menjadi pemberian yang jauh lebih besar daripada hadir dengan nasihat, ayat, atau penjelasan.
+
+Aku telah belajar, perlahan dan kadang dengan canggung, bahwa dorongan untuk mengatakan sesuatu yang mendalam ketika seseorang berduka biasanya lebih tentang meredakan ketidaknyamanan diri kita sendiri daripada ketidaknyamanan mereka. Keheningan terasa tak tertahankan bagi penghibur jauh sebelum terasa tak tertahankan bagi orang yang berduka. Belajar duduk dalam ketidaknyamanan itu, tanpa terburu-buru mengisinya, adalah tindakan kasih itu sendiri.
+
+Hari ini, jika Anda mengenal seseorang yang sedang menderita, tahanlah dorongan untuk datang dengan solusi atau pidato. Pertimbangkan untuk sekadar datang — dan tinggal. Biarkan kehadiran Anda, bukan kata-kata Anda, menjadi persembahan pertama. Sahabat-sahabat Ayub akhirnya akan berbicara, dan banyak dari apa yang mereka katakan ternyata keliru. Namun pelayanan pertama mereka, yang tanpa kata itu, sudah tepat sekali.',
+     'Presence, offered without the pressure to fix or explain, is often the truest form of comfort we can give.', 'Kehadiran, yang diberikan tanpa tekanan untuk memperbaiki atau menjelaskan, sering kali menjadi bentuk penghiburan yang paling sejati yang bisa kita berikan.',
+     'Lord, teach me the ministry of silence. When words fail, let my presence speak of your love, and give me the patience to simply stay. Amen.', 'Tuhan, ajarilah aku pelayanan diam. Ketika kata-kata gagal, biarlah kehadiranku berbicara tentang kasih-Mu, dan berikanlah aku kesabaran untuk sekadar tinggal. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Job 2:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ayub 2:13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Weeping With, Not Fixing For', 'Menangis Bersama, Bukan Memperbaiki',
+     'Paul''s instruction in Romans is deceptively simple: rejoice with those who rejoice, mourn with those who mourn. Notice what it does not say. It does not say ''explain to those who mourn why this happened.'' It does not say ''remind those who mourn that things could be worse.'' It says mourn with them — enter their sorrow, don''t stand outside it offering commentary.
+
+This kind of mourning requires something costly from us: a willingness to feel, at least a little, the weight that someone else is carrying. It is far easier to observe grief from a safe emotional distance, nodding sympathetically while staying comfortably untouched. But ''mourning with'' asks us to let another person''s pain actually reach us, even briefly, even imperfectly.
+
+The psalmist gives us the theological ground for this kind of solidarity: the Lord himself is close to the brokenhearted. God does not comfort from a distance either. He draws near to exactly the place where a heart has been crushed. When we mourn with someone, we are not merely being kind; we are participating in the very posture God himself takes toward suffering people.
+
+Think today of someone whose grief you have kept at arm''s length, perhaps because it was easier that way. What would it look like to move closer — not to fix, not to explain, but simply to let their sorrow touch you enough that you weep, in whatever small way, alongside them?', 'Instruksi Paulus dalam Kitab Roma tampak sederhana: bersukacitalah dengan orang yang bersukacita, menangislah dengan orang yang menangis. Perhatikan apa yang tidak dikatakannya. Ia tidak berkata, ''jelaskan kepada orang yang menangis mengapa hal ini terjadi.'' Ia tidak berkata, ''ingatkan orang yang menangis bahwa keadaan bisa lebih buruk.'' Ia berkata menangislah bersama mereka — masuklah ke dalam kesedihan mereka, jangan berdiri di luar sambil memberi komentar.
+
+Jenis tangisan bersama ini menuntut sesuatu yang mahal dari kita: kesediaan untuk merasakan, setidaknya sedikit, beban yang sedang dipikul orang lain. Jauh lebih mudah mengamati duka dari jarak emosional yang aman, mengangguk berempati sambil tetap tidak tersentuh dengan nyaman. Namun ''menangis bersama'' meminta kita membiarkan kepedihan orang lain benar-benar menjangkau kita, meskipun singkat, meskipun tidak sempurna.
+
+Pemazmur memberi kita dasar teologis bagi solidaritas semacam ini: TUHAN sendiri dekat kepada orang-orang yang patah hati. Allah pun tidak menghibur dari kejauhan. Ia mendekat justru ke tempat di mana sebuah hati telah remuk. Ketika kita menangis bersama seseorang, kita bukan sekadar bersikap baik; kita sedang mengambil bagian dalam sikap yang diambil Allah sendiri terhadap orang-orang yang menderita.
+
+Pikirkanlah hari ini tentang seseorang yang dukanya selama ini Anda jaga jaraknya, mungkin karena itu terasa lebih mudah. Seperti apa jadinya jika Anda mendekat — bukan untuk memperbaiki, bukan untuk menjelaskan, tetapi sekadar membiarkan kesedihan mereka menyentuh Anda cukup dalam sehingga Anda pun menangis, dengan cara sekecil apa pun, bersama mereka?',
+     'Mourning with someone means letting their pain actually reach you — not observing grief from a safe distance, but drawing near the way God himself draws near.', 'Menangis bersama seseorang berarti membiarkan kepedihan mereka benar-benar menjangkau Anda — bukan mengamati duka dari jarak yang aman, melainkan mendekat sebagaimana Allah sendiri mendekat.',
+     'God who draws near to the brokenhearted, teach me to mourn with those who mourn instead of observing from a distance. Give me courage to let another''s sorrow touch me. Amen.', 'Allah yang mendekat kepada orang yang patah hati, ajarilah aku menangis bersama orang yang menangis, bukan sekadar mengamati dari kejauhan. Berikanlah aku keberanian untuk membiarkan kesedihan orang lain menyentuhku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 34:18', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:15', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 34:18', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Jesus Wept', 'Yesus Menangis',
+     'It is the shortest verse in the Bible, and one of the most theologically loaded: Jesus wept. He stood outside the tomb of his friend Lazarus, a man he was, within minutes, about to raise from the dead. He already knew how the story would end. And still, seeing Mary and the mourners weeping, something in him broke open, and he wept with them.
+
+This detail should reshape how we think about comforting others. Jesus did not withhold his own grief just because he possessed the power to fix the situation. He did not say, ''Don''t cry, I''ve got this.'' He grieved fully, in the moment, alongside people he loved — even while holding, unseen, the power of resurrection in his hands.
+
+There is something freeing in this for those of us who try to comfort others. We are not required to have the resolution before we can share the sorrow. We do not need to know how a hard season will end in order to sit with someone in the middle of it. Jesus, who knew the ending better than anyone, still made room for tears in the middle.
+
+And the same passage that shows us Jesus weeping also shows us Jesus declaring himself the resurrection and the life. Grief and hope are not opposites in the Christian story; they live remarkably close together. When you comfort someone today, you do not have to choose between honoring their tears and holding onto hope for them. Jesus did both, in the same breath, at the same tomb.', 'Ini adalah ayat terpendek dalam Alkitab, sekaligus salah satu yang paling sarat makna teologis: Yesus menangis. Ia berdiri di luar makam sahabat-Nya, Lazarus, seorang yang dalam beberapa menit akan Ia bangkitkan dari kematian. Ia sudah tahu bagaimana kisah itu akan berakhir. Namun tetap saja, melihat Maria dan orang-orang yang berduka menangis, sesuatu dalam diri-Nya pecah, dan Ia menangis bersama mereka.
+
+Detail ini seharusnya membentuk ulang cara kita memikirkan tentang menghibur orang lain. Yesus tidak menahan air mata-Nya sendiri hanya karena Ia memiliki kuasa untuk memperbaiki keadaan. Ia tidak berkata, ''Jangan menangis, semua akan Kuurus.'' Ia berduka sepenuhnya, pada saat itu juga, bersama orang-orang yang Ia kasihi — bahkan sambil menggenggam, tak terlihat, kuasa kebangkitan di tangan-Nya.
+
+Ada sesuatu yang membebaskan dalam hal ini bagi kita yang berusaha menghibur orang lain. Kita tidak diwajibkan memiliki penyelesaian terlebih dahulu sebelum bisa berbagi kesedihan. Kita tidak perlu tahu bagaimana masa sulit akan berakhir untuk bisa duduk bersama seseorang di tengah masa itu. Yesus, yang tahu akhir cerita lebih baik daripada siapa pun, tetap memberi ruang bagi air mata di tengah perjalanan.
+
+Dan bagian yang sama yang menunjukkan Yesus menangis juga menunjukkan Yesus menyatakan diri-Nya sebagai kebangkitan dan hidup. Duka dan pengharapan bukanlah dua hal yang berlawanan dalam kisah Kristen; keduanya hidup berdekatan dengan luar biasa. Ketika Anda menghibur seseorang hari ini, Anda tidak perlu memilih antara menghormati air mata mereka dan tetap memegang pengharapan bagi mereka. Yesus melakukan keduanya, dalam napas yang sama, di makam yang sama.',
+     'You don''t need to know how someone''s story will end in order to grieve honestly with them along the way — Jesus, who knew, still wept.', 'Anda tidak perlu tahu bagaimana kisah seseorang akan berakhir untuk bisa berduka dengan jujur bersama mereka di sepanjang jalan — Yesus, yang tahu, tetap menangis.',
+     'Jesus who wept at Lazarus''s tomb, teach me not to rush past sorrow toward solutions. Let me hold both honest grief and quiet hope, as you did. Amen.', 'Yesus yang menangis di makam Lazarus, ajarilah aku untuk tidak buru-buru melewati kesedihan menuju solusi. Biarlah aku memegang duka yang jujur sekaligus pengharapan yang tenang, seperti Engkau. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 11:35', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 11:25', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 11:35', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 11:25', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'A Comfort That Comes Full Circle', 'Penghiburan yang Berputar Kembali',
+     'Paul opens his second letter to the Corinthians with an idea worth sitting with slowly: God comforts us in our troubles so that we can comfort others in theirs, using the very comfort we ourselves received. This is not just theology; it''s an economy. Comfort is not meant to be hoarded. It is meant to move through us, from God to us, and then from us to someone else.
+
+This reframes every hard season we have ever walked through. The grief you carried, the illness you survived, the loss that once seemed unbearable — none of it was wasted, even if it felt pointless at the time. It became, whether you intended it or not, a kind of training. You learned, from the inside, what comfort actually feels like, and now you are equipped to offer that same comfort to someone else.
+
+This does not mean we should minimize someone''s pain by comparing it to our own — ''I know exactly how you feel'' can sometimes do more harm than good. But it does mean that our own history of being comforted by God gives us a credibility and a tenderness that theory alone could never provide. We comfort not as experts, but as people who have also once needed comforting.
+
+As this short plan ends, think back on a time God comforted you in real trouble. Ask him to show you who, right now, needs exactly that kind of comfort from you — not a lecture, not a fix, but the same patient, present love you once received. Revelation promises a day when every tear will finally be wiped away for good. Until then, we are called to be part of how that wiping happens.', 'Paulus membuka suratnya yang kedua kepada jemaat Korintus dengan sebuah gagasan yang layak direnungkan perlahan: Allah menghibur kita dalam kesusahan kita supaya kita dapat menghibur orang lain dalam kesusahan mereka, dengan penghiburan yang sama yang kita terima sendiri dari Allah. Ini bukan sekadar teologi; ini sebuah aliran. Penghiburan tidak dimaksudkan untuk disimpan sendiri. Ia dimaksudkan untuk mengalir melalui kita, dari Allah kepada kita, lalu dari kita kepada orang lain.
+
+Pandangan ini membingkai ulang setiap masa sulit yang pernah kita lalui. Duka yang pernah Anda pikul, sakit yang pernah Anda lewati, kehilangan yang dulu terasa tak tertahankan — tidak satu pun dari itu sia-sia, sekalipun terasa tanpa arti pada saat itu. Semua itu menjadi, sengaja atau tidak, semacam pelatihan. Anda belajar, dari dalam diri sendiri, seperti apa penghiburan itu sesungguhnya, dan kini Anda dilengkapi untuk memberikan penghiburan yang sama kepada orang lain.
+
+Ini bukan berarti kita harus mengecilkan penderitaan seseorang dengan membandingkannya dengan pengalaman kita sendiri — kalimat ''aku tahu persis perasaanmu'' kadang bisa lebih merugikan daripada menolong. Tetapi ini berarti bahwa riwayat kita sendiri dihibur oleh Allah memberi kita kredibilitas dan kelembutan yang tidak pernah bisa diberikan oleh teori semata. Kita menghibur bukan sebagai ahli, melainkan sebagai orang yang pernah juga membutuhkan penghiburan.
+
+Saat rencana singkat ini berakhir, kenanglah saat Allah pernah menghibur Anda dalam kesulitan yang nyata. Mintalah Dia menunjukkan siapa, saat ini juga, yang membutuhkan penghiburan seperti itu dari Anda — bukan ceramah, bukan solusi, melainkan kasih yang sabar dan hadir yang sama seperti yang pernah Anda terima. Kitab Wahyu menjanjikan hari ketika setiap air mata akhirnya akan dihapus untuk selamanya. Sampai hari itu tiba, kita dipanggil untuk menjadi bagian dari bagaimana penghapusan itu terjadi.',
+     'The comfort you once received from God in your own hardship is not meant to stay with you — it is meant to move, through you, to someone who needs it now.', 'Penghiburan yang pernah Anda terima dari Allah dalam kesulitan Anda sendiri tidak dimaksudkan untuk berhenti pada Anda — ia dimaksudkan untuk mengalir, melalui Anda, kepada seseorang yang membutuhkannya sekarang.',
+     'God of all comfort, thank you for every time you have met me in trouble. Show me who needs that same comfort from me today, and make me willing to give it. Amen.', 'Allah sumber segala penghiburan, terima kasih atas setiap kali Engkau menemuiku dalam kesusahan. Tunjukkanlah kepadaku siapa yang membutuhkan penghiburan yang sama dariku hari ini, dan jadikanlah aku rela memberikannya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 1:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Revelation 21:4', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 1:3-4', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Wahyu 21:4', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: The Hidden Towel  (Love for the Poor & Suffering, 7 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love for the Poor & Suffering' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'The Hidden Towel';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'The Hidden Towel', 'Kain Lap yang Tersembunyi',
+     'Seven days of serving without needing to be seen', 'Tujuh hari melayani tanpa perlu dilihat orang',
+     'A seven-day plan for anyone weary of serving for applause, or quietly hurt that their service goes unnoticed. Rooted in Christ''s example of washing feet and serving in secret, this plan resets our motives and restores joy to hidden work.', 'Rencana tujuh hari bagi siapa pun yang lelah melayani demi pujian, atau diam-diam terluka karena pelayanannya tidak diperhatikan. Berakar pada teladan Kristus yang membasuh kaki dan melayani secara tersembunyi, rencana ini mengatur ulang motivasi kita dan memulihkan sukacita dalam pekerjaan yang tersembunyi.', 7)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Giving in Secret', 'Memberi secara Tersembunyi',
+     'Jesus gives a strange instruction about generosity in the Sermon on the Mount: when you give to the needy, don''t let your left hand know what your right hand is doing. It''s a vivid, almost comic image — imagine trying to physically hide an action from part of your own body. The point is not literal secrecy from ourselves, but a deep, instinctive resistance to publicizing our own good deeds, even internally, even to our own sense of self-congratulation.
+
+We live in a culture built almost entirely around visibility. Good deeds get photographed, posted, tagged, praised. There is nothing automatically wrong with people seeing good done — plenty of Scripture calls us to let our light shine. But Jesus is naming a particular danger: when the applause becomes the actual reason we act, we have already received our full reward in the moment of being seen, and there is nothing left for God to give.
+
+I have learned that some of the purest joy in serving others comes precisely from the moments no one will ever know about — the anonymous gift, the quiet errand run for someone who will never trace it back to you, the help given and then simply walked away from. There is a lightness in that kind of giving that recognition-driven generosity rarely produces.
+
+Today, try one act of hidden generosity — something genuinely secret, that costs you the chance to be thanked or noticed. Pay attention to what it feels like afterward, and let that feeling teach you something about the reward Jesus promises from ''your Father, who sees what is done in secret.''', 'Yesus memberikan instruksi yang unik tentang kemurahan hati dalam Khotbah di Bukit: ketika engkau memberi sedekah, jangan biarkan tangan kirimu tahu apa yang diperbuat tangan kananmu. Ini gambaran yang hidup, hampir lucu — bayangkan mencoba secara fisik menyembunyikan sebuah tindakan dari bagian tubuh Anda sendiri. Intinya bukan kerahasiaan harfiah dari diri sendiri, melainkan penolakan yang dalam dan naluriah untuk mempublikasikan perbuatan baik kita sendiri, bahkan secara batin, bahkan kepada rasa puas diri kita sendiri.
+
+Kita hidup dalam budaya yang hampir seluruhnya dibangun di sekitar keterlihatan. Perbuatan baik difoto, diunggah, ditandai, dipuji. Tidak ada yang secara otomatis salah dengan orang lain melihat kebaikan dilakukan — banyak bagian Kitab Suci memanggil kita untuk membiarkan terang kita bersinar. Namun Yesus sedang menunjuk pada bahaya tertentu: ketika tepuk tangan menjadi alasan sesungguhnya kita bertindak, kita sudah menerima upah penuh kita pada saat dilihat, dan tidak ada lagi yang tersisa untuk diberikan Allah.
+
+Aku telah belajar bahwa sebagian sukacita paling murni dalam melayani orang lain datang justru dari momen-momen yang tidak akan pernah diketahui siapa pun — pemberian tanpa nama, urusan kecil yang dijalankan untuk seseorang yang tidak akan pernah bisa melacaknya kembali ke Anda, bantuan yang diberikan lalu ditinggalkan begitu saja. Ada kelegaan dalam jenis pemberian itu yang jarang dihasilkan oleh kemurahan hati yang digerakkan oleh pengakuan.
+
+Hari ini, cobalah satu tindakan kemurahan hati yang tersembunyi — sesuatu yang benar-benar rahasia, yang mengorbankan kesempatan untuk diucapkan terima kasih atau diperhatikan. Perhatikan bagaimana rasanya setelah itu, dan biarkan perasaan itu mengajarkan Anda sesuatu tentang upah yang dijanjikan Yesus dari ''Bapamu yang melihat yang tersembunyi.''',
+     'When applause becomes our real reason for serving, we''ve already received our full reward in the moment of being seen — hidden generosity leaves room for God to give something better.', 'Ketika tepuk tangan menjadi alasan sesungguhnya kita melayani, kita sudah menerima upah penuh kita pada saat dilihat — kemurahan hati yang tersembunyi menyisakan ruang bagi Allah untuk memberi sesuatu yang lebih baik.',
+     'Father who sees what is done in secret, purify my reasons for serving others. Let me find joy in the hidden gift, trusting you see even what no one else will ever know. Amen.', 'Bapa yang melihat yang tersembunyi, murnikanlah alasanku dalam melayani orang lain. Biarlah aku menemukan sukacita dalam pemberian yang tersembunyi, percaya bahwa Engkau melihat bahkan apa yang tidak akan pernah diketahui siapa pun. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 6:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 6:3-4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Working for an Audience of One', 'Bekerja untuk Satu Penonton',
+     'Paul tells the Colossians something that reframes every task, however small or unnoticed: whatever you do, work at it with all your heart, as working for the Lord, not for human masters. This wasn''t written to people in glamorous, visible roles. Much of Colossians was addressed, in context, to household servants doing repetitive, thankless labor that no one would ever praise them for.
+
+There is deep freedom in this reframing. If our service is ultimately for the Lord, then it does not actually matter whether a human boss, a spouse, a friend, or anyone else notices or thanks us properly. The value of the work was never dependent on human recognition in the first place — it was always, underneath the surface, an offering made to God.
+
+This doesn''t mean we should stop caring whether people treat each other with basic appreciation; gratitude between people still matters. But it does mean our sense of worth and motivation doesn''t have to hinge on getting it. Many of us know the quiet sting of doing something helpful and having it go completely unacknowledged. Paul''s words offer a way through that sting — not by pretending it doesn''t hurt, but by relocating our audience.
+
+Today, as you do ordinary tasks — the ones that will likely go unnoticed by anyone around you — try consciously offering them to God instead. Say it plainly, even silently: ''this one is for you.'' Let that small shift change how the unnoticed work actually feels.', 'Paulus mengatakan sesuatu kepada jemaat Kolose yang membingkai ulang setiap tugas, sekecil atau setidak-diperhatikan apa pun itu: apa pun juga yang kamu perbuat, perbuatlah dengan segenap hatimu seperti untuk Tuhan dan bukan untuk manusia. Ini tidak ditulis kepada orang-orang dengan peran yang gemerlap dan terlihat. Sebagian besar surat Kolose, dalam konteksnya, ditujukan kepada para pelayan rumah tangga yang melakukan pekerjaan berulang dan tidak berterima kasih yang tidak akan pernah dipuji oleh siapa pun.
+
+Ada kebebasan yang dalam dalam pembingkaian ulang ini. Jika pelayanan kita pada akhirnya untuk Tuhan, maka sesungguhnya tidak masalah apakah seorang atasan, pasangan, teman, atau siapa pun memperhatikan atau berterima kasih dengan semestinya. Nilai dari pekerjaan itu sejak awal tidak pernah bergantung pada pengakuan manusia — ia selalu, di balik permukaan, merupakan persembahan yang dibuat kepada Allah.
+
+Ini bukan berarti kita berhenti peduli apakah orang saling memperlakukan dengan penghargaan yang wajar; rasa syukur antarsesama tetap penting. Tetapi ini berarti rasa berharga dan motivasi kita tidak perlu bergantung pada mendapatkannya. Banyak dari kita mengenal sengatan diam-diam ketika melakukan sesuatu yang menolong dan sama sekali tidak diakui. Kata-kata Paulus menawarkan jalan melewati sengatan itu — bukan dengan berpura-pura tidak sakit, melainkan dengan memindahkan penonton kita.
+
+Hari ini, saat Anda melakukan tugas-tugas biasa — yang kemungkinan besar tidak akan diperhatikan oleh siapa pun di sekitar Anda — cobalah secara sadar mempersembahkannya kepada Allah. Katakan dengan jelas, bahkan dalam hati: ''yang ini untuk-Mu.'' Biarkan pergeseran kecil itu mengubah bagaimana pekerjaan yang tidak diperhatikan itu sesungguhnya terasa.',
+     'When our service is ultimately offered to God, its value never depended on human recognition in the first place — that reframing can heal the sting of going unnoticed.', 'Ketika pelayanan kita pada akhirnya dipersembahkan kepada Allah, nilainya sejak awal tidak pernah bergantung pada pengakuan manusia — pembingkaian ulang itu bisa menyembuhkan sengatan karena tidak diperhatikan.',
+     'Lord, let me work today as though for you alone. Heal the part of me that craves recognition, and teach me to find my reward in you first. Amen.', 'Tuhan, biarlah aku bekerja hari ini seolah-olah hanya untuk-Mu. Sembuhkanlah bagian diriku yang mendambakan pengakuan, dan ajarilah aku menemukan upahku terlebih dahulu di dalam-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:23-24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:23-24', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Great in the Kingdom', 'Besar dalam Kerajaan',
+     'Jesus completely rewrites the world''s definition of greatness in a single teaching: whoever wants to become great among you must be your servant, just as the Son of Man did not come to be served, but to serve. Every human hierarchy we know runs the opposite direction — greatness accumulates power, servants stand at the bottom, and status flows toward the person everyone else serves.
+
+Jesus flips that pyramid upside down and then, remarkably, places himself at the very bottom of it. The Son of Man — the one with every right to be served by all creation — chose instead to serve, ultimately giving his life as a ransom for others. If the measure of true greatness is service rather than status, then some of the ''greatest'' people in any room are often the ones we walk right past without noticing.
+
+This teaching should unsettle our instinctive rankings — of who matters at church, at work, in our families. The person quietly cleaning up after everyone else has left, the one running errands no one thanks them for, the caregiver nobody applauds: by Jesus''s own definition, these may be standing closer to true greatness than anyone receiving the recognition.
+
+Today, notice the hidden servants around you — the ones whose work makes everything else possible but who rarely receive credit. Consider one way you might either become one of them more intentionally, or honor one of them who already is.', 'Yesus menulis ulang sepenuhnya definisi dunia tentang kebesaran dalam satu pengajaran: barangsiapa ingin menjadi besar di antara kamu, hendaklah ia menjadi pelayanmu, sama seperti Anak Manusia datang bukan untuk dilayani, melainkan untuk melayani. Setiap hierarki manusia yang kita kenal berjalan ke arah yang berlawanan — kebesaran mengumpulkan kekuasaan, pelayan berdiri di posisi terbawah, dan status mengalir menuju orang yang dilayani semua orang lain.
+
+Yesus membalikkan piramida itu, lalu, secara luar biasa, menempatkan diri-Nya sendiri di posisi paling bawah. Anak Manusia — yang memiliki setiap hak untuk dilayani oleh seluruh ciptaan — justru memilih untuk melayani, akhirnya memberikan nyawa-Nya sebagai tebusan bagi orang lain. Jika ukuran kebesaran sejati adalah pelayanan, bukan status, maka beberapa orang ''terbesar'' di ruangan mana pun sering kali adalah orang-orang yang kita lewati begitu saja tanpa memperhatikan.
+
+Pengajaran ini seharusnya mengguncang peringkat naluriah kita — tentang siapa yang penting di gereja, di tempat kerja, dalam keluarga kita. Orang yang diam-diam membersihkan setelah semua orang pergi, yang menjalankan urusan tanpa diucapkan terima kasih, pendamping yang tidak pernah ditepuktangani: menurut definisi Yesus sendiri, mereka mungkin berdiri lebih dekat dengan kebesaran sejati daripada siapa pun yang menerima pengakuan.
+
+Hari ini, perhatikan pelayan-pelayan tersembunyi di sekitar Anda — mereka yang pekerjaannya membuat segala sesuatu yang lain menjadi mungkin namun jarang menerima pujian. Pertimbangkan satu cara Anda bisa menjadi salah satu dari mereka dengan lebih sengaja, atau menghormati salah satu dari mereka yang sudah demikian.',
+     'By Jesus''s own definition, the hidden servant no one applauds may stand closer to true greatness than anyone receiving the recognition.', 'Menurut definisi Yesus sendiri, pelayan tersembunyi yang tidak ditepuktangani mungkin berdiri lebih dekat dengan kebesaran sejati daripada siapa pun yang menerima pengakuan.',
+     'Lord Jesus, who came to serve rather than be served, reshape my idea of greatness. Help me notice and honor the hidden servants around me today. Amen.', 'Tuhan Yesus, yang datang untuk melayani, bukan dilayani, bentuklah ulang gagasanku tentang kebesaran. Tolonglah aku memperhatikan dan menghormati pelayan-pelayan tersembunyi di sekitarku hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 20:26-28', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 20:26-28', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Kneeling with a Towel', 'Berlutut dengan Sehelai Kain',
+     'On the night before he died, Jesus did something so ordinary and so lowly that his own disciples were uncomfortable watching it happen: he wrapped a towel around his waist and washed their feet, one by one, the way only the lowest household servant would normally be expected to do. This was not a symbolic gesture performed for an audience beyond the room. It happened quietly, among friends, with no one else there to witness or applaud it.
+
+Afterward, Jesus made the meaning explicit: ''I have set you an example that you should do as I have done for you.'' The example was not primarily about literal foot-washing, though some traditions still practice that beautifully. It was about the posture underneath it — the willingness of the greatest person in the room to kneel down and attend to the dirtiest, most unglamorous need of the people he loved.
+
+Foot-washing in the ancient world was specifically the task nobody wanted, a job reserved for the lowest servant precisely because feet, in dusty sandal-worn roads, were genuinely unpleasant to handle. Jesus chose the task everyone else avoided. There is something instructive in noticing which tasks we ourselves avoid — the unpleasant, undignified, unnoticed ones — and asking whether Christ might be inviting us to kneel down there too.
+
+Today, identify one ''towel task'' in your own life — some form of service that feels beneath you, unpleasant, or unlikely to ever be noticed or thanked. Consider doing it anyway, deliberately, as an act of following Christ''s own example rather than avoiding it as beneath your dignity.', 'Pada malam sebelum Ia wafat, Yesus melakukan sesuatu yang begitu biasa dan begitu rendah sehingga murid-murid-Nya sendiri merasa tidak nyaman menyaksikannya: Ia melilitkan sehelai kain di pinggang-Nya dan membasuh kaki mereka, satu per satu, dengan cara yang biasanya hanya dilakukan oleh pelayan rumah tangga yang paling rendah. Ini bukan gestur simbolis yang dilakukan untuk penonton di luar ruangan itu. Ini terjadi dengan tenang, di antara para sahabat, tanpa ada orang lain yang menyaksikan atau bertepuk tangan.
+
+Setelah itu, Yesus menjelaskan maknanya dengan gamblang: ''Aku telah memberikan suatu teladan kepada kamu, supaya kamu juga berbuat sama seperti yang telah Kuperbuat kepadamu.'' Teladan itu bukan terutama tentang membasuh kaki secara harfiah, meskipun beberapa tradisi masih mempraktikkannya dengan indah. Ini tentang sikap yang mendasarinya — kesediaan orang terbesar di ruangan itu untuk berlutut dan memperhatikan kebutuhan paling kotor dan tanpa kemewahan dari orang-orang yang Ia kasihi.
+
+Membasuh kaki di dunia kuno secara khusus adalah tugas yang tidak diinginkan siapa pun, pekerjaan yang dicadangkan untuk pelayan paling rendah tepat karena kaki, di jalanan berdebu yang dilalui dengan sandal, sungguh tidak menyenangkan untuk ditangani. Yesus memilih tugas yang dihindari semua orang lain. Ada sesuatu yang mengajarkan dalam memperhatikan tugas-tugas mana yang kita sendiri hindari — yang tidak menyenangkan, tidak bermartabat, tidak diperhatikan — dan bertanya apakah Kristus mungkin sedang mengundang kita untuk berlutut di sana juga.
+
+Hari ini, kenali satu ''tugas kain lap'' dalam hidup Anda sendiri — suatu bentuk pelayanan yang terasa di bawah martabat Anda, tidak menyenangkan, atau tidak mungkin pernah diperhatikan atau diucapkan terima kasih. Pertimbangkan untuk tetap melakukannya, dengan sengaja, sebagai tindakan mengikuti teladan Kristus sendiri, bukan menghindarinya sebagai di bawah martabat Anda.',
+     'Jesus chose the one task everyone else avoided — notice which unpleasant, unnoticed task you avoid, and ask whether he is inviting you to kneel there too.', 'Yesus memilih satu-satunya tugas yang dihindari semua orang lain — perhatikan tugas tidak menyenangkan dan tidak diperhatikan apa yang Anda hindari, dan tanyakan apakah Ia sedang mengundang Anda berlutut di sana juga.',
+     'Jesus, who knelt with a towel, give me the humility to do the unpleasant, unnoticed task rather than avoid it. Let your example, not my comfort, guide me. Amen.', 'Yesus, yang berlutut dengan sehelai kain, berikanlah aku kerendahan hati untuk melakukan tugas yang tidak menyenangkan dan tidak diperhatikan, bukan menghindarinya. Biarlah teladan-Mu, bukan kenyamananku, yang memimpinku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 13:14-15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 13:14-15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Valuing Others Above Ourselves', 'Menganggap Orang Lain Lebih Utama',
+     'Paul''s instruction to the Philippians goes straight to the root of why we so often struggle to serve without recognition: he tells them to do nothing out of selfish ambition or vain conceit, but in humility to value others above themselves. Selfish ambition and vain conceit are precisely the soil in which our hunger for recognition grows. When we''re quietly ranking ourselves against others, unnoticed service starts to feel like an injustice rather than a gift.
+
+Humility, in this passage, is not self-hatred or pretending we have no value. It is a redirected attention — looking to the interests of others rather than constantly monitoring our own status. This kind of humility actually frees us from the exhausting, never-satisfied project of managing how others perceive our contributions.
+
+Many of us know how quickly service can curdle into resentment when we start keeping score — noticing who thanked us and who didn''t, who got credit we felt we deserved, whose effort seems to go unrecognized while ours does too. Paul''s remedy isn''t to suppress that feeling through sheer willpower, but to genuinely shift our attention outward, toward the actual needs and interests of the people we''re serving.
+
+Today, when you notice the tug of wanting credit for something you''ve done, try consciously turning your attention toward the person you served instead — their need, their relief, their good, rather than your recognition. Let humility become less about thinking less of yourself and more about thinking of yourself less.', 'Instruksi Paulus kepada jemaat Filipi langsung menyentuh akar mengapa kita begitu sering bergumul untuk melayani tanpa pengakuan: ia mengatakan kepada mereka untuk tidak melakukan apa pun karena ambisi selfish atau kesombongan yang sia-sia, tetapi dengan rendah hati menganggap orang lain lebih utama daripada diri sendiri. Ambisi selfish dan kesombongan yang sia-sia justru adalah tanah tempat dahaga kita akan pengakuan tumbuh. Ketika kita diam-diam membandingkan diri dengan orang lain, pelayanan yang tidak diperhatikan mulai terasa seperti ketidakadilan, bukan pemberian.
+
+Kerendahan hati, dalam bagian ini, bukanlah membenci diri sendiri atau berpura-pura tidak memiliki nilai. Ini adalah pengalihan perhatian — memandang kepentingan orang lain, bukan terus-menerus mengawasi status kita sendiri. Jenis kerendahan hati ini sesungguhnya membebaskan kita dari proyek yang melelahkan dan tak pernah puas dalam mengelola bagaimana orang lain memandang kontribusi kita.
+
+Banyak dari kita mengenal betapa cepatnya pelayanan bisa berubah menjadi kebencian ketika kita mulai menghitung nilai — memperhatikan siapa yang berterima kasih dan siapa yang tidak, siapa yang mendapat pujian yang menurut kita layak kita terima, upaya siapa yang tampak tidak diakui sementara upaya kita pun demikian. Solusi Paulus bukanlah menekan perasaan itu dengan sekadar kemauan keras, melainkan benar-benar mengalihkan perhatian kita ke luar, kepada kebutuhan dan kepentingan sesungguhnya dari orang-orang yang kita layani.
+
+Hari ini, ketika Anda menyadari dorongan untuk mendapat pujian atas sesuatu yang telah Anda lakukan, cobalah secara sadar mengalihkan perhatian Anda kepada orang yang Anda layani — kebutuhan mereka, kelegaan mereka, kebaikan bagi mereka, bukan pengakuan bagi Anda. Biarkan kerendahan hati menjadi bukan tentang berpikir lebih rendah tentang diri sendiri, melainkan lebih jarang memikirkan diri sendiri.',
+     'Humility isn''t thinking less of yourself, but thinking of yourself less — redirecting attention from your recognition to the actual needs of the person you''re serving.', 'Kerendahan hati bukan berpikir lebih rendah tentang diri sendiri, melainkan lebih jarang memikirkan diri sendiri — mengalihkan perhatian dari pengakuan bagi diri kepada kebutuhan nyata orang yang Anda layani.',
+     'Lord, when I feel the pull to keep score, turn my eyes outward instead. Teach me a humility that frees me from needing credit for what I do. Amen.', 'Tuhan, ketika aku merasakan dorongan untuk menghitung-hitung, alihkanlah pandanganku ke luar. Ajarilah aku kerendahan hati yang membebaskanku dari kebutuhan akan pujian atas apa yang kulakukan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 2:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 2:3-4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Faithful Stewards of Grace', 'Pengurus Anugerah yang Setia',
+     'Peter offers a simple but clarifying image for service: each of us should use whatever gift we''ve received to serve others, as faithful stewards of God''s grace in its various forms. A steward is not the owner of what they manage — they are entrusted with something that ultimately belongs to someone else, and their job is faithfulness, not fame.
+
+This reframes both our gifts and our service. Whatever ability, resource, time, or skill you have to offer was never fully yours to begin with; it was given to you, on loan, as an expression of God''s grace, meant to be passed along rather than hoarded or displayed. A steward who serves well doesn''t expect to be celebrated for managing someone else''s property faithfully. Faithfulness itself is the point.
+
+This image is quietly freeing for anyone who serves in ways that go unnoticed. You were never meant to be the source of your own gifts, only a faithful channel for grace that originated somewhere else. That means the credit was never really yours to claim in the first place — and also that the responsibility to use your gift well doesn''t depend on whether anyone applauds you for it.
+
+Today, name one specific gift God has given you — practical, relational, spiritual, whatever it may be — and ask how you might steward it faithfully this week for someone else''s good, regardless of whether they ever know it came from you.', 'Petrus menawarkan gambaran yang sederhana namun menjernihkan tentang pelayanan: setiap orang di antara kita hendaknya menggunakan karunia yang telah diperolehnya untuk melayani orang lain, sebagai pengurus yang baik dari kasih karunia Allah dalam berbagai bentuknya. Seorang pengurus bukanlah pemilik dari apa yang ia kelola — ia dipercayakan sesuatu yang pada akhirnya adalah milik orang lain, dan tugasnya adalah kesetiaan, bukan ketenaran.
+
+Gambaran ini membingkai ulang baik karunia kita maupun pelayanan kita. Kemampuan, sumber daya, waktu, atau keterampilan apa pun yang Anda miliki untuk ditawarkan sejak awal tidak pernah sepenuhnya milik Anda; ia diberikan kepada Anda, sebagai pinjaman, sebagai ungkapan anugerah Allah, dimaksudkan untuk diteruskan, bukan ditimbun atau dipamerkan. Seorang pengurus yang melayani dengan baik tidak mengharapkan dirayakan karena mengelola milik orang lain dengan setia. Kesetiaan itu sendirilah intinya.
+
+Gambaran ini secara diam-diam membebaskan bagi siapa pun yang melayani dengan cara yang tidak diperhatikan. Anda tidak pernah dimaksudkan menjadi sumber dari karunia Anda sendiri, hanya saluran yang setia bagi anugerah yang berasal dari tempat lain. Itu berarti pujian sejak awal bukanlah milik Anda untuk diklaim — dan juga berarti tanggung jawab untuk menggunakan karunia Anda dengan baik tidak bergantung pada apakah ada yang bertepuk tangan untuk Anda.
+
+Hari ini, sebutkan satu karunia khusus yang telah diberikan Allah kepada Anda — praktis, relasional, rohani, apa pun itu — dan tanyakan bagaimana Anda bisa mengurusnya dengan setia minggu ini demi kebaikan orang lain, terlepas dari apakah mereka pernah tahu itu berasal dari Anda.',
+     'Your gifts were never fully your own to begin with — as a steward, your job is faithfulness, not fame, and the credit was never really yours to claim.', 'Karunia Anda sejak awal tidak pernah sepenuhnya milik Anda — sebagai pengurus, tugas Anda adalah kesetiaan, bukan ketenaran, dan pujian sejak awal bukanlah milik Anda untuk diklaim.',
+     'Lord, thank you for entrusting me with gifts that are truly yours. Help me steward them faithfully today, content to be a channel rather than the source. Amen.', 'Tuhan, terima kasih telah mempercayakan kepadaku karunia yang sesungguhnya milik-Mu. Tolonglah aku mengurusnya dengan setia hari ini, puas menjadi saluran, bukan sumbernya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 4:10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 4:10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'Not Growing Weary', 'Jangan Menjadi Lemah',
+     'As this seven-day plan closes, Paul offers a final, honest word to anyone whose hidden service has started to feel heavy: let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up. Notice that he doesn''t pretend weariness is impossible or a sign of weak faith. He assumes it will come. The instruction is not to avoid tiredness, but to keep going through it.
+
+Unseen service is especially prone to this particular exhaustion, because the usual fuel of encouragement and thanks so rarely arrives to refill the tank. It is one thing to serve faithfully for a season when no one notices; it is another to sustain that for years. Paul''s promise of a harvest ''at the proper time'' acknowledges that the reward for hidden faithfulness is often delayed, sometimes well beyond what we can see in this life.
+
+Colossians offers the posture that makes this endurance possible: as God''s chosen, holy, and dearly loved people, clothe yourselves with compassion, kindness, humility, gentleness, and patience. These are not qualities that produce quick, visible results. They are qualities built for the long, unglamorous stretch — the kind of stretch most hidden service actually requires.
+
+Look back over this week. Think of the towel tasks, the secret gifts, the moments you served without needing anyone to see. Ask God for renewed strength to keep doing exactly that — not because it will always feel rewarding in the moment, but because you trust the harvest is real, even when it''s still hidden from view.', 'Saat rencana tujuh hari ini berakhir, Paulus menawarkan kata terakhir yang jujur bagi siapa pun yang pelayanan tersembunyinya mulai terasa berat: janganlah kita jemu-jemu berbuat baik, karena apabila sudah tiba waktunya, kita akan menuai, jika kita tidak menjadi lemah. Perhatikan bahwa ia tidak berpura-pura bahwa kelelahan itu mustahil atau tanda iman yang lemah. Ia menganggap kelelahan itu pasti datang. Instruksinya bukan untuk menghindari kelelahan, melainkan untuk terus melangkah melewatinya.
+
+Pelayanan yang tidak terlihat sangat rentan terhadap kelelahan khusus ini, karena bahan bakar dorongan dan ucapan terima kasih yang biasa jarang sekali datang untuk mengisi ulang tangki. Satu hal bila melayani dengan setia selama satu musim ketika tidak ada yang memperhatikan; hal lain lagi bila mempertahankannya selama bertahun-tahun. Janji Paulus tentang tuaian ''pada waktunya'' mengakui bahwa upah bagi kesetiaan yang tersembunyi sering kali tertunda, kadang jauh melampaui apa yang bisa kita lihat dalam hidup ini.
+
+Surat Kolose menawarkan sikap yang membuat ketekunan ini mungkin: sebagai orang-orang pilihan Allah yang kudus dan dikasihi-Nya, kenakanlah belas kasihan, kemurahan, kerendahan hati, kelemahlembutan, dan kesabaran. Ini bukanlah kualitas-kualitas yang menghasilkan hasil yang cepat dan terlihat. Ini adalah kualitas yang dibangun untuk perjalanan panjang tanpa kemewahan — jenis perjalanan yang justru sering dituntut oleh pelayanan tersembunyi.
+
+Tengok kembali minggu ini. Ingatlah tugas-tugas kain lap, pemberian-pemberian rahasia, momen-momen Anda melayani tanpa perlu ada yang melihat. Mintalah kepada Allah kekuatan yang baru untuk terus melakukan persis itu — bukan karena itu akan selalu terasa memuaskan pada saat itu juga, melainkan karena Anda percaya tuaian itu nyata, bahkan ketika masih tersembunyi dari pandangan.',
+     'The reward for hidden faithfulness is often delayed, sometimes well beyond what we can see — the invitation is to keep going, trusting the harvest is real even while it''s still out of view.', 'Upah bagi kesetiaan yang tersembunyi sering kali tertunda, kadang jauh melampaui apa yang bisa kita lihat — undangannya adalah untuk terus melangkah, percaya bahwa tuaian itu nyata bahkan ketika masih belum terlihat.',
+     'Lord, renew my strength for the long, hidden stretch of service ahead. Clothe me with patience and compassion, and let me trust your harvest even when I cannot yet see it. Amen.', 'Tuhan, perbaruilah kekuatanku untuk perjalanan pelayanan yang panjang dan tersembunyi di depan. Kenakanlah padaku kesabaran dan belas kasihan, dan biarlah aku percaya akan tuaian-Mu bahkan ketika aku belum bisa melihatnya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:9', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:12', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:9', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: A Heart of Worship  (Love of God, 7 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'A Heart of Worship';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'A Heart of Worship', 'Hati yang Menyembah',
+     'Seven days learning to adore God for who He is', 'Tujuh hari belajar menyembah Allah karena siapa Diri-Nya',
+     'A week-long journey into worship as a way of life — kneeling before our Maker, offering thanksgiving, worshiping in spirit and truth, recognizing His worthiness, and joining the eternal chorus that never stops declaring His holiness.', 'Sebuah perjalanan selama seminggu menuju penyembahan sebagai gaya hidup — berlutut di hadapan Pencipta kita, mempersembahkan syukur, menyembah dalam roh dan kebenaran, mengakui kelayakan-Nya, dan bergabung dengan paduan suara kekal yang tak pernah berhenti menyerukan kekudusan-Nya.', 7)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Come, Let Us Bow Down', 'Marilah Kita Sujud Menyembah',
+     'Worship, at its root, is not primarily about music or a Sunday hour — it is about posture, about where we place ourselves in relation to God. The psalmist puts it physically: "Come, let us bow down in worship, let us kneel before the LORD our Maker." Before we sing a note or utter a word, worship begins with the body and heart acknowledging: You are the Maker, and I am the made.
+
+There is something our modern independence resists in kneeling. We are trained to stand tall, to assert ourselves, to avoid postures of submission. And yet the psalmist invites this bowing not as humiliation but as relief — the relief of finally putting down the exhausting pretense that we are our own makers, our own gods, answerable to no one. Kneeling before our actual Maker is where rest, paradoxically, begins.
+
+Notice the psalm calls Him "the LORD our Maker" — not a distant architect who built the world and walked away, but a Maker still intimately connected to what He made. Worship, then, is not flattering a stranger; it is acknowledging a relationship that already exists, whether or not we''ve paid attention to it. He made you. He knows you. Bowing before Him is simply telling the truth about that bond.
+
+Today, before you ask God for anything, try simply bowing — literally, if you''re able, or in your heart if you''re not. Let the first words of your day be less about your requests and more about His worthiness: You are my Maker, and I kneel before You, not because I have to, but because it is where I belong.', 'Penyembahan, pada akarnya, bukan pertama-tama tentang musik atau satu jam pada hari Minggu — itu tentang sikap, tentang di mana kita menempatkan diri kita dalam hubungan dengan Allah. Pemazmur mengungkapkannya secara fisik: "Masuklah, marilah kita sujud menyembah, berlutut di hadapan TUHAN yang menjadikan kita." Sebelum kita menyanyikan satu nada atau mengucapkan satu kata, penyembahan dimulai dengan tubuh dan hati yang mengakui: Engkaulah Pencipta, dan aku adalah yang diciptakan.
+
+Ada sesuatu dalam kemandirian modern kita yang menolak berlutut. Kita dilatih untuk berdiri tegak, menegaskan diri kita, menghindari sikap tunduk. Namun pemazmur mengundang sikap sujud ini bukan sebagai penghinaan melainkan sebagai kelegaan — kelegaan dari akhirnya meletakkan kepura-puraan yang melelahkan bahwa kita adalah pencipta diri sendiri, allah bagi diri sendiri, yang tidak perlu bertanggung jawab kepada siapa pun. Berlutut di hadapan Pencipta kita yang sesungguhnya adalah di mana istirahat, secara paradoks, dimulai.
+
+Perhatikan mazmur ini menyebut-Nya "TUHAN yang menjadikan kita" — bukan arsitek yang jauh yang membangun dunia lalu pergi, melainkan Pencipta yang masih terhubung erat dengan apa yang Ia buat. Penyembahan, kalau begitu, bukan menyanjung orang asing; itu mengakui sebuah hubungan yang sudah ada, entah kita memperhatikannya atau tidak. Ia menciptakanmu. Ia mengenalmu. Sujud di hadapan-Nya hanyalah mengatakan kebenaran tentang ikatan itu.
+
+Hari ini, sebelum engkau meminta apa pun kepada Allah, cobalah sekadar sujud — secara harfiah, jika engkau bisa, atau dalam hatimu jika tidak. Biarlah kata-kata pertama harimu lebih sedikit tentang permintaanmu dan lebih banyak tentang kelayakan-Nya: Engkaulah Penciptaku, dan aku berlutut di hadapan-Mu, bukan karena harus, tetapi karena di situlah tempatku yang sesungguhnya.',
+     'Kneeling before God is not humiliation — it is finally telling the truth about who made whom.', 'Berlutut di hadapan Allah bukanlah penghinaan — itu akhirnya mengatakan kebenaran tentang siapa yang menciptakan siapa.',
+     'LORD my Maker, I bow before You today—not out of obligation, but because it is where I truly belong. Receive my worship as an act of rest and truth. Amen.', 'TUHAN, Penciptaku, aku sujud di hadapan-Mu hari ini — bukan karena kewajiban, tetapi karena di situlah tempatku yang sesungguhnya. Terimalah penyembahanku sebagai tindakan istirahat dan kebenaran. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 95:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 95:6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Enter With Thanksgiving', 'Masuklah dengan Syukur',
+     'There''s a specific instruction here about how to approach God: "Enter his gates with thanksgiving and his courts with praise; give thanks to him and praise his name." Thanksgiving is not merely one item on a longer worship checklist — it''s described as the entryway itself, the gate we walk through to even begin approaching Him.
+
+This matters especially on days when praise doesn''t come naturally. When life is heavy, thanksgiving can feel forced, even dishonest. But the psalmist doesn''t wait for feelings of gratitude to arrive before commanding the act of thanksgiving — because gratitude, like many spiritual postures, is often something we practice our way into rather than something we simply feel our way into. The act itself becomes the gate that opens the heart.
+
+It''s worth noticing that thanksgiving here is corporate, not just private — "enter his gates," "his courts" — the language of a community approaching together. Worship was never meant to be a purely individual project. There is something that happens when a group of people, whatever they are individually carrying, choose together to walk through that gate of thanksgiving. It changes the atmosphere of the room, and often the atmosphere of the heart.
+
+Try beginning today, however you feel, with a short, specific list of thanks — not generic gratitude, but three particular things, however small. Let that list be your gate. You may find that praise, which felt distant when you started, is closer than you expected by the time you reach the other side.', 'Ada instruksi khusus di sini tentang bagaimana menghampiri Allah: "Masuklah melalui pintu gerbang-Nya dengan nyanyian syukur, dan pelataran-Nya dengan puji-pujian, bersyukurlah kepada-Nya, pujilah nama-Nya!" Ucapan syukur bukan sekadar satu butir dalam daftar penyembahan yang panjang — ia digambarkan sebagai pintu gerbang itu sendiri, gerbang yang kita lalui bahkan untuk mulai menghampiri-Nya.
+
+Ini penting terutama pada hari-hari ketika pujian tidak muncul secara alami. Ketika hidup terasa berat, ucapan syukur bisa terasa dipaksakan, bahkan tidak jujur. Tetapi pemazmur tidak menunggu perasaan syukur muncul lebih dulu sebelum memerintahkan tindakan bersyukur — karena syukur, seperti banyak sikap rohani lainnya, sering kali adalah sesuatu yang kita latih hingga kita masuk ke dalamnya, bukan sesuatu yang kita rasakan lebih dulu baru kita lakukan. Tindakan itu sendiri menjadi gerbang yang membuka hati.
+
+Perlu diperhatikan bahwa ucapan syukur di sini bersifat komunal, bukan hanya pribadi — "masuklah melalui pintu gerbang-Nya," "pelataran-Nya" — bahasa dari sebuah komunitas yang menghampiri bersama. Penyembahan tidak pernah dimaksudkan menjadi proyek yang sepenuhnya individu. Ada sesuatu yang terjadi ketika sekelompok orang, apa pun yang secara pribadi mereka pikul, memilih bersama-sama melewati gerbang syukur itu. Itu mengubah suasana ruangan, dan sering kali mengubah suasana hati.
+
+Cobalah memulai hari ini, apa pun perasaanmu, dengan daftar syukur yang singkat dan spesifik — bukan syukur yang umum, tetapi tiga hal tertentu, betapapun kecilnya. Biarlah daftar itu menjadi gerbangmu. Engkau mungkin akan menemukan bahwa pujian, yang terasa jauh ketika engkau memulai, sudah lebih dekat dari yang kaukira begitu engkau sampai di seberang.',
+     'Thanksgiving is not the destination of worship — it is the gate we walk through to even begin.', 'Ucapan syukur bukan tujuan akhir penyembahan — itu gerbang yang kita lalui bahkan untuk memulai.',
+     'Lord, I choose thanksgiving today, even when it doesn''t come easily. Open my heart through gratitude, and lead me from there into deeper praise. Amen.', 'Tuhan, aku memilih bersyukur hari ini, sekalipun itu tidak mudah muncul. Bukalah hatiku melalui rasa syukur, dan tuntunlah aku dari sana menuju pujian yang lebih dalam. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 100:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 100:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'In Spirit and in Truth', 'Dalam Roh dan Kebenaran',
+     'Jesus'' conversation with the Samaritan woman at the well drifts, at one point, into a debate about the correct location for worship — her people worshiped on a mountain, His people worshiped in Jerusalem. Jesus gently sidesteps the whole argument: "A time is coming and has now come when the true worshipers will worship the Father in the Spirit and in truth."
+
+This was a radical redefinition. Worship was no longer going to be primarily about the right building, the right mountain, the right ritual location. It was going to be about the posture of the heart, wherever that heart happened to be standing. This must have been remarkable news to a woman who, because of her history and her ethnicity, likely felt excluded from the "correct" places of worship altogether.
+
+"In spirit and in truth" holds two things together that we often separate. Spirit without truth becomes worship built on feeling alone, disconnected from who God actually is — easily swayed by mood, easily emptied of substance. Truth without spirit becomes correct doctrine with a cold heart, technically accurate but lifeless. Jesus asks for both: an engaged heart and an honest, accurate understanding of who it is being offered to.
+
+Wherever you worship today — a church pew, a kitchen table, a car, a hospital room — location was never the requirement Jesus cared about most. He is looking for worshipers who bring Him both their whole heart and their honest truth. Bring both today, wherever you happen to be standing.', 'Percakapan Yesus dengan perempuan Samaria di sumur, pada satu titik, mengarah ke perdebatan tentang lokasi yang tepat untuk beribadah — bangsanya menyembah di gunung, bangsa Yesus menyembah di Yerusalem. Yesus dengan lembut mengalihkan seluruh perdebatan itu: "Tetapi saatnya akan datang dan sudah tiba sekarang, bahwa penyembah-penyembah benar akan menyembah Bapa dalam roh dan kebenaran."
+
+Ini adalah pendefinisian ulang yang radikal. Penyembahan tidak lagi terutama tentang gedung yang tepat, gunung yang tepat, lokasi ritual yang tepat. Ia menjadi tentang sikap hati, di mana pun hati itu kebetulan sedang berdiri. Ini pasti menjadi kabar yang luar biasa bagi seorang perempuan yang, karena sejarah dan etnisnya, mungkin merasa sepenuhnya dikecualikan dari tempat-tempat ibadah yang "benar."
+
+"Dalam roh dan kebenaran" menyatukan dua hal yang sering kita pisahkan. Roh tanpa kebenaran menjadi penyembahan yang dibangun hanya atas perasaan, terputus dari siapa Allah sesungguhnya — mudah goyah oleh suasana hati, mudah kosong dari substansi. Kebenaran tanpa roh menjadi doktrin yang benar dengan hati yang dingin, secara teknis akurat tetapi tanpa kehidupan. Yesus meminta keduanya: hati yang terlibat dan pemahaman yang jujur dan akurat tentang kepada siapa penyembahan itu dipersembahkan.
+
+Di mana pun engkau menyembah hari ini — bangku gereja, meja dapur, mobil, ruang rumah sakit — lokasi tidak pernah menjadi syarat yang paling Yesus pedulikan. Ia sedang mencari penyembah yang membawa kepada-Nya baik hati yang utuh maupun kebenaran yang jujur. Bawalah keduanya hari ini, di mana pun engkau kebetulan berada.',
+     'God is not searching for the right location to be worshiped in — He is searching for hearts that bring Him both truth and true feeling.', 'Allah tidak mencari lokasi yang tepat untuk disembah — Ia mencari hati yang membawa kepada-Nya baik kebenaran maupun perasaan yang tulus.',
+     'Father, You are Spirit, and You seek worshipers in spirit and truth. Take my worship wherever I am today, and make it both honest and heartfelt. Amen.', 'Bapa, Engkau adalah Roh, dan Engkau mencari penyembah dalam roh dan kebenaran. Terimalah penyembahanku di mana pun aku berada hari ini, dan jadikanlah itu jujur sekaligus sepenuh hati. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 4:23-24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 4:23-24', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Worthy Is the Lord', 'Layaklah Tuhan',
+     'John''s vision of heaven''s throne room in Revelation is full of strange and overwhelming imagery, but at its center is a single, simple confession sung by the creatures gathered there: "You are worthy, our Lord and God, to receive glory and honor and power, for you created all things, and by your will they were created and have their being."
+
+Notice the reason given for God''s worthiness — not primarily what He has done for the worshipers personally, though that is also true elsewhere in Scripture, but simply that He created everything, and everything exists by His will. Worship here is rooted in who God is and what He has made, not in a transaction of what we''ve received from Him. He is worthy whether or not our circumstances are currently going well.
+
+This kind of worship — praising God simply for being God, independent of our immediate benefit — can feel unfamiliar in a culture that often approaches faith transactionally: what has God done for me lately? Revelation''s vision invites us into something older and sturdier, a worship that would still be true even if every specific blessing in our life vanished tomorrow, because it rests on His nature, not our circumstances.
+
+Try praying today without a single request. Simply declare His worthiness — as Creator, as Sustainer, as the One by whose will you and everything around you exists and continues to exist. Let worship, for a few minutes, be entirely about Him.', 'Penglihatan Yohanes tentang ruang takhta surga dalam Wahyu penuh dengan gambaran yang aneh dan luar biasa, tetapi di pusatnya ada satu pengakuan sederhana yang dinyanyikan oleh makhluk-makhluk yang berkumpul di sana: "Ya Tuhan dan Allah kami, Engkau layak menerima puji-pujian dan hormat dan kuasa; sebab Engkau telah menciptakan segala sesuatu; dan segala sesuatu itu ada dan diciptakan oleh karena kehendak-Mu."
+
+Perhatikan alasan yang diberikan untuk kelayakan Allah — bukan terutama apa yang telah Ia lakukan bagi para penyembah secara pribadi, meskipun itu juga benar di bagian lain Alkitab, melainkan sekadar bahwa Ia menciptakan segala sesuatu, dan segala sesuatu ada karena kehendak-Nya. Penyembahan di sini berakar pada siapa Allah adanya dan apa yang telah Ia ciptakan, bukan pada transaksi tentang apa yang telah kita terima dari-Nya. Ia layak entah keadaan kita saat ini sedang baik atau tidak.
+
+Jenis penyembahan ini — memuji Allah sekadar karena Ia adalah Allah, terlepas dari keuntungan langsung kita — bisa terasa asing dalam budaya yang sering mendekati iman secara transaksional: apa yang telah Allah lakukan bagiku belakangan ini? Penglihatan dalam Wahyu mengundang kita ke dalam sesuatu yang lebih tua dan lebih kokoh, penyembahan yang tetap benar bahkan jika setiap berkat khusus dalam hidup kita lenyap besok, karena itu bersandar pada sifat-Nya, bukan keadaan kita.
+
+Cobalah berdoa hari ini tanpa satu pun permintaan. Sekadar nyatakan kelayakan-Nya — sebagai Pencipta, sebagai Penopang, sebagai Dia yang karena kehendak-Nya engkau dan segala sesuatu di sekitarmu ada dan terus ada. Biarlah penyembahan, untuk beberapa menit, sepenuhnya tentang Dia.',
+     'God''s worthiness does not rise and fall with our circumstances — He was worthy before we existed and remains worthy no matter what today holds.', 'Kelayakan Allah tidak naik turun mengikuti keadaan kita — Ia layak sebelum kita ada, dan tetap layak apa pun yang dibawa hari ini.',
+     'You are worthy, Lord God, to receive glory and honor and power. I worship You today simply for who You are — Creator, Sustainer, worthy of all praise. Amen.', 'Engkau layak, ya Tuhan Allah, menerima puji-pujian, hormat, dan kuasa. Aku menyembah-Mu hari ini sekadar karena siapa Diri-Mu — Pencipta, Penopang, layak menerima segala pujian. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Revelation 4:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Wahyu 4:11', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'The Splendor of Holiness', 'Berhiaskan Kekudusan',
+     'Psalm 29 is a thunderstorm of a psalm — the "voice of the LORD" breaking cedars, striking with flashes of lightning, shaking the wilderness. In the middle of that overwhelming display of power, the psalmist offers a simple instruction: "Ascribe to the LORD the glory due his name; worship the LORD in the splendor of his holiness."
+
+"Ascribe" is an interesting word — it means to credit, to attribute, to give something its rightful due. We don''t create God''s glory by worshiping; we simply acknowledge glory that already exists, whether we notice it or not. Worship, in this sense, isn''t adding anything to God. It''s aligning our perception with reality, finally seeing and saying what has been true all along.
+
+"The splendor of his holiness" pairs two words we don''t often put together — splendor, which suggests beauty, brightness, something we''d want to look at; and holiness, which suggests otherness, separateness, something set apart. God''s holiness is not cold or distant, an attribute to be feared and nothing more. It is beautiful. There is a magnetic, awe-filled draw to a God who is entirely unlike us in His purity, and yet worthy of being gazed upon rather than merely avoided.
+
+Today, take a moment to simply behold — not analyze, not request, just look, in your mind''s eye, at the holiness of God as something beautiful rather than merely intimidating. Let awe, not obligation, shape your worship.', 'Mazmur 29 adalah mazmur yang penuh badai guntur — "suara TUHAN" mematahkan pohon-pohon aras, menyambar dengan kilat, mengguncang padang gurun. Di tengah pertunjukan kuasa yang luar biasa itu, pemazmur memberikan instruksi sederhana: "Berilah kepada TUHAN kemuliaan nama-Nya, sujudlah menyembah kepada TUHAN dengan berhiaskan kekudusan."
+
+"Berilah" adalah kata yang menarik — artinya mengakui, memberikan, memberi sesuatu haknya yang semestinya. Kita tidak menciptakan kemuliaan Allah dengan menyembah; kita hanya mengakui kemuliaan yang sudah ada, entah kita menyadarinya atau tidak. Penyembahan, dalam pengertian ini, bukan menambahkan sesuatu kepada Allah. Itu menyelaraskan persepsi kita dengan kenyataan, akhirnya melihat dan mengatakan apa yang selama ini sudah benar.
+
+"Berhiaskan kekudusan" memasangkan dua kata yang tidak sering kita satukan — keindahan, yang menyiratkan kecantikan, kecerahan, sesuatu yang ingin kita pandang; dan kekudusan, yang menyiratkan keberbedaan, kepisahan, sesuatu yang dikhususkan. Kekudusan Allah bukanlah sesuatu yang dingin atau jauh, sebuah sifat yang hanya untuk ditakuti dan tidak lebih. Itu indah. Ada daya tarik yang magnetis, penuh kekaguman, kepada Allah yang sepenuhnya tidak seperti kita dalam kemurnian-Nya, namun layak dipandang, bukan sekadar dihindari.
+
+Hari ini, luangkanlah waktu sekadar untuk memandang — bukan menganalisis, bukan meminta, hanya melihat, dalam mata batinmu, kekudusan Allah sebagai sesuatu yang indah, bukan sekadar mengintimidasi. Biarlah kekaguman, bukan kewajiban, membentuk penyembahanmu.',
+     'God''s holiness is not only something to fear — it is something breathtakingly beautiful, worthy of our gaze.', 'Kekudusan Allah bukan hanya sesuatu untuk ditakuti — itu sesuatu yang begitu indah, layak untuk kita pandang.',
+     'Lord, I ascribe to You the glory due Your name. Let me see Your holiness today not as something distant to fear, but as splendor worth beholding. Amen.', 'Tuhan, kuberikan kepada-Mu kemuliaan nama-Mu yang selayaknya. Biarlah aku melihat kekudusan-Mu hari ini bukan sebagai sesuatu yang jauh untuk ditakuti, melainkan keindahan yang layak dipandang. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 29:2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 29:2', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Holy, Holy, Holy', 'Kudus, Kudus, Kudus',
+     'Isaiah''s vision of the throne room is one of the most vivid in Scripture: seraphim flying above the throne, calling to one another without pause, "Holy, holy, holy is the LORD Almighty; the whole earth is full of his glory." In Hebrew, repeating a word three times is the language''s way of expressing the absolute superlative — this is not just holy, or very holy, but holiness beyond any category we have words for.
+
+What''s striking is that this cry is described as continuous — the seraphim are still calling this to one another, an unbroken chorus that has not paused since Isaiah witnessed it. Worship in heaven is not an occasional event; it is the ongoing, unceasing occupation of beings who see God clearly enough to never grow bored of declaring His holiness. If it never stops there, perhaps our worship here is meant to be less of an isolated event and more of a rhythm we return to continually.
+
+Isaiah''s response to this vision is telling: he doesn''t feel impressed or entertained — he feels undone. "Woe to me!" he cries, suddenly aware of his own uncleanness in the presence of absolute holiness. True encounters with God''s holiness rarely leave us comfortable; they strip away our self-sufficiency and show us, clearly, both who He is and who we are not yet. And yet the story doesn''t end there — a coal touches his lips, and he is cleansed, then sent.
+
+Let today''s reflection do in you what it did in Isaiah: first, an honest confrontation with God''s overwhelming holiness; then, the humility to admit your own need; and finally, the willingness to be cleansed and sent, changed by having truly seen Him.', 'Penglihatan Yesaya tentang ruang takhta adalah salah satu yang paling hidup dalam Alkitab: seraphim terbang di atas takhta, berseru satu kepada yang lain tanpa henti, "Kudus, kudus, kuduslah TUHAN semesta alam, seluruh bumi penuh kemuliaan-Nya!" Dalam bahasa Ibrani, mengulang sebuah kata tiga kali adalah cara bahasa itu mengungkapkan tingkat superlatif mutlak — ini bukan sekadar kudus, atau sangat kudus, melainkan kekudusan yang melampaui kategori apa pun yang kita miliki katanya.
+
+Yang mencolok adalah seruan ini digambarkan berlangsung terus-menerus — para seraphim masih menyerukan hal ini satu kepada yang lain, sebuah paduan suara tak terputus yang belum berhenti sejak Yesaya menyaksikannya. Penyembahan di surga bukan peristiwa sesekali; itu adalah kesibukan yang terus-menerus dan tak berkesudahan dari makhluk-makhluk yang melihat Allah cukup jelas hingga tidak pernah bosan menyerukan kekudusan-Nya. Jika di sana tidak pernah berhenti, mungkin penyembahan kita di sini pun dimaksudkan bukan sebagai peristiwa yang terisolasi, melainkan sebuah ritme yang terus kita kembali kepadanya.
+
+Respons Yesaya terhadap penglihatan ini sangat berarti: ia tidak merasa terkesan atau terhibur — ia merasa hancur. "Celakalah aku!" serunya, tiba-tiba sadar akan kenajisannya sendiri di hadapan kekudusan yang mutlak. Perjumpaan sejati dengan kekudusan Allah jarang membuat kita merasa nyaman; itu mengelupas kecukupan diri kita dan menunjukkan dengan jelas, baik siapa Diri-Nya maupun siapa kita yang belum menjadi. Namun kisah ini tidak berakhir di situ — sebuah bara api menyentuh bibirnya, dan ia disucikan, lalu diutus.
+
+Biarlah renungan hari ini melakukan dalam dirimu apa yang dilakukannya dalam diri Yesaya: pertama, perjumpaan yang jujur dengan kekudusan Allah yang luar biasa; kemudian, kerendahan hati untuk mengakui kebutuhanmu sendiri; dan akhirnya, kesediaan untuk disucikan dan diutus, diubah karena telah sungguh-sungguh melihat Dia.',
+     'A real encounter with God''s holiness never leaves us unchanged — it humbles us, cleanses us, and sends us out.', 'Perjumpaan sejati dengan kekudusan Allah tidak pernah meninggalkan kita tanpa perubahan — itu merendahkan kita, menyucikan kita, dan mengutus kita.',
+     'Holy, holy, holy Lord, I come before You aware of my need. Cleanse me, and send me out changed by having truly seen You. Amen.', 'Tuhan yang kudus, kudus, kudus, aku datang di hadapan-Mu dengan menyadari kebutuhanku. Sucikanlah aku, dan utuslah aku, diubah karena telah sungguh-sungguh melihat-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 6:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 6:3', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'Let Everything Praise Him', 'Biarlah Segala Sesuatu Memuji-Nya',
+     'Psalm 150, the final psalm in the whole book, is a crescendo — trumpets, harps, lyres, tambourines, dancing, strings, pipes, clashing cymbals, an entire orchestra of praise gathered together. And then, after all that instrumentation is named, the psalm closes with the widest invitation possible: "Let everything that has breath praise the LORD."
+
+Not just musicians. Not just the spiritually gifted or the naturally expressive. Everything that has breath — which means every single one of us qualifies simply by being alive. You do not need a beautiful voice, a particular temperament, or years of practiced devotion to be included in this invitation. If you are breathing, you are being called to praise.
+
+This final verse is a fitting close to a whole week of worship, and to the whole book of Psalms itself — after all the laments, the confessions, the questions, the doubts, the celebrations, the book ends here, on the widest possible note: praise is not the privilege of the perfectly composed life. It belongs to anyone still breathing, which includes people in the middle of grief, uncertainty, joy, and everything between.
+
+As you close this week, let your very breath become a kind of praise — inhale as receiving from Him, exhale as offering back to Him. Whatever else this week has stirred in you, let today''s closing be simple: you are alive, and that alone qualifies you to praise the Lord of everything.', 'Mazmur 150, mazmur terakhir dalam seluruh kitab, adalah sebuah puncak — sangkakala, kecapi, gambus, rebana, tari-tarian, alat musik gesek, seruling, ceracap yang berdenting, seluruh orkestra pujian berkumpul bersama. Dan kemudian, setelah semua alat musik itu disebutkan, mazmur ini ditutup dengan undangan seluas mungkin: "Biarlah segala yang bernafas memuji TUHAN!"
+
+Bukan hanya para musisi. Bukan hanya mereka yang berbakat rohani atau ekspresif secara alami. Segala yang bernafas — artinya setiap kita memenuhi syarat sekadar dengan hidup. Engkau tidak perlu suara yang indah, temperamen tertentu, atau bertahun-tahun latihan kesalehan untuk termasuk dalam undangan ini. Jika engkau bernapas, engkau sedang dipanggil untuk memuji.
+
+Ayat penutup ini adalah penutup yang pas bagi satu minggu penuh penyembahan, dan bagi seluruh kitab Mazmur itu sendiri — setelah semua ratapan, pengakuan, pertanyaan, keraguan, perayaan, kitab ini berakhir di sini, pada nada yang paling luas mungkin: pujian bukanlah hak istimewa bagi hidup yang sempurna teratur. Ia milik siapa pun yang masih bernapas, termasuk orang-orang yang sedang berada di tengah dukacita, ketidakpastian, sukacita, dan segala sesuatu di antaranya.
+
+Saat engkau menutup minggu ini, biarlah napasmu sendiri menjadi semacam pujian — menarik napas sebagai menerima dari-Nya, mengembuskannya sebagai mempersembahkan kembali kepada-Nya. Apa pun lagi yang telah digugah minggu ini dalam dirimu, biarlah penutup hari ini sederhana: engkau hidup, dan itu saja sudah membuatmu layak memuji Tuhan atas segala sesuatu.',
+     'Praise is not reserved for the spiritually gifted — it belongs to everyone who is still breathing.', 'Pujian bukan hak istimewa bagi yang berbakat rohani — ia milik setiap orang yang masih bernapas.',
+     'Lord, let every breath I take today be a form of praise to You. Thank You for the gift of life itself, and for the invitation to worship You simply because I am alive. Amen.', 'Tuhan, biarlah setiap napas yang kuhirup hari ini menjadi bentuk pujian bagi-Mu. Terima kasih atas anugerah hidup itu sendiri, dan atas undangan untuk menyembah-Mu sekadar karena aku hidup. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 150:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 150:6', 'TB', 1);
+
+  -- ===================================================================
+  -- Plan: Bread of Love  (Love of God, 5 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Bread of Love';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Bread of Love', 'Roti Kasih',
+     'Five days encountering Christ in the Eucharist', 'Lima hari berjumpa dengan Kristus dalam Ekaristi',
+     'A five-day journey through the gift of the Eucharist — from Jesus naming Himself the Bread of Life, through the Last Supper and the Cross, to the call to abide in Him daily. Ideal for anyone who wants to receive Communion with fresh wonder.', 'Sebuah perjalanan lima hari menelusuri anugerah Ekaristi — dari Yesus menyebut diri-Nya Roti Hidup, melalui Perjamuan Terakhir dan Salib, hingga panggilan untuk tinggal di dalam-Nya setiap hari. Cocok bagi siapa pun yang ingin menerima Komuni dengan kekaguman yang baru.', 5)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'I Am the Bread of Life', 'Akulah Roti Hidup',
+     'Hunger is one of the most universal human experiences — not only the hunger of an empty stomach, but the deeper hunger that no meal ever quite satisfies: the ache for meaning, for love that does not run out, for a sense that we are not simply drifting through our days. Into that ache, Jesus makes an extraordinary claim: "I am the bread of life. Whoever comes to me will never go hungry."
+
+This statement would have startled His first hearers, who had just eaten bread multiplied from five loaves the day before. Jesus was not offering another meal that would leave them hungry again by evening. He was offering Himself as the food that actually satisfies — not because we stop needing anything else, but because at the center of every other hunger is a hunger for Him that only He can meet.
+
+For those of us who receive the Eucharist, this verse takes on a very concrete shape. Every time we come forward at Mass, hands open, we are living out this claim — coming to Him, receiving Him, and being fed not with a symbol only but with His true and abiding presence. It is easy for this to become routine. It is worth pausing to remember: this is the Bread of Life we are receiving, offered freely to a hungry heart.
+
+Today, notice your own hunger — for approval, for rest, for certainty, for love. Bring that hunger honestly to Jesus rather than trying to fill it elsewhere. He does not offer a temporary fix. He offers Himself, freely, as often as we are willing to come.', 'Lapar adalah salah satu pengalaman manusia yang paling universal — bukan hanya lapar karena perut kosong, tetapi lapar yang lebih dalam yang tidak pernah benar-benar dipuaskan oleh makanan apa pun: kerinduan akan makna, akan kasih yang tidak pernah habis, akan perasaan bahwa kita tidak sekadar mengapung tanpa arah menjalani hari-hari kita. Ke dalam kerinduan itulah Yesus membuat pernyataan yang luar biasa: "Akulah roti hidup; barangsiapa datang kepada-Ku, ia tidak akan lapar lagi."
+
+Pernyataan ini pasti mengejutkan para pendengar pertama-Nya, yang baru saja makan roti yang digandakan dari lima roti sehari sebelumnya. Yesus tidak sedang menawarkan makanan lain yang akan membuat mereka lapar lagi menjelang malam. Ia menawarkan diri-Nya sendiri sebagai makanan yang benar-benar memuaskan — bukan karena kita berhenti membutuhkan hal lain, melainkan karena di pusat setiap kelaparan lain ada kerinduan akan Dia yang hanya bisa dipenuhi oleh-Nya sendiri.
+
+Bagi kita yang menerima Ekaristi, ayat ini mengambil bentuk yang sangat nyata. Setiap kali kita maju dalam Misa, dengan tangan terbuka, kita sedang menghidupi pernyataan ini — datang kepada-Nya, menerima Dia, dan diberi makan bukan hanya dengan simbol, melainkan dengan kehadiran-Nya yang benar dan tetap. Sangat mudah bagi hal ini menjadi rutinitas belaka. Perlu kita berhenti sejenak untuk mengingat: inilah Roti Hidup yang kita terima, yang diberikan dengan cuma-cuma kepada hati yang lapar.
+
+Hari ini, sadarilah kelaparanmu sendiri — akan pengakuan, akan istirahat, akan kepastian, akan kasih. Bawalah kelaparan itu dengan jujur kepada Yesus, bukan mencoba memenuhinya di tempat lain. Ia tidak menawarkan solusi sementara. Ia menawarkan diri-Nya sendiri, dengan cuma-cuma, sesering kita bersedia datang.',
+     'Every other hunger is a whisper pointing us toward the one hunger only Christ can satisfy.', 'Setiap kelaparan lain adalah bisikan yang mengarahkan kita kepada satu kerinduan yang hanya bisa dipuaskan oleh Kristus.',
+     'Jesus, Bread of Life, I bring You my hunger today — for love, for rest, for meaning. Feed me with Yourself, and teach me to keep coming back to You. Amen.', 'Yesus, Roti Hidup, kubawa kepada-Mu kelaparanku hari ini — akan kasih, akan istirahat, akan makna. Berilah aku makan dengan diri-Mu sendiri, dan ajarku untuk terus kembali kepada-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 6:35', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 6:35', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'This Is My Body', 'Inilah Tubuh-Ku',
+     'There is something almost unbearably intimate about the Last Supper. Jesus, hours away from betrayal and death, sits with the men who will scatter and deny Him, and instead of withdrawing in bitterness, He gives them a gift: His very self, under the form of bread and wine. "This is my body given for you... this cup is the new covenant in my blood, which is poured out for you."
+
+In the ancient world, a covenant sealed in blood was the strongest bond imaginable — a permanent, unbreakable commitment. Jesus was not using poetic language loosely. He was establishing a new and lasting covenant, sealed not with the blood of animals but with His own, poured out fully, for people who did not yet deserve it and, in some cases, would deny they even knew Him within hours.
+
+"Given for you" and "poured out for you" — these are not abstract theological phrases. They are personal. Whatever your name is, whatever your history, that gift was given for you specifically, before you had done anything to earn it, in the same way it was given for Peter, who would deny Him three times that same night, and for Judas, who was still at the table.
+
+When you receive the Eucharist, or simply reflect on this moment today, let it be personal rather than routine. This is not a distant historical event. It is a gift given, deliberately, for you — body and blood, poured out in love, offered again and again to a heart still learning how to receive it.', 'Ada sesuatu yang hampir tak tertanggungkan keintimannya dari Perjamuan Terakhir. Yesus, beberapa jam sebelum pengkhianatan dan kematian-Nya, duduk bersama orang-orang yang akan tercerai-berai dan menyangkal-Nya, dan alih-alih menarik diri dengan kepahitan, Ia memberi mereka sebuah pemberian: diri-Nya sendiri, dalam rupa roti dan anggur. "Inilah tubuh-Ku yang diserahkan bagi kamu... Cawan ini adalah perjanjian baru oleh darah-Ku, yang ditumpahkan bagi kamu."
+
+Dalam dunia kuno, sebuah perjanjian yang dimeteraikan dengan darah adalah ikatan terkuat yang bisa dibayangkan — komitmen yang permanen dan tak terputuskan. Yesus tidak sekadar menggunakan bahasa puitis. Ia sedang menetapkan sebuah perjanjian baru dan kekal, dimeteraikan bukan dengan darah binatang melainkan dengan darah-Nya sendiri, dicurahkan sepenuhnya, bagi orang-orang yang belum layak menerimanya, dan dalam beberapa kasus akan menyangkal bahkan mengenal-Nya dalam hitungan jam.
+
+"Diserahkan bagi kamu" dan "ditumpahkan bagi kamu" — ini bukan ungkapan teologis yang abstrak. Ini pribadi. Siapa pun namamu, apa pun sejarahmu, pemberian itu diberikan bagimu secara khusus, sebelum engkau melakukan apa pun untuk mendapatkannya, sama seperti diberikan bagi Petrus, yang akan menyangkal-Nya tiga kali malam itu juga, dan bagi Yudas, yang masih duduk di meja itu.
+
+Ketika engkau menerima Ekaristi, atau sekadar merenungkan momen ini hari ini, biarlah itu terasa pribadi, bukan sekadar rutinitas. Ini bukan peristiwa sejarah yang jauh. Ini pemberian yang diberikan, dengan sengaja, bagimu — tubuh dan darah, dicurahkan dalam kasih, ditawarkan berulang kali kepada hati yang masih belajar cara menerimanya.',
+     'The gift of His body and blood was not given to the worthy — it was given to us, so that we might become worthy of receiving it again.', 'Pemberian tubuh dan darah-Nya tidak diberikan kepada yang layak — itu diberikan kepada kita, agar kita boleh menjadi layak untuk menerimanya lagi.',
+     'Lord Jesus, thank You for giving Yourself so completely, so personally, for me. Help me never receive this gift casually. Let it change how I love. Amen.', 'Tuhan Yesus, terima kasih karena Engkau memberikan diri-Mu begitu sepenuhnya, begitu pribadi, bagiku. Tolonglah aku agar tidak pernah menerima pemberian ini dengan sembarangan. Biarlah itu mengubah caraku mengasihi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 22:19-20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 22:19-20', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Bread for the Life of the World', 'Roti bagi Hidup Dunia',
+     'There is a striking word in this verse that Jesus'' listeners could not have missed: flesh. "This bread is my flesh, which I will give for the life of the world." This was not gentle, comfortable religious language. It was so startling that, according to the rest of John 6, many of His own disciples walked away, unable to accept what He was saying.
+
+Jesus did not soften the statement to keep them. He let them go rather than explain it away as merely symbolic. This tells us something important: what happens in the Eucharist is not a metaphor Jesus offered casually. It is a real gift of Himself, mysterious and beyond full explanation, but not less real for being mysterious. Faith, here as elsewhere, is trusting what Christ says even when it exceeds our understanding.
+
+Notice too the scope of the gift: "for the life of the world." Not for one nation, one family, one worthy group — the whole world. The bread of life was never meant to be hoarded by a few; it is offered as broadly as human hunger itself. Wherever the Eucharist is celebrated, this same gift, for the same wide world, is being given again.
+
+Sit with the weight of this today: Christ gave His very self so that the world — not a perfect world, a broken and hungry one — could have life. That includes you, in your particular hunger and history. Let gratitude, not habit, shape how you approach this gift.', 'Ada satu kata yang mencolok dalam ayat ini yang tidak mungkin terlewat oleh para pendengar Yesus: daging. "Roti yang Kuberikan itu ialah daging-Ku, yang akan Kuberikan untuk hidup dunia." Ini bukan bahasa keagamaan yang lembut dan nyaman. Ini begitu mengejutkan sehingga, menurut kelanjutan Yohanes 6, banyak dari murid-murid-Nya sendiri pergi meninggalkan-Nya, tidak sanggup menerima apa yang Ia katakan.
+
+Yesus tidak melunakkan pernyataan-Nya untuk menahan mereka. Ia membiarkan mereka pergi daripada menjelaskannya sekadar sebagai simbol. Ini memberi tahu kita sesuatu yang penting: apa yang terjadi dalam Ekaristi bukanlah metafora yang Yesus tawarkan secara sembarangan. Itu adalah pemberian diri-Nya yang nyata, misterius dan melampaui penjelasan penuh, tetapi tidak kurang nyata karena bersifat misterius. Iman, di sini seperti di tempat lain, adalah mempercayai apa yang Kristus katakan bahkan ketika itu melampaui pengertian kita.
+
+Perhatikan juga cakupan pemberian ini: "untuk hidup dunia." Bukan untuk satu bangsa, satu keluarga, atau satu kelompok yang layak — melainkan seluruh dunia. Roti hidup tidak pernah dimaksudkan untuk ditimbun oleh segelintir orang; ia ditawarkan seluas kelaparan manusia itu sendiri. Di mana pun Ekaristi dirayakan, pemberian yang sama, bagi dunia yang sama luasnya, sedang diberikan lagi.
+
+Renungkanlah beratnya hal ini hari ini: Kristus memberikan diri-Nya sendiri agar dunia — bukan dunia yang sempurna, melainkan dunia yang rusak dan lapar — boleh memperoleh hidup. Itu termasuk engkau, dengan kelaparan dan sejarahmu yang khas. Biarlah rasa syukur, bukan kebiasaan, yang membentuk caramu menghampiri pemberian ini.',
+     'What Christ offers in the Eucharist is not a symbol He explained away — it is a mystery He asked us to trust.', 'Apa yang Kristus tawarkan dalam Ekaristi bukanlah simbol yang Ia jelaskan begitu saja — itu adalah misteri yang Ia minta kita percayai.',
+     'Jesus, I don''t fully understand the mystery of this gift, but I trust Your words. Thank You for giving Yourself for the life of the whole world, including me. Amen.', 'Yesus, aku tidak sepenuhnya memahami misteri pemberian ini, tetapi aku percaya perkataan-Mu. Terima kasih karena Engkau memberikan diri-Mu bagi hidup seluruh dunia, termasuk aku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 6:51', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 6:51', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Until He Comes', 'Sampai Ia Datang',
+     'Paul''s words to the Corinthians situate the Eucharist within a larger story: "whenever you eat this bread and drink this cup, you proclaim the Lord''s death until he comes." Every celebration of the Eucharist looks backward and forward at once — backward to the Cross, where the gift was purchased, and forward to Christ''s return, when the story reaches its completion. We stand in the middle of that story every time we approach the altar.
+
+This means the Eucharist is never merely a private, personal moment, however personal it also is. It is a proclamation — a public act of the whole Church declaring, together, that Christ died and that Christ is coming again. In a culture that often shrinks faith down to private feeling, the Eucharist insists on something communal and historical: this happened, this matters, and this is not yet finished.
+
+Living "until he comes" also shapes how we wait. We are not merely killing time between now and eternity; we are a people formed, meal by meal, week by week, to remember who we belong to and where our story is headed. The Eucharist trains our hope. It reminds hungry, waiting hearts that the story does not end at the Cross — it continues toward a return, a restoration, a feast without end.
+
+As you receive the Eucharist this week, or reflect on this truth, let it stretch your sense of time. You are not just present at Mass; you are proclaiming, with the whole Church across every age, that Christ has died, Christ is risen, and Christ will come again.', 'Kata-kata Paulus kepada jemaat Korintus menempatkan Ekaristi dalam kisah yang lebih besar: "setiap kali kamu makan roti ini dan minum cawan ini, kamu memberitakan kematian Tuhan sampai Ia datang." Setiap perayaan Ekaristi menoleh ke belakang dan ke depan sekaligus — ke belakang kepada Salib, tempat pemberian itu dibeli, dan ke depan kepada kedatangan Kristus kembali, ketika kisah ini mencapai kepenuhannya. Kita berdiri di tengah kisah itu setiap kali kita menghampiri altar.
+
+Ini berarti Ekaristi tidak pernah sekadar menjadi momen pribadi belaka, sekalipun ia juga sangat pribadi. Ia adalah sebuah pemberitaan — tindakan publik dari seluruh Gereja yang bersama-sama menyatakan bahwa Kristus telah mati dan Kristus akan datang kembali. Di tengah budaya yang sering menciutkan iman menjadi sekadar perasaan pribadi, Ekaristi bersikeras pada sesuatu yang bersifat komunal dan historis: ini sungguh terjadi, ini penting, dan ini belum selesai.
+
+Hidup "sampai Ia datang" juga membentuk cara kita menunggu. Kita bukan sekadar membunuh waktu antara sekarang dan kekekalan; kita adalah umat yang dibentuk, meja demi meja, minggu demi minggu, untuk mengingat kepada siapa kita berpunya dan ke mana kisah kita menuju. Ekaristi melatih harapan kita. Ia mengingatkan hati yang lapar dan menunggu bahwa kisah ini tidak berakhir di Salib — ia berlanjut menuju kedatangan-Nya kembali, pemulihan, sebuah perjamuan tanpa akhir.
+
+Saat engkau menerima Ekaristi minggu ini, atau merenungkan kebenaran ini, biarlah itu meluaskan pemahamanmu tentang waktu. Engkau bukan sekadar hadir dalam Misa; engkau sedang memberitakan, bersama seluruh Gereja sepanjang segala zaman, bahwa Kristus telah mati, Kristus telah bangkit, dan Kristus akan datang kembali.',
+     'Every Eucharist is both a memory and a promise — Christ''s death behind us, His return still ahead.', 'Setiap Ekaristi adalah kenangan sekaligus janji — kematian Kristus di belakang kita, kedatangan-Nya kembali masih di depan.',
+     'Lord, as I remember Your death, help me also to live in hope of Your return. Let the Eucharist shape not just my moment, but my whole sense of time. Amen.', 'Tuhan, saat aku mengenang kematian-Mu, tolonglah aku juga hidup dalam pengharapan akan kedatangan-Mu kembali. Biarlah Ekaristi membentuk bukan hanya saat ini, tetapi seluruh pemahamanku tentang waktu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 11:26', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 11:26', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Remain in Me', 'Tinggallah di dalam Aku',
+     'The Eucharist is not meant to be a single encounter we admire and move on from; it is meant to form an ongoing union. Jesus paints the picture Himself: "I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit; apart from me you can do nothing." A branch does not visit the vine occasionally — it stays attached, continuously, or it withers.
+
+This is the deeper purpose of receiving Communion regularly: not a ritual to check off, but a continual grafting of our life into His. Every reception is meant to deepen a remaining, a staying, an abiding — so that His life genuinely flows into ours the way sap flows from vine into branch, invisible but utterly necessary for anything good to grow.
+
+"Apart from me you can do nothing" can sound harsh until we recognize it as simple honesty. Left to ourselves, we run dry — our patience thins, our love grows tired, our hope flickers. Remaining in Christ, especially through the Eucharist, is not extra credit for the spiritually ambitious. It is how ordinary, tired people keep bearing any fruit at all.
+
+As you close this week''s reflection on the Eucharist, ask yourself honestly: is Communion something I merely attend, or something I remain in — carrying it with me into the rest of the week, letting His life shape my choices, my patience, my love? Let today be a fresh commitment to stay close to the Vine.', 'Ekaristi tidak dimaksudkan menjadi satu pertemuan yang kita kagumi lalu kita tinggalkan; ia dimaksudkan membentuk persatuan yang berkelanjutan. Yesus sendiri melukiskan gambarannya: "Akulah pokok anggur dan kamulah ranting-rantingnya. Barangsiapa tinggal di dalam Aku dan Aku di dalam dia, ia berbuah banyak, sebab di luar Aku kamu tidak dapat berbuat apa-apa." Sebuah ranting tidak sesekali mengunjungi pokok anggur — ia tetap melekat, terus-menerus, atau ia akan layu.
+
+Inilah tujuan yang lebih dalam dari menerima Komuni secara teratur: bukan ritual yang sekadar dicentang, melainkan pencangkokan hidup kita yang terus-menerus ke dalam hidup-Nya. Setiap kali menerima dimaksudkan untuk memperdalam sikap tinggal, menetap, berdiam — agar hidup-Nya sungguh-sungguh mengalir ke dalam hidup kita, sebagaimana getah mengalir dari pokok anggur ke dalam ranting, tak terlihat namun benar-benar diperlukan agar sesuatu yang baik dapat tumbuh.
+
+"Di luar Aku kamu tidak dapat berbuat apa-apa" bisa terdengar keras sampai kita menyadarinya sebagai kejujuran belaka. Dibiarkan sendirian, kita mengering — kesabaran kita menipis, kasih kita menjadi lelah, harapan kita berkelap-kelip. Tinggal di dalam Kristus, terutama melalui Ekaristi, bukanlah nilai tambahan bagi mereka yang berambisi rohani. Itulah cara orang biasa yang lelah tetap dapat menghasilkan buah sama sekali.
+
+Saat engkau menutup renungan minggu ini tentang Ekaristi, tanyakan pada dirimu dengan jujur: apakah Komuni sekadar sesuatu yang kuhadiri, atau sesuatu yang kutinggali — kubawa sepanjang sisa minggu, kubiarkan hidup-Nya membentuk pilihanku, kesabaranku, kasihku? Biarlah hari ini menjadi komitmen baru untuk tetap dekat dengan Pokok Anggur itu.',
+     'Fruit doesn''t come from a single visit to the vine — it comes from staying attached, day after ordinary day.', 'Buah tidak datang dari sekali kunjungan ke pokok anggur — ia datang dari tetap melekat, hari demi hari yang biasa.',
+     'Jesus, true Vine, keep me attached to You long after I leave the altar. Let Your life flow into mine, so that whatever grows in me is fruit that comes from You. Amen.', 'Yesus, Pokok Anggur yang benar, tetaplah lekatkan aku pada-Mu jauh setelah aku meninggalkan altar. Biarlah hidup-Mu mengalir ke dalam hidupku, sehingga apa pun yang tumbuh dalam diriku adalah buah yang berasal dari-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 15:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 15:5', 'TB', 1);
+
+  -- ===================================================================
+  -- Plan: Held by Mercy  (Love of God, 6 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Held by Mercy';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Held by Mercy', 'Dipeluk oleh Belas Kasihan',
+     'Six days resting in the God whose mercy never runs out', 'Enam hari beristirahat dalam Allah yang belas kasih-Nya tak pernah habis',
+     'A six-day walk through the width and depth of God''s mercy — new every morning, higher than our failures, deeper than the sea, and running to meet us before we even finish our confession. For anyone weighed down by guilt or shame.', 'Sebuah perjalanan enam hari menelusuri luas dan dalamnya belas kasihan Allah — selalu baru tiap pagi, lebih tinggi dari kegagalan kita, lebih dalam dari lautan, dan berlari menemui kita bahkan sebelum kita selesai mengaku. Bagi siapa pun yang dibebani rasa bersalah atau malu.', 6)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'New Every Morning', 'Selalu Baru Tiap Pagi',
+     'Lamentations is, as its name suggests, a book of grief — written after Jerusalem''s fall, in the wreckage of loss almost too large to name. It is a strange place to find one of Scripture''s most beloved lines about mercy, yet that is exactly where it appears, tucked into the middle of sorrow: "Because of the LORD''s great love we are not consumed, for his compassions never fail. They are new every morning."
+
+There is something important in that placement. Mercy is not a truth reserved for days when life feels manageable; it is a truth spoken into the middle of ruins. The writer does not pretend the devastation isn''t real. He simply insists that even here, even now, God''s compassion has not run dry. If mercy can be found in Lamentations, it can be found in whatever wreckage you are currently standing in too.
+
+"New every morning" is a phrase worth sitting with slowly. It means yesterday''s failure does not define today''s mercy. However you fell short yesterday — in patience, in honesty, in love — this morning''s compassion from God was not diminished by it. Mercy does not accumulate debt against you over time; it resets, faithfully, with the sunrise, because it flows from God''s character, not from your track record.
+
+Before you carry today''s weight, pause and receive this: whatever yesterday held, this morning''s mercy is fresh, full, and freely offered. You do not need to earn your way back into God''s compassion. You only need to wake up and receive it again, the way the sun rises without asking permission.', 'Ratapan, sesuai namanya, adalah kitab dukacita — ditulis setelah kejatuhan Yerusalem, di tengah reruntuhan kehilangan yang hampir tak terkatakan besarnya. Ini tempat yang aneh untuk menemukan salah satu ayat tentang belas kasihan yang paling dikasihi dalam Alkitab, namun justru di sanalah ayat itu muncul, terselip di tengah kesedihan: "Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi."
+
+Ada sesuatu yang penting dari letak ayat ini. Belas kasihan bukanlah kebenaran yang disimpan hanya untuk hari-hari ketika hidup terasa terkendali; itu kebenaran yang diucapkan di tengah reruntuhan. Penulisnya tidak berpura-pura kehancuran itu tidak nyata. Ia hanya bersikeras bahwa bahkan di sini, bahkan sekarang, belas kasihan Allah belum kering. Jika belas kasihan dapat ditemukan dalam Ratapan, ia juga dapat ditemukan di reruntuhan apa pun yang sedang kaupijaki sekarang.
+
+"Selalu baru tiap pagi" adalah frasa yang layak direnungkan perlahan. Artinya, kegagalan kemarin tidak menentukan belas kasihan hari ini. Betapa pun engkau gagal kemarin — dalam kesabaran, kejujuran, kasih — belas kasihan Allah pagi ini tidak berkurang karenanya. Belas kasihan tidak menumpuk utang atasmu seiring waktu; ia diperbarui, dengan setia, bersama matahari terbit, karena ia mengalir dari karakter Allah, bukan dari rekam jejakmu.
+
+Sebelum engkau memikul beban hari ini, berhentilah sejenak dan terimalah ini: apa pun yang dibawa kemarin, belas kasihan pagi ini segar, penuh, dan diberikan dengan cuma-cuma. Engkau tidak perlu berjuang untuk pantas menerima belas kasihan Allah lagi. Engkau hanya perlu bangun dan menerimanya lagi, sebagaimana matahari terbit tanpa meminta izin.',
+     'God''s mercy does not carry yesterday''s balance forward — it resets, complete and fresh, every single morning.', 'Belas kasihan Allah tidak membawa saldo kemarin — ia diperbarui, utuh dan segar, setiap pagi.',
+     'Lord, thank You that Your mercy is not exhausted by my repeated failures. Meet me fresh this morning, and help me receive Your compassion instead of my own guilt. Amen.', 'Tuhan, terima kasih karena belas kasihan-Mu tidak habis oleh kegagalanku yang berulang. Temuilah aku dengan segar pagi ini, dan tolonglah aku menerima belas kasihan-Mu, bukan rasa bersalahku sendiri. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Slow to Anger, Rich in Love', 'Panjang Sabar, Berlimpah Kasih',
+     'Psalm 103 reads almost like David preaching to his own soul, reminding himself of who God actually is before his circumstances or his failures try to convince him otherwise: "The LORD is compassionate and gracious, slow to anger, abounding in love." Four descriptions, stacked together, painting a portrait of a God very different from the harsh, easily-provoked deity many of us secretly fear He might be.
+
+"Slow to anger" is worth lingering on, especially for anyone who carries quiet fear that they have finally worn out God''s patience. Slow to anger does not mean God is indifferent to sin — Scripture is clear He is not. It means His patience is vast, His willingness to wait for us to turn back is far greater than our willingness to keep testing it. He is not counting down toward some breaking point with you.
+
+"Abounding in love" — the Hebrew word behind this is hesed, a covenant love that is loyal, steadfast, and does not depend on our performance. This is not sentimental affection that rises and falls with our behavior. It is a settled, committed love, the kind a faithful parent has for a child even mid-tantrum, even after the front door has been slammed for the tenth time.
+
+If you have been quietly bracing for God''s anger, let this verse loosen your shoulders today. He is not the impatient, easily-exhausted God your fear has imagined. He is compassionate, gracious, slow to anger, and abounding in a love that has not given up on you and is not about to start now.', 'Mazmur 103 hampir seperti Daud sedang berkhotbah kepada jiwanya sendiri, mengingatkan dirinya siapa Allah yang sesungguhnya sebelum keadaan atau kegagalannya mencoba meyakinkannya sebaliknya: "TUHAN adalah pengasih dan penyayang, panjang sabar dan berlimpah kasih setia." Empat gambaran, disusun bersama, melukiskan potret Allah yang sangat berbeda dari sosok ilahi yang keras dan mudah tersinggung yang diam-diam ditakuti banyak dari kita.
+
+"Panjang sabar" layak direnungkan lebih lama, terutama bagi siapa pun yang diam-diam takut telah akhirnya menghabiskan kesabaran Allah. Panjang sabar bukan berarti Allah acuh terhadap dosa — Alkitab jelas menyatakan Ia tidak demikian. Artinya, kesabaran-Nya sangat luas, kesediaan-Nya menunggu kita berbalik jauh lebih besar daripada kesediaan kita untuk terus mengujinya. Ia tidak sedang menghitung mundur menuju suatu titik batas denganmu.
+
+"Berlimpah kasih setia" — kata Ibrani di baliknya adalah hesed, kasih perjanjian yang setia, teguh, dan tidak bergantung pada kinerja kita. Ini bukan kasih sayang sentimental yang naik turun mengikuti perilaku kita. Ini kasih yang mantap dan berkomitmen, jenis kasih yang dimiliki orang tua yang setia terhadap anaknya bahkan di tengah amukan, bahkan setelah pintu depan dibanting untuk yang kesepuluh kalinya.
+
+Jika engkau selama ini diam-diam bersiap menghadapi kemarahan Allah, biarlah ayat ini melonggarkan bahumu hari ini. Ia bukan Allah yang tidak sabar dan mudah lelah seperti yang dibayangkan ketakutanmu. Ia pengasih, penyayang, panjang sabar, dan berlimpah kasih setia yang belum menyerah atasmu dan tidak akan mulai sekarang.',
+     'God''s patience with you is not running out — His love for you is not a limited resource He is rationing.', 'Kesabaran Allah terhadapmu tidak sedang habis — kasih-Nya bagimu bukan sumber daya terbatas yang sedang Ia jatah-jatahkan.',
+     'Father, forgive me for imagining You as harsher than You are. Thank You for being slow to anger and abounding in love. Teach me to trust Your patience instead of fearing it will run out. Amen.', 'Bapa, ampunilah aku karena membayangkan-Mu lebih keras daripada diri-Mu yang sesungguhnya. Terima kasih karena Engkau panjang sabar dan berlimpah kasih setia. Ajarku mempercayai kesabaran-Mu, bukan takut ia akan habis. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 103:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 103:8', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'As Far as the East Is from the West', 'Sejauh Timur dari Barat',
+     'The psalmist keeps building on the picture he started in verse 8, reaching now for the widest images he can find to describe the size of God''s mercy: "As high as the heavens are above the earth, so great is his love... as far as the east is from the west, so far has he removed our transgressions from us." These are not modest comparisons. They are deliberately, almost extravagantly, immense.
+
+Notice why east and west are chosen rather than north and south. North and south have a fixed midpoint — the poles — but east and west never meet; you can travel east forever and never arrive at west. This is not poetic decoration. It is a precise image of a distance that has no measurable limit. That is how far God has removed our sin from us — not filed away nearby, but placed at an infinite, ever-widening distance.
+
+Many of us carry sin the way we carry old photographs — kept close, pulled out and revisited, examined again and again as though God were doing the same. But this verse insists otherwise: He has removed it, actively and completely, to a distance we cannot even conceptually close. If God has put your sin infinitely far from you, what does it mean that you keep dragging it back?
+
+Consider today whatever guilt you have been holding onto long after God released it. Practice saying, perhaps out loud: as far as the east is from the west — that is how far my sin has been removed. Let that be true not just theologically, but practically, in how you treat yourself today.', 'Pemazmur terus membangun gambaran yang ia mulai di ayat 8, kini meraih gambaran paling luas yang bisa ia temukan untuk menggambarkan besarnya belas kasihan Allah: "Setinggi langit di atas bumi, demikian besarnya kasih setia-Nya... sejauh timur dari barat, demikian dijauhkan-Nya dari pada kita pelanggaran kita." Ini bukan perbandingan yang sederhana. Ini sengaja, bahkan hampir berlebihan, luar biasa besarnya.
+
+Perhatikan mengapa timur dan barat yang dipilih, bukan utara dan selatan. Utara dan selatan memiliki titik tengah yang tetap — kutub-kutubnya — tetapi timur dan barat tidak pernah bertemu; engkau bisa berjalan ke timur selamanya dan tidak akan pernah sampai ke barat. Ini bukan hiasan puitis. Ini gambaran yang presisi tentang jarak yang tidak memiliki batas terukur. Sejauh itulah Allah menjauhkan dosa kita dari kita — bukan disimpan di dekat, melainkan diletakkan pada jarak tak terhingga yang terus melebar.
+
+Banyak dari kita memikul dosa seperti kita memikul foto lama — disimpan dekat, dikeluarkan dan diperiksa lagi, ditinjau berulang kali seolah-olah Allah pun melakukan hal yang sama. Tetapi ayat ini bersikeras sebaliknya: Ia telah menjauhkannya, secara aktif dan sepenuhnya, ke jarak yang bahkan tidak bisa kita bayangkan untuk didekatkan kembali. Jika Allah telah meletakkan dosamu sejauh tak terhingga darimu, apa artinya jika engkau terus menyeretnya kembali?
+
+Renungkanlah hari ini rasa bersalah apa pun yang masih kaupegang lama setelah Allah melepaskannya. Berlatihlah mengucapkan, mungkin dengan suara: sejauh timur dari barat — sejauh itulah dosaku telah dijauhkan. Biarlah itu benar bukan hanya secara teologis, tetapi secara praktis, dalam caramu memperlakukan dirimu hari ini.',
+     'If God has removed your sin to an infinite distance, dragging it back close to you is a battle you don''t need to keep fighting.', 'Jika Allah telah menjauhkan dosamu ke jarak tak terhingga, menyeretnya kembali dekat adalah pertempuran yang tidak perlu terus kaulawan.',
+     'Lord, help me let go of what You have already removed. Thank You for a mercy wide enough to put my sin infinitely far from me. Teach me to stop reaching for it. Amen.', 'Tuhan, tolonglah aku melepaskan apa yang sudah Engkau jauhkan. Terima kasih atas belas kasihan yang cukup luas untuk meletakkan dosaku sejauh tak terhingga dariku. Ajarku berhenti meraihnya kembali. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 103:11-12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 103:11-12', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Cast Into the Depths of the Sea', 'Dilemparkan ke Dasar Laut',
+     'The prophet Micah, writing to a people who had broken covenant with God repeatedly, ends his book not with condemnation but with a question that answers itself: "Who is a God like you, who pardons sin and forgives transgression?" It is less a theological statement than an outburst of wonder — as if Micah, staring at Israel''s long record of failure and God''s persistent mercy, simply cannot help but marvel.
+
+The imagery that follows is vivid: "You will tread our sins underfoot and hurl all our iniquities into the depths of the sea." This is not tidy bookkeeping mercy, a careful erasing of a ledger. It is forceful, almost violent in its finality — sin trampled down, then thrown into the deepest part of the ocean, a place with no lights, no maps, no way back to the surface.
+
+There''s an old rabbinic and later devotional tradition of imagining God posting a sign at the bottom of that sea: "no fishing allowed." Whether or not that''s the intended reading, it captures something true — the sins God forgives are not merely relocated somewhere we might still stumble upon them again. They are gone, buried in a depth we were never meant to go digging in.
+
+What sin have you been quietly fishing for at the bottom of that sea, unwilling to believe it''s really gone? Micah''s wonder can become your own today. Let the question sit with you — "Who is a God like you?" — and let the answer be worship rather than doubt.', 'Nabi Mikha, menulis kepada umat yang berulang kali melanggar perjanjian dengan Allah, mengakhiri kitabnya bukan dengan penghukuman melainkan dengan pertanyaan yang menjawab dirinya sendiri: "Siapakah, ya Allah, yang sama seperti Engkau, yang mengampuni kesalahan dan yang membiarkan saja pelanggaran?" Ini lebih merupakan luapan kekaguman daripada pernyataan teologis — seolah Mikha, menatap rekam jejak panjang kegagalan Israel dan belas kasihan Allah yang terus-menerus, tak dapat menahan diri untuk kagum.
+
+Gambaran yang menyusul begitu hidup: "Engkau akan menginjak-injak kedurjanaan kami. Engkau akan melemparkan segala dosa kami ke tempat tidak terduga dalamnya laut." Ini bukan belas kasihan pembukuan yang rapi, sekadar menghapus catatan dengan hati-hati. Ini penuh kekuatan, hampir dahsyat dalam ketegasannya — dosa diinjak-injak, lalu dilemparkan ke bagian laut yang paling dalam, tempat tanpa cahaya, tanpa peta, tanpa jalan kembali ke permukaan.
+
+Ada tradisi rabinik kuno dan tradisi devosional kemudian yang membayangkan Allah memasang tanda di dasar laut itu: "dilarang memancing." Terlepas dari apakah itu maksud sebenarnya, gambaran itu menangkap sesuatu yang benar — dosa yang Allah ampuni bukan sekadar dipindahkan ke tempat yang mungkin masih bisa kita temukan lagi. Dosa itu lenyap, terkubur di kedalaman yang tidak pernah dimaksudkan untuk kita gali kembali.
+
+Dosa apa yang selama ini diam-diam kaupancing dari dasar laut itu, tidak mau percaya bahwa itu sungguh lenyap? Kekaguman Mikha bisa menjadi kekagumanmu sendiri hari ini. Biarkan pertanyaan itu tinggal bersamamu — "Siapakah Allah yang sama seperti Engkau?" — dan biarlah jawabannya adalah penyembahan, bukan keraguan.',
+     'God does not just forgive sin — He removes it so thoroughly that fishing for it again is a choice, not a necessity.', 'Allah tidak sekadar mengampuni dosa — Ia menyingkirkannya begitu tuntas sehingga memancingnya kembali adalah pilihan, bukan keharusan.',
+     'God of mercy, there is no one like You. Help me leave what You have buried in the sea, and receive the freedom of a sin truly forgiven. Amen.', 'Allah yang penuh belas kasihan, tidak ada yang seperti Engkau. Tolonglah aku meninggalkan apa yang telah Engkau kuburkan di dasar laut, dan menerima kebebasan dari dosa yang sungguh diampuni. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Micah 7:18-19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mikha 7:18-19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Rich in Mercy', 'Kaya dengan Rahmat',
+     'Paul''s letter to the Ephesians pauses, mid-argument, for one of the most beautiful phrases in the New Testament: "But because of his great love for us, God, who is rich in mercy, made us alive with Christ even when we were dead in transgressions." Notice the timing embedded in that sentence — God acted while we were dead, not after we had cleaned ourselves up enough to deserve rescue.
+
+"Rich in mercy" is an economic image, and it''s worth taking seriously. A person who is rich does not run out easily; they have more than enough reserve for whatever is asked of them. God''s mercy is described the same way — not scarce, not rationed, not nearly exhausted by the time it reaches you. There is abundance behind every act of forgiveness He extends, a well that does not run dry no matter how many times we come back to it.
+
+"Made us alive... even when we were dead" is the heart of grace. Dead people cannot contribute to their own resurrection; they can only receive it. This is not a partnership where God does most of the work and we supply a little effort to tip the scales. It is entirely His initiative, His mercy, His life breathed into what had no life of its own to offer.
+
+"It is by grace you have been saved" — the phrase Paul adds almost as an aside is really the whole point. If you have been waiting to feel worthy enough before accepting God''s mercy, this verse removes that requirement entirely. You were dead when He acted. You do not need to be more alive before you receive Him now.', 'Surat Paulus kepada jemaat Efesus berhenti sejenak, di tengah argumennya, untuk salah satu ungkapan paling indah dalam Perjanjian Baru: "Tetapi Allah yang kaya dengan rahmat, oleh karena kasih-Nya yang besar, yang dilimpahkan-Nya kepada kita, telah menghidupkan kita bersama-sama dengan Kristus, sekalipun kita telah mati oleh kesalahan-kesalahan kita." Perhatikan waktu yang tertanam dalam kalimat itu — Allah bertindak ketika kita masih mati, bukan setelah kita cukup membersihkan diri untuk pantas diselamatkan.
+
+"Kaya dengan rahmat" adalah gambaran ekonomi, dan layak diambil serius. Orang yang kaya tidak mudah kehabisan; mereka memiliki lebih dari cukup cadangan untuk apa pun yang diminta dari mereka. Belas kasihan Allah digambarkan dengan cara yang sama — tidak langka, tidak dijatah, tidak nyaris habis pada saat mencapaimu. Ada kelimpahan di balik setiap tindakan pengampunan yang Ia berikan, sebuah sumur yang tidak pernah kering betapapun sering kita kembali kepadanya.
+
+"Telah menghidupkan kita... sekalipun kita telah mati" adalah inti dari kasih karunia. Orang yang mati tidak bisa berkontribusi pada kebangkitannya sendiri; mereka hanya bisa menerimanya. Ini bukan kemitraan di mana Allah melakukan sebagian besar pekerjaan dan kita menyumbang sedikit usaha untuk menggenapi timbangan. Ini sepenuhnya prakarsa-Nya, belas kasihan-Nya, hidup-Nya yang dihembuskan ke dalam sesuatu yang tidak memiliki hidup apa pun untuk ditawarkan sendiri.
+
+"Oleh kasih karunia kamu diselamatkan" — frasa yang ditambahkan Paulus hampir sebagai sisipan sebenarnya adalah inti dari segalanya. Jika engkau selama ini menunggu merasa cukup layak sebelum menerima belas kasihan Allah, ayat ini sepenuhnya menghapus syarat itu. Engkau masih mati ketika Ia bertindak. Engkau tidak perlu menjadi lebih hidup lebih dulu sebelum menerima-Nya sekarang.',
+     'God''s rescue was never a reward for the living — it was mercy given to the dead, which means it can be given to you exactly as you are.', 'Pertolongan Allah tidak pernah menjadi hadiah bagi yang hidup — itu adalah belas kasihan yang diberikan kepada yang mati, artinya itu bisa diberikan kepadamu persis seperti dirimu sekarang.',
+     'God, rich in mercy, thank You for making me alive when I had nothing to offer. Help me stop trying to earn what You have already freely given. Amen.', 'Allah yang kaya dengan rahmat, terima kasih karena Engkau menghidupkanku ketika aku tidak punya apa-apa untuk ditawarkan. Tolonglah aku berhenti mencoba mendapatkan apa yang sudah Engkau berikan dengan cuma-cuma. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 2:4-5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 2:4-5', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'The Father Who Runs', 'Bapa yang Berlari',
+     'The parable of the prodigal son turns on one small, astonishing detail easy to rush past: while the son is still far off, rehearsing his apology, "his father saw him and was filled with compassion for him; he ran to his son." In that culture, an older, respected man did not run — running meant hiking up your robes and exposing your legs, an undignified thing for a patriarch to do in public. The father didn''t care.
+
+He ran before the son finished his speech, before any groveling, before the apology was even fully spoken. Mercy, in this story, does not wait to be earned through a sufficiently humble confession. It runs out the door the moment repentance turns us toward home, meeting us while we are still a long way off, still unsure of our welcome, still rehearsing words we won''t even get to finish.
+
+Romans 5:8 makes the same point from a different angle: "While we were still sinners, Christ died for us." Not after we improved. Not once we had proven ourselves. God''s love for us was demonstrated at our lowest point, not our best one. This is the consistent shape of mercy throughout Scripture — it always moves first, always runs toward us, never waits at the doorway with its arms crossed until we''ve proven we deserve to come in.
+
+Wherever you have been slowly making your way home — unsure if you''ll be welcomed, rehearsing an apology you fear won''t be enough — this is the God who is already running toward you. You don''t need the perfect speech. You only need to turn, and He will close the distance Himself.', 'Perumpamaan anak yang hilang berputar pada satu detail kecil yang mengagumkan dan mudah terlewat: ketika sang anak masih jauh, sedang menghafalkan permintaan maafnya, "ayahnya telah melihatnya, lalu tergeraklah hatinya oleh belas kasihan, ia berlari mendapatkan anaknya." Dalam budaya itu, seorang pria yang lebih tua dan dihormati tidak berlari — berlari berarti menyingsingkan jubah dan memperlihatkan kaki, hal yang tidak pantas bagi seorang bapa keluarga untuk dilakukan di depan umum. Sang ayah tidak peduli.
+
+Ia berlari sebelum anaknya menyelesaikan pidatonya, sebelum ada sujud memohon, bahkan sebelum permintaan maaf sepenuhnya terucap. Belas kasihan, dalam kisah ini, tidak menunggu untuk didapatkan melalui pengakuan yang cukup rendah hati. Ia berlari keluar pintu pada saat pertobatan mengarahkan kita pulang, menemui kita ketika kita masih jauh, masih tidak yakin akan disambut, masih menghafalkan kata-kata yang bahkan tidak akan sempat selesai kita ucapkan.
+
+Roma 5:8 menyampaikan poin yang sama dari sudut berbeda: "Ketika kita masih berdosa, Kristus telah mati untuk kita." Bukan setelah kita memperbaiki diri. Bukan setelah kita membuktikan diri. Kasih Allah kepada kita ditunjukkan pada titik terendah kita, bukan titik terbaik kita. Inilah bentuk belas kasihan yang konsisten sepanjang Alkitab — ia selalu bergerak lebih dulu, selalu berlari menuju kita, tidak pernah menunggu di ambang pintu dengan tangan bersedekap sampai kita membuktikan diri layak untuk masuk.
+
+Di mana pun engkau selama ini perlahan sedang menempuh jalan pulang — tidak yakin akan disambut, menghafalkan permintaan maaf yang kautakutkan tidak akan cukup — inilah Allah yang sudah berlari menujumu. Engkau tidak butuh pidato yang sempurna. Engkau hanya perlu berbalik, dan Ia sendiri yang akan menutup jaraknya.',
+     'Mercy does not wait at the door for a perfect apology — it runs to meet you while you are still finding your way home.', 'Belas kasihan tidak menunggu di pintu untuk permintaan maaf yang sempurna — ia berlari menemuimu selagi engkau masih mencari jalan pulang.',
+     'Father, thank You for running toward me before I even finish my confession. I turn toward home today — meet me on the way, as You always have. Amen.', 'Bapa, terima kasih karena Engkau berlari menujuku bahkan sebelum aku selesai mengaku. Aku berbalik menuju rumah hari ini — temuilah aku di jalan, seperti yang selalu Engkau lakukan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 15:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 5:8', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 15:20', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 5:8', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Resting in His Faithfulness  (Love of God, 3 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Resting in His Faithfulness';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Resting in His Faithfulness', 'Beristirahat dalam Kesetiaan-Nya',
+     'Learning to lean on God when the ground feels unsteady', 'Belajar bersandar pada Allah ketika pijakan terasa goyah',
+     'A short plan for anyone whose heart is anxious, walking through three days of surrender — trusting God''s understanding over our own, receiving His strength in fear, and resting in His good plans for our future.', 'Sebuah rencana singkat bagi siapa pun yang hatinya cemas, menelusuri tiga hari penyerahan diri — mempercayai pengertian Allah lebih dari pengertian sendiri, menerima kekuatan-Nya dalam ketakutan, dan beristirahat dalam rencana-Nya yang baik bagi masa depan kita.', 3)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Trust Over Understanding', 'Percaya Melebihi Pengertian',
+     'There is a particular kind of tiredness that comes from trying to figure everything out on our own — turning a decision over and over in our minds, weighing every possible outcome, and still finding no peace at the end of it. Many of us know this feeling well: the exhaustion of carrying a weight that was never meant to be carried alone. Scripture meets us exactly here, not with a plan we must decode ourselves, but with an invitation to trust a Person.
+
+Proverbs 3:5-6 does not ask us to switch off our minds. It asks us to stop leaning our full weight on them. There is a difference between thinking carefully and trusting only ourselves; the first is wisdom, the second is a quiet form of pride that leaves us exhausted. When we submit our ways to God — our plans, our timing, our fears — we are not surrendering our intelligence. We are simply admitting that His view of our life is wider than ours will ever be.
+
+Psalm 56:3 is refreshingly honest: "When I am afraid, I put my trust in you." Notice it does not say "when I am afraid, I stop being afraid." Trust is not the absence of fear; it is what we do with our fear. David wrote this psalm while running from enemies who wanted him dead, and still he chose, in that fear, to turn toward God rather than away from Him. That choice is available to us too, every single day.
+
+Perhaps today you are holding a decision, a diagnosis, a relationship, or simply an unclear tomorrow. You do not need to have it all figured out before you come to God. Bring Him your uncertainty exactly as it is. Ask Him to straighten the path you cannot yet see, and trust that the God who made the road is also walking it with you.', 'Ada semacam kelelahan khusus yang muncul ketika kita mencoba memikirkan segala sesuatu sendirian — membolak-balik sebuah keputusan dalam pikiran, menimbang setiap kemungkinan hasil, namun tetap tidak menemukan ketenangan pada akhirnya. Banyak dari kita mengenal perasaan ini dengan baik: lelah karena memikul beban yang sebenarnya tidak pernah dimaksudkan untuk dipikul sendiri. Firman Tuhan menemui kita tepat di titik ini, bukan dengan rencana yang harus kita pecahkan sendiri, melainkan dengan undangan untuk mempercayai sebuah Pribadi.
+
+Amsal 3:5-6 tidak meminta kita mematikan akal budi kita. Ayat ini meminta kita berhenti menaruh seluruh berat kita di atasnya. Ada perbedaan antara berpikir dengan cermat dan hanya mempercayai diri sendiri; yang pertama adalah hikmat, yang kedua adalah bentuk kesombongan yang halus dan melelahkan. Ketika kita mengakui Allah dalam segala jalan kita — rencana kita, waktu kita, ketakutan kita — kita tidak sedang menyerahkan akal budi kita. Kita hanya mengakui bahwa pandangan Allah atas hidup kita jauh lebih luas daripada pandangan kita sendiri.
+
+Mazmur 56:3 begitu jujur: "Pada waktu aku takut, aku ini percaya kepada-Mu." Perhatikan, ayat ini tidak berkata "pada waktu aku takut, aku berhenti takut." Percaya bukanlah ketiadaan rasa takut; percaya adalah apa yang kita lakukan dengan rasa takut itu. Daud menulis mazmur ini ketika ia sedang dikejar musuh yang ingin membunuhnya, namun di tengah ketakutan itu ia memilih berpaling kepada Allah, bukan menjauh dari-Nya. Pilihan itu tersedia bagi kita juga, setiap hari.
+
+Barangkali hari ini engkau sedang memikul sebuah keputusan, diagnosis, hubungan, atau sekadar hari esok yang belum jelas. Engkau tidak perlu memahami semuanya lebih dulu sebelum datang kepada Allah. Bawalah ketidakpastianmu apa adanya. Mintalah Dia meluruskan jalan yang belum bisa kaulihat, dan percayalah bahwa Allah yang membuat jalan itu juga sedang berjalan bersamamu.',
+     'Trust is not the absence of fear — it is choosing to turn toward God in the middle of it, again and again.', 'Percaya bukan berarti tidak ada rasa takut — melainkan memilih berpaling kepada Allah di tengah rasa takut itu, berulang kali.',
+     'Lord, I bring You my need to control and understand everything. Teach me to lean on You instead of my own understanding. Straighten the path I cannot see, and hold my fear gently until it becomes trust. Amen.', 'Tuhan, aku membawa kepada-Mu keinginanku untuk mengendalikan dan memahami segalanya. Ajarku bersandar kepada-Mu, bukan pada pengertianku sendiri. Luruskanlah jalan yang belum bisa kulihat, dan peganglah ketakutanku dengan lembut hingga berubah menjadi percaya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 56:3', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 56:3', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Held When You Are Afraid', 'Dipegang Saat Engkau Takut',
+     'Fear rarely announces itself politely. It creeps in at two in the morning, in a waiting room, in the silence after bad news, in the ordinary Tuesday when everything suddenly feels too heavy. God''s word to Isaiah''s exiled people was not a promise that hard things would disappear, but a promise of presence in the middle of them: "Do not fear, for I am with you."
+
+Notice the order of the verse. God does not first list reasons the fear is unreasonable. He simply says: I am with you, I am your God. The comfort is not a technique for managing anxiety; it is a Person. Whatever we are facing, we are not facing it as isolated individuals gathering our own strength from nothing — we are facing it as people who belong to a God who has already promised His presence before we even asked for it.
+
+The verse continues with three strong verbs: strengthen, help, uphold. God does not simply stand near us like a spectator; He acts on our behalf. He strengthens what is weak in us, helps where we cannot help ourselves, and upholds us with His own right hand when our legs give out. This is not a distant deity watching from far away — this is a God who gets underneath the weight with us.
+
+If fear has been your companion lately, let this verse become a place to stand rather than a sentence to memorize. Say it slowly, perhaps even aloud: I am with you, I am your God. Let those words settle into the exact spot where your anxiety lives, and trust that His hand is steady even when yours is shaking.', 'Rasa takut jarang datang dengan sopan. Ia menyelinap masuk pada pukul dua dini hari, di ruang tunggu, dalam keheningan setelah kabar buruk, atau pada hari Selasa biasa yang tiba-tiba terasa terlalu berat. Firman Allah kepada umat Israel yang terbuang bukanlah janji bahwa hal-hal sulit akan lenyap, melainkan janji akan kehadiran-Nya di tengah kesulitan itu: "Janganlah takut, sebab Aku menyertai engkau."
+
+Perhatikan urutan ayat ini. Allah tidak lebih dulu memberi daftar alasan mengapa ketakutan itu tidak masuk akal. Ia hanya berkata: Aku menyertai engkau, Akulah Allahmu. Penghiburan itu bukan sebuah teknik mengelola kecemasan; itu adalah sebuah Pribadi. Apa pun yang sedang kita hadapi, kita tidak menghadapinya sebagai individu yang berjuang mengumpulkan kekuatan sendiri dari kehampaan — kita menghadapinya sebagai orang-orang milik Allah yang telah menjanjikan kehadiran-Nya bahkan sebelum kita memintanya.
+
+Ayat ini dilanjutkan dengan tiga kata kerja yang kuat: meneguhkan, menolong, memegang. Allah tidak sekadar berdiri di dekat kita seperti penonton; Ia bertindak bagi kita. Ia meneguhkan apa yang lemah dalam diri kita, menolong di titik kita tidak mampu menolong diri sendiri, dan memegang kita dengan tangan kanan-Nya ketika lutut kita goyah. Ini bukan pribadi ilahi yang jauh dan hanya menyaksikan — ini Allah yang turut menopang beban itu bersama kita.
+
+Jika belakangan ini ketakutan menjadi teman dekatmu, biarlah ayat ini menjadi tempat berpijak, bukan sekadar kalimat yang dihafal. Ucapkanlah perlahan, bahkan mungkin dengan suara: Aku menyertai engkau, Akulah Allahmu. Biarkan kata-kata itu meresap tepat di tempat kecemasanmu bersarang, dan percayalah bahwa tangan-Nya tetap teguh sekalipun tanganmu gemetar.',
+     'God''s presence doesn''t remove the storm, but it does mean you never stand in it alone.', 'Kehadiran Allah tidak menghilangkan badai, tetapi memastikan engkau tidak pernah berdiri di dalamnya sendirian.',
+     'Father, thank You that You are near even when I cannot feel it. Strengthen what is weak in me today, help me where I cannot help myself, and hold me steady with Your hand. Amen.', 'Bapa, terima kasih karena Engkau dekat sekalipun aku tidak merasakannya. Teguhkanlah apa yang lemah dalam diriku hari ini, tolonglah aku di titik aku tak mampu menolong diriku sendiri, dan peganglah aku teguh dengan tangan-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 41:10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 41:10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'A Future Held in His Hands', 'Masa Depan dalam Genggaman-Nya',
+     'Jeremiah 29:11 is one of the most quoted verses in Scripture, and also one of the most misunderstood outside of its context. God spoke these words to a people in exile — displaced, grieving, far from home, with decades of hard waiting still ahead of them. This was not a promise of an easy, comfortable life. It was a promise that even in exile, God''s plans for His people had not been abandoned.
+
+That context actually makes the promise more useful to us, not less. Most of us are not living the life we imagined; some part of us feels like it is in exile too — waiting, displaced, unsure what comes next. Into that very real place, God says His plans are for welfare, not calamity; for hope and a future, not despair. He is not promising the absence of hardship. He is promising that hardship does not get the last word over our story.
+
+Romans 8:28 widens the promise further. Paul does not say all things are good — plenty of what happens to us is genuinely painful, even evil. What he says is that God works in all things for the good of those who love Him. There is a difference between calling suffering good and trusting that God can bring good even out of suffering He did not cause. That is a much sturdier hope, one that survives contact with real life.
+
+Maybe your future feels uncertain right now — a job, a relationship, your health, your calling. You do not need to know the ending today. You only need to trust the One who holds it. Let these two verses sit together in your heart this week: God has plans for your good, and He is at work even in what feels unfinished.', 'Yeremia 29:11 adalah salah satu ayat yang paling sering dikutip dalam Alkitab, dan juga salah satu yang paling sering disalahpahami di luar konteksnya. Allah mengucapkan kata-kata ini kepada umat yang sedang dalam pembuangan — tercerabut dari tanah air, berduka, jauh dari rumah, dengan puluhan tahun penantian berat masih di depan mereka. Ini bukan janji hidup yang mudah dan nyaman. Ini janji bahwa bahkan di tengah pembuangan, rencana Allah bagi umat-Nya belum ditinggalkan.
+
+Konteks itu justru membuat janji ini lebih berguna bagi kita, bukan sebaliknya. Kebanyakan dari kita tidak sedang menjalani hidup seperti yang kita bayangkan; sebagian dari diri kita pun merasa seperti sedang dalam pembuangan — menunggu, tercerabut, tidak yakin apa yang akan terjadi selanjutnya. Ke dalam tempat yang sangat nyata itulah Allah berkata bahwa rancangan-Nya adalah rancangan damai sejahtera, bukan kecelakaan; harapan dan hari depan, bukan keputusasaan. Ia tidak menjanjikan ketiadaan kesulitan. Ia menjanjikan bahwa kesulitan tidak akan menjadi kata akhir atas kisah hidup kita.
+
+Roma 8:28 memperluas janji ini lebih jauh. Paulus tidak berkata bahwa segala sesuatu itu baik — banyak hal yang terjadi pada kita sungguh menyakitkan, bahkan jahat. Yang ia katakan adalah bahwa Allah turut bekerja dalam segala sesuatu untuk mendatangkan kebaikan bagi mereka yang mengasihi Dia. Ada perbedaan antara menyebut penderitaan itu baik, dan mempercayai bahwa Allah dapat mendatangkan kebaikan bahkan dari penderitaan yang bukan Ia sebabkan. Itulah harapan yang jauh lebih kokoh, yang tetap bertahan ketika berhadapan dengan kenyataan hidup.
+
+Barangkali masa depanmu terasa tidak pasti sekarang — pekerjaan, hubungan, kesehatan, atau panggilan hidupmu. Engkau tidak perlu tahu akhir ceritanya hari ini. Engkau hanya perlu percaya kepada Dia yang memegangnya. Biarkan kedua ayat ini bersemayam dalam hatimu minggu ini: Allah memiliki rencana bagi kebaikanmu, dan Ia sedang bekerja bahkan dalam hal yang terasa belum selesai.',
+     'God''s plans for you did not end where your circumstances feel stuck — He is still writing, and He is still good.', 'Rencana Allah bagimu tidak berakhir di titik keadaanmu terasa buntu — Ia masih menulis kisahmu, dan Ia tetap baik.',
+     'Lord, when my present feels like exile, remind me that You have not abandoned Your plans for me. Work Your good even through what I don''t understand, and give me patience to trust Your timing. Amen.', 'Tuhan, ketika keadaanku sekarang terasa seperti pembuangan, ingatkanlah aku bahwa Engkau belum meninggalkan rencana-Mu bagiku. Kerjakanlah kebaikan-Mu bahkan melalui hal yang tidak kumengerti, dan berilah aku kesabaran untuk mempercayai waktu-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Jeremiah 29:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:28', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yeremia 29:11', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:28', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: The Quiet Room  (Love of God, 4 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Love of God' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'The Quiet Room';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'The Quiet Room', 'Ruang yang Sunyi',
+     'A four-day journey into prayer as friendship with God', 'Perjalanan empat hari menuju doa sebagai persahabatan dengan Allah',
+     'This plan walks through four facets of a praying life — private communion, honest surrender, constant conversation, and prayer offered together with others — helping you build a rhythm of talking and listening to God.', 'Rencana ini menelusuri empat sisi dari kehidupan doa — persekutuan pribadi, penyerahan yang jujur, percakapan yang terus-menerus, dan doa yang dinaikkan bersama orang lain — membantumu membangun ritme berbicara dan mendengarkan Allah.', 4)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Secret Place', 'Tempat yang Tersembunyi',
+     'Jesus gave surprisingly little instruction on the technique of prayer, but He was specific about one thing: go somewhere private. "Go into your room, close the door." In a culture — His and ours — where public displays of piety could earn admiration, Jesus pointed His followers toward a room nobody else would see. Prayer, He seemed to be saying, is first and foremost about being with God, not about being watched.
+
+There is something freeing in this. So often our prayer lives are shadowed by comparison — a nagging sense that other people pray more eloquently, more consistently, more spiritually than we do. Jesus quietly removes the audience. In the secret place there is no one to impress, which means there is finally room to be honest. You do not need better words in your closed room. You only need to show up.
+
+Notice too what Jesus promises: "your Father, who sees what is done in secret, will reward you." God is not indifferent to the prayers no one else hears. The tears cried alone, the sentence prayed under your breath on the way to work, the wordless sigh before bed — none of it is wasted or unseen. A Father who sees in secret is a Father who is paying far closer attention than we usually assume.
+
+Consider today where your "room" might be — an actual closed door, a car before you start the engine, a walk before the household wakes. It does not need to be long or eloquent. It needs only to be honest, and it needs to be Him you are speaking to, not an audience of your own imagining.', 'Yesus memberikan sangat sedikit petunjuk tentang teknik berdoa, tetapi Ia sangat spesifik tentang satu hal: pergilah ke tempat yang tersembunyi. "Masuklah ke dalam kamarmu, tutuplah pintu." Dalam budaya-Nya — dan budaya kita — di mana kesalehan yang dipertontonkan bisa mendatangkan pujian, Yesus justru mengarahkan murid-murid-Nya ke sebuah ruang yang tidak dilihat siapa pun. Doa, tampaknya Ia ingin katakan, pertama-tama adalah tentang bersama Allah, bukan tentang ditonton.
+
+Ada sesuatu yang membebaskan dari hal ini. Begitu sering kehidupan doa kita dibayangi oleh perbandingan — perasaan mengganjal bahwa orang lain berdoa lebih fasih, lebih rutin, lebih rohani dari kita. Yesus dengan tenang menghilangkan penonton itu. Di tempat tersembunyi tidak ada orang untuk dikesankan, yang berarti akhirnya ada ruang untuk jujur. Engkau tidak butuh kata-kata yang lebih indah di kamarmu yang tertutup. Engkau hanya perlu hadir.
+
+Perhatikan juga apa yang Yesus janjikan: "Bapamu yang melihat yang tersembunyi akan membalasnya kepadamu." Allah tidak acuh terhadap doa-doa yang tidak didengar siapa pun. Air mata yang ditumpahkan sendirian, kalimat yang didoakan pelan-pelan dalam perjalanan kerja, helaan napas tanpa kata sebelum tidur — semuanya tidak sia-sia dan tidak luput dari perhatian. Bapa yang melihat yang tersembunyi adalah Bapa yang jauh lebih memperhatikan daripada yang biasa kita duga.
+
+Pikirkanlah hari ini di mana "kamarmu" berada — pintu yang benar-benar tertutup, mobil sebelum engkau menyalakan mesin, jalan kaki sebelum rumah bangun. Doa itu tidak perlu panjang atau fasih. Ia hanya perlu jujur, dan Dia-lah yang perlu kauajak bicara, bukan penonton bayangan yang kaubuat sendiri.',
+     'Prayer is not a performance for an audience — it is an honest conversation with a Father who already sees you fully.', 'Doa bukanlah pertunjukan untuk penonton — doa adalah percakapan jujur dengan Bapa yang sudah melihatmu secara utuh.',
+     'Father, teach me to find You in the quiet places. Free me from performing my faith for others, and meet me honestly when I close the door. Amen.', 'Bapa, ajarku menemukan-Mu di tempat yang sunyi. Bebaskanlah aku dari kebiasaan mempertontonkan imanku bagi orang lain, dan temuilah aku dengan jujur ketika aku menutup pintu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 6:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 6:6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Anxious to At Peace', 'Dari Cemas Menjadi Damai',
+     'Anxiety has a way of narrowing our focus until the worry fills the whole room of our mind. Paul, writing this letter from prison, had every earthly reason to be consumed by anxiety about his future. And yet he tells the Philippians — and us — "do not be anxious about anything." Not because anxiety is shameful, but because there is somewhere better to put it.
+
+The instruction is not simply "stop worrying," which rarely works for anyone. It is "in every situation, by prayer and petition, with thanksgiving, present your requests to God." Paul gives us an action, not just a prohibition. Anxiety left alone in our minds grows; anxiety spoken honestly to God becomes a request, handed to Someone capable of carrying it. The thanksgiving matters too — it reminds us, even mid-worry, that we are not without help.
+
+What follows is one of Scripture''s most tender promises: "the peace of God, which transcends all understanding, will guard your hearts and your minds." Notice this peace is not necessarily the peace of a resolved problem — Paul was still in prison when he wrote this. It is a peace that stands guard over us before the circumstances change, sometimes long before. It does not always make sense from the outside. It simply holds.
+
+What request have you been carrying silently, turning it over in your mind instead of placing it in prayer? Try naming it plainly to God today — not polished, just honest — and add one thing you are thankful for even now. Let this be the exchange: your anxiety handed over, His peace received in return.', 'Kecemasan memiliki cara untuk mempersempit fokus kita hingga kekhawatiran memenuhi seluruh ruang pikiran. Paulus, menulis surat ini dari penjara, memiliki setiap alasan duniawi untuk dikuasai kecemasan tentang masa depannya. Namun ia berkata kepada jemaat Filipi — dan kepada kita — "Janganlah hendaknya kamu kuatir tentang apapun juga." Bukan karena kecemasan itu memalukan, melainkan karena ada tempat yang lebih baik untuk meletakkannya.
+
+Perintah ini bukan sekadar "berhenti khawatir," yang jarang berhasil bagi siapa pun. Perintahnya adalah "nyatakanlah dalam segala hal keinginanmu kepada Allah dalam doa dan permohonan dengan ucapan syukur." Paulus memberi kita sebuah tindakan, bukan sekadar larangan. Kecemasan yang dibiarkan sendirian dalam pikiran akan membesar; kecemasan yang diucapkan dengan jujur kepada Allah berubah menjadi permohonan, diserahkan kepada Pribadi yang sanggup memikulnya. Ucapan syukur juga penting — ia mengingatkan kita, bahkan di tengah kekhawatiran, bahwa kita tidak sendirian tanpa pertolongan.
+
+Yang menyusul kemudian adalah salah satu janji paling lembut dalam Alkitab: "damai sejahtera Allah, yang melampaui segala akal, akan memelihara hati dan pikiranmu." Perhatikan, damai sejahtera ini belum tentu damai sejahtera karena masalah sudah selesai — Paulus masih di penjara ketika menulis ini. Ini adalah damai sejahtera yang berjaga atas kita sebelum keadaan berubah, kadang jauh sebelum itu. Damai ini tidak selalu masuk akal dari luar. Ia hanya menopang.
+
+Permohonan apa yang selama ini kaupendam sendiri, kaubolak-balik dalam pikiran alih-alih kauletakkan dalam doa? Cobalah menyebutkannya secara terus terang kepada Allah hari ini — tidak perlu rapi, cukup jujur — dan tambahkan satu hal yang kausyukuri bahkan sekarang. Biarlah ini menjadi pertukarannya: kecemasanmu diserahkan, damai sejahtera-Nya diterima sebagai gantinya.',
+     'Peace is not the reward for a solved problem — it is God''s guard posted over your heart while the problem is still unfolding.', 'Damai sejahtera bukan hadiah untuk masalah yang sudah selesai — itu adalah penjagaan Allah atas hatimu selagi masalah itu masih berlangsung.',
+     'Lord, I hand You what I have been carrying alone. Thank You for hearing me. Guard my heart and mind with a peace I cannot manufacture myself. Amen.', 'Tuhan, kuserahkan kepada-Mu apa yang selama ini kupikul sendirian. Terima kasih karena Engkau mendengarku. Jagalah hati dan pikiranku dengan damai sejahtera yang tidak bisa kuciptakan sendiri. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 4:6-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 4:6-7', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Praying Without Ceasing', 'Berdoa Tanpa Berkesudahan',
+     '"Pray continually" sounds, at first, like an impossible command — how could anyone pray every waking moment while also working, cooking, driving, raising children? But Paul is not asking us to fold our hands nonstop. He is describing a posture of ongoing awareness, a heart kept open toward God through the whole shape of an ordinary day, not just during set-apart moments.
+
+Think of it less like a single long prayer and more like an open phone line kept on in the background — sometimes silent, sometimes a quick word, always available. A prayer while washing dishes. A thank-you noticed in traffic. A short "help me" before a hard conversation. This kind of praying without ceasing does not require perfect focus; it requires a habit of returning, again and again, to the God who is already there.
+
+Psalm 46:10 offers the other half of this rhythm: "Be still, and know that I am God." Constant conversation with God needs moments of stillness too, or it can become one-sided noise. Stillness is not empty — it is where we finally stop talking long enough to remember who we are talking to. In a world that rewards constant motion, choosing stillness, even for a few minutes, is itself an act of trust.
+
+Try weaving both today: a running conversation with God through your ordinary tasks, and a few deliberate minutes of stillness where you say nothing at all. Let the noise settle. Let Him be God, and let yourself simply be with Him.', '"Tetaplah berdoa" terdengar, pada awalnya, seperti perintah yang mustahil — bagaimana mungkin seseorang berdoa setiap saat sambil bekerja, memasak, menyetir, membesarkan anak? Tetapi Paulus tidak meminta kita melipat tangan tanpa henti. Ia menggambarkan sebuah sikap hati yang terus terjaga, hati yang tetap terbuka kepada Allah sepanjang bentuk hari yang biasa, bukan hanya pada saat-saat yang disisihkan khusus.
+
+Bayangkan ini bukan seperti satu doa panjang yang tunggal, melainkan seperti saluran telepon yang tetap terbuka di latar belakang — kadang sunyi, kadang berisi sepatah kata cepat, selalu tersedia. Doa sambil mencuci piring. Ucapan syukur yang teringat saat macet. "Tolonglah aku" yang singkat sebelum percakapan yang berat. Doa yang tak berkesudahan seperti ini tidak menuntut konsentrasi sempurna; ia menuntut kebiasaan untuk kembali, berulang kali, kepada Allah yang sudah ada di sana.
+
+Mazmur 46:10 menawarkan sisi lain dari ritme ini: "Diamlah, dan ketahuilah, bahwa Akulah Allah!" Percakapan yang terus-menerus dengan Allah juga membutuhkan saat-saat diam, atau ia bisa berubah menjadi kebisingan sepihak. Diam bukan berarti kosong — itulah saat kita akhirnya berhenti berbicara cukup lama untuk mengingat kepada siapa kita berbicara. Di dunia yang menghargai gerak tanpa henti, memilih diam, bahkan hanya beberapa menit, adalah tindakan percaya itu sendiri.
+
+Cobalah merajut keduanya hari ini: percakapan yang mengalir dengan Allah sepanjang tugas-tugas biasamu, dan beberapa menit diam yang disengaja di mana engkau tidak berkata apa-apa. Biarkan kebisingan mereda. Biarkan Dia menjadi Allah, dan biarkan dirimu sekadar bersama-Nya.',
+     'A praying life is not one long unbroken sentence to God — it is a habit of returning to Him all day long.', 'Hidup yang berdoa bukanlah satu kalimat panjang tanpa jeda kepada Allah — itu adalah kebiasaan untuk terus kembali kepada-Nya sepanjang hari.',
+     'Lord, teach me to keep my heart open to You through the ordinary hours of today. And in the stillness, quiet my noise so I can simply know that You are God. Amen.', 'Tuhan, ajarku menjaga hatiku tetap terbuka kepada-Mu sepanjang jam-jam biasa hari ini. Dan dalam keheningan, tenangkanlah kebisinganku agar aku bisa sekadar mengetahui bahwa Engkaulah Allah. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Thessalonians 5:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 46:10', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Tesalonika 5:17', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 46:10', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'The Power of Praying Together', 'Kuasa Berdoa Bersama',
+     'There is a certain vulnerability in asking someone else to pray for you. It means admitting you cannot carry something alone, that your own prayers, however sincere, feel insufficient for the weight of what you are facing. James writes plainly: "confess your sins to each other and pray for each other so that you may be healed. The prayer of a righteous person is powerful and effective."
+
+Notice James pairs confession with prayer. There is something healing about being known, not just prayed for from a polite distance but prayed for by someone who understands, at least in part, what you are actually carrying. Community was never meant to be a place where we perform having it together. It was meant to be a place where our real burdens are shared and carried by more than one set of hands.
+
+This is part of why the Church has always gathered to pray together — in small groups, in parishes, at the foot of the altar. There is a strength in shared prayer that solitary prayer, however faithful, does not fully replace. When two or more voices lift the same need before God, something in us settles: we are not facing this alone, and neither is our prayer.
+
+Who in your life could you ask to pray for you this week — honestly, specifically, without polishing the request first? And who might need you to offer the same? Praying for one another is one of the simplest and most powerful gifts we can give — let today be the day you either ask or offer it.', 'Ada semacam kerentanan tertentu ketika kita meminta orang lain mendoakan kita. Itu berarti mengakui bahwa kita tidak bisa memikul sesuatu sendirian, bahwa doa kita sendiri, sekalipun tulus, terasa tidak cukup untuk beban yang sedang kita hadapi. Yakobus menulis dengan terus terang: "Karena itu hendaklah kamu saling mengaku dosamu dan saling mendoakan, supaya kamu sembuh. Doa orang yang benar, bilamana dengan yakin didoakan, sangat besar kuasanya."
+
+Perhatikan bahwa Yakobus memasangkan pengakuan dengan doa. Ada sesuatu yang menyembuhkan dari dikenali, bukan sekadar didoakan dari jarak yang sopan, melainkan didoakan oleh seseorang yang memahami, setidaknya sebagian, apa yang sebenarnya sedang kaupikul. Persekutuan tidak pernah dimaksudkan menjadi tempat kita berpura-pura baik-baik saja. Ia dimaksudkan menjadi tempat beban kita yang sesungguhnya dibagikan dan dipikul oleh lebih dari sepasang tangan.
+
+Inilah sebagian alasan mengapa Gereja senantiasa berkumpul untuk berdoa bersama — dalam kelompok kecil, di paroki, di kaki altar. Ada kekuatan dalam doa bersama yang tidak sepenuhnya bisa digantikan oleh doa sendirian, sekalipun doa itu sungguh setia. Ketika dua suara atau lebih menaikkan kebutuhan yang sama di hadapan Allah, ada sesuatu dalam diri kita yang menjadi tenang: kita tidak sedang menghadapi ini sendirian, dan doa kita pun tidak sendirian.
+
+Siapa dalam hidupmu yang bisa kaumintai doa minggu ini — dengan jujur, spesifik, tanpa lebih dulu memolesnya? Dan siapa yang mungkin membutuhkan hal yang sama darimu? Mendoakan satu sama lain adalah salah satu pemberian paling sederhana dan paling berkuasa yang bisa kita berikan — biarlah hari ini menjadi hari engkau memintanya atau menawarkannya.',
+     'We were never meant to pray entirely alone — shared prayer carries weight our solitary prayers cannot carry by themselves.', 'Kita tidak pernah dimaksudkan untuk berdoa sepenuhnya sendirian — doa bersama memikul beban yang tidak bisa dipikul oleh doa kita sendirian.',
+     'Lord, give me the humility to ask for prayer, and the love to offer it freely to others. Bind our hearts together as we bring our needs before You. Amen.', 'Tuhan, berilah aku kerendahan hati untuk meminta didoakan, dan kasih untuk menawarkan doa dengan bebas kepada orang lain. Satukanlah hati kami saat membawa kebutuhan kami di hadapan-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 5:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 5:16', 'TB', 1);
+
+  -- ===================================================================
+  -- Plan: Building a Love That Lasts  (Partner Love, 5 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Partner Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Building a Love That Lasts';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Building a Love That Lasts', 'Membangun Cinta yang Bertahan',
+     'A Five-Day Journey for Couples Preparing for Marriage', 'Perjalanan Lima Hari bagi Pasangan yang Bersiap Menikah',
+     'For couples who are engaged or seriously dating and dreaming of a future together, this plan explores what it means to build a marriage on Christ, the rock. Over five days you will reflect on foundation, unity, humble love, and covenant faithfulness as the ground for a lifelong yes.', 'Bagi pasangan yang bertunangan atau berpacaran serius dan bermimpi tentang masa depan bersama, rencana ini menggali makna membangun pernikahan di atas Kristus, sang batu karang. Selama lima hari Anda akan merenungkan fondasi, kesatuan, kasih yang rendah hati, dan kesetiaan dalam perjanjian sebagai dasar bagi sebuah ''ya'' seumur hidup.', 5)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'The Rock We Build On', 'Batu Karang Tempat Kita Membangun',
+     'There is a particular kind of excitement that comes with planning a future together — choosing a date, imagining a home, picturing the years ahead. It is a beautiful season, but it is also a season that asks a quiet, unglamorous question underneath all the excitement: what are we actually building on? A wedding day can be planned in months. A marriage is built over decades, and decades reveal foundations that a single day cannot.
+
+Jesus told a simple story about two builders. Both built houses. Both faced the same storm — the same rain, the same wind, the same flood. The difference was not the storm; the difference was what was underneath the house before the storm ever came. One had dug down to rock. The other had settled for sand because it was faster, easier, good enough for now. When the storm came, only one house was still standing.
+
+Every couple faces storms — money stress, in-laws, misunderstandings, seasons of exhaustion, disappointment in each other. No relationship is exempt from weather. So the question worth asking early, honestly, together, is not whether storms will come, but what your relationship is resting on when they do. Is it built on feelings alone, which rise and fall? On compatibility, which can shift with circumstance? Or is it being dug down into something that does not move — a shared commitment to Christ and to each other that holds even when feelings don''t?
+
+This is not a discouraging thought; it is a freeing one. You do not have to build a perfect relationship with no cracks. You have to build a rooted one. Today, before any other planning, let this be the first and quiet decision you make together: we will keep coming back to the rock. Not because storms won''t come, but because we want to still be standing, hand in hand, when they pass.', 'Ada kegembiraan tersendiri saat merencanakan masa depan bersama — memilih tanggal, membayangkan rumah, membayangkan tahun-tahun ke depan. Musim ini indah, tetapi di baliknya ada pertanyaan sunyi yang sering terlewat: sebenarnya kita sedang membangun di atas apa? Hari pernikahan bisa direncanakan dalam hitungan bulan. Pernikahan dibangun selama puluhan tahun, dan puluhan tahun itu akan menyingkapkan fondasi yang tidak terlihat dalam satu hari saja.
+
+Yesus pernah bercerita tentang dua orang yang membangun rumah. Keduanya menghadapi badai yang sama — hujan yang sama, angin yang sama, banjir yang sama. Perbedaannya bukan pada badainya, melainkan pada apa yang ada di bawah rumah itu sebelum badai datang. Yang satu menggali sampai ke batu karang. Yang lain memilih pasir karena lebih cepat, lebih mudah, cukup baik untuk sekarang. Ketika badai datang, hanya satu rumah yang tetap berdiri.
+
+Setiap pasangan akan menghadapi badai — tekanan keuangan, hubungan dengan mertua, kesalahpahaman, musim kelelahan, kekecewaan terhadap pasangan. Tidak ada hubungan yang kebal dari cuaca buruk. Maka pertanyaan yang layak diajukan sejak awal, dengan jujur, bersama-sama, bukanlah apakah badai akan datang, melainkan di atas apa hubungan kalian bertumpu saat badai itu tiba. Apakah hanya di atas perasaan, yang naik turun? Di atas kecocokan, yang bisa berubah oleh keadaan? Atau sedang digali sampai pada sesuatu yang tidak goyah — komitmen bersama kepada Kristus dan kepada satu sama lain yang tetap kokoh sekalipun perasaan berubah?
+
+Ini bukan pikiran yang menyurutkan semangat, melainkan yang membebaskan. Kalian tidak perlu membangun hubungan yang sempurna tanpa retak. Kalian perlu membangun hubungan yang berakar. Hari ini, sebelum rencana lainnya, biarlah ini menjadi keputusan pertama dan diam-diam yang kalian buat bersama: kami akan terus kembali kepada batu karang itu. Bukan karena badai tidak akan datang, tetapi karena kami ingin tetap berdiri, bergandengan tangan, ketika badai itu berlalu.',
+     'A good marriage is not one that avoids storms, but one that is dug down into a foundation that holds when storms come. Ask together today: what are we really building on?', 'Pernikahan yang baik bukanlah yang terhindar dari badai, melainkan yang tergali sampai ke fondasi yang kokoh saat badai datang. Tanyakanlah bersama hari ini: sebenarnya kami sedang membangun di atas apa?',
+     'Lord Jesus, be the rock beneath everything we are building. Where we have settled for sand — for convenience, for feelings alone — show us gently, and give us courage to dig deeper into you together. Amen.', 'Tuhan Yesus, jadilah batu karang di bawah segala yang kami bangun. Di mana kami memilih pasir — demi kemudahan, demi perasaan semata — tunjukkanlah dengan lembut, dan berilah kami keberanian untuk menggali lebih dalam kepada-Mu bersama-sama. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 7:24-25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 7:24-25', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'No Longer Two', 'Bukan Lagi Dua',
+     'Two people who love each other still walk into a wedding as two separate lives — two families, two sets of habits, two histories, two ways of loading a dishwasher and two ways of arguing. The wonder of marriage is not that those differences disappear. It is that God takes two whole, distinct people and, over years of small choices, weaves them into something new: one flesh, one household, one shared story that neither of them could have written alone.
+
+This oneness is not something a wedding ceremony automatically produces. It is something a couple grows into, day after ordinary day, through the small unglamorous decisions that never make it into a highlight reel — choosing to tell the truth even when it''s uncomfortable, choosing to stay in the room during a hard conversation instead of walking away, choosing ''we'' language over ''me'' language when making plans. Oneness is built the same way trust is built: slowly, through repetition, through a thousand small proofs that you are on the same side.
+
+It also means holding loosely to some things you once held tightly — your own schedule, your own preferences, your own way of doing things — not because you disappear into your spouse, but because two people becoming one requires both to make room. This is costly. It is also, many who have walked this road will tell you, the very thing that makes the years sweet: no longer facing life alone, no longer carrying decisions by yourself, no longer wondering who is truly for you.
+
+As you prepare for this, resist the temptation to think oneness will simply happen because you love each other. Talk today about what ''we'' will look like in practical terms — money, time, family, faith, home. Let this be a decision as much as a feeling: what God is joining, we will not let anything easily pull apart.', 'Dua orang yang saling mencintai tetap melangkah ke pernikahan sebagai dua kehidupan yang terpisah — dua keluarga, dua kebiasaan, dua sejarah, dua cara mencuci piring dan dua cara berdebat. Keajaiban pernikahan bukanlah bahwa perbedaan itu lenyap. Keajaibannya adalah Allah mengambil dua pribadi yang utuh dan berbeda, lalu melalui bertahun-tahun keputusan kecil, menenun mereka menjadi sesuatu yang baru: satu daging, satu rumah tangga, satu kisah bersama yang tak mungkin ditulis sendiri oleh salah satu dari mereka.
+
+Kesatuan ini bukan sesuatu yang otomatis dihasilkan oleh sebuah upacara pernikahan. Ini adalah sesuatu yang ditumbuhkan pasangan hari demi hari yang biasa, melalui keputusan-keputusan kecil yang tidak pernah masuk sorotan — memilih untuk berkata jujur meski tidak nyaman, memilih untuk tetap di ruangan saat percakapan sulit alih-alih pergi, memilih bahasa ''kami'' daripada ''aku'' saat membuat rencana. Kesatuan dibangun seperti kepercayaan dibangun: perlahan, melalui pengulangan, melalui ribuan bukti kecil bahwa kalian berada di pihak yang sama.
+
+Ini juga berarti memegang lebih longgar beberapa hal yang dulu kalian pegang erat — jadwal sendiri, preferensi sendiri, cara sendiri melakukan sesuatu — bukan karena kalian lenyap ke dalam pasangan, melainkan karena dua orang menjadi satu memerlukan keduanya memberi ruang. Ini mahal harganya. Namun banyak yang telah melalui jalan ini akan berkata, inilah justru yang membuat tahun-tahun terasa manis: tidak lagi menghadapi hidup sendirian, tidak lagi memikul keputusan seorang diri, tidak lagi bertanya-tanya siapa yang sungguh berpihak padamu.
+
+Saat mempersiapkan hal ini, tahanlah godaan untuk berpikir kesatuan akan terjadi begitu saja karena kalian saling mencintai. Bicarakanlah hari ini tentang seperti apa ''kami'' secara praktis — uang, waktu, keluarga, iman, rumah. Biarlah ini menjadi keputusan sekaligus perasaan: apa yang telah dipersatukan Allah, tidak akan kami biarkan begitu saja diceraiberaikan.',
+     'Oneness in marriage is grown, not assumed. Talk honestly today about what ''we'' will mean in the practical shape of your daily life.', 'Kesatuan dalam pernikahan ditumbuhkan, bukan diandaikan begitu saja. Bicarakan dengan jujur hari ini tentang apa arti ''kami'' dalam bentuk nyata kehidupan sehari-hari.',
+     'Father, weave our two lives into one without erasing who You made each of us to be. Teach us to say ''we'' before ''me,'' and protect the oneness You are building in us. Amen.', 'Bapa, tenunlah dua kehidupan kami menjadi satu tanpa menghapus siapa diri kami masing-masing yang telah Kau ciptakan. Ajari kami mengucap ''kami'' sebelum ''aku'', dan lindungilah kesatuan yang sedang Kau bangun dalam kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 10:8-9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 10:8-9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Love That Puts You First', 'Kasih yang Mendahulukan Engkau',
+     'Before the wedding, love often looks like effort — flowers, thoughtful messages, showing up looking your best, trying hard to impress. There is nothing wrong with this; it is a real and good expression of care. But marriage will eventually ask for a different, deeper kind of love: the kind that shows up not to impress, but to serve, on the ordinary days when no one is watching and there is nothing to prove.
+
+Paul describes this love plainly: doing nothing out of selfish ambition, valuing the other person above yourself, looking not only to your own interests but to theirs. This is a hard word for anyone raised to protect their own comfort first. And to be honest, no one does this perfectly — many couples, years in, will tell you that selfishness is the quiet enemy they fight against more than any outside threat to their marriage.
+
+What makes this kind of love possible is not sheer willpower but where you''re looking. Paul writes these words about humility right after pointing to Christ, who had every right to be served and instead knelt down to serve. A marriage rooted in that pattern doesn''t keep score of who did more. It asks, again and again, in small ordinary moments: what does love require of me right now, even when it costs me something?
+
+Today, talk honestly about this together — not as an accusation, but as an aspiration. Where have you noticed yourselves keeping score instead of serving? Ask God to grow in you a love that notices the other person''s tiredness before your own, that reaches for their interests as readily as your own. This is not weakness. It is the shape love takes when it has somewhere solid to stand.', 'Sebelum menikah, kasih sering terlihat seperti usaha — bunga, pesan penuh perhatian, tampil sebaik mungkin, berusaha keras membuat terkesan. Tidak ada yang salah dengan ini; ini adalah ungkapan perhatian yang nyata dan baik. Namun pernikahan pada akhirnya akan menuntut jenis kasih yang berbeda dan lebih dalam: kasih yang hadir bukan untuk membuat terkesan, melainkan untuk melayani, pada hari-hari biasa ketika tidak ada yang menyaksikan dan tidak ada yang perlu dibuktikan.
+
+Paulus menggambarkan kasih ini dengan jelas: tidak berbuat sesuatu karena kepentingan diri sendiri, menganggap orang lain lebih utama dari diri sendiri, tidak hanya memperhatikan kepentingan sendiri tetapi juga kepentingan orang lain. Ini firman yang berat bagi siapa pun yang dibesarkan untuk melindungi kenyamanannya sendiri lebih dulu. Dan sejujurnya, tidak ada yang melakukan ini dengan sempurna — banyak pasangan yang telah bertahun-tahun menikah akan berkata, keegoisan adalah musuh diam-diam yang lebih sering mereka lawan daripada ancaman dari luar mana pun terhadap pernikahan mereka.
+
+Yang membuat kasih semacam ini mungkin bukanlah semata-mata kekuatan kemauan, melainkan ke mana kalian memandang. Paulus menuliskan kata-kata tentang kerendahan hati ini tepat setelah menunjuk kepada Kristus, yang berhak sepenuhnya untuk dilayani namun justru berlutut untuk melayani. Pernikahan yang berakar pada pola itu tidak menghitung siapa berbuat lebih banyak. Ia bertanya, berulang-ulang, dalam momen-momen kecil biasa: apa yang dituntut kasih dariku saat ini, sekalipun itu berharga bagiku?
+
+Hari ini, bicarakanlah hal ini dengan jujur bersama — bukan sebagai tuduhan, melainkan sebagai cita-cita. Di mana kalian menyadari diri lebih sering menghitung-hitung daripada melayani? Mintalah Allah menumbuhkan dalam diri kalian kasih yang menyadari kelelahan pasangan sebelum kelelahan sendiri, yang meraih kepentingan pasangan sesiap meraih kepentingan sendiri. Ini bukan kelemahan. Inilah bentuk kasih ketika ia memiliki tempat berpijak yang kokoh.',
+     'The love that lasts past the wedding day is the kind that serves quietly, without an audience. Ask where you might be keeping score instead of serving.', 'Kasih yang bertahan setelah hari pernikahan adalah kasih yang melayani diam-diam, tanpa penonton. Tanyakan di mana kalian mungkin lebih sering menghitung-hitung daripada melayani.',
+     'Jesus, You knelt to serve when You had every right to be served. Shape our love after Yours — humble, attentive, quick to put the other first. Amen.', 'Yesus, Engkau berlutut untuk melayani padahal berhak sepenuhnya untuk dilayani. Bentuklah kasih kami seperti kasih-Mu — rendah hati, penuh perhatian, dan cepat mendahulukan orang lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 2:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 2:3-4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'A Promise Kept Daily', 'Janji yang Dijaga Setiap Hari',
+     'There is a difference between a contract and a covenant, and it is worth understanding clearly before you stand at the altar. A contract is conditional — I give this, you give that, and if one side stops holding up their end, the agreement dissolves. A covenant is different. It is a promise that holds even when circumstances change, even when the other person is having a hard season, even when keeping it costs more than you expected.
+
+Marriage, from the very beginning, was never meant to be a contract of convenience. It is a covenant made before God, which means your faithfulness to each other is not ultimately dependent on how well your spouse performs that day. Paul is remarkably direct about this: marriage involves a mutual, ongoing devotion of yourselves to one another — not as a burden reluctantly carried, but as a daily gift freely given.
+
+This is countercultural in a world that often treats commitment as something to be re-negotiated the moment it becomes inconvenient. But covenant love says: I chose you, and I choose you again today, and I will choose you tomorrow, not because every day feels easy but because a promise means something. This kind of love is not naive about hardship. It simply refuses to let hardship be the final word.
+
+Before you marry, ask each other honestly: are we ready to make a promise, not just fall in love? Falling in love happens to you. A covenant is something you do, deliberately, again and again, for the rest of your life. That is a weightier, and far more beautiful, thing to build a wedding on.', 'Ada perbedaan antara kontrak dan perjanjian, dan ini layak dipahami dengan jelas sebelum kalian berdiri di depan altar. Kontrak bersifat bersyarat — aku memberi ini, kamu memberi itu, dan jika salah satu pihak berhenti memenuhi bagiannya, kesepakatan itu bubar. Perjanjian berbeda. Ia adalah janji yang tetap berlaku sekalipun keadaan berubah, sekalipun pasangan sedang melewati musim yang berat, sekalipun menepatinya berharga lebih mahal dari yang dibayangkan.
+
+Pernikahan, sejak semula, tidak pernah dimaksudkan sebagai kontrak berdasarkan kenyamanan. Ia adalah perjanjian yang dibuat di hadapan Allah, yang berarti kesetiaan kalian satu sama lain pada akhirnya tidak bergantung pada seberapa baik pasangan berkinerja pada hari itu. Paulus sangat terus terang tentang hal ini: pernikahan melibatkan pemberian diri yang saling dan berkelanjutan satu sama lain — bukan sebagai beban yang dipikul dengan enggan, melainkan sebagai pemberian harian yang diberikan dengan bebas.
+
+Ini bertentangan dengan arus dunia yang sering memperlakukan komitmen sebagai sesuatu yang bisa dinegosiasikan ulang begitu terasa tidak nyaman. Namun kasih perjanjian berkata: aku memilihmu, dan aku memilihmu lagi hari ini, dan aku akan memilihmu besok, bukan karena setiap hari terasa mudah, melainkan karena sebuah janji itu bermakna. Kasih semacam ini tidak naif terhadap kesulitan. Ia hanya menolak membiarkan kesulitan menjadi kata akhir.
+
+Sebelum menikah, tanyakanlah satu sama lain dengan jujur: sudah siapkah kami membuat sebuah janji, bukan sekadar jatuh cinta? Jatuh cinta terjadi begitu saja pada diri kita. Perjanjian adalah sesuatu yang kalian lakukan, dengan sengaja, berulang-ulang, sepanjang sisa hidup kalian. Itulah dasar yang jauh lebih berbobot, dan jauh lebih indah, untuk membangun sebuah pernikahan.',
+     'A wedding celebrates falling in love; a marriage is sustained by covenant. Ask each other: are we ready to keep choosing this, daily, on purpose?', 'Pernikahan merayakan jatuh cinta; perkawinan bertahan karena perjanjian. Tanyakan satu sama lain: sudah siapkah kami terus memilih ini, setiap hari, dengan sengaja?',
+     'Lord, we don''t want a love that depends on our best days. Root our commitment in covenant, not convenience, and give us grace to keep our promise daily. Amen.', 'Tuhan, kami tidak ingin kasih yang hanya bergantung pada hari-hari terbaik kami. Tanamkanlah komitmen kami dalam perjanjian, bukan kenyamanan, dan berilah kami anugerah untuk menepati janji setiap hari. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 7:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 7:3', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'A Future Worth Choosing', 'Masa Depan yang Layak Dipilih',
+     'Ruth had every reasonable excuse to walk away. She was a young widow, a foreigner, with no obligation left to her mother-in-law Naomi once her husband had died. Custom and comfort both pointed the same direction: go home, start over, choose the easier path. Instead, she said some of the most quietly courageous words in Scripture — where you go, I will go; your people will be my people. That was not a feeling. It was a decision to bind her future to someone else''s.
+
+Choosing to marry someone is, in a very real sense, a Ruth moment. You are saying: your story is now my story. Your family, your struggles, your calling, your future — I am choosing to walk into all of it with you, not because I know exactly what is ahead, but because I trust that walking it together is better than walking it separately.
+
+Scripture is honest about why this matters. Two are better than one, it says, because they have a good return for their labor — if one falls, the other can help them up. This is not a romantic idea only; it is a practical, tested truth. The seasons ahead of you will include falling — disappointment, fatigue, loss, ordinary hard days. A good marriage means you will not fall alone, and you will not have to lift yourself back up by yourself either.
+
+As you close this week of preparation, let today be a renewal of that Ruth-like choosing. Look at each other and mean it: wherever you go, I will go. Not because the road ahead is easy, but because a future built together, held by God, is a future worth choosing again and again.', 'Rut punya banyak alasan wajar untuk pergi. Ia seorang janda muda, orang asing, tanpa kewajiban lagi kepada mertuanya Naomi setelah suaminya meninggal. Adat dan kenyamanan sama-sama mengarah ke satu arah: pulang, memulai lagi, memilih jalan yang lebih mudah. Namun ia justru mengucapkan salah satu kata-kata paling berani dan tenang dalam Alkitab — ke mana engkau pergi, ke situ jugalah aku pergi; bangsamulah bangsaku. Itu bukan sekadar perasaan. Itu adalah keputusan untuk mengikatkan masa depannya kepada orang lain.
+
+Memilih untuk menikahi seseorang, dalam arti yang sesungguhnya, adalah momen ala Rut. Kalian sedang berkata: kisahmu kini menjadi kisahku. Keluargamu, pergumulanmu, panggilanmu, masa depanmu — aku memilih melangkah ke dalam semuanya bersamamu, bukan karena aku tahu persis apa yang ada di depan, melainkan karena aku percaya melangkahinya bersama lebih baik daripada sendiri-sendiri.
+
+Alkitab jujur tentang mengapa ini penting. Berdua lebih baik dari seorang diri, katanya, karena upah jerih lelah mereka baik — kalau yang seorang jatuh, temannya dapat membangunkannya. Ini bukan sekadar gagasan romantis; ini kebenaran yang praktis dan teruji. Musim-musim di depan kalian akan mencakup kejatuhan — kekecewaan, kelelahan, kehilangan, hari-hari sulit yang biasa. Pernikahan yang baik berarti kalian tidak akan jatuh sendirian, dan kalian juga tidak perlu bangkit sendiri.
+
+Saat menutup minggu persiapan ini, biarlah hari ini menjadi pembaruan pilihan ala Rut itu. Pandanglah satu sama lain dan sungguh-sungguh maksudkan ini: ke mana pun engkau pergi, ke situ pula aku pergi. Bukan karena jalan di depan mudah, melainkan karena masa depan yang dibangun bersama, dipegang oleh Allah, adalah masa depan yang layak dipilih berulang-ulang.',
+     'Marriage is a Ruth-like choosing — binding your future to another''s, on purpose, not because it''s easy but because it''s better together.', 'Pernikahan adalah pilihan ala Rut — mengikatkan masa depanmu kepada orang lain, dengan sengaja, bukan karena mudah tetapi karena lebih baik bersama-sama.',
+     'God, as we choose each other today and every day ahead, walk with us. Let us be for each other what Ruth was to Naomi — steadfast, present, unwilling to leave. Amen.', 'Allah, saat kami memilih satu sama lain hari ini dan setiap hari ke depan, berjalanlah bersama kami. Jadikanlah kami satu sama lain seperti Rut bagi Naomi — teguh, hadir, tak mau pergi. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ruth 1:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-10', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Rut 1:16', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-10', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Made New Again  (Partner Love, 6 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Partner Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Made New Again';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Made New Again', 'Dipulihkan Kembali',
+     'A Six-Day Path to Rebuilding Trust After Hurt', 'Jalan Enam Hari Memulihkan Kepercayaan Setelah Terluka',
+     'When trust has been broken in a relationship, healing rarely arrives all at once. This plan walks gently through naming the pain, receiving God''s comfort, choosing forgiveness, and rebuilding day by day toward a renewed and honest love.', 'Ketika kepercayaan dalam sebuah hubungan telah retak, pemulihan jarang datang sekaligus. Rencana ini menuntun dengan lembut melalui proses menamai rasa sakit, menerima penghiburan Allah, memilih mengampuni, dan membangun kembali sedikit demi sedikit menuju kasih yang baru dan jujur.', 6)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'It''s Okay to Name the Hurt', 'Tidak Apa Menamai Rasa Sakit',
+     'Some couples try to skip straight to healing without ever stopping to name what actually broke. They want to move forward so badly that they rush past the honest, uncomfortable step of saying out loud: this hurt me, and it mattered. But healing that skips honesty tends to be shallow, a patch over a wound that never really closed, waiting to reopen the next time trust is tested.
+
+Whatever the specific breach — a lie, a betrayal, a season of emotional distance, a broken promise — the pain it caused is real, and God does not ask you to minimize it in order to move on. Scripture does not describe God as distant from the brokenhearted, uncomfortable with their pain, eager for them to hurry up and feel better. It describes Him as close, present, near to exactly the kind of ache you may be carrying.
+
+This is worth sitting with today, whichever side of the hurt you are on. If you were wounded, you do not have to perform forgiveness before you have actually grieved what was lost. If you caused the wound, you do not have to rush your spouse''s healing on your own timeline; real repair cannot be hurried into looking finished before it is.
+
+Naming the hurt honestly, without minimizing it and without weaponizing it, is the first real step toward something new being built. Today, if you can, say out loud — to God, and perhaps to each other — exactly what was broken. Not to relive it endlessly, but to finally stop pretending it didn''t happen.', 'Sebagian pasangan mencoba langsung melompat ke pemulihan tanpa pernah berhenti menamai apa yang sesungguhnya retak. Mereka begitu ingin maju sehingga melewati langkah jujur yang tidak nyaman: mengatakan dengan lantang, ini menyakitiku, dan itu penting. Namun pemulihan yang melewati kejujuran cenderung dangkal, sekadar tambalan di atas luka yang sebenarnya belum benar-benar menutup, menunggu terbuka lagi saat kepercayaan diuji berikutnya.
+
+Apa pun pelanggaran spesifiknya — kebohongan, pengkhianatan, musim kejauhan emosional, janji yang diingkari — rasa sakit yang ditimbulkannya nyata, dan Allah tidak meminta kalian mengecilkannya demi bisa maju. Alkitab tidak menggambarkan Allah sebagai pribadi yang jauh dari orang yang patah hati, yang tidak nyaman dengan rasa sakit mereka, yang ingin mereka cepat-cepat merasa lebih baik. Alkitab menggambarkan-Nya sebagai dekat, hadir, menyertai persis jenis luka yang mungkin sedang kalian pikul.
+
+Ini layak direnungkan hari ini, di sisi mana pun kalian berada dalam luka ini. Jika kalian yang terluka, kalian tidak perlu berpura-pura sudah mengampuni sebelum sungguh-sungguh berduka atas apa yang hilang. Jika kalian yang menyebabkan luka itu, kalian tidak perlu memaksa pemulihan pasangan sesuai jadwal kalian sendiri; pemulihan yang sejati tidak bisa diburu-buru agar terlihat selesai padahal belum.
+
+Menamai luka dengan jujur, tanpa mengecilkannya dan tanpa menjadikannya senjata, adalah langkah nyata pertama menuju sesuatu yang baru dibangun. Hari ini, jika kalian mampu, ucapkanlah dengan lantang — kepada Allah, dan mungkin kepada satu sama lain — persis apa yang telah retak. Bukan untuk terus-menerus mengenangnya, melainkan untuk akhirnya berhenti berpura-pura itu tidak pernah terjadi.',
+     'You do not have to minimize the hurt to move forward. God is near to exactly the ache you carry. Name it honestly before rushing past it.', 'Kalian tidak perlu mengecilkan rasa sakit untuk bisa maju. Allah dekat dengan luka yang sedang kalian pikul. Namailah dengan jujur sebelum tergesa-gesa melewatinya.',
+     'Lord, You are close to the brokenhearted. Meet us in this honest pain, and give us courage to name what happened without minimizing it or hiding from it. Amen.', 'Tuhan, Engkau dekat dengan orang yang patah hati. Jumpailah kami dalam rasa sakit yang jujur ini, dan berilah kami keberanian menamai apa yang terjadi tanpa mengecilkannya atau menyembunyikannya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 34:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 34:19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Joy Comes in the Morning', 'Sukacita Datang di Pagi Hari',
+     'There is a particular kind of night that feels like it will never end — the night after discovering something that changes how you see your marriage, the long weeks of tension that follow, the exhausted feeling of not knowing if things will ever feel normal again. If you are in that kind of night now, or remember one, you know how endless it can feel from the inside.
+
+The psalmist knew nights like that too, and did not pretend otherwise. But he also testified to something on the other side of them: weeping may stay for the night, but rejoicing comes in the morning. This is not a promise that pain disappears quickly or painlessly. It is a promise that pain is not the final chapter — that morning does, eventually, come, even when the night feels unending while you''re in it.
+
+For a couple rebuilding after hurt, this promise matters practically. It means you do not have to force yourselves to feel healed before you actually are. Grief and hope can coexist; you can still be in the night and trust that morning is coming. Healing in a marriage is rarely a single sunrise — it is often many small mornings, small moments of trust slowly returning, laughter slowly coming back, ordinary days slowly starting to feel ordinary again.
+
+Where are you tonight — still in the weeping, or starting to notice the first grey light of morning? Wherever you are, let this be true: God is not asking you to rush the night, only to trust that He is present in it, and that morning belongs to Him.', 'Ada satu jenis malam yang terasa tidak akan pernah berakhir — malam setelah menyadari sesuatu yang mengubah cara memandang pernikahanmu, minggu-minggu panjang penuh ketegangan yang menyusul, rasa lelah tidak tahu apakah segalanya akan pernah terasa normal lagi. Jika kalian sedang berada dalam malam semacam itu sekarang, atau mengingatnya, kalian tahu betapa tanpa akhir rasanya dari dalam.
+
+Pemazmur juga mengenal malam semacam itu, dan tidak berpura-pura sebaliknya. Namun ia juga bersaksi tentang sesuatu di sisi lainnya: sebab sesaat saja Ia murka, tetapi seumur hidup Ia murah hati; sebab menjelang malam ada tangisan, tetapi menjelang pagi ada sorak-sorai. Ini bukan janji bahwa rasa sakit hilang dengan cepat atau tanpa perih. Ini janji bahwa rasa sakit bukanlah bab terakhir — bahwa pagi, pada akhirnya, akan datang, sekalipun malam terasa tanpa akhir saat kita sedang di dalamnya.
+
+Bagi pasangan yang sedang membangun kembali setelah terluka, janji ini penting secara praktis. Artinya kalian tidak perlu memaksa diri merasa pulih sebelum sungguh-sungguh pulih. Kesedihan dan pengharapan bisa hidup berdampingan; kalian masih bisa berada di dalam malam sambil percaya pagi sedang datang. Pemulihan dalam pernikahan jarang berupa satu kali matahari terbit — sering kali itu banyak pagi-pagi kecil, momen-momen kecil kepercayaan yang perlahan kembali, tawa yang perlahan muncul lagi, hari-hari biasa yang perlahan mulai terasa biasa lagi.
+
+Di manakah kalian malam ini — masih dalam tangisan, atau mulai melihat cahaya kelabu pertama fajar? Di mana pun kalian berada, biarlah ini menjadi kebenaran: Allah tidak meminta kalian mempercepat malam, hanya percaya bahwa Ia hadir di dalamnya, dan bahwa pagi adalah milik-Nya.',
+     'Grief and hope can coexist. You don''t have to rush the night — trust that God is present in it, and that morning belongs to Him.', 'Kesedihan dan pengharapan bisa hidup berdampingan. Kalian tidak perlu mempercepat malam — percayalah Allah hadir di dalamnya, dan pagi adalah milik-Nya.',
+     'Father, in this long night, remind us that You are near and that morning will come. We don''t rush our healing, but we trust it is on its way. Amen.', 'Bapa, dalam malam yang panjang ini, ingatkanlah kami bahwa Engkau dekat dan pagi akan datang. Kami tidak memburu pemulihan kami, tetapi kami percaya itu sedang menuju kepada kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 30:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 30:6', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Choosing to Forgive', 'Memilih Mengampuni',
+     'Forgiveness after a real betrayal or a deep wound is one of the hardest things a person is ever asked to do, and it is important to say clearly: forgiveness is not the same as saying the hurt didn''t matter, and it is not the same as pretending everything is fine now. It is a decision, often made painfully and repeatedly, to release the offender from the debt they owe you — even while consequences and healing are still being worked out.
+
+Jesus put it in terms almost uncomfortably direct: do not judge, and you will not be judged; forgive, and you will be forgiven. This is not a simple transaction where forgiving automatically erases pain. It is a spiritual posture — refusing to hold your spouse hostage to the worst thing they''ve done, even as you both work honestly toward rebuilding what was broken.
+
+It''s worth saying plainly: forgiveness does not mean forgetting, and it does not mean trust is instantly restored. Trust is rebuilt slowly, through a pattern of trustworthy behavior over time. Forgiveness is what makes that rebuilding possible at all — it clears the ground so something new can actually grow, instead of being planted in bitterness that will eventually choke it.
+
+If you are the one who needs to forgive, ask God today for the grace to begin — not to finish in one sitting, but to begin. If you are the one who caused the hurt, receive this same grace as a call to patient, humble consistency, proving with time what words alone cannot prove.', 'Mengampuni setelah pengkhianatan nyata atau luka yang dalam adalah salah satu hal tersulit yang pernah diminta dari seseorang, dan penting untuk dikatakan dengan jelas: mengampuni tidak sama dengan mengatakan luka itu tidak penting, dan tidak sama dengan berpura-pura semuanya sudah baik-baik saja sekarang. Itu adalah keputusan, sering kali diambil dengan menyakitkan dan berulang-ulang, untuk melepaskan pelaku dari utang yang ia miliki kepadamu — bahkan ketika konsekuensi dan pemulihan masih terus diupayakan.
+
+Yesus mengatakannya dengan cara yang hampir terasa langsung: janganlah kamu menghakimi, maka kamu pun tidak akan dihakimi; ampunilah, dan kamu akan diampuni. Ini bukan transaksi sederhana di mana mengampuni otomatis menghapus rasa sakit. Ini adalah sikap rohani — menolak menyandera pasangan dengan hal terburuk yang pernah ia lakukan, sambil kalian berdua dengan jujur berusaha membangun kembali apa yang telah retak.
+
+Perlu dikatakan dengan jelas: mengampuni bukan berarti melupakan, dan bukan berarti kepercayaan langsung pulih. Kepercayaan dibangun kembali secara perlahan, melalui pola perilaku yang dapat dipercaya seiring waktu. Pengampunan adalah yang membuat pembangunan kembali itu mungkin terjadi sama sekali — ia membersihkan lahan agar sesuatu yang baru bisa sungguh-sungguh tumbuh, alih-alih ditanam dalam kepahitan yang pada akhirnya akan mencekiknya.
+
+Jika kalian adalah yang perlu mengampuni, mintalah anugerah dari Allah hari ini untuk memulai — bukan untuk menyelesaikannya sekaligus, melainkan untuk memulai. Jika kalian adalah yang menyebabkan luka itu, terimalah anugerah yang sama ini sebagai panggilan untuk konsistensi yang sabar dan rendah hati, membuktikan dengan waktu apa yang tidak bisa dibuktikan oleh kata-kata saja.',
+     'Forgiveness is not forgetting, and it doesn''t instantly restore trust — but it clears the ground so something new can actually grow.', 'Mengampuni bukan melupakan, dan tidak langsung memulihkan kepercayaan — tetapi itu membersihkan lahan agar sesuatu yang baru bisa sungguh-sungguh tumbuh.',
+     'Lord, forgiving feels impossible some days. Give me the grace to begin, even imperfectly, and give us both patience for the slow work of rebuilding trust. Amen.', 'Tuhan, mengampuni terasa mustahil pada hari-hari tertentu. Berilah aku anugerah untuk memulai, sekalipun belum sempurna, dan berilah kami berdua kesabaran untuk kerja perlahan membangun kembali kepercayaan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 6:37', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 6:37', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Rebuilding, Brick by Brick', 'Membangun Kembali, Batu demi Batu',
+     'There is a season for everything, Scripture reminds us, and rebuilding trust is its own particular season — not the season of falling in love, not the season of the wedding, but a slower, more deliberate season of small, repeated proof. It rarely happens through one grand gesture. It happens through the boring, faithful repetition of showing up honestly, day after day, until the pattern itself becomes believable again.
+
+This is often the hardest part for both people. The one rebuilding trust can feel like nothing they do is ever quite enough, that yesterday''s honesty doesn''t erase last year''s dishonesty in the other person''s mind. The one extending trust can feel guilty for still having doubts, for flinching at reminders, for needing time that feels, to the other person, painfully slow.
+
+Both experiences are understandable, and both need patience — not the kind of patience that avoids the topic, but the kind that keeps choosing to try again even after falling short. Proverbs says the righteous person falls seven times and rises again; it does not say they never fall. Rebuilding trust is not a straight line upward. It includes setbacks, hard conversations that resurface, moments that feel like starting over.
+
+If today feels like one of those setbacks, take heart: falling is not the same as failing, as long as you keep rising. Ask each other honestly: what would one small, believable brick look like today? Not the whole wall rebuilt at once — just one honest brick, laid well.', 'Untuk segala sesuatu ada masanya, Alkitab mengingatkan kita, dan membangun kembali kepercayaan adalah musimnya sendiri — bukan musim jatuh cinta, bukan musim pernikahan, melainkan musim yang lebih lambat dan lebih disengaja berupa bukti kecil yang berulang-ulang. Ini jarang terjadi melalui satu gestur besar. Ini terjadi melalui pengulangan yang membosankan namun setia dari hadir dengan jujur, hari demi hari, sampai polanya sendiri kembali bisa dipercaya.
+
+Ini sering menjadi bagian tersulit bagi kedua belah pihak. Orang yang sedang membangun kembali kepercayaan bisa merasa apa pun yang ia lakukan tidak pernah cukup, bahwa kejujuran hari ini tidak menghapus ketidakjujuran tahun lalu di benak pasangannya. Orang yang memberi kepercayaan bisa merasa bersalah karena masih meragu, karena masih tersentak oleh pengingat, karena membutuhkan waktu yang terasa, bagi pasangannya, menyakitkan lambat.
+
+Kedua pengalaman ini bisa dimengerti, dan keduanya membutuhkan kesabaran — bukan kesabaran yang menghindari topik itu, melainkan kesabaran yang terus memilih mencoba lagi bahkan setelah gagal. Amsal berkata orang benar jatuh tujuh kali dan bangkit kembali; tidak dikatakan mereka tidak pernah jatuh. Membangun kembali kepercayaan bukanlah garis lurus menanjak. Di dalamnya ada kemunduran, percakapan sulit yang muncul lagi, momen yang terasa seperti mulai dari awal.
+
+Jika hari ini terasa seperti salah satu kemunduran itu, kuatkanlah hati: jatuh tidak sama dengan gagal, selama kalian terus bangkit. Tanyakan satu sama lain dengan jujur: seperti apa satu bata kecil yang bisa dipercaya hari ini? Bukan seluruh tembok dibangun ulang sekaligus — cukup satu bata jujur, diletakkan dengan baik.',
+     'Rebuilding trust is not a straight line — it includes setbacks. Falling is not the same as failing, as long as you keep rising to lay one more honest brick.', 'Membangun kembali kepercayaan bukan garis lurus — di dalamnya ada kemunduran. Jatuh tidak sama dengan gagal, selama kalian terus bangkit meletakkan satu bata jujur lagi.',
+     'Lord, give us patience for this slow rebuilding — patience with each other, and patience with ourselves. Help us lay one honest brick today, and trust You with the rest of the wall. Amen.', 'Tuhan, berilah kami kesabaran untuk pembangunan kembali yang perlahan ini — sabar terhadap satu sama lain, dan sabar terhadap diri sendiri. Tolong kami meletakkan satu bata jujur hari ini, dan percayakan sisa temboknya kepada-Mu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 3:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 24:16', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 3:1', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 24:16', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'New Every Morning', 'Baru Setiap Pagi',
+     'One of the quiet dangers in a marriage recovering from hurt is letting yesterday''s failures define today before today has even had a chance to begin. Waking up already bracing for the old argument, already expecting the old pattern, already deciding how the day will go based on how badly the last one went — this is an exhausting way to live, and it rarely leaves room for actual change to be noticed.
+
+Scripture offers a different rhythm: God''s compassions are new every morning; great is His faithfulness. This is not a promise that the past is erased. It is a promise that mercy doesn''t run out — that God meets you today with fresh compassion, not a tally of yesterday''s failures held against you, and He invites you to extend that same freshness to each other.
+
+This does not mean ignoring real patterns that need real change; wisdom still pays attention to whether growth is actually happening. But it does mean refusing to let your spouse be permanently defined by their worst day, refusing to let bitterness harden into the lens through which you see every new morning. People can change. Relationships can be renewed. God''s faithfulness toward both of you is not exhausted by what happened before today.
+
+Try, today, to receive this morning as genuinely new — not naively, but hopefully. What would it look like to meet your spouse today without the weight of every past conversation attached? Ask God for that kind of mercy toward them, the same mercy He offers you, new again this morning.', 'Salah satu bahaya diam-diam dalam pernikahan yang sedang pulih dari luka adalah membiarkan kegagalan kemarin menentukan hari ini sebelum hari ini sempat dimulai. Bangun sambil sudah bersiaga menghadapi pertengkaran lama, sudah menduga pola lama, sudah memutuskan bagaimana hari ini akan berjalan berdasarkan seberapa buruk hari kemarin — ini cara hidup yang melelahkan, dan jarang menyisakan ruang untuk melihat perubahan yang sesungguhnya sedang terjadi.
+
+Alkitab menawarkan irama yang berbeda: kasih setia TUHAN tidak berkesudahan, rahmat-Nya tidak habis-habisnya, selalu baru tiap pagi; besar kesetiaan-Mu. Ini bukan janji bahwa masa lalu terhapus. Ini janji bahwa rahmat tidak pernah habis — bahwa Allah menjumpai kalian hari ini dengan belas kasih yang segar, bukan catatan kegagalan kemarin yang dipertahankan melawan kalian, dan Ia mengajak kalian memberikan kesegaran yang sama itu satu sama lain.
+
+Ini bukan berarti mengabaikan pola nyata yang perlu benar-benar berubah; hikmat tetap memperhatikan apakah pertumbuhan sungguh terjadi. Namun ini berarti menolak membiarkan pasangan selamanya didefinisikan oleh hari terburuknya, menolak membiarkan kepahitan mengeras menjadi lensa yang melaluinya kalian memandang setiap pagi baru. Orang bisa berubah. Hubungan bisa dipulihkan. Kesetiaan Allah terhadap kalian berdua tidak habis oleh apa yang terjadi sebelum hari ini.
+
+Cobalah, hari ini, menerima pagi ini sebagai sungguh-sungguh baru — bukan secara naif, melainkan dengan penuh harap. Seperti apa rasanya menjumpai pasanganmu hari ini tanpa beban setiap percakapan masa lalu yang menempel? Mintalah kepada Allah belas kasih semacam itu bagi mereka, belas kasih yang sama yang Ia tawarkan kepadamu, baru lagi pagi ini.',
+     'Don''t let yesterday''s failures define today before it begins. Receive this morning as genuinely new, and offer that same mercy to your spouse.', 'Jangan biarkan kegagalan kemarin menentukan hari ini sebelum dimulai. Terimalah pagi ini sebagai sungguh-sungguh baru, dan berikan belas kasih yang sama kepada pasanganmu.',
+     'Faithful God, Your mercies are new every morning. Help us receive today fresh, not weighed down by yesterday, and help us offer each other that same new mercy. Amen.', 'Allah yang setia, rahmat-Mu baru setiap pagi. Tolong kami menerima hari ini dengan segar, tidak terbebani oleh kemarin, dan tolong kami memberikan rahmat baru yang sama itu satu sama lain. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'A New Thing Springing Up', 'Sesuatu yang Baru Bertumbuh',
+     'It is tempting, after a painful season, to believe your marriage can only ever go back to what it was before — or worse, that it is permanently marked by what went wrong and can never be more than a repaired version of a broken thing. But God rarely just repairs; He tends to make new. What is ahead of you is not required to be a patched-up copy of the past. It can genuinely be something new.
+
+God spoke through Isaiah to a people who had every reason to stay focused on their failure and loss: forget the former things, do not dwell on the past; I am doing a new thing. This is not a call to deny that painful things happened. It is an invitation to stop letting the past be the only lens through which you see what is possible now.
+
+Many couples who have walked through real rebuilding describe something surprising on the other side: not just a restored marriage, but in some ways a stronger, more honest one than before — because they learned to communicate in ways they never had to when things were easy, because they discovered a depth of grace and endurance in each other and in God that a smooth road would never have revealed.
+
+This is not guaranteed, and it is not quick, and it does not erase what was lost along the way. But it is possible, and Scripture invites you to hope for it honestly rather than merely survive toward it. As you close this plan, ask together: what new thing might God want to grow here — not the old marriage repaired, but something new, rooted in what you''ve learned, blooming in a wilderness you didn''t choose but walked through together anyway.', 'Setelah musim yang menyakitkan, tergoda rasanya untuk percaya bahwa pernikahan kalian hanya bisa kembali seperti dulu — atau lebih buruk lagi, bahwa ia selamanya bercap oleh apa yang salah dan tak akan pernah lebih dari sekadar versi tertambal dari sesuatu yang retak. Namun Allah jarang sekadar memperbaiki; Ia cenderung membuat baru. Apa yang ada di depan kalian tidak harus menjadi salinan tambalan dari masa lalu. Itu bisa sungguh-sungguh menjadi sesuatu yang baru.
+
+Allah berfirman melalui Yesaya kepada umat yang punya segala alasan untuk tetap terpaku pada kegagalan dan kehilangan mereka: jangan lagi mengingat-ingat hal-hal yang dahulu, dan jangan lagi memikirkan hal-hal yang lampau. Lihat, Aku hendak membuat sesuatu yang baru, yang sekarang sudah tumbuh; belumkah kamu mengetahuinya? Ini bukan seruan untuk mengingkari bahwa hal-hal menyakitkan pernah terjadi. Ini undangan untuk berhenti membiarkan masa lalu menjadi satu-satunya lensa yang melaluinya kalian memandang apa yang mungkin sekarang.
+
+Banyak pasangan yang telah melalui pembangunan kembali yang sesungguhnya menggambarkan sesuatu yang mengejutkan di sisi lainnya: bukan sekadar pernikahan yang pulih, tetapi dalam beberapa hal pernikahan yang lebih kuat dan lebih jujur dari sebelumnya — karena mereka belajar berkomunikasi dengan cara yang tak pernah mereka perlukan saat semuanya mudah, karena mereka menemukan kedalaman anugerah dan ketahanan dalam diri satu sama lain dan dalam Allah yang tak akan pernah tersingkap lewat jalan yang mulus.
+
+Ini tidak dijamin, dan tidak cepat, dan tidak menghapus apa yang hilang di sepanjang jalan. Namun ini mungkin, dan Alkitab mengundang kalian untuk berharap dengan jujur akan hal itu, bukan sekadar bertahan menuju ke sana. Saat menutup rencana ini, tanyakanlah bersama: sesuatu yang baru apa yang mungkin ingin Allah tumbuhkan di sini — bukan pernikahan lama yang diperbaiki, melainkan sesuatu yang baru, berakar pada apa yang telah kalian pelajari, mekar di padang gurun yang tidak kalian pilih namun kalian lalui bersama.',
+     'What lies ahead doesn''t have to be a patched-up copy of the past. Ask together what new thing God might want to grow from here.', 'Apa yang ada di depan tidak harus menjadi salinan tambalan dari masa lalu. Tanyakan bersama sesuatu yang baru apa yang mungkin ingin Allah tumbuhkan dari sini.',
+     'Lord, thank You that You make things new. We don''t ask for the old marriage patched over — we ask for the new thing You want to grow in us. Make a way where we saw only wilderness. Amen.', 'Tuhan, terima kasih karena Engkau membuat segala sesuatu baru. Kami tidak meminta pernikahan lama yang sekadar ditambal — kami meminta hal baru yang ingin Kau tumbuhkan dalam kami. Buatlah jalan di tempat yang dulu hanya kami lihat sebagai padang gurun. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 43:18-19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 5:17', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 43:18-19', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 5:17', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Speaking Peace, Not War  (Partner Love, 4 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Partner Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Speaking Peace, Not War';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Speaking Peace, Not War', 'Berkata-kata Damai, Bukan Perang',
+     'A Four-Day Plan on Communication and Conflict', 'Rencana Empat Hari tentang Komunikasi dan Konflik',
+     'Every couple fights — the question is whether your words build a home or slowly wear one down. This short plan looks at listening, gentle speech, quick forgiveness, and peacemaking as daily practices, not one-time fixes.', 'Setiap pasangan pasti pernah bertengkar — pertanyaannya adalah apakah kata-kata kalian membangun rumah tangga atau perlahan meruntuhkannya. Rencana singkat ini membahas mendengarkan, tutur kata lembut, cepat mengampuni, dan menjadi pembawa damai sebagai kebiasaan harian, bukan solusi sekali jadi.', 4)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Quick to Listen', 'Cepat Mendengar',
+     'Most arguments between couples are not really about the dishes, or the money, or who forgot what. Underneath the surface topic is almost always a deeper ache — I don''t feel heard, I don''t feel valued, I don''t feel like my side of this matters to you. And too often, both people are so busy preparing their own defense that neither one is actually listening. Two monologues collide and call themselves a conversation.
+
+James gives a short, almost blunt instruction that most of us need to hear again and again: be quick to listen, slow to speak, slow to become angry. Notice the order. Listening comes first, before speaking, before anger even has room to rise. That order is not accidental. Listening first changes what you hear, and often it changes what needs to be said at all.
+
+Real listening in marriage is harder than it sounds, because it requires setting down your own case, at least for a moment, to genuinely try to understand your spouse''s experience — not to win, not to prepare your rebuttal, but to understand. It means asking, ''help me understand what this feels like for you,'' and actually waiting for the answer instead of the next opening to speak.
+
+Think of a recent disagreement. Were you listening to understand, or listening to respond? Today, practice this in even one small conversation: let your spouse finish completely, reflect back what you heard before you answer, and notice how differently the conversation moves when someone finally feels heard.', 'Kebanyakan pertengkaran pasangan sebenarnya bukan tentang piring kotor, uang, atau siapa yang lupa apa. Di balik topik permukaan itu hampir selalu ada luka yang lebih dalam — aku tidak merasa didengar, aku tidak merasa dihargai, aku tidak merasa pihakku dianggap penting olehmu. Dan terlalu sering, kedua orang begitu sibuk menyiapkan pembelaan diri sehingga tak satu pun benar-benar mendengarkan. Dua monolog bertabrakan dan menyebut diri mereka percakapan.
+
+Yakobus memberi instruksi singkat, hampir tegas, yang perlu terus kita dengar berulang-ulang: cepatlah mendengar, lambatlah berkata-kata, lambatlah marah. Perhatikan urutannya. Mendengar didahulukan, sebelum berbicara, bahkan sebelum kemarahan sempat naik. Urutan itu bukan kebetulan. Mendengar lebih dulu mengubah apa yang kita dengar, dan sering kali mengubah apakah sesuatu perlu dikatakan sama sekali.
+
+Mendengar sungguh-sungguh dalam pernikahan lebih sulit dari kedengarannya, karena itu menuntut kita meletakkan dulu argumen kita sendiri, setidaknya sejenak, untuk sungguh-sungguh mencoba memahami apa yang dialami pasangan — bukan untuk menang, bukan untuk menyiapkan bantahan, melainkan untuk memahami. Ini berarti bertanya, ''bantu aku memahami bagaimana rasanya bagimu,'' dan benar-benar menunggu jawabannya, bukan menunggu celah untuk bicara lagi.
+
+Pikirkan perselisihan yang baru-baru ini terjadi. Apakah kalian mendengar untuk memahami, atau mendengar untuk menjawab? Hari ini, praktikkan ini bahkan dalam satu percakapan kecil saja: biarkan pasanganmu selesai bicara sepenuhnya, ulangi apa yang kau dengar sebelum menjawab, dan perhatikan betapa berbedanya arah percakapan ketika seseorang akhirnya merasa didengar.',
+     'Most conflict softens the moment one person truly feels heard. Practice listening to understand, not to respond, today.', 'Kebanyakan konflik mereda begitu satu orang benar-benar merasa didengar. Latihlah mendengar untuk memahami, bukan untuk menjawab, hari ini.',
+     'Lord, slow us down before we speak. Teach us to listen the way You listen to us — fully, patiently, without rushing to be understood first. Amen.', 'Tuhan, perlambatlah kami sebelum berkata-kata. Ajari kami mendengar seperti Engkau mendengarkan kami — sepenuhnya, dengan sabar, tanpa buru-buru ingin dipahami lebih dulu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 1:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 1:19', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Gentle Words, Strong Marriage', 'Kata Lembut, Pernikahan Kuat',
+     'It is a strange thing that we so often save our sharpest words for the person we love most. A stranger gets our patience; our spouse, tired and familiar and safe, sometimes gets our worst tone. We assume love means they''ll understand, they''ll forgive, they''ll still be there tomorrow — and so we let our words get careless in a way we''d never allow with anyone else.
+
+Proverbs offers a piece of wisdom so simple it''s easy to dismiss, and so true it deserves to be written on a kitchen wall: a gentle answer turns away wrath, but a harsh word stirs up anger. This is not about avoiding hard conversations or swallowing your feelings. It is about the tone you choose to carry a hard truth in. The same concern, spoken gently, can open a door that the same concern, spoken harshly, slams shut.
+
+Many couples can trace their worst arguments not to what was actually wrong, but to how it was said — the eye roll, the sarcasm, the raised voice that made a small disagreement into a battle neither one wanted. Words are not neutral tools. They either build a safe place for your spouse to be honest with you, or they teach your spouse to brace, to hide, to stop bringing things to you at all.
+
+Before your next hard conversation, pause and ask: is my tone an open door or a slammed one? You can say the truth and still say it gently. In fact, gentleness often makes truth easier to receive — and a marriage where truth can be spoken gently is a marriage that can survive almost anything.', 'Aneh rasanya, kita justru sering menyimpan kata-kata paling tajam untuk orang yang paling kita cintai. Orang asing mendapat kesabaran kita; pasangan kita, yang akrab, lelah, dan terasa aman, kadang mendapat nada bicara terburuk kita. Kita mengira kasih berarti mereka akan mengerti, akan memaafkan, akan tetap ada besok — sehingga kita membiarkan kata-kata kita ceroboh dengan cara yang tak pernah kita izinkan pada orang lain.
+
+Amsal menawarkan hikmat yang sederhana sehingga mudah diabaikan, namun begitu benar sehingga layak dituliskan di dinding dapur: jawaban yang lembut meredakan kegeraman, tetapi perkataan yang pedas membangkitkan marah. Ini bukan soal menghindari percakapan sulit atau memendam perasaan. Ini soal nada suara yang kita pilih untuk menyampaikan kebenaran yang sulit. Kekhawatiran yang sama, disampaikan dengan lembut, bisa membuka pintu — sedangkan kekhawatiran yang sama, disampaikan dengan keras, bisa membanting pintu itu tertutup.
+
+Banyak pasangan bisa menelusuri pertengkaran terburuk mereka bukan pada apa yang sebenarnya salah, melainkan pada bagaimana itu disampaikan — mata yang berputar, sindiran, suara yang meninggi yang mengubah perselisihan kecil menjadi pertempuran yang tak diinginkan siapa pun. Kata-kata bukanlah alat yang netral. Kata-kata itu entah membangun tempat aman bagi pasangan untuk jujur padamu, atau mengajarkan pasangan untuk bersiaga, bersembunyi, berhenti membawa hal apa pun kepadamu.
+
+Sebelum percakapan sulit berikutnya, berhentilah sejenak dan tanyakan: apakah nadaku sebuah pintu terbuka atau pintu yang dibanting? Kalian bisa mengatakan kebenaran dan tetap mengatakannya dengan lembut. Bahkan, kelembutan sering membuat kebenaran lebih mudah diterima — dan pernikahan yang di dalamnya kebenaran bisa disampaikan dengan lembut adalah pernikahan yang bisa bertahan menghadapi hampir apa pun.',
+     'You can speak the truth and still choose gentleness. Ask yourself: is my tone opening a door for my spouse, or shutting one?', 'Kalian bisa mengatakan kebenaran dan tetap memilih kelembutan. Tanyakan pada diri sendiri: apakah nadaku membuka pintu bagi pasanganku, atau menutupnya?',
+     'Lord, guard my tongue with my spouse, the person I most want to protect, not wound. Give me gentle words even when my feelings run hot. Amen.', 'Tuhan, jagalah lidahku terhadap pasanganku, orang yang paling ingin kulindungi, bukan kulukai. Berikanlah aku kata-kata lembut bahkan ketika perasaanku sedang bergejolak. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 15:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 15:1', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Quick to Forgive', 'Cepat Mengampuni',
+     'Some couples treat forgiveness like a formality — a word said quickly so the tension can end, while the offense quietly gets filed away in a mental ledger for later. But real forgiveness is not a technicality. It is a decision to release a debt, fully, the way God released ours, without keeping a running tally to bring up in the next disagreement.
+
+Paul''s instruction is direct: be kind and compassionate, forgiving each other, just as God in Christ forgave you. Notice the standard — not forgiving as much as feels fair, not forgiving once the other person has suffered enough, but forgiving the way you have been forgiven: generously, completely, without conditions attached.
+
+This is hard when the hurt is real and the apology feels late or small. But an unforgiven offense doesn''t stay contained; it leaks into the next conversation, and the one after that, quietly poisoning things that had nothing to do with the original wound. Couples who keep long records of each other''s wrongs often find themselves fighting the same fight over and over, dressed in new clothes.
+
+Is there something small — or not so small — you have been holding onto, waiting for your spouse to earn your forgiveness? Today, consider what it would mean to forgive as you have been forgiven: not because the hurt didn''t matter, but because holding it is costing you both more than releasing it ever could.', 'Sebagian pasangan memperlakukan pengampunan seperti formalitas — sebuah kata yang cepat diucapkan agar ketegangan berakhir, sementara pelanggarannya diam-diam dicatat dalam buku besar batin untuk diungkit nanti. Namun pengampunan yang sesungguhnya bukanlah sekadar formalitas. Itu adalah keputusan untuk melepaskan utang, sepenuhnya, seperti Allah melepaskan utang kita, tanpa terus menyimpan catatan untuk diungkit di perselisihan berikutnya.
+
+Instruksi Paulus tegas: hendaklah kamu ramah seorang terhadap yang lain, penuh kasih mesra, dan saling mengampuni, sebagaimana Allah di dalam Kristus telah mengampuni kamu. Perhatikan standarnya — bukan mengampuni sebanyak yang terasa adil, bukan mengampuni setelah pasangan cukup menderita, melainkan mengampuni seperti kita telah diampuni: dengan murah hati, sepenuhnya, tanpa syarat yang mengikat.
+
+Ini berat ketika lukanya nyata dan permintaan maaf terasa terlambat atau kurang. Namun pelanggaran yang tidak diampuni tidak akan tinggal diam; ia merembes ke percakapan berikutnya, dan yang berikutnya lagi, diam-diam meracuni hal-hal yang sama sekali tidak berkaitan dengan luka semula. Pasangan yang menyimpan catatan panjang kesalahan satu sama lain sering mendapati diri bertengkar dalam pertikaian yang sama berulang-ulang, hanya berganti baju.
+
+Adakah sesuatu yang kecil — atau tidak begitu kecil — yang selama ini kalian pegang, menunggu pasangan pantas mendapat pengampunanmu? Hari ini, pikirkan apa artinya mengampuni seperti kalian telah diampuni: bukan karena lukanya tidak penting, melainkan karena menyimpannya justru merugikan kalian berdua lebih dari melepaskannya.',
+     'Unforgiven offenses don''t stay contained — they leak into everything else. Ask what it would mean to forgive fully, the way you''ve been forgiven.', 'Pelanggaran yang tidak diampuni tidak akan tinggal diam — ia merembes ke mana-mana. Tanyakan apa artinya mengampuni sepenuhnya, seperti kalian telah diampuni.',
+     'Father, You forgave us completely, without a ledger. Teach us to forgive each other the same way — freely, fully, without keeping score. Amen.', 'Bapa, Engkau mengampuni kami sepenuhnya, tanpa catatan utang. Ajari kami mengampuni satu sama lain dengan cara yang sama — dengan bebas, sepenuhnya, tanpa menghitung-hitung. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:32', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Peacemakers at Home', 'Pembawa Damai di Rumah',
+     'It''s easy to think of peacemaking as something for diplomats and mediators, some skill needed ''out there'' in the world. But the truest test of whether you can make peace is usually much closer to home — in the small kitchen-table disagreements, the tense car rides, the moments when being right feels more urgent than being at peace.
+
+Paul''s instruction carries an important qualifier: as far as it depends on you, live at peace. He doesn''t promise that peace is always fully in your control — your spouse has their own choices to make too — but he is clear that your part of it is your responsibility. You cannot control whether your spouse chooses peace in a given moment, but you can always control whether you do.
+
+Jesus calls peacemakers blessed, children of God, not peacekeepers who simply avoid conflict by staying silent and letting resentment build. Peacemaking is active — it means naming the issue instead of pretending it isn''t there, and then working toward resolution rather than just toward the end of an uncomfortable conversation. It costs more than silence, but it builds more than silence ever could.
+
+As you finish this short plan on communication, ask: in our home, am I usually the one who escalates, or the one who reaches for peace? You cannot make your spouse a peacemaker. But you can, today and every day, choose to be one — and that choice alone changes the shape of a marriage.', 'Mudah untuk menganggap membawa damai adalah tugas para diplomat dan mediator, sebuah keterampilan yang dibutuhkan ''di luar sana'' di dunia. Namun ujian sesungguhnya apakah kalian bisa membawa damai biasanya jauh lebih dekat dari itu — dalam perselisihan kecil di meja makan, perjalanan mobil yang tegang, saat-saat ketika merasa benar terasa lebih mendesak daripada merasa damai.
+
+Instruksi Paulus membawa syarat penting: sedapat-dapatnya, sejauh hal itu bergantung padamu, hiduplah dalam perdamaian dengan semua orang. Ia tidak menjanjikan bahwa damai selalu sepenuhnya dalam kendali kita — pasangan kita juga punya pilihannya sendiri — tetapi ia jelas bahwa bagianmu adalah tanggung jawabmu. Kalian tidak bisa mengendalikan apakah pasangan memilih damai pada suatu momen, tetapi kalian selalu bisa mengendalikan apakah kalian sendiri memilihnya.
+
+Yesus menyebut para pembawa damai berbahagia, anak-anak Allah — bukan sekadar penjaga damai yang menghindari konflik dengan berdiam diri dan membiarkan kebencian menumpuk. Membawa damai itu aktif — artinya menamai persoalan alih-alih berpura-pura tidak ada, lalu bekerja menuju penyelesaian, bukan sekadar menuju berakhirnya percakapan yang tidak nyaman. Itu berharga lebih mahal daripada diam, tetapi membangun lebih banyak daripada yang bisa dibangun diam.
+
+Saat menutup rencana singkat tentang komunikasi ini, tanyakanlah: di rumah kami, apakah aku biasanya yang memperkeruh keadaan, atau yang meraih damai? Kalian tidak bisa membuat pasangan menjadi pembawa damai. Namun kalian bisa, hari ini dan setiap hari, memilih untuk menjadi pembawa damai itu sendiri — dan pilihan itu saja mengubah bentuk sebuah pernikahan.',
+     'You cannot control whether your spouse chooses peace, but you can always control whether you do. Choose to be the peacemaker today.', 'Kalian tidak bisa mengendalikan apakah pasangan memilih damai, tetapi kalian selalu bisa mengendalikan pilihan kalian sendiri. Pilihlah menjadi pembawa damai hari ini.',
+     'Prince of Peace, make me a peacemaker in my own home first. Where I tend to escalate, teach me to de-escalate; where I stay silent out of avoidance, give me courage to seek real resolution. Amen.', 'Raja Damai, jadikanlah aku pembawa damai di rumahku sendiri terlebih dahulu. Di mana aku cenderung memperkeruh keadaan, ajari aku meredakannya; di mana aku diam karena menghindar, berilah aku keberanian mencari penyelesaian yang sesungguhnya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 5:9', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:18', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 5:9', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Still Choosing You  (Partner Love, 3 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Partner Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Still Choosing You';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Still Choosing You', 'Tetap Memilihmu',
+     'A Three-Day Reflection for Long-Married Couples', 'Renungan Tiga Hari bagi Pasangan yang Telah Lama Menikah',
+     'For couples who have shared many years, this brief plan is an invitation to notice what familiarity can quietly dull — the sharpening, the delight, the gratitude — and to fall in love again with the person you already married.', 'Bagi pasangan yang telah berbagi bertahun-tahun bersama, rencana singkat ini adalah undangan untuk menyadari apa yang diam-diam bisa memudar karena rasa terbiasa — saling mengasah, kekaguman, rasa syukur — dan untuk jatuh cinta lagi kepada orang yang telah kalian nikahi.', 3)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Iron Sharpens Iron', 'Besi Menajamkan Besi',
+     'After enough years together, a marriage can start to feel like furniture — familiar, functional, no longer really looked at. You know each other''s coffee order, each other''s moods, each other''s stories so well you can finish the sentences. This familiarity is a gift few couples starting out can imagine, but it carries a quiet risk too: the temptation to stop actually engaging with each other, to coast on knowing rather than continuing to know.
+
+Proverbs offers an image worth returning to at this stage of marriage: as iron sharpens iron, so one person sharpens another. Sharpening requires contact, friction, ongoing engagement — not the comfortable friction of old arguments rehashed, but the good friction of two people still challenging each other to grow, still asking real questions, still willing to be shaped by one another.
+
+Long marriages that stay vibrant tend to share this quality: the couple keeps choosing to sharpen rather than simply coexist. They ask each other what they''re learning, what they''re afraid of, what they''re dreaming about now, not just what''s for dinner. They let each other keep changing instead of freezing each other in an old picture of who you used to be.
+
+After all these years, when was the last time you asked your spouse a genuinely new question — not about logistics, but about their soul? Today, be iron to each other again. Ask something real. Let yourself be sharpened, not just kept company.', 'Setelah cukup banyak tahun bersama, sebuah pernikahan bisa mulai terasa seperti perabot — akrab, berfungsi, namun tak lagi benar-benar diperhatikan. Kalian tahu pesanan kopi satu sama lain, suasana hati satu sama lain, cerita satu sama lain begitu hafal sampai bisa menyelesaikan kalimatnya. Keakraban ini adalah anugerah yang jarang bisa dibayangkan pasangan yang baru memulai, tetapi ia juga membawa risiko diam-diam: godaan untuk berhenti sungguh-sungguh berinteraksi satu sama lain, hanya melaju di atas ''sudah tahu'' alih-alih terus mengenal.
+
+Amsal menawarkan gambaran yang layak terus diingat pada tahap pernikahan ini: besi menajamkan besi, seorang menajamkan sesamanya. Mengasah membutuhkan kontak, gesekan, keterlibatan yang berkelanjutan — bukan gesekan nyaman dari pertengkaran lama yang diulang-ulang, melainkan gesekan baik dari dua orang yang masih saling menantang untuk bertumbuh, masih mengajukan pertanyaan sungguhan, masih bersedia dibentuk oleh satu sama lain.
+
+Pernikahan panjang yang tetap hidup cenderung memiliki kualitas ini: pasangan itu terus memilih untuk saling mengasah alih-alih sekadar hidup berdampingan. Mereka bertanya satu sama lain apa yang sedang mereka pelajari, apa yang mereka takutkan, apa yang sedang mereka impikan sekarang, bukan hanya apa menu makan malam. Mereka membiarkan satu sama lain terus berubah, bukan membekukan satu sama lain dalam gambaran lama tentang siapa dulu kalian.
+
+Setelah sekian tahun ini, kapan terakhir kali kalian mengajukan pertanyaan yang sungguh-sungguh baru kepada pasangan — bukan soal logistik, melainkan soal jiwanya? Hari ini, jadilah besi bagi satu sama lain lagi. Tanyakan sesuatu yang sungguhan. Biarkan diri kalian diasah, bukan sekadar ditemani.',
+     'Familiarity can quietly turn into coasting. Ask your spouse a genuinely new question today, and let yourself be sharpened rather than merely kept company.', 'Keakraban bisa diam-diam berubah menjadi sekadar melaju tanpa arah. Ajukan pertanyaan yang sungguh-sungguh baru kepada pasanganmu hari ini, dan biarkan dirimu diasah, bukan sekadar ditemani.',
+     'Lord, don''t let us settle into comfortable distance disguised as familiarity. Sharpen us through each other again, and give us curiosity for the person our spouse is still becoming. Amen.', 'Tuhan, jangan biarkan kami jatuh ke dalam jarak yang nyaman namun menyamar sebagai keakraban. Asahlah kami lagi melalui satu sama lain, dan berilah kami rasa ingin tahu akan pribadi yang sedang terus dibentuk dari pasangan kami. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 27:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 27:17', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Renewed Strength, Together', 'Kekuatan yang Dibarui, Bersama',
+     'There is a particular kind of tiredness that comes with a long marriage — not the tiredness of a bad relationship, but the ordinary weariness of decades of showing up: raising children or facing their absence, work and money and health and aging parents, the sheer accumulated weight of so many years of ordinary faithfulness. It is a good tiredness in many ways, but it is real, and it is worth naming rather than pushing through silently.
+
+Isaiah''s promise to a weary people is worth holding onto here: those who hope in the Lord will renew their strength; they will soar on wings like eagles, they will run and not grow weary, they will walk and not be faint. This is not a promise of endless youthful energy. It is a promise that God renews those who keep turning to Him, even in a season that has every reason to feel depleted.
+
+The psalmist offers a companion image for this stage of life: the righteous will still bear fruit in old age, they will stay fresh and green. A tree planted deep does not stop producing simply because it has stood a long time; if anything, its roots run deeper and its fruit is often sweeter. A marriage rooted in God is not destined to grow stale with age — it can keep bearing good fruit precisely because it has weathered so many seasons.
+
+If you are tired today, that is not a sign something is wrong with your marriage. It may simply be a sign you need to turn together, again, toward the source of renewal. Where might you both need fresh strength right now — and will you ask for it together?', 'Ada jenis kelelahan tertentu yang datang bersama pernikahan yang panjang — bukan kelelahan dari hubungan yang buruk, melainkan keletihan biasa dari puluhan tahun terus hadir: membesarkan anak-anak atau menghadapi kepergian mereka, pekerjaan dan uang dan kesehatan dan orang tua yang menua, beban yang terkumpul dari begitu banyak tahun kesetiaan yang biasa. Ini kelelahan yang baik dalam banyak hal, tetapi nyata, dan layak dinamai, bukan sekadar ditahan dalam diam.
+
+Janji Yesaya kepada umat yang lelah layak dipegang di sini: orang-orang yang menanti-nantikan TUHAN mendapat kekuatan baru, mereka seumpama rajawali yang naik terbang dengan kekuatan sayapnya, mereka berlari dan tidak menjadi lesu, mereka berjalan dan tidak menjadi lelah. Ini bukan janji energi masa muda yang tak berkesudahan. Ini janji bahwa Allah membarui mereka yang terus berpaling kepada-Nya, bahkan di musim yang punya segala alasan untuk terasa terkuras.
+
+Pemazmur menawarkan gambaran pendamping untuk tahap kehidupan ini: orang benar akan tetap berbuah pada masa tua, akan tetap penuh getah dan segar. Pohon yang tertanam dalam tidak berhenti berbuah hanya karena telah lama berdiri; justru sering kali akarnya makin dalam dan buahnya makin manis. Pernikahan yang berakar pada Allah tidak ditakdirkan menjadi hambar seiring usia — ia bisa terus berbuah baik, justru karena telah melewati begitu banyak musim.
+
+Jika kalian lelah hari ini, itu bukan tanda ada yang salah dengan pernikahan kalian. Itu mungkin sekadar tanda kalian perlu berpaling bersama, lagi, kepada sumber pembaruan. Di mana kalian berdua mungkin membutuhkan kekuatan baru sekarang — dan maukah kalian memintanya bersama?',
+     'A long marriage isn''t destined to grow stale — rooted in God, it can keep bearing sweeter fruit with time. Turn together toward the source of renewal.', 'Pernikahan yang panjang tidak ditakdirkan menjadi hambar — berakar pada Allah, ia bisa terus berbuah semakin manis seiring waktu. Berpalinglah bersama kepada sumber pembaruan.',
+     'Lord, we are tired in good and honest ways after these years. Renew our strength as we wait on You together, and let our marriage keep bearing fruit even as we age. Amen.', 'Tuhan, kami lelah dengan cara yang baik dan jujur setelah bertahun-tahun ini. Barui kekuatan kami saat kami menanti-nantikan-Mu bersama, dan biarkan pernikahan kami terus berbuah bahkan seiring kami menua. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 40:31', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 92:14', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 40:31', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 92:15', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Delight, Not Just Duty', 'Kekaguman, Bukan Sekadar Kewajiban',
+     'It is possible to be faithful to someone for decades and still forget to delight in them — to show up, keep your vows, do your part, and yet quietly stop noticing the person you''re actually married to. Duty without delight can sustain a marriage for a long time, but it is not the fullest picture Scripture paints of what love between spouses can be.
+
+Proverbs describes a husband who praises his wife, whose children rise up and call her blessed — not out of obligation, but genuine admiration, spoken aloud. And the Song of Songs, that unashamedly tender book of Scripture, gives us a simple, warm picture of belonging: my beloved is mine and I am his. These are not the words of duty. They are the words of delight — of two people who still, after everything, choose to see each other with fondness.
+
+Delight is a discipline as much as a feeling, especially after many years. It means actually saying out loud what you appreciate about your spouse, not just assuming they know. It means noticing small things again — the way they laugh, something they''re good at, a kindness they showed this week — instead of only noticing what still needs fixing. Gratitude, spoken, has a way of reviving what silence lets go quiet.
+
+As you close this short plan, try something simple and, in a long marriage, surprisingly rare: tell your spouse specifically what you delight in about them. Not a general ''I love you,'' but something particular, something true, something they may not have heard in a while. Let today be less about duty fulfilled, and more about delight renewed.', 'Sangat mungkin setia kepada seseorang selama puluhan tahun namun lupa mengaguminya — terus hadir, menjaga janji, melakukan bagian sendiri, namun diam-diam berhenti benar-benar memperhatikan orang yang sesungguhnya kalian nikahi. Kewajiban tanpa kekaguman bisa mempertahankan pernikahan dalam waktu lama, tetapi itu bukan gambaran paling utuh yang dilukiskan Alkitab tentang kasih antara suami istri.
+
+Amsal menggambarkan seorang suami yang memuji istrinya, yang anak-anaknya bangkit dan menyebutnya berbahagia — bukan karena kewajiban, melainkan kekaguman yang tulus, diucapkan dengan lantang. Dan Kidung Agung, kitab Alkitab yang begitu lembut tanpa malu-malu, memberi kita gambaran sederhana dan hangat tentang menjadi milik: kekasihku kepunyaanku, dan aku kepunyaan dia. Ini bukan kata-kata kewajiban. Ini kata-kata kekaguman — dari dua orang yang, setelah semuanya, masih memilih memandang satu sama lain dengan sayang.
+
+Kekaguman adalah disiplin sekaligus perasaan, terutama setelah bertahun-tahun. Artinya benar-benar mengucapkan apa yang kalian hargai dari pasangan, bukan sekadar menganggap mereka sudah tahu. Artinya memperhatikan lagi hal-hal kecil — cara mereka tertawa, sesuatu yang mereka kuasai, kebaikan yang mereka tunjukkan minggu ini — alih-alih hanya memperhatikan apa yang masih perlu diperbaiki. Rasa syukur, yang diucapkan, punya cara menghidupkan kembali apa yang dibiarkan sunyi oleh keheningan.
+
+Saat menutup rencana singkat ini, cobalah sesuatu yang sederhana dan, dalam pernikahan yang panjang, mengejutkan langkanya: katakan kepada pasangan secara spesifik apa yang kalian kagumi darinya. Bukan sekadar ''aku mencintaimu'' yang umum, melainkan sesuatu yang khusus, sesuatu yang benar, sesuatu yang mungkin sudah lama tidak mereka dengar. Biarlah hari ini lebih tentang kekaguman yang dibarui, bukan sekadar kewajiban yang ditunaikan.',
+     'Duty can sustain a marriage, but delight renews it. Say out loud, specifically, what you delight in about your spouse today.', 'Kewajiban bisa mempertahankan pernikahan, tetapi kekaguman memperbaruinya. Ucapkan dengan lantang, secara spesifik, apa yang kalian kagumi dari pasangan hari ini.',
+     'Lord, thank You for the years we''ve shared. Revive our delight in each other — help us notice again what we love, and say it out loud. Amen.', 'Tuhan, terima kasih untuk tahun-tahun yang telah kami bagi. Hidupkan kembali kekaguman kami satu sama lain — tolong kami memperhatikan lagi apa yang kami kasihi, dan mengucapkannya dengan lantang. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 31:28', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Song of Songs 2:16', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 31:28', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kidung Agung 2:16', 'TB', 3);
+
+  -- ===================================================================
+  -- Plan: Waiting Well  (Partner Love, 7 days)
+  -- ===================================================================
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Partner Love' AND parent_id = v_love_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+  DELETE FROM public.devotion_plans WHERE title = 'Waiting Well';
+
+  INSERT INTO public.devotion_plans
+    (category_id, title, title_id, subtitle, subtitle_id,
+     description, description_id, duration_days)
+  VALUES
+    (v_cat_id, 'Waiting Well', 'Menanti dengan Baik',
+     'A Seven-Day Guide to Waiting and Preparing Your Heart for Love', 'Panduan Tujuh Hari untuk Menanti dan Menyiapkan Hati bagi Kasih',
+     'For those who are single and long for a future partner, this seven-day plan offers a way to wait that is neither anxious striving nor passive resignation — trusting God''s timing, guarding your heart, growing in contentment, and praying for the future with hope.', 'Bagi mereka yang masih lajang dan merindukan pasangan di masa depan, rencana tujuh hari ini menawarkan cara menanti yang bukan kecemasan yang mengejar-ngejar maupun kepasrahan yang pasif — mempercayai waktu Allah, menjaga hati, bertumbuh dalam kepuasan, dan mendoakan masa depan dengan pengharapan.', 7)
+  RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 1, 'Wait for the Lord', 'Nantikanlah TUHAN',
+     'Waiting for a future spouse can feel like standing in a hallway with no visible door — you don''t know how long the hallway is, whether you''re even facing the right direction, or what''s supposed to happen while you wait. It is one of the more disorienting kinds of waiting, because unlike waiting for a test result or a job offer, there is no clear timeline, and comparison to others'' timelines can make the waiting feel even heavier.
+
+The psalmist''s instruction is short and, honestly, not always what we want to hear: wait for the Lord; be strong and take heart and wait for the Lord. Notice it''s said twice, framing a call to strength and courage in between — as if the writer knew waiting itself would require real strength, not just patience but active courage to keep trusting while nothing visible seems to be happening.
+
+This kind of waiting is not passive resignation, arms crossed, life on pause until a spouse arrives. It is active trust — living fully now, growing now, becoming now, while trusting that God is not asleep on your timeline even when His pace feels painfully unlike yours. Waiting well does not mean waiting comfortably. It means waiting with your heart still turned toward God rather than turned bitter or anxious.
+
+Today, however long your hallway has felt, let this be your prayer: not ''why is this taking so long,'' but ''strengthen my heart while I wait.'' God is not indifferent to this ache. He is present in the hallway with you.', 'Menanti pasangan masa depan bisa terasa seperti berdiri di lorong tanpa pintu yang terlihat — kalian tidak tahu seberapa panjang lorong itu, apakah kalian bahkan menghadap arah yang benar, atau apa yang seharusnya terjadi selama menanti. Ini salah satu jenis penantian yang lebih membingungkan, karena tidak seperti menanti hasil tes atau tawaran kerja, tidak ada garis waktu yang jelas, dan membandingkan diri dengan garis waktu orang lain bisa membuat penantian terasa makin berat.
+
+Instruksi pemazmur singkat, dan sejujurnya, tidak selalu yang ingin kita dengar: nantikanlah TUHAN, kuatkanlah dan teguhkanlah hatimu, ya, nantikanlah TUHAN! Perhatikan itu dikatakan dua kali, mengapit seruan untuk kuat dan teguh di antaranya — seolah sang penulis tahu penantian itu sendiri akan menuntut kekuatan sungguhan, bukan sekadar kesabaran tetapi keberanian aktif untuk terus percaya sementara tampaknya tidak ada yang terjadi.
+
+Penantian semacam ini bukan kepasrahan pasif, tangan bersedekap, hidup dijeda sampai pasangan datang. Ini kepercayaan yang aktif — hidup sepenuhnya sekarang, bertumbuh sekarang, menjadi diri sekarang, sambil percaya bahwa Allah tidak tertidur atas garis waktu kalian sekalipun ritme-Nya terasa menyakitkan berbeda dari ritme kalian. Menanti dengan baik bukan berarti menanti dengan nyaman. Artinya menanti dengan hati yang tetap berpaling kepada Allah, bukan berubah pahit atau cemas.
+
+Hari ini, seberapa pun panjang lorong yang kalian rasakan, biarlah ini menjadi doa kalian: bukan ''mengapa ini begitu lama'', melainkan ''kuatkanlah hatiku selagi aku menanti.'' Allah tidak acuh terhadap kerinduan ini. Ia hadir di lorong itu bersamamu.',
+     'Waiting well is not passive — it''s active trust, courage to keep growing while nothing visible seems to be happening.', 'Menanti dengan baik bukanlah pasif — itu kepercayaan yang aktif, keberanian untuk terus bertumbuh sementara tampaknya belum ada yang terjadi.',
+     'Lord, strengthen my heart while I wait. I don''t know how long this hallway is, but I trust You are walking it with me. Amen.', 'Tuhan, kuatkanlah hatiku selagi aku menanti. Aku tidak tahu seberapa panjang lorong ini, tetapi aku percaya Engkau berjalan bersamaku di dalamnya. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 27:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 27:14', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 2, 'Delight First', 'Kagumi Dahulu',
+     'It is tempting, in seasons of waiting, to treat God like a vending machine for the thing you want most — pray hard enough, be good enough, wait patiently enough, and eventually the desired result drops out. But the verse many people quote in seasons of longing for a spouse is often misread when it''s used this way, as a formula for getting what you want rather than an invitation into something deeper.
+
+Take delight in the Lord, the psalmist writes, and he will give you the desires of your heart. Read carefully, this is not primarily a transaction. It''s a promise about what happens inside you when delighting in God becomes your actual pursuit rather than a means to another end: your desires themselves begin to be shaped, aligned, sometimes surprisingly reordered by nearness to Him.
+
+This doesn''t mean the desire for a spouse is wrong or needs to be suppressed until it disappears. It means the healthiest way to wait for a future partner is not to center your life around the waiting, checking the hallway door every hour, but to center your life around delighting in God now — growing in Him, serving, learning, becoming the kind of person capable of real, self-giving love, so that whenever love does arrive, you are actually ready to offer it.
+
+Ask yourself honestly today: is my delight centered on God, or has waiting for a spouse quietly become the center I orbit everything else around? Whatever the answer, let today be a turning back toward delighting in Him first — not instead of hoping for love, but as the very ground that hope can stand on.', 'Dalam musim penantian, tergoda rasanya memperlakukan Allah seperti mesin penjual otomatis untuk hal yang paling kalian inginkan — berdoa cukup keras, cukup baik, menanti cukup sabar, lalu akhirnya hasil yang diinginkan keluar. Namun ayat yang sering dikutip banyak orang dalam musim merindukan pasangan justru sering salah dibaca ketika dipakai dengan cara ini, sebagai rumus untuk mendapatkan yang diinginkan alih-alih undangan pada sesuatu yang lebih dalam.
+
+Kagumilah TUHAN, tulis sang pemazmur, maka Ia akan memberikan kepadamu apa yang diinginkan hatimu. Dibaca dengan saksama, ini bukan pertama-tama sebuah transaksi. Ini janji tentang apa yang terjadi di dalam diri kita ketika mengagumi Allah menjadi tujuan sesungguhnya, bukan sekadar sarana menuju tujuan lain: keinginan kita sendiri mulai dibentuk, diselaraskan, kadang secara mengejutkan disusun ulang, oleh kedekatan dengan-Nya.
+
+Ini bukan berarti keinginan akan pasangan itu salah atau perlu ditekan sampai lenyap. Ini berarti cara paling sehat untuk menanti pasangan masa depan bukanlah memusatkan hidup pada penantian itu, memeriksa pintu lorong setiap jam, melainkan memusatkan hidup pada mengagumi Allah sekarang — bertumbuh dalam Dia, melayani, belajar, menjadi pribadi yang mampu mengasihi dengan sungguh-sungguh dan memberi diri, sehingga kapan pun kasih itu tiba, kalian sungguh siap memberikannya.
+
+Tanyakan pada diri sendiri dengan jujur hari ini: apakah kekagumanku terpusat pada Allah, atau apakah menanti pasangan diam-diam telah menjadi pusat yang mengelilingi segala yang lain? Apa pun jawabannya, biarlah hari ini menjadi kesempatan berpaling kembali untuk mengagumi Dia lebih dulu — bukan sebagai pengganti mengharapkan kasih, melainkan sebagai dasar tempat pengharapan itu bisa berpijak.',
+     'This verse is not a formula for getting what you want — it''s a promise about what happens inside you when God, not the waiting, becomes the true center.', 'Ayat ini bukan rumus untuk mendapatkan yang diinginkan — ini janji tentang apa yang terjadi di dalam diri saat Allah, bukan penantian itu sendiri, menjadi pusat yang sesungguhnya.',
+     'Lord, I don''t want to orbit my life around waiting. Let my delight center on You today, and trust You to shape even my desires in that closeness. Amen.', 'Tuhan, aku tidak ingin hidupku berputar mengelilingi penantian. Biarlah kekagumanku berpusat pada-Mu hari ini, dan aku percaya Engkau membentuk bahkan keinginan-keinginanku dalam kedekatan itu. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 37:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 37:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 3, 'Guard Your Heart', 'Jagalah Hatimu',
+     'When you long for a relationship, it can be tempting to lower your guard just to feel less alone — to accept attention that doesn''t actually honor you, to stay in something half-hearted because half-hearted still feels better than empty, to ignore red flags because the loneliness is louder than the warning signs. Waiting is hard enough without also handing your heart to something that was never going to hold it well.
+
+Proverbs gives a piece of wisdom that applies directly here: above all else, guard your heart, for everything you do flows from it. This is not a call to build walls and let no one in. It''s a call to protect the wellspring — because whatever you allow to shape your heart while you wait will shape the kind of love you''re capable of when a real relationship does come.
+
+Guarding your heart, practically, might mean being honest with yourself about a situationship that isn''t actually going anywhere. It might mean stepping back from a pattern of seeking validation through attention rather than genuine connection. It might mean choosing friendships and community that speak truth to you, rather than isolating yourself with only the ache of waiting for company.
+
+This is not about self-protection out of fear, but about stewardship — treating your heart as something worth caring for well, because someday you will hand pieces of it to another person, and you want what you hand over to be whole, not worn thin by things that were never meant to fill this particular longing. What is one thing today that would mean actually guarding your heart?', 'Ketika kalian merindukan hubungan, tergoda rasanya menurunkan penjagaan hati hanya agar tidak merasa terlalu sendiri — menerima perhatian yang sebenarnya tidak menghormati diri, bertahan dalam sesuatu yang setengah hati karena setengah hati masih terasa lebih baik daripada kosong, mengabaikan tanda-tanda peringatan karena kesepian terdengar lebih keras daripada tanda bahaya itu. Menanti sudah cukup berat tanpa juga menyerahkan hati kepada sesuatu yang memang tidak akan pernah mampu menjaganya dengan baik.
+
+Amsal memberi hikmat yang berlaku langsung di sini: jagalah hatimu dengan segala kewaspadaan, karena dari situlah terpancar kehidupan. Ini bukan seruan untuk membangun tembok dan tidak membiarkan siapa pun masuk. Ini seruan untuk melindungi sumber mata air — karena apa pun yang kalian biarkan membentuk hati kalian selama menanti akan membentuk jenis kasih yang mampu kalian berikan ketika hubungan yang sesungguhnya nanti datang.
+
+Menjaga hati, secara praktis, mungkin berarti jujur pada diri sendiri tentang hubungan tanpa status yang sebenarnya tidak menuju ke mana pun. Mungkin berarti mundur dari pola mencari validasi melalui perhatian alih-alih koneksi yang sungguhan. Mungkin berarti memilih pertemanan dan komunitas yang berkata jujur kepadamu, alih-alih mengisolasi diri hanya dengan kerinduan menanti teman.
+
+Ini bukan tentang melindungi diri karena rasa takut, melainkan tentang penatalayanan — memperlakukan hati kalian sebagai sesuatu yang layak dijaga dengan baik, karena suatu hari kalian akan menyerahkan kepingan hati itu kepada orang lain, dan kalian ingin apa yang diserahkan itu utuh, bukan tergerus habis oleh hal-hal yang tak pernah dimaksudkan untuk mengisi kerinduan khusus ini. Apa satu hal hari ini yang berarti sungguh-sungguh menjaga hatimu?',
+     'Guarding your heart isn''t building walls — it''s stewardship, so that whatever you hand over one day is whole, not worn thin by things never meant to fill this longing.', 'Menjaga hati bukanlah membangun tembok — itu penatalayanan, agar apa pun yang kelak kalian serahkan tetap utuh, bukan tergerus oleh hal-hal yang tak pernah dimaksudkan mengisi kerinduan ini.',
+     'Lord, guard my heart when loneliness makes me want to lower it myself. Help me steward it well, so it''s whole when I finally get to give it away. Amen.', 'Tuhan, jagalah hatiku ketika kesepian membuatku ingin menurunkan penjagaannya sendiri. Tolong aku menatalayaninya dengan baik, sehingga ia utuh saat akhirnya kuserahkan. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 4:23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 4:23', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 4, 'Rest While You Hope', 'Beristirahat Selagi Berharap',
+     'There is a restlessness particular to waiting for love — a low hum of checking, wondering, comparing your life to friends who are already married, wondering if you missed some window, wondering what''s wrong with the timing or with you. This restlessness can quietly steal the peace out of seasons that could otherwise be full and good in their own right.
+
+The psalmist offers a striking image of where rest actually comes from: yes, my soul, find rest in God alone; my hope comes from him. Not from a relationship status, not from certainty about the future, not from finally getting an answer to when — but from God alone. This is a hard truth to sit with when what you want most is a person, not a principle. But it is also, in the end, the only rest that doesn''t depend on circumstances outside your control.
+
+Lamentations adds a companion promise: the Lord is good to those whose hope is in him, to the one who seeks him. Notice that the goodness described here is not conditioned on the waiting ending soon. It is available now, in the seeking itself, in the present tense of trusting Him today rather than only once the waiting is over.
+
+Practicing this rest doesn''t mean pretending you don''t long for a partner. It means refusing to let that longing be the only place you look for peace. Where could you let your soul actually rest today — not in an answer, but in God Himself, right in the middle of not knowing?', 'Ada kegelisahan tertentu yang khas dalam menanti kasih — dengungan pelan memeriksa, bertanya-tanya, membandingkan hidup dengan teman-teman yang sudah menikah, bertanya-tanya apakah kalian melewatkan suatu kesempatan, bertanya-tanya apa yang salah dengan waktunya atau dengan diri sendiri. Kegelisahan ini bisa diam-diam mencuri kedamaian dari musim-musim yang sebenarnya bisa penuh dan baik dengan sendirinya.
+
+Pemazmur menawarkan gambaran yang mencolok tentang dari mana ketenangan sesungguhnya berasal: hanya dekat Allah saja aku tenang, hai jiwaku, sebab dari pada-Nyalah harapanku. Bukan dari status hubungan, bukan dari kepastian tentang masa depan, bukan dari akhirnya mendapat jawaban tentang kapan — melainkan dari Allah saja. Ini kebenaran yang berat untuk direnungkan ketika yang paling diinginkan adalah seseorang, bukan sebuah prinsip. Namun pada akhirnya, inilah satu-satunya ketenangan yang tidak bergantung pada keadaan di luar kendali kalian.
+
+Ratapan menambahkan janji pendamping: TUHAN adalah baik bagi orang yang berharap kepada-Nya, bagi jiwa yang mencari Dia. Perhatikan bahwa kebaikan yang digambarkan di sini tidak bersyarat pada berakhirnya penantian segera. Itu tersedia sekarang, dalam pencarian itu sendiri, dalam bentuk waktu sekarang mempercayai Dia hari ini, bukan hanya setelah penantian berakhir.
+
+Melatih ketenangan ini bukan berarti berpura-pura tidak merindukan pasangan. Ini berarti menolak membiarkan kerinduan itu menjadi satu-satunya tempat mencari damai. Di mana kalian bisa membiarkan jiwa kalian sungguh-sungguh beristirahat hari ini — bukan dalam sebuah jawaban, melainkan dalam Allah sendiri, tepat di tengah ketidaktahuan?',
+     'Real rest doesn''t come from a relationship status or an answer about timing — it comes from God alone, available now, in the middle of not knowing.', 'Ketenangan yang sesungguhnya tidak datang dari status hubungan atau jawaban tentang waktu — itu datang dari Allah saja, tersedia sekarang, di tengah ketidaktahuan.',
+     'Lord, my soul is restless for an answer You haven''t given yet. Teach me to find rest in You alone, right in the middle of not knowing. Amen.', 'Tuhan, jiwaku gelisah menanti jawaban yang belum Kau berikan. Ajari aku menemukan ketenangan hanya dalam Engkau, tepat di tengah ketidaktahuan ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 62:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:25', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 62:6', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:25', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 5, 'Learning Contentment', 'Belajar Merasa Cukup',
+     'Contentment is one of those things that sounds simple until you actually try to practice it in a season you didn''t choose. It is easy to imagine feeling content once circumstances change — once the relationship arrives, once the waiting ends — but Scripture describes a contentment that is learned in the middle of unchanged circumstances, not just after they improve.
+
+Paul, writing from difficult circumstances of his own, makes a striking claim: I have learned to be content whatever the circumstances... I can do all this through him who gives me strength. Notice the word learned — this wasn''t natural to him either. Contentment was a discipline built over time, through seasons of both plenty and want, not a personality trait some people simply have and others don''t.
+
+For someone waiting on a future spouse, learning contentment does not mean pretending the desire doesn''t exist or suppressing hope for a relationship. It means refusing to let your current life be treated as a waiting room, a placeholder that doesn''t count until the ''real'' life with a partner begins. Your life now, single, is not a delay. It is your actual life, worth living fully, worth investing in deeply, right now.
+
+What would it look like this week to actually live your single season, rather than merely endure it — pursuing friendships, growth, calling, joy, not as consolation prizes but as real and good gifts in their own right? Ask God today for the strength Paul describes: not the strength to stop wanting a partner, but the strength to be genuinely content while you wait.', 'Merasa cukup adalah salah satu hal yang terdengar sederhana sampai kalian benar-benar mencoba mempraktikkannya dalam musim yang tidak kalian pilih. Mudah membayangkan merasa cukup setelah keadaan berubah — setelah hubungan itu datang, setelah penantian berakhir — tetapi Alkitab menggambarkan rasa cukup yang dipelajari di tengah keadaan yang belum berubah, bukan hanya setelah membaik.
+
+Paulus, menulis dari keadaannya sendiri yang sulit, membuat pernyataan yang mencolok: aku telah belajar mencukupkan diri dalam segala keadaan... segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku. Perhatikan kata belajar — ini juga tidak alami baginya. Merasa cukup adalah disiplin yang dibangun seiring waktu, melalui musim berkelimpahan maupun kekurangan, bukan sifat kepribadian yang sekadar dimiliki sebagian orang dan tidak dimiliki yang lain.
+
+Bagi seseorang yang menanti pasangan masa depan, belajar merasa cukup tidak berarti berpura-pura keinginan itu tidak ada atau menekan harapan akan hubungan. Ini berarti menolak membiarkan hidup kalian sekarang diperlakukan sebagai ruang tunggu, sebuah pengganti sementara yang belum terhitung sampai ''kehidupan sesungguhnya'' bersama pasangan dimulai. Hidup kalian sekarang, sebagai lajang, bukanlah penundaan. Itu adalah kehidupan kalian yang sesungguhnya, layak dijalani sepenuhnya, layak diinvestasikan secara mendalam, sekarang juga.
+
+Seperti apa rasanya minggu ini benar-benar menjalani musim lajang, bukan sekadar bertahan melewatinya — mengejar pertemanan, pertumbuhan, panggilan, sukacita, bukan sebagai hadiah hiburan melainkan sebagai anugerah yang nyata dan baik dengan sendirinya? Mintalah kepada Allah hari ini kekuatan yang digambarkan Paulus: bukan kekuatan untuk berhenti menginginkan pasangan, melainkan kekuatan untuk sungguh-sungguh merasa cukup selagi menanti.',
+     'Your single season is not a waiting room — it''s your actual life. Ask for strength not to stop wanting a partner, but to be genuinely content while you wait.', 'Musim lajangmu bukan ruang tunggu — itu kehidupanmu yang sesungguhnya. Mintalah kekuatan bukan untuk berhenti menginginkan pasangan, melainkan untuk sungguh-sungguh merasa cukup selagi menanti.',
+     'Lord, teach me the contentment Paul learned. Help me live fully now, not as a placeholder life, but as the real life You have given me today. Amen.', 'Tuhan, ajari aku rasa cukup yang dipelajari Paulus. Tolong aku menjalani hidup sepenuhnya sekarang, bukan sebagai kehidupan pengganti, melainkan sebagai kehidupan sesungguhnya yang Kau berikan kepadaku hari ini. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 4:11-13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 4:11-13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 6, 'Praying for Who Is to Come', 'Mendoakan Dia yang Akan Datang',
+     'It can feel strange to pray for someone you haven''t met yet — a person somewhere, living their own life, perhaps also waiting, perhaps also wondering. But praying for your future spouse, even before you know their name or face, is a quiet act of hope: a way of trusting that God is already at work on both sides of a story you can''t yet see the whole of.
+
+Proverbs speaks with striking confidence about this: he who finds a wife finds what is good and receives favor from the LORD. And again: a prudent, God-fearing spouse is from the LORD. These verses don''t promise a guaranteed timeline, but they do reveal something about how Scripture regards this kind of love — not as something you simply produce through effort or luck, but as a good gift that God is genuinely involved in.
+
+So pray specifically. Pray for their character, wherever they are right now — for their walk with God, their integrity, their capacity to love well. Pray for whatever season they might be in, whether easy or hard. Pray, too, for yourself, that you would keep becoming the kind of person capable of receiving and giving that same good, godly love when the time comes.
+
+This is not a guarantee that prayer speeds up timing or removes the ache of waiting. But it is a way of participating in hope rather than only enduring the wait passively. Today, if you feel ready, pray by name for ''my future spouse, wherever they are'' — and trust that God, who sees them fully even now, is faithfully at work.', 'Terasa aneh rasanya mendoakan seseorang yang belum pernah kalian temui — seseorang di suatu tempat, menjalani hidupnya sendiri, mungkin juga sedang menanti, mungkin juga bertanya-tanya. Namun mendoakan pasangan masa depan, bahkan sebelum kalian tahu nama atau wajahnya, adalah tindakan pengharapan yang tenang: cara mempercayai bahwa Allah sudah bekerja di kedua sisi sebuah kisah yang belum bisa kalian lihat seutuhnya.
+
+Amsal berbicara dengan keyakinan yang mencolok tentang hal ini: siapa mendapat isteri, mendapat sesuatu yang baik, dan ia dikenan TUHAN. Dan lagi: rumah dan harta adalah warisan nenek moyang, tetapi isteri yang berakal budi adalah karunia TUHAN. Ayat-ayat ini tidak menjanjikan garis waktu yang pasti, tetapi menunjukkan sesuatu tentang bagaimana Alkitab memandang kasih semacam ini — bukan sesuatu yang sekadar kalian hasilkan lewat usaha atau keberuntungan, melainkan anugerah baik yang Allah sungguh-sungguh terlibat di dalamnya.
+
+Maka berdoalah secara spesifik. Doakan karakter mereka, di mana pun mereka sekarang — perjalanan iman mereka bersama Allah, integritas mereka, kemampuan mereka mengasihi dengan baik. Doakan musim apa pun yang mungkin sedang mereka lalui, entah mudah atau sulit. Doakan pula diri kalian sendiri, agar kalian terus menjadi pribadi yang mampu menerima dan memberikan kasih yang baik dan saleh yang sama itu ketika waktunya tiba.
+
+Ini bukan jaminan bahwa doa mempercepat waktu atau menghilangkan sakitnya menanti. Namun ini cara berpartisipasi dalam pengharapan, bukan sekadar bertahan pasif melewati penantian. Hari ini, jika kalian merasa siap, doakanlah secara khusus ''pasangan masa depanku, di mana pun ia berada'' — dan percayalah bahwa Allah, yang melihatnya sepenuhnya bahkan sekarang, sedang bekerja dengan setia.',
+     'Praying for a future spouse by name, even before you know them, is a quiet act of hope. Pray for their character today, and for your own.', 'Mendoakan pasangan masa depan secara khusus, bahkan sebelum mengenalnya, adalah tindakan pengharapan yang tenang. Doakan karakter mereka hari ini, dan juga karaktermu sendiri.',
+     'Lord, I pray for my future spouse today, wherever they are. Shape their heart, and shape mine, so that whenever You bring us together, we''re ready to love well. Amen.', 'Tuhan, aku mendoakan pasangan masa depanku hari ini, di mana pun ia berada. Bentuklah hatinya, dan bentuklah hatiku, sehingga kapan pun Kau mempertemukan kami, kami siap saling mengasihi dengan baik. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 18:22', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 19:14', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 18:22', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 19:14', 'TB', 3);
+
+  INSERT INTO public.devotion_plan_days
+    (plan_id, day_number, devotional_title, devotional_title_id,
+     devotional_content, devotional_content_id,
+     reflection, reflection_id, prayer, prayer_id)
+  VALUES
+    (v_plan_id, 7, 'Trusting the Path', 'Mempercayai Jalan Ini',
+     'After a week of reflecting on waiting, it is worth ending where every honest season of waiting must eventually land: trust. Not the kind of trust that pretends to understand God''s timeline, but the kind that keeps leaning on Him even when the reasoning doesn''t add up, even when the path forward is genuinely unclear.
+
+Proverbs offers words that have steadied countless people through uncertain seasons: trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight. This is not a promise that your own understanding is worthless, but a reminder that your understanding is limited — you cannot see the whole map, only the step in front of you, and that is precisely where trust is meant to carry what understanding cannot.
+
+Romans adds a companion promise that has comforted many in long seasons of waiting: in all things God works for the good of those who love him. Not that every single thing that happens is good in itself — waiting itself is often genuinely hard — but that God is actively weaving even this season, this uncertainty, this ache, into something He is working for your good, in ways you may not be able to trace yet.
+
+As you close this plan, resist the urge to demand a full explanation of your timeline before you trust God with it. Trust doesn''t require full information; it requires a willing heart. Whatever is ahead of you — a long road still, or a turn closer than you think — walk it with your heart leaning fully on Him, and let Him make your paths straight.', 'Setelah seminggu merenungkan penantian, layaklah mengakhiri di tempat yang pada akhirnya harus dituju setiap musim penantian yang jujur: kepercayaan. Bukan jenis kepercayaan yang berpura-pura memahami garis waktu Allah, melainkan yang terus bersandar kepada-Nya bahkan ketika penalarannya tidak masuk akal, bahkan ketika jalan ke depan sungguh-sungguh belum jelas.
+
+Amsal menawarkan kata-kata yang telah menguatkan banyak orang melalui musim yang tidak pasti: percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri. Akuilah Dia dalam segala lakumu, maka Ia akan meluruskan jalanmu. Ini bukan janji bahwa pengertian kalian sendiri tidak berharga, melainkan pengingat bahwa pengertian kalian terbatas — kalian tidak bisa melihat seluruh petanya, hanya langkah di depan mata, dan di situlah tepatnya kepercayaan dimaksudkan untuk memikul apa yang tidak sanggup dipikul pengertian.
+
+Roma menambahkan janji pendamping yang telah menghibur banyak orang dalam musim penantian yang panjang: Allah turut bekerja dalam segala sesuatu untuk mendatangkan kebaikan bagi mereka yang mengasihi Dia. Bukan berarti setiap hal yang terjadi baik dengan sendirinya — penantian itu sendiri sering sungguh-sungguh berat — melainkan bahwa Allah secara aktif menenun bahkan musim ini, ketidakpastian ini, kerinduan ini, menjadi sesuatu yang sedang Ia kerjakan untuk kebaikan kalian, dengan cara yang mungkin belum bisa kalian lacak sekarang.
+
+Saat menutup rencana ini, tahanlah dorongan untuk menuntut penjelasan lengkap tentang garis waktu kalian sebelum mempercayakannya kepada Allah. Kepercayaan tidak menuntut informasi lengkap; ia menuntut hati yang bersedia. Apa pun yang ada di depan kalian — jalan yang masih panjang, atau tikungan yang lebih dekat dari perkiraan — jalanilah dengan hati yang sepenuhnya bersandar kepada-Nya, dan biarkan Ia meluruskan jalan kalian.',
+     'Trust doesn''t require full information about your timeline — only a willing heart. Let Him make your paths straight, one step at a time.', 'Kepercayaan tidak menuntut informasi lengkap tentang garis waktumu — hanya hati yang bersedia. Biarkan Dia meluruskan jalanmu, selangkah demi selangkah.',
+     'Lord, I trust You with the path ahead, even without seeing the whole map. Make my path straight, and give me a willing, patient heart until the day You bring love into my life. Amen.', 'Tuhan, aku mempercayakan jalan di depan kepada-Mu, sekalipun belum melihat seluruh petanya. Luruskanlah jalanku, dan berilah aku hati yang bersedia dan sabar sampai hari ketika Kau membawa kasih ke dalam hidupku. Amin.')
+  RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:28', 'WEB', 1);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 2);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:28', 'TB', 3);
+
+  RAISE NOTICE 'Devotion seed done: % categories, % plans, % days, % verses',
+    (SELECT count(*) FROM public.devotion_categories),
+    (SELECT count(*) FROM public.devotion_plans),
+    (SELECT count(*) FROM public.devotion_plan_days),
+    (SELECT count(*) FROM public.devotion_day_verses);
+END $$;
+
+-- --- Verification (these results are shown in the SQL editor) ---------------
+SELECT 'category tree' AS check, parent.name AS parent, child.name AS name,
+       child.name_id
+  FROM public.devotion_categories child
+  LEFT JOIN public.devotion_categories parent ON parent.id = child.parent_id
+ ORDER BY parent.name NULLS FIRST, child.name;
+
+SELECT c.name AS sub_category, count(*) AS plans, sum(p.duration_days) AS total_days
+  FROM public.devotion_plans p
+  JOIN public.devotion_categories c ON c.id = p.category_id
+ GROUP BY c.name
+ ORDER BY c.name;
