@@ -96,8 +96,8 @@ export default function PlansClient({
                     {plan.cover_image_url ? (
                       <Image src={plan.cover_image_url} alt={displayTitle} fill className={`object-cover ${isCompletedShelf ? 'grayscale' : ''}`} />
                     ) : (
-                      <div className="w-full h-full flex flex-col p-3">
-                        <span className="text-white text-xs font-bold line-clamp-4 mt-2">{displayTitle}</span>
+                      <div className="w-full h-full flex flex-col p-3 overflow-y-auto hide-scrollbar">
+                        <span className="text-white text-xs font-bold mt-2 leading-snug">{displayTitle}</span>
                       </div>
                     )}
                     
@@ -114,8 +114,8 @@ export default function PlansClient({
                     
                     {/* Obi Band for Indonesian Translation */}
                     {language === "id" && plan.title_id && (
-                      <div className="absolute bottom-4 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-1.5 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
-                        <span className="text-[10px] sm:text-xs font-serif font-bold text-[#e8decd] tracking-wide truncate w-full text-center drop-shadow-md">
+                      <div className="absolute bottom-4 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-2 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
+                        <span className="text-[10px] sm:text-xs font-serif font-bold text-[#e8decd] tracking-wide w-full text-center leading-tight drop-shadow-md">
                           {displayTitle}
                         </span>
                       </div>
