@@ -5,65 +5,69 @@
 
 DO $$
 DECLARE
-  v_family_id UUID;
+  v_category_id UUID;
   v_cat_id UUID;
   v_plan_id UUID;
   v_day_id UUID;
 BEGIN
   -- Top-level category ------------------------------------------------------
-  SELECT id INTO v_family_id FROM public.devotion_categories
+  SELECT id INTO v_category_id FROM public.devotion_categories
     WHERE name = 'Family' AND parent_id IS NULL
     ORDER BY created_at ASC
     LIMIT 1;
-  IF v_family_id IS NULL THEN
+  IF v_category_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
       VALUES ('Family', 'Keluarga', NULL)
-      RETURNING id INTO v_family_id;
+      RETURNING id INTO v_category_id;
   ELSE
     UPDATE public.devotion_categories SET name_id = 'Keluarga'
-      WHERE id = v_family_id;
+      WHERE id = v_category_id;
   END IF;
 
-  DELETE FROM public.devotion_plans WHERE title = 'Held in the Waiting';
-  DELETE FROM public.devotion_plans WHERE title = 'Letting Go of the Map';
-  DELETE FROM public.devotion_plans WHERE title = 'Bread for the Unknown Road';
-  DELETE FROM public.devotion_plans WHERE title = 'Faith When the Paycheck Doesn''t Stretch';
-  DELETE FROM public.devotion_plans WHERE title = 'Strength for the Weary Body';
-  DELETE FROM public.devotion_plans WHERE title = 'When Heaven Feels Silent';
-  DELETE FROM public.devotion_plans WHERE title = 'Small Beginnings: A Daily Prayer Habit';
-  DELETE FROM public.devotion_plans WHERE title = 'Bread for the Journey: Growing Through Scripture';
-  DELETE FROM public.devotion_plans WHERE title = 'Roots in Dry Ground: Faith That Matures';
-  DELETE FROM public.devotion_plans WHERE title = 'When God Feels Silent';
-  DELETE FROM public.devotion_plans WHERE title = 'Honest Questions, Held Faith';
-  DELETE FROM public.devotion_plans WHERE title = 'Finding My Way Back';
+  DELETE FROM public.devotion_plans WHERE title = 'Little Hearts, Big Faith';
+  DELETE FROM public.devotion_plans WHERE title = 'Letting Go, Holding On in Prayer';
+  DELETE FROM public.devotion_plans WHERE title = 'Discipline Rooted in Grace';
+  DELETE FROM public.devotion_plans WHERE title = 'Raising Faith-Filled Teens';
+  DELETE FROM public.devotion_plans WHERE title = 'Grateful Hearts';
+  DELETE FROM public.devotion_plans WHERE title = 'Honoring the Autumn Years';
+  DELETE FROM public.devotion_plans WHERE title = 'Bridging the Distance';
+  DELETE FROM public.devotion_plans WHERE title = 'Their Legacy Lives On';
+  DELETE FROM public.devotion_plans WHERE title = 'From Rivals to Reconciled';
+  DELETE FROM public.devotion_plans WHERE title = 'Becoming One Family';
+  DELETE FROM public.devotion_plans WHERE title = 'Roots That Reach Far';
+  DELETE FROM public.devotion_plans WHERE title = 'A Brother Born for Adversity';
+  DELETE FROM public.devotion_plans WHERE title = 'Building an Altar in Your Home';
+  DELETE FROM public.devotion_plans WHERE title = 'Passing the Flame to the Next Generation';
+  DELETE FROM public.devotion_plans WHERE title = 'A Family Year of Grace';
+  DELETE FROM public.devotion_plans WHERE title = 'The Faith Our Grandparents Kept';
 
 
-  -- Sub-category: Trusting God in Uncertainty --------------------------------------------------------
+  -- Sub-category: Parenting with Faith --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Trusting God in Uncertainty' AND parent_id = v_family_id
+    WHERE name = 'Parenting with Faith' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Trusting God in Uncertainty', 'Percaya kepada Allah dalam Ketidakpastian', v_family_id)
+      VALUES ('Parenting with Faith', 'Mendidik Anak dengan Iman', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
-    UPDATE public.devotion_categories SET name_id = 'Percaya kepada Allah dalam Ketidakpastian'
+    UPDATE public.devotion_categories SET name_id = 'Mendidik Anak dengan Iman'
       WHERE id = v_cat_id;
   END IF;
 
-  -- Plan: Held in the Waiting
+  -- Plan: Little Hearts, Big Faith
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Held in the Waiting',
-    'Ditopang dalam Penantian',
-    'Finding God''s peace in the space between prayer and answer',
-    'Menemukan damai Allah dalam jarak antara doa dan jawaban',
+    'Little Hearts, Big Faith',
+    'Hati Kecil, Iman yang Besar',
+    'Planting the seeds of faith in your young child',
+    'Menanamkan benih iman pada anak kecil Anda',
     5,
-    'A five-day journey for anyone stuck in a waiting room they didn''t choose — a job search, a diagnosis, a relationship, a prayer that hasn''t been answered yet. Each day gently turns the ache of delay into an invitation to trust the character of the God who holds the timeline, not just the outcome.',
-    'Perjalanan lima hari bagi siapa saja yang terjebak di ruang tunggu yang tidak mereka pilih — pencarian kerja, diagnosis, hubungan, atau doa yang belum terjawab. Setiap hari dengan lembut mengubah kegelisahan karena penundaan menjadi undangan untuk percaya pada karakter Allah yang memegang waktu, bukan hanya hasil akhirnya.',
-    '/images/devotions/held-in-the-waiting.jpeg'
+    'A five-day devotional for parents of young children, exploring how ordinary moments — bedtime prayers, mealtime blessings, a scraped knee, a bedtime story — become the soil where a child''s faith first takes root, and how a parent''s quiet, consistent example teaches more than any sermon ever could.',
+    'Renungan lima hari bagi orang tua dengan anak kecil, yang menelusuri bagaimana momen-momen sederhana — doa sebelum tidur, syukur sebelum makan, lutut yang terluka, cerita sebelum tidur — menjadi tanah tempat iman anak mulai berakar, dan bagaimana teladan orang tua yang tenang dan konsisten mengajarkan lebih banyak daripada khotbah mana pun.',
+    '/images/devotions/little-hearts-big-faith.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -74,29 +78,25 @@ BEGIN
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'The Ache of Waiting', 'Kerinduan dalam Penantian',
-    'There is a particular kind of tiredness that comes from waiting. It is not the tiredness of hard labor but the tiredness of holding your breath for a long time — checking the phone, replaying the conversation, wondering if today is the day the answer finally comes. Waiting seasons rarely announce how long they will last, and that uncertainty is often harder to carry than the waiting itself.
+    'The Soil Beneath Their Feet', 'Tanah di Bawah Kaki Mereka',
+    'Long before a child can recite a creed or understand a sermon, they are already learning what faith looks like — from the way we fold our hands before dinner, the way we pause to thank God for a sunny morning, the way we speak about Him at all. Faith in the early years is caught far more than it is taught. A three-year-old cannot follow a theological argument, but she can absolutely notice whether Mommy and Daddy actually pray, or just talk about praying.
 
-Scripture never pretends that waiting is easy. The psalmists cried out, the prophets grew weary, and even Jesus'' closest friends spent three long days between the cross and the empty tomb not knowing what would happen next. If the Bible is honest about anything, it is honest about how long God''s people have had to wait for what He promised. This is not a flaw in the story; it is part of the story.
+This is both a comfort and a gentle challenge. It is a comfort because it means we don''t need elaborate programs or perfect words to raise a faithful child — we simply need to live our own faith honestly and warmly in front of them. It is a challenge because children are remarkably perceptive; they notice the gap between what we say on Sunday and how we act on Tuesday. Many parents find that the desire to raise faithful children becomes one of the strongest motivations to deepen their own walk with God.
 
-Isaiah 40:31 does not promise that the waiting will be short. It promises that those who wait will be renewed — not despite the waiting, but through it. There is something being built in us during delay that cannot be built any other way: a deeper trust, a slower heart, a strength that does not depend on circumstances lining up in our favor. God is not simply making us wait; He is meeting us in the waiting.
+Deuteronomy 6 gives us a beautiful picture of what this looks like in daily life — not a formal curriculum, but faith woven into walking, sitting, lying down, and rising up. It happens in the car, at the table, during bath time. The soil of a child''s heart is being prepared every single day, in ways that feel unremarkable in the moment but accumulate into something lasting.
 
-Today, if you are in a season where the answer has not come, let this be permission to name the ache honestly before God. He is not offended by your impatience or your exhaustion. He is near to it, ready to exchange your borrowed strength for His own.', 'Ada semacam kelelahan tersendiri yang datang dari menanti. Ini bukan kelelahan karena kerja keras, melainkan kelelahan karena menahan napas untuk waktu yang lama — memeriksa ponsel, mengulang percakapan dalam pikiran, bertanya-tanya apakah hari ini jawabannya akhirnya datang. Musim penantian jarang memberi tahu berapa lama ia akan berlangsung, dan ketidakpastian itu sering kali lebih berat dipikul daripada penantian itu sendiri.
+Today, consider one ordinary moment in your day — a meal, a car ride, a goodnight — where you might let your child see your faith a little more plainly. Not a lecture. Just a visible, honest moment of turning toward God together.', 'Jauh sebelum seorang anak dapat mengucapkan pengakuan iman atau memahami sebuah khotbah, mereka sudah belajar seperti apa rupa iman itu — dari cara kita melipat tangan sebelum makan, cara kita berhenti sejenak untuk bersyukur atas pagi yang cerah, cara kita berbicara tentang Tuhan sama sekali. Iman pada tahun-tahun awal lebih banyak ditangkap daripada diajarkan. Seorang anak berusia tiga tahun tidak dapat mengikuti argumen teologis, tetapi ia benar-benar dapat memperhatikan apakah Ayah dan Ibu sungguh-sungguh berdoa, atau hanya membicarakan tentang berdoa.
 
-Alkitab tidak pernah berpura-pura bahwa menanti itu mudah. Pemazmur berseru, para nabi menjadi lelah, dan bahkan sahabat-sahabat terdekat Yesus menghabiskan tiga hari panjang antara salib dan kubur kosong tanpa tahu apa yang akan terjadi selanjutnya. Jika Alkitab jujur tentang sesuatu, ia jujur tentang betapa lamanya umat Allah harus menanti apa yang Ia janjikan. Ini bukan kekurangan dalam kisah itu; ini bagian dari kisah itu.
+Ini adalah penghiburan sekaligus tantangan yang lembut. Penghiburan, karena ini berarti kita tidak memerlukan program yang rumit atau kata-kata yang sempurna untuk membesarkan anak yang beriman — kita hanya perlu menjalani iman kita sendiri dengan jujur dan hangat di hadapan mereka. Tantangan, karena anak-anak sangat peka; mereka memperhatikan jarak antara apa yang kita katakan pada hari Minggu dan bagaimana kita bersikap pada hari Selasa. Banyak orang tua merasa bahwa keinginan untuk membesarkan anak yang beriman justru menjadi salah satu dorongan terkuat untuk memperdalam perjalanan iman mereka sendiri.
 
-Yesaya 40:31 tidak menjanjikan bahwa penantian akan singkat. Ia menjanjikan bahwa mereka yang menanti akan dipulihkan — bukan meski menanti, melainkan justru melalui penantian itu. Ada sesuatu yang sedang dibentuk dalam diri kita selama masa tunda yang tidak dapat dibentuk dengan cara lain: kepercayaan yang lebih dalam, hati yang lebih tenang, kekuatan yang tidak bergantung pada keadaan yang berpihak pada kita. Allah tidak sekadar membuat kita menunggu; Ia menemui kita dalam penantian itu.
+Ulangan 6 memberi kita gambaran indah tentang seperti apa hal ini dalam kehidupan sehari-hari — bukan kurikulum formal, melainkan iman yang dijalin ke dalam saat berjalan, duduk, berbaring, dan bangun. Ini terjadi di dalam mobil, di meja makan, saat waktu mandi. Tanah hati seorang anak sedang disiapkan setiap hari, dengan cara yang terasa biasa saja pada saat itu tetapi terkumpul menjadi sesuatu yang bertahan lama.
 
-Hari ini, jika engkau berada dalam musim di mana jawaban belum juga datang, biarlah ini menjadi izin untuk menyebut kegelisahan itu dengan jujur di hadapan Allah. Ia tidak tersinggung oleh ketidaksabaranmu atau keletihanmu. Ia dekat dengan itu semua, siap menukar kekuatanmu yang meminjam dengan kekuatan-Nya sendiri.',
-    'What would it look like today to hand God your exhaustion instead of just your request?', 'Seperti apa jadinya hari ini jika engkau menyerahkan keletihanmu kepada Allah, bukan hanya permintaanmu?',
-    'Lord, I am tired of waiting and I don''t know how much longer this season will last. Please renew my strength today, not by ending the wait, but by meeting me inside it. Teach me to trust Your timing even when I cannot see Your plan. Amen.', 'Tuhan, aku lelah menanti dan aku tidak tahu berapa lama lagi musim ini akan berlangsung. Pulihkanlah kekuatanku hari ini, bukan dengan mengakhiri penantian ini, tetapi dengan menemuiku di dalamnya. Ajarlah aku untuk percaya pada waktu-Mu sekalipun aku belum bisa melihat rencana-Mu. Amin.'
+Hari ini, pikirkanlah satu momen biasa dalam hari Anda — makan bersama, perjalanan dengan mobil, ucapan selamat malam — di mana Anda bisa membiarkan anak Anda melihat iman Anda sedikit lebih nyata. Bukan ceramah. Hanya momen yang terlihat, jujur, saat berpaling bersama kepada Tuhan.',
+    'Faith is caught in the ordinary moments of your day — where might your child be watching you today?', 'Iman ditangkap dalam momen-momen biasa harimu — di manakah anak Anda mungkin sedang memperhatikan Anda hari ini?',
+    'Lord, make my ordinary days into holy ground for my child. Let them see You in the small things I do — in my patience, my gratitude, my prayers. Teach me to live my faith out loud, not because I am perfect, but because I am honest. Amen.', 'Tuhan, jadikanlah hari-hariku yang biasa menjadi tanah yang kudus bagi anakku. Biarlah mereka melihat Engkau dalam hal-hal kecil yang kulakukan — dalam kesabaranku, rasa syukurku, doa-doaku. Ajarku untuk menghidupi imanku secara nyata, bukan karena aku sempurna, tetapi karena aku jujur. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 40:31', 'WEB', 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 40:31', 'TB', 'tetapi orang-orang yang menanti-nantikan TUHAN mendapat kekuatan baru: mereka seumpama rajawali yang naik terbang dengan kekuatan sayapnya; mereka berlari dan tidak menjadi lesu, mereka berjalan dan tidak menjadi lelah.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 6:6-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 6:6-7', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -106,29 +106,25 @@ Hari ini, jika engkau berada dalam musim di mana jawaban belum juga datang, biar
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'Waiting Without Losing Heart', 'Menanti Tanpa Kehilangan Hati',
-    'One of the quiet dangers of a long wait is not that we stop believing God exists, but that we slowly stop expecting Him to move. We keep going through the motions of faith while our hearts grow guarded, protecting ourselves from another disappointment. It feels safer to expect less. Many of us know this instinct well — the quiet decision to stop hoping so hard, just in case.
+    'A Gift, Not a Possession', 'Anugerah, Bukan Milik',
+    'It is easy, especially in the exhausting early years, to slip into thinking of our children as projects to manage or extensions of ourselves to shape into our own image. Psalm 127 offers a different, freeing perspective: children are a heritage from the Lord, a reward. They are gifts entrusted to us, not possessions we own outright. This distinction changes everything about how we parent.
 
-Psalm 27 was written by someone surrounded by real trouble, not someone with an easy life who could afford to be patient. David writes about enemies, about fear, about the very real possibility of falling. And in the middle of that chapter, after describing his confidence in God''s goodness, he gives himself — and us — a command: wait for the Lord, be strong, take heart, and wait for the Lord again. He says it twice, as if he knows how easily we drift.
+When we see our children as gifts, we hold them with open hands rather than a clenched fist. We can still guide, correct, and teach — but we do it as stewards caring for something precious that ultimately belongs to God, not as owners defending our territory. This posture takes real pressure off. We are not solely responsible for engineering a perfect outcome; we are invited to partner with God, who loves this child even more than we do.
 
-Notice that waiting, in this psalm, is not passive. It is paired with strength and courage. Biblical waiting is not sitting in a corner with folded hands, hoping something happens. It is an active posture of the heart — choosing, again and again, to keep believing God is good even when the evidence has not yet arrived. That kind of waiting takes more strength than most people realize, because it means resisting the pull toward cynicism every single day.
+Many parents describe a particular moment — watching a sleeping child, or hearing an unexpected word of wisdom from a small mouth — when this truth becomes suddenly, tearfully real: this child was never fully ours to control. They were lent to us for a season, to love, to guide, and eventually to release into their own calling. That realization can soften the grip of anxiety that so often comes with parenting.
 
-If your heart has grown guarded during this season, today is a good day to notice it without shame and to ask God to soften it again. Taking heart is not naivety. It is a decision to keep believing that the God who has been faithful before will be faithful again.', 'Salah satu bahaya diam-diam dari penantian yang panjang bukanlah kita berhenti percaya bahwa Allah ada, melainkan kita perlahan berhenti mengharapkan Ia bertindak. Kita terus menjalani rutinitas iman sementara hati kita mulai berjaga-jaga, melindungi diri dari kekecewaan berikutnya. Rasanya lebih aman untuk berharap lebih sedikit. Banyak dari kita mengenal betul dorongan ini — keputusan diam-diam untuk berhenti berharap terlalu keras, siapa tahu kecewa lagi.
+Today, try holding your child a little more loosely in your heart — not with less love, but with less fear. Thank God specifically for this particular child, with their particular quirks and questions and stubbornness, as the gift they are.', 'Sangat mudah, terutama pada tahun-tahun awal yang melelahkan, untuk mulai memandang anak-anak kita sebagai proyek yang harus dikelola atau perpanjangan diri kita yang harus dibentuk menurut gambaran kita sendiri. Mazmur 127 menawarkan perspektif lain yang membebaskan: anak-anak adalah milik pusaka dari TUHAN, suatu upah. Mereka adalah anugerah yang dipercayakan kepada kita, bukan milik yang kita kuasai sepenuhnya. Perbedaan ini mengubah segalanya tentang cara kita mendidik anak.
 
-Mazmur 27 ditulis oleh seseorang yang dikelilingi kesulitan nyata, bukan oleh orang yang hidupnya mudah sehingga bisa bersabar dengan santai. Daud menulis tentang musuh, tentang ketakutan, tentang kemungkinan nyata untuk jatuh. Dan di tengah pasal itu, setelah menggambarkan keyakinannya pada kebaikan Allah, ia memberi dirinya sendiri — dan kita — sebuah perintah: nantikanlah TUHAN, kuatkan dan teguhkanlah hatimu, lalu nantikanlah TUHAN sekali lagi. Ia mengatakannya dua kali, seolah tahu betapa mudahnya kita mulai menyimpang.
+Ketika kita memandang anak-anak kita sebagai anugerah, kita memegang mereka dengan tangan terbuka, bukan dengan kepalan tangan. Kita tetap dapat membimbing, menegur, dan mengajar — tetapi kita melakukannya sebagai penatalayan yang merawat sesuatu yang berharga yang pada akhirnya adalah milik Tuhan, bukan sebagai pemilik yang mempertahankan wilayahnya. Sikap ini benar-benar meringankan beban. Kita tidak sepenuhnya bertanggung jawab untuk merekayasa hasil yang sempurna; kita diundang untuk bekerja sama dengan Tuhan, yang mengasihi anak ini bahkan lebih dari kita.
 
-Perhatikan bahwa penantian, dalam mazmur ini, bukanlah sikap pasif. Ia dipasangkan dengan kekuatan dan keberanian. Penantian alkitabiah bukanlah duduk di sudut dengan tangan terlipat, berharap sesuatu terjadi. Ini adalah sikap hati yang aktif — memilih, berulang-ulang, untuk terus percaya bahwa Allah itu baik sekalipun buktinya belum tiba. Penantian semacam itu membutuhkan lebih banyak kekuatan daripada yang disadari kebanyakan orang, karena itu berarti melawan dorongan menuju sikap sinis setiap hari.
+Banyak orang tua menggambarkan suatu momen tertentu — memandangi anak yang sedang tidur, atau mendengar kata-kata bijak yang tak terduga dari mulut yang kecil — ketika kebenaran ini tiba-tiba terasa nyata, bahkan mengharukan: anak ini tidak pernah sepenuhnya milik kita untuk dikendalikan. Mereka dipinjamkan kepada kita untuk suatu musim, untuk dikasihi, dibimbing, dan pada akhirnya dilepaskan menuju panggilan mereka sendiri. Kesadaran itu dapat melembutkan cengkeraman kecemasan yang begitu sering menyertai peran sebagai orang tua.
 
-Jika hatimu mulai berjaga-jaga selama musim ini, hari ini adalah hari yang baik untuk menyadarinya tanpa rasa malu dan meminta Allah melembutkannya kembali. Meneguhkan hati bukanlah kepolosan. Itu adalah keputusan untuk terus percaya bahwa Allah yang setia di masa lalu akan setia lagi.',
-    'Has your heart quietly stopped expecting God to move? Ask Him to soften it again today.', 'Apakah hatimu diam-diam berhenti mengharapkan Allah bertindak? Mintalah Ia melembutkannya kembali hari ini.',
-    'Father, I confess that I have started guarding my heart against disappointment instead of trusting You with it. Give me the courage to keep hoping. Strengthen me to wait well, not passively, but actively believing in Your goodness. Amen.', 'Bapa, aku mengaku bahwa aku mulai menjaga hatiku dari kekecewaan alih-alih mempercayakannya kepada-Mu. Berilah aku keberanian untuk terus berharap. Kuatkanlah aku untuk menanti dengan baik, bukan secara pasif, melainkan dengan aktif percaya pada kebaikan-Mu. Amin.'
+Hari ini, cobalah memegang anak Anda sedikit lebih longgar di dalam hati Anda — bukan dengan kasih yang lebih sedikit, melainkan dengan rasa takut yang lebih sedikit. Bersyukurlah secara khusus kepada Tuhan atas anak Anda yang ini, dengan keunikan, pertanyaan, dan kekeraskepalaannya, sebagai anugerah yang memang ia adanya.',
+    'Can you thank God today for exactly this child, quirks and all, as a gift rather than a task to complete?', 'Dapatkah Anda bersyukur kepada Tuhan hari ini atas anak Anda ini apa adanya, dengan segala keunikannya, sebagai anugerah dan bukan sekadar tugas yang harus diselesaikan?',
+    'Father, thank You for the gift of my child. Help me hold them with open hands, trusting that You love them even more than I do. Free me from the fear of getting everything right, and fill me instead with gratitude for this season of loving them. Amen.', 'Bapa, terima kasih atas anugerah anakku. Tolong aku untuk memegangnya dengan tangan terbuka, percaya bahwa Engkau mengasihinya bahkan lebih daripada aku. Bebaskan aku dari rasa takut harus melakukan semuanya dengan sempurna, dan penuhilah aku sebaliknya dengan rasa syukur atas musim mengasihi mereka ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 27:14', 'WEB', 'Wait for the LORD; be strong and take heart and wait for the LORD.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 27:14', 'TB', 'Nantikanlah TUHAN! Kuatkan dan teguhkanlah hatimu! Ya, nantikanlah TUHAN!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 127:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 127:3', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -138,29 +134,25 @@ Jika hatimu mulai berjaga-jaga selama musim ini, hari ini adalah hari yang baik 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'The Silence Isn''t Absence', 'Keheningan Bukan Berarti Ketiadaan',
-    'The Book of Lamentations is an unlikely place to look for hope. It is a book of grief, written in the ruins of a city that had lost everything. And yet right in the middle of that devastation, the writer pauses and says something startling: the Lord is good to those who hope in Him. Not despite the ruins — in the middle of them.
+    'Let the Little Ones Come', 'Biarkan Anak-Anak Kecil Itu Datang',
+    'There is a scene in the Gospels that never fails to move parents of young children: the disciples, trying to protect Jesus'' time and energy, turning away parents who were bringing their little ones to Him. And Jesus, indignant, says the opposite of what they expected — let the children come, do not hinder them, for the kingdom of God belongs to such as these. He did not see children as an interruption. He saw them as a picture of the kingdom itself.
 
-Silence is one of the hardest parts of waiting. When we don''t hear anything from God, we can start to interpret that silence as absence, as if He has stepped away or stopped caring. But Scripture consistently shows the opposite pattern: God is often doing His deepest work in the quiet, unseen places, long before anything visible changes. The years Joseph spent forgotten in an Egyptian prison were not wasted years; they were preparation years, even though he could not have known it at the time.
+This should shape how we think about a young child''s spirituality. We sometimes assume real faith begins later — after they can read, after they can sit still, after they can articulate doctrine. But Jesus points the other direction: children already model something essential about faith — trust, dependence, uncomplicated love. We are not merely preparing our children for faith someday; in some ways, they are already showing us what faith looks like today.
 
-This verse in Lamentations pairs God''s goodness with quiet waiting — ''it is good to wait quietly for the salvation of the LORD.'' Quiet here does not mean numb or resigned. It means a settled trust that does not need constant reassurance to keep believing. It is the difference between a child who panics every time a parent leaves the room and a child who has learned, through years of being cared for, that the parent always comes back.
+This changes how we treat a toddler''s prayers, however simple, however interrupted by giggles or a wandering mind. A three-year-old''s clumsy, sincere ''thank you God for my dog and my blanket'' is not a lesser prayer waiting to mature into something more sophisticated — it may be closer to the trust Jesus was describing than our own anxious, wordy adult prayers.
 
-If this season feels silent, consider that silence is not the same as absence. God''s goodness does not depend on how loudly He is speaking to you right now. It depends on who He has always been — and He has not changed.', 'Kitab Ratapan adalah tempat yang tak terduga untuk mencari harapan. Ini adalah kitab dukacita, ditulis di reruntuhan sebuah kota yang telah kehilangan segalanya. Namun tepat di tengah kehancuran itu, sang penulis berhenti sejenak dan mengatakan sesuatu yang mengejutkan: TUHAN itu baik bagi orang yang berharap kepada-Nya. Bukan meski di reruntuhan — justru di tengah-tengahnya.
+Today, watch your child''s simple faith with fresh eyes. Let their uncomplicated trust in God, and in you, teach you something about the kind of faith Jesus welcomed.', 'Ada satu adegan dalam Injil yang selalu menyentuh hati para orang tua dengan anak kecil: para murid, yang berusaha melindungi waktu dan tenaga Yesus, mengusir orang tua yang membawa anak-anak kecil mereka kepada-Nya. Dan Yesus, dengan hati yang tergerak, berkata sebaliknya dari yang mereka duga — biarkan anak-anak itu datang, jangan menghalangi mereka, sebab orang-orang yang seperti itulah yang empunya Kerajaan Allah. Ia tidak memandang anak-anak sebagai gangguan. Ia melihat mereka sebagai gambaran dari Kerajaan itu sendiri.
 
-Keheningan adalah salah satu bagian tersulit dari penantian. Ketika kita tidak mendengar apa pun dari Allah, kita bisa mulai menafsirkan keheningan itu sebagai ketiadaan, seolah Ia menjauh atau berhenti peduli. Namun Alkitab secara konsisten menunjukkan pola sebaliknya: Allah sering melakukan karya-Nya yang paling dalam di tempat-tempat sunyi yang tak terlihat, jauh sebelum ada perubahan yang tampak. Bertahun-tahun yang Yusuf habiskan terlupakan di penjara Mesir bukanlah tahun yang sia-sia; itu adalah tahun-tahun persiapan, meskipun ia tidak dapat mengetahuinya saat itu.
+Hal ini seharusnya membentuk cara kita memandang kerohanian seorang anak kecil. Kita kadang mengira iman yang sungguh-sungguh baru dimulai kemudian — setelah mereka bisa membaca, setelah mereka bisa duduk diam, setelah mereka bisa mengungkapkan ajaran dengan jelas. Namun Yesus menunjuk ke arah yang berbeda: anak-anak sudah menunjukkan sesuatu yang mendasar tentang iman — kepercayaan, ketergantungan, kasih yang tidak rumit. Kita tidak sekadar menyiapkan anak-anak kita untuk beriman suatu hari nanti; dalam banyak hal, mereka sudah menunjukkan kepada kita seperti apa iman itu hari ini.
 
-Ayat dalam Ratapan ini memadukan kebaikan Allah dengan penantian yang tenang — ''adalah baik menanti dengan diam pertolongan TUHAN.'' Diam di sini bukan berarti mati rasa atau pasrah tanpa daya. Ini berarti kepercayaan yang mantap, yang tidak memerlukan jaminan terus-menerus untuk tetap percaya. Ini adalah perbedaan antara anak yang panik setiap kali orang tuanya meninggalkan ruangan dan anak yang telah belajar, melalui bertahun-tahun dirawat, bahwa orang tuanya selalu kembali.
+Ini mengubah cara kita memandang doa seorang balita, sesederhana apa pun, sesering apa pun terputus oleh tawa cekikikan atau pikiran yang melayang. Doa seorang anak berusia tiga tahun yang kikuk namun tulus, ''terima kasih Tuhan untuk anjingku dan selimutku,'' bukanlah doa yang lebih rendah yang menunggu untuk berkembang menjadi sesuatu yang lebih canggih — doa itu mungkin lebih dekat dengan kepercayaan yang digambarkan Yesus dibandingkan doa-doa panjang dan cemas kita sebagai orang dewasa.
 
-Jika musim ini terasa sunyi, pertimbangkanlah bahwa keheningan tidak sama dengan ketiadaan. Kebaikan Allah tidak bergantung pada seberapa keras Ia berbicara kepadamu saat ini. Itu bergantung pada siapa Dia selalu ada — dan Dia tidak berubah.',
-    'Where in your life have you mistaken God''s silence for His absence?', 'Di bagian mana dalam hidupmu engkau salah mengira keheningan Allah sebagai ketiadaan-Nya?',
-    'Lord, when I hear nothing from You, help me remember that You are still working even when I cannot see or hear it. Give me a quiet, settled trust instead of anxious striving. You are good, even in the silence. Amen.', 'Tuhan, ketika aku tidak mendengar apa-apa dari-Mu, tolonglah aku mengingat bahwa Engkau tetap bekerja walau aku tak dapat melihat atau mendengarnya. Berilah aku kepercayaan yang tenang dan mantap, bukan usaha yang cemas. Engkau baik, bahkan dalam keheningan. Amin.'
+Hari ini, pandanglah iman sederhana anak Anda dengan mata yang baru. Biarkan kepercayaan mereka yang tidak rumit kepada Tuhan, dan kepada Anda, mengajarkan sesuatu kepada Anda tentang iman seperti apa yang disambut Yesus.',
+    'What might your child''s simple, trusting prayers be teaching you about faith right now?', 'Apa yang mungkin sedang diajarkan oleh doa anak Anda yang sederhana dan penuh percaya kepada Anda tentang iman saat ini?',
+    'Jesus, thank You for welcoming children so warmly. Help me never treat my child''s presence, or their questions, or their simple prayers, as an interruption. Let me learn from their trust even as I try to teach them. Amen.', 'Tuhan Yesus, terima kasih karena Engkau menyambut anak-anak dengan begitu hangat. Tolong aku untuk tidak pernah menganggap kehadiran anakku, pertanyaan-pertanyaannya, atau doa-doanya yang sederhana sebagai gangguan. Biarkan aku belajar dari kepercayaan mereka bahkan sambil aku berusaha mengajar mereka. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lamentations 3:25-26', 'WEB', 'The LORD is good to those whose hope is in him, to the one who seeks him; it is good to wait quietly for the salvation of the LORD.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ratapan 3:25-26', 'TB', 'TUHAN itu baik bagi orang yang berharap kepada-Nya, bagi jiwa yang mencari Dia. Adalah baik menanti dengan diam pertolongan TUHAN.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 10:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 10:14', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -170,29 +162,25 @@ Jika musim ini terasa sunyi, pertimbangkanlah bahwa keheningan tidak sama dengan
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'Hope That Watches the Horizon', 'Harapan yang Menatap Ufuk',
-    'There is a difference between waiting and watching. Waiting can be passive, even resentful, counting the days until something is over. Watching is different — it is waiting with your eyes open, expecting that something is coming, even if you can''t see it yet. Psalm 130 gives us the image of a watchman, someone whose job depends on staying alert through the long, uncertain hours of the night.
+    'Blessing at the Table', 'Berkat di Meja Makan',
+    'So much of a child''s earliest sense of God is shaped not in church but at the kitchen table, in the small ritual of pausing before a meal to give thanks. It seems almost too ordinary to matter — a few seconds of folded hands before spaghetti or scrambled eggs. But these tiny, repeated rituals build something enormous over years: a child''s instinctive sense that gratitude to God is simply part of how our family lives.
 
-The psalmist says his whole being waits for the Lord, more than watchmen wait for the morning. Anyone who has stayed up through a hard night — with a sick child, a worried mind, or simply insomnia — knows the particular ache of watching the clock and longing for daylight. The watchman doesn''t know exactly when dawn will break, but he knows it will. His confidence isn''t in the clock; it''s in the sun''s faithful pattern of rising.
+3 John speaks of a joy greater than any other — hearing that one''s children are walking in the truth. That kind of joy is rarely built through one dramatic conversation. It is built through thousands of small, faithful repetitions: grace before meals, a blessing at bedtime, a quiet ''thank You, God'' after good news and even after disappointment. None of these moments feels significant on its own. Together, over years, they form the architecture of a child''s faith.
 
-That is the posture this psalm invites us into: not certainty about timing, but certainty about God''s character. We may not know exactly when our answer will come, our circumstances will shift, or our prayer will be resolved. But we can know, the way a watchman knows the sun will rise, that God''s word can be trusted and His faithfulness does not run out.
+There is a temptation to think these small rituals don''t matter because they seem to lack depth — a four-year-old rushing through ''God is great, God is good'' hardly seems like theology. But consistency itself teaches something theology cannot: that God is present in ordinary time, not just in special moments. Children absorb rhythm before they absorb doctrine.
 
-Today, try shifting from waiting to watching. Instead of simply enduring the hours, look for God''s small movements in the details of your day — a timely word from a friend, an unexpected provision, a moment of unexplained peace. These are often the first light before the full dawn.', 'Ada perbedaan antara menanti dan berjaga-jaga. Menanti bisa bersifat pasif, bahkan penuh kejengkelan, menghitung hari sampai sesuatu berakhir. Berjaga-jaga berbeda — itu adalah menanti dengan mata terbuka, mengharapkan sesuatu akan datang, sekalipun belum bisa dilihat. Mazmur 130 memberi kita gambaran seorang penjaga malam, seseorang yang pekerjaannya bergantung pada tetap waspada melewati jam-jam malam yang panjang dan tak pasti.
+Today, notice one small ritual of thanksgiving in your home — a grace, a blessing, a bedtime prayer — and receive it not as a chore to check off, but as a quiet investment in your child''s lifelong sense that God belongs at the table of everyday life.', 'Sebagian besar dari kesan pertama seorang anak tentang Tuhan dibentuk bukan di gereja, melainkan di meja dapur, dalam ritual kecil berhenti sejenak sebelum makan untuk mengucap syukur. Rasanya hampir terlalu sederhana untuk berarti — beberapa detik tangan terlipat sebelum makan spageti atau telur dadar. Namun ritual-ritual kecil yang berulang ini membangun sesuatu yang besar selama bertahun-tahun: kesadaran alami seorang anak bahwa bersyukur kepada Tuhan adalah bagian sederhana dari cara keluarga kita hidup.
 
-Pemazmur berkata seluruh jiwanya menanti TUHAN, lebih dari penjaga-penjaga malam menanti pagi. Siapa pun yang pernah begadang melewati malam yang berat — dengan anak yang sakit, pikiran yang cemas, atau sekadar sulit tidur — tahu betul kegelisahan khusus saat menatap jam dan merindukan siang. Penjaga malam tidak tahu persis kapan fajar akan menyingsing, tetapi ia tahu itu akan tiba. Keyakinannya bukan pada jam, melainkan pada pola matahari yang setia terbit.
+Surat 3 Yohanes berbicara tentang sukacita yang lebih besar dari yang lain — mendengar bahwa anak-anak kita hidup dalam kebenaran. Sukacita semacam itu jarang dibangun melalui satu percakapan yang dramatis. Ia dibangun melalui ribuan pengulangan kecil yang setia: doa sebelum makan, berkat sebelum tidur, ''terima kasih Tuhan'' yang tenang setelah kabar baik dan bahkan setelah kekecewaan. Tidak satu pun dari momen-momen ini terasa signifikan dengan sendirinya. Bersama-sama, selama bertahun-tahun, momen-momen itu membentuk struktur iman seorang anak.
 
-Itulah sikap yang diundang oleh mazmur ini kepada kita: bukan kepastian tentang waktu, melainkan kepastian tentang karakter Allah. Kita mungkin tidak tahu persis kapan jawaban kita akan datang, keadaan kita akan berubah, atau doa kita akan terselesaikan. Tetapi kita dapat tahu, sebagaimana penjaga malam tahu matahari akan terbit, bahwa firman Allah dapat dipercaya dan kesetiaan-Nya tidak pernah habis.
+Ada godaan untuk berpikir bahwa ritual-ritual kecil ini tidak penting karena tampaknya kurang mendalam — seorang anak berusia empat tahun yang terburu-buru mengucap ''Tuhan itu besar, Tuhan itu baik'' rasanya jauh dari teologi. Namun konsistensi itu sendiri mengajarkan sesuatu yang tidak bisa diajarkan oleh teologi: bahwa Tuhan hadir dalam waktu yang biasa, bukan hanya pada momen-momen istimewa. Anak-anak menyerap irama sebelum mereka menyerap ajaran.
 
-Hari ini, cobalah beralih dari menanti menjadi berjaga-jaga. Alih-alih sekadar bertahan melewati jam demi jam, carilah gerak kecil Allah dalam detail harimu — kata-kata yang tepat waktu dari seorang teman, penyediaan yang tak terduga, momen damai yang tak terjelaskan. Ini sering kali adalah cahaya pertama sebelum fajar penuh tiba.',
-    'What small signs of God''s presence might you be missing because you''re only counting the hours instead of watching for Him?', 'Tanda-tanda kecil kehadiran Allah apa yang mungkin terlewat olehmu karena engkau hanya menghitung jam, bukan menantikan Dia?',
-    'Lord, turn my passive waiting into active watching. Open my eyes to see You at work even in small, ordinary moments today. I put my hope in Your word, not in my ability to predict what happens next. Amen.', 'Tuhan, ubahlah penantianku yang pasif menjadi sikap berjaga-jaga yang aktif. Bukalah mataku untuk melihat-Mu bekerja bahkan dalam momen-momen kecil dan biasa hari ini. Aku menaruh harapanku pada firman-Mu, bukan pada kemampuanku menebak apa yang akan terjadi. Amin.'
+Hari ini, perhatikan satu ritual syukur kecil di rumah Anda — doa makan, berkat, doa sebelum tidur — dan terimalah itu bukan sebagai tugas yang harus dicentang, melainkan sebagai investasi yang tenang bagi kesadaran anak Anda seumur hidup bahwa Tuhan hadir di meja kehidupan sehari-hari.',
+    'What small daily ritual of thanksgiving could become a steady root of faith for your child?', 'Ritual syukur kecil apa dalam keseharian yang bisa menjadi akar iman yang mantap bagi anak Anda?',
+    'Lord, thank You for the small rituals that shape my child''s heart. Even when they feel routine to me, use them to build in my child a lasting sense that You belong at every table, every bedtime, every ordinary day. Amen.', 'Tuhan, terima kasih atas ritual-ritual kecil yang membentuk hati anakku. Bahkan ketika terasa rutin bagiku, pakailah itu untuk membangun dalam diri anakku kesadaran yang bertahan bahwa Engkau hadir di setiap meja, setiap waktu tidur, setiap hari yang biasa. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 130:5', 'WEB', 'I wait for the LORD, my whole being waits, and in his word I put my hope.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 130:5', 'TB', 'Aku menanti-nantikan TUHAN, jiwaku menanti-nanti, dan aku mengharapkan firman-Nya.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 John 1:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 Yohanes 1:4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -202,152 +190,38 @@ Hari ini, cobalah beralih dari menanti menjadi berjaga-jaga. Alih-alih sekadar b
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 5,
-    'Patience as a Form of Trust', 'Kesabaran sebagai Wujud Kepercayaan',
-    'By the final day of a devotional like this, it would be nice if the answer had arrived — the job offer, the test results, the resolution we''ve been praying for. But real life rarely wraps up on our schedule. Some of us will close this week still in the exact same waiting room we started in. If that''s you, this last day is for you especially.
+    'The Path They Will Not Depart', 'Jalan yang Tidak Akan Ditinggalkannya',
+    'Proverbs 22:6 is one of the most quoted, and sometimes most misunderstood, verses about parenting: ''Start children off on the way they should go, and even when they are old they will not turn from it.'' It can sound like a formula or a guarantee — do this and that outcome is certain. But read as wisdom literature, it is better understood as a description of how formation tends to work: the direction we point a child in the early years shapes the direction they tend to travel, even through detours later in life.
 
-Paul writes in Romans 8 about hoping for what we do not yet see, and waiting for it patiently. He connects hope directly to patience, as if the two cannot really be separated. Real hope is not wishful thinking that fades the moment things get hard; it is a steady confidence that produces endurance, because it is rooted in who God is rather than in how quickly things resolve.
+This is not a promise that removes free will, nor a verse meant to burden parents with guilt when a grown child wanders. It is, instead, an encouragement: the seeds you plant now are not wasted, even when you cannot yet see them grow. A foundation laid in these early years — habits of prayer, a sense of belonging to a loving God, a home where faith is normal rather than forced — becomes part of the very ground a child stands on, long after they''ve left your house.
 
-It''s worth remembering that patience, in Scripture, is never framed as a weakness or a consolation prize for people who couldn''t get what they wanted faster. It is listed among the fruit of the Spirit — a genuine mark of a life being shaped by God. Every long wait you endure with your eyes on Him is not wasted time; it is patience being grown in you, the very character of Christ taking deeper root.
+Many parents of grown children look back and say the same thing: they cannot point to one decisive conversation that secured their child''s faith. What they can point to is years of small, faithful starts — bedtime prayers, Sunday mornings, a home where God''s name was spoken with love rather than fear. That is the ''starting off'' this proverb describes.
 
-So as this week closes, let this be your commitment: not that the waiting will end today, but that you will keep hoping anyway. You will keep bringing your unanswered questions to God, keep watching for His movement, and keep trusting that the God who has walked with His people through every long night in history has not forgotten you in yours.', 'Pada hari terakhir renungan seperti ini, akan menyenangkan jika jawabannya sudah tiba — tawaran kerja, hasil pemeriksaan, penyelesaian yang telah kita doakan. Namun kehidupan nyata jarang selesai sesuai jadwal kita. Beberapa dari kita akan mengakhiri minggu ini masih berada di ruang tunggu yang sama persis dengan tempat kita memulai. Jika itu dirimu, hari terakhir ini secara khusus untukmu.
+As you close this week, take heart. You do not need to finish the whole journey today. You are simply starting your child off on the way — one bedtime prayer, one grace before dinner, one honest example at a time. Trust the rest to the God who loves this child even more than you do.', 'Amsal 22:6 adalah salah satu ayat tentang mendidik anak yang paling sering dikutip, dan kadang paling disalahpahami: ''Didiklah orang muda menurut jalan yang patut baginya, maka pada masa tuanya pun ia tidak akan menyimpang dari pada jalan itu.'' Ayat ini bisa terdengar seperti rumus atau jaminan — lakukan ini dan itu, maka hasilnya pasti. Namun jika dibaca sebagai sastra hikmat, ayat ini lebih tepat dipahami sebagai gambaran tentang bagaimana pembentukan biasanya bekerja: arah yang kita tunjukkan kepada seorang anak pada tahun-tahun awal membentuk arah yang cenderung mereka tempuh, bahkan melalui jalan memutar di kemudian hari.
 
-Paulus menulis dalam Roma 8 tentang mengharapkan apa yang belum kita lihat, dan menantikannya dengan tekun. Ia menghubungkan harapan langsung dengan kesabaran, seolah keduanya tidak dapat benar-benar dipisahkan. Harapan yang sejati bukanlah angan-angan yang pudar begitu keadaan menjadi sulit; itu adalah keyakinan yang teguh yang menghasilkan ketekunan, karena berakar pada siapa Allah, bukan pada seberapa cepat keadaan terselesaikan.
+Ini bukan janji yang menghapus kehendak bebas, juga bukan ayat yang dimaksudkan untuk membebani orang tua dengan rasa bersalah ketika anak yang sudah dewasa mengembara. Sebaliknya, ini adalah dorongan semangat: benih yang Anda tanam sekarang tidak sia-sia, bahkan ketika Anda belum dapat melihatnya bertumbuh. Fondasi yang diletakkan pada tahun-tahun awal ini — kebiasaan berdoa, kesadaran akan menjadi milik Tuhan yang mengasihi, rumah tempat iman terasa wajar bukan dipaksakan — menjadi bagian dari tanah tempat seorang anak berdiri, jauh setelah mereka meninggalkan rumah Anda.
 
-Perlu diingat bahwa kesabaran, dalam Alkitab, tidak pernah digambarkan sebagai kelemahan atau hadiah hiburan bagi orang yang tidak bisa mendapatkan keinginannya lebih cepat. Ia termasuk dalam buah Roh — tanda sejati dari kehidupan yang sedang dibentuk oleh Allah. Setiap penantian panjang yang kau tanggung dengan mata tertuju kepada-Nya bukanlah waktu yang sia-sia; itu adalah kesabaran yang sedang bertumbuh dalam dirimu, karakter Kristus sendiri yang mengakar lebih dalam.
+Banyak orang tua dengan anak yang sudah dewasa menoleh ke belakang dan mengatakan hal yang sama: mereka tidak dapat menunjuk satu percakapan yang menentukan yang mengukuhkan iman anak mereka. Yang dapat mereka tunjuk adalah bertahun-tahun permulaan kecil yang setia — doa sebelum tidur, pagi hari Minggu, rumah tempat nama Tuhan diucapkan dengan kasih dan bukan dengan rasa takut. Itulah ''permulaan'' yang digambarkan amsal ini.
 
-Jadi saat minggu ini berakhir, biarlah ini menjadi komitmenmu: bukan bahwa penantian akan berakhir hari ini, melainkan bahwa engkau akan tetap berharap. Engkau akan terus membawa pertanyaan yang belum terjawab kepada Allah, terus menantikan gerak-Nya, dan terus percaya bahwa Allah yang telah menyertai umat-Nya melalui setiap malam panjang dalam sejarah tidak melupakanmu dalam malammu sendiri.',
-    'Even if nothing changes today, what would it mean to keep hoping anyway?', 'Sekalipun tidak ada yang berubah hari ini, apa artinya jika engkau tetap terus berharap?',
-    'God, I don''t know when this waiting will end, but I choose to keep hoping in You. Grow patience in me that I could not grow on my own. Thank You for staying with me through every long night. I trust You with what I cannot yet see. Amen.', 'Allah, aku tidak tahu kapan penantian ini akan berakhir, tetapi aku memilih untuk tetap berharap kepada-Mu. Tumbuhkanlah dalam diriku kesabaran yang tidak dapat kutumbuhkan sendiri. Terima kasih karena tetap menyertaiku melewati setiap malam yang panjang. Aku memercayakan kepada-Mu apa yang belum bisa kulihat. Amin.'
+Saat Anda menutup minggu ini, kuatkanlah hati. Anda tidak perlu menyelesaikan seluruh perjalanan hari ini. Anda hanya sedang memulai anak Anda pada jalan itu — satu doa sebelum tidur, satu syukur sebelum makan, satu teladan yang jujur, pada satu waktu. Percayakan sisanya kepada Tuhan yang mengasihi anak ini bahkan lebih daripada Anda.',
+    'What small, faithful ''start'' can you offer your child today, trusting God with the years ahead?', 'Permulaan kecil apa yang setia dapat Anda berikan kepada anak Anda hari ini, sambil mempercayakan tahun-tahun mendatang kepada Tuhan?',
+    'Lord, I entrust the whole journey of my child''s faith to You. Help me be faithful in these small early starts, and trust You with the years I cannot control. Root my child so deeply in Your love that even life''s detours cannot fully uproot them. Amen.', 'Tuhan, kupercayakan seluruh perjalanan iman anakku kepada-Mu. Tolong aku setia dalam permulaan-permulaan kecil ini, dan percayakan kepada-Mu tahun-tahun yang tidak dapat kukendalikan. Akarkanlah anakku begitu dalam pada kasih-Mu sehingga bahkan jalan memutar dalam hidup tidak akan sepenuhnya mencabutnya. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 22:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 22:6', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 8:25', 'WEB', 'But if we hope for what we do not yet have, we wait for it patiently.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 8:25', 'TB', 'Tetapi jika kita mengharapkan apa yang tidak kita lihat, kita menantikannya dengan tekun.');
-
-  -- Plan: Letting Go of the Map
+  -- Plan: Letting Go, Holding On in Prayer
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Letting Go of the Map',
-    'Melepaskan Peta Sendiri',
-    'Surrendering your plans to a God who sees further than you',
-    'Menyerahkan rencanamu kepada Allah yang melihat lebih jauh',
-    3,
-    'A short, focused three-day reset for the planner, the control-keeper, the five-year-plan maker whose plans just fell apart. Rooted in classic wisdom and gospel teaching, this plan helps you open your clenched hands and trade your map for the guidance of the One who already knows the road.',
-    'Reset singkat dan terfokus selama tiga hari bagi si perencana, si penjaga kendali, pembuat rencana lima tahun yang rencananya baru saja berantakan. Berakar pada hikmat klasik dan pengajaran Injil, renungan ini membantumu membuka genggaman tanganmu dan menukar petamu dengan tuntunan Dia yang sudah tahu jalannya.',
-    '/images/devotions/letting-go-of-the-map.jpeg'
-  ) RETURNING id INTO v_plan_id;
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 1,
-    'When Our Plans Aren''t the Plan', 'Ketika Rencana Kita Bukan Rencana-Nya',
-    'Most of us like to think of ourselves as reasonably good planners. We map out the next steps, weigh the options, do the research, and build something we''re confident in. There is nothing wrong with planning — Scripture is full of wisdom about diligence and foresight. But there is a particular kind of grief that comes when a plan we worked hard on falls apart anyway, despite our best effort and best intentions.
-
-Proverbs 3:5-6 is one of the most quoted verses in the Bible for a reason: it names exactly this tension. Trust in the Lord with all your heart, and lean not on your own understanding. Notice it doesn''t say our understanding is worthless — it says don''t lean on it entirely, as though it''s the only support we need. Our understanding is limited by definition; we can only see the road behind us and a short stretch ahead. God sees the whole terrain.
-
-This isn''t a call to stop thinking or planning altogether. It''s a call to hold our plans with open hands rather than clenched fists — to submit them to God in all our ways, as the verse says, so that He can straighten the path even when our own map turns out to be wrong. Many of us have looked back on a season where a plan fell through and later recognized, with some surprise, that the detour turned out to be exactly where we needed to be.
-
-Today, consider the plan you''re holding most tightly right now. Not to abandon it, but to genuinely offer it to God — asking Him to redirect it if your understanding has led you somewhere He never intended.', 'Kebanyakan dari kita suka menganggap diri sebagai perencana yang cukup baik. Kita memetakan langkah selanjutnya, menimbang pilihan, melakukan riset, dan membangun sesuatu yang kita yakini. Tidak ada yang salah dengan merencanakan — Alkitab penuh dengan hikmat tentang ketekunan dan pandangan ke depan. Tetapi ada semacam dukacita tersendiri yang muncul ketika rencana yang telah kita kerjakan keras ternyata tetap gagal, meski sudah dengan usaha dan niat terbaik.
-
-Amsal 3:5-6 adalah salah satu ayat yang paling sering dikutip dalam Alkitab, dan bukan tanpa alasan: ia menyebutkan tepat ketegangan ini. Percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri. Perhatikan, ayat ini tidak berkata bahwa pengertian kita tidak berharga — ia berkata jangan bersandar padanya sepenuhnya, seolah itu satu-satunya sandaran yang kita butuhkan. Pengertian kita, menurut sifatnya, terbatas; kita hanya bisa melihat jalan di belakang kita dan sepenggal jalan di depan. Allah melihat seluruh medan.
-
-Ini bukan seruan untuk berhenti berpikir atau merencanakan sama sekali. Ini adalah seruan untuk memegang rencana kita dengan tangan terbuka, bukan tangan terkepal — untuk mengakui-Nya dalam segala laku kita, seperti kata ayat itu, sehingga Ia dapat meluruskan jalan bahkan ketika peta kita sendiri ternyata keliru. Banyak dari kita pernah menoleh ke belakang pada musim ketika sebuah rencana gagal, dan kemudian menyadari, dengan sedikit terkejut, bahwa jalan memutar itu ternyata justru tempat yang kita butuhkan.
-
-Hari ini, pikirkanlah rencana yang paling erat kau genggam saat ini. Bukan untuk meninggalkannya, tetapi untuk sungguh-sungguh menyerahkannya kepada Allah — memohon Ia mengarahkannya kembali jika pengertianmu telah membawamu ke tempat yang tak pernah Ia maksudkan.',
-    'Which plan are you holding with a clenched fist right now, and what would it look like to open your hand?', 'Rencana mana yang sedang kau genggam erat sekarang, dan seperti apa jadinya jika kau membuka tanganmu?',
-    'Lord, I bring You the plan I''ve been holding so tightly. I don''t fully understand where this road is going, but I trust You more than I trust my own map. Straighten my path where I''ve gone the wrong way. Amen.', 'Tuhan, aku membawa kepada-Mu rencana yang telah kugenggam begitu erat. Aku tidak sepenuhnya memahami ke mana jalan ini menuju, tetapi aku percaya kepada-Mu lebih daripada peta buatanku sendiri. Luruskanlah jalanku di mana aku telah salah arah. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 'Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 'Percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri. Akuilah Dia dalam segala lakumu, maka Ia akan meluruskan jalanmu.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 2,
-    'One Day at a Time', 'Selangkah demi Selangkah',
-    'There''s a certain kind of anxiety that comes not from today''s problems, but from all the tomorrows we''re trying to solve in advance. Will this job work out? What if the diagnosis is bad? What happens if the relationship doesn''t survive this? Our minds can spiral years into the future, gathering worries that haven''t even happened yet and carrying them as if they already have.
-
-Jesus addresses this directly in the Sermon on the Mount, right after teaching about God''s care for birds and flowers. Do not worry about tomorrow, He says, because tomorrow will worry about itself. Each day has enough trouble of its own. It''s almost startlingly practical — not a mystical promise, but an instruction about where to place our attention. Today has enough to handle without also carrying next year''s uncertainty.
-
-This teaching isn''t asking us to stop caring about the future or to abandon wisdom and preparation. It''s inviting us to release the illusion that we can control the future by worrying about it hard enough. Worry doesn''t actually secure tomorrow; it only steals the peace available to us today. Letting go of the map doesn''t mean we stop moving forward — it means we stop trying to see ten steps ahead before we''re willing to take the next one.
-
-Today, practice narrowing your focus. Instead of trying to solve every uncertain outcome at once, ask God simply for what you need for today — today''s strength, today''s wisdom, today''s provision — and trust Him to be present again tomorrow when tomorrow actually arrives.', 'Ada semacam kecemasan tertentu yang muncul bukan dari masalah hari ini, melainkan dari semua hari esok yang kita coba selesaikan lebih dulu. Apakah pekerjaan ini akan berhasil? Bagaimana jika diagnosisnya buruk? Apa yang terjadi jika hubungan ini tidak bertahan melewati ini? Pikiran kita bisa berputar bertahun-tahun ke depan, mengumpulkan kekhawatiran yang bahkan belum terjadi dan membawanya seolah-olah sudah terjadi.
-
-Yesus membahas hal ini secara langsung dalam Khotbah di Bukit, tepat setelah mengajar tentang perhatian Allah bagi burung-burung dan bunga-bunga. Janganlah kuatir akan hari besok, kata-Nya, karena hari besok mempunyai kesusahannya sendiri. Kesusahan sehari cukuplah untuk sehari. Ini hampir mengejutkan karena begitu praktis — bukan janji mistis, melainkan instruksi tentang ke mana kita harus mengarahkan perhatian. Hari ini sudah cukup berat tanpa harus juga membawa ketidakpastian tahun depan.
-
-Ajaran ini tidak meminta kita berhenti peduli pada masa depan atau meninggalkan hikmat dan persiapan. Ini mengundang kita untuk melepaskan ilusi bahwa kita bisa mengendalikan masa depan dengan mengkhawatirkannya cukup keras. Kekhawatiran sebenarnya tidak mengamankan hari esok; ia hanya mencuri damai yang tersedia bagi kita hari ini. Melepaskan peta sendiri bukan berarti kita berhenti melangkah maju — itu berarti kita berhenti mencoba melihat sepuluh langkah ke depan sebelum bersedia mengambil langkah berikutnya.
-
-Hari ini, latihlah untuk mempersempit fokusmu. Alih-alih mencoba menyelesaikan setiap kemungkinan yang tak pasti sekaligus, mintalah kepada Allah hanya apa yang kau butuhkan untuk hari ini — kekuatan hari ini, hikmat hari ini, penyediaan hari ini — dan percayalah Ia akan hadir lagi besok ketika esok benar-benar tiba.',
-    'Which future worry are you carrying today that actually belongs to a day that hasn''t come yet?', 'Kekhawatiran masa depan mana yang sedang kau bawa hari ini padahal sebenarnya milik hari yang belum tiba?',
-    'Jesus, I confess I''ve been trying to solve tomorrow''s problems today, and it''s exhausting me. Help me set down what isn''t mine to carry yet. Give me what I need for today, and I will trust You for tomorrow when it comes. Amen.', 'Yesus, aku mengaku bahwa aku telah mencoba menyelesaikan masalah hari esok hari ini, dan itu melelahkanku. Tolong aku meletakkan apa yang belum menjadi bagianku untuk dipikul. Berilah aku apa yang kubutuhkan untuk hari ini, dan aku akan mempercayakan hari esok kepada-Mu ketika ia tiba. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 6:34', 'WEB', 'Therefore do not worry about tomorrow, for tomorrow will worry about itself. Each day has enough trouble of its own.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 6:34', 'TB', 'Sebab itu janganlah kamu kuatir akan hari besok, karena hari besok mempunyai kesusahannya sendiri. Kesusahan sehari cukuplah untuk sehari.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 3,
-    'Holding Plans with Open Hands', 'Menggenggam Rencana dengan Tangan Terbuka',
-    'There is a certain confidence many of us grew up with — the idea that if we just plan carefully enough, we can guarantee our own outcomes. Today or tomorrow we will do this, go there, build that, become this. It''s not a bad instinct; ambition and diligence are gifts. But James, writing to early Christians who were making exactly these kinds of confident business plans, offers a gentle but firm correction.
-
-James doesn''t condemn planning itself. He condemns planning as though our lives are entirely in our own hands, as though tomorrow is a guarantee we''re owed. He reminds his readers that life itself is like a mist — here for a little while, then gone. That''s not meant to be morbid; it''s meant to be freeing. If our days are genuinely a gift rather than a guarantee, then every plan we make is already, quietly, an act of trust.
-
-James''s suggested phrase — ''if it is the Lord''s will'' — isn''t superstition or a magic formula to attach to our sentences. It''s a posture of the heart: an ongoing acknowledgment that our plans exist inside God''s larger will, not the other way around. Saying this, out loud or in our hearts, isn''t a sign of weak ambition. It''s actually a sign of security, because it means our identity and peace aren''t riding entirely on whether our plans succeed exactly as drawn.
-
-As this short plan closes, consider writing down one plan you''re currently making — for your career, your family, your future — and simply adding this phrase to it in your own words. Not as a formality, but as a genuine surrender: this, Lord, if it is Your will. Let that be the map you carry instead of the one you drew alone.', 'Ada semacam keyakinan tertentu yang tumbuh dalam diri banyak dari kita — gagasan bahwa jika kita cukup teliti merencanakan, kita dapat menjamin hasil kita sendiri. Hari ini atau besok kami akan melakukan ini, pergi ke sana, membangun itu, menjadi begini. Ini bukan dorongan yang buruk; ambisi dan ketekunan adalah anugerah. Tetapi Yakobus, menulis kepada orang-orang Kristen mula-mula yang sedang membuat rencana bisnis yang penuh keyakinan seperti ini, memberikan koreksi yang lembut namun tegas.
-
-Yakobus tidak mengutuk perencanaan itu sendiri. Ia mengutuk perencanaan yang seolah-olah hidup kita sepenuhnya ada di tangan kita sendiri, seolah esok adalah jaminan yang menjadi hak kita. Ia mengingatkan para pembacanya bahwa hidup itu sendiri seperti uap — ada sebentar, lalu lenyap. Ini bukan dimaksudkan untuk menakutkan; ini dimaksudkan untuk membebaskan. Jika hari-hari kita sungguh adalah anugerah dan bukan jaminan, maka setiap rencana yang kita buat sesungguhnya, secara diam-diam, sudah menjadi tindakan percaya.
-
-Ungkapan yang disarankan Yakobus — ''jika Tuhan menghendakinya'' — bukanlah takhayul atau rumus ajaib yang ditempelkan pada kalimat kita. Itu adalah sikap hati: pengakuan yang terus-menerus bahwa rencana kita berada di dalam kehendak Allah yang lebih besar, bukan sebaliknya. Mengucapkan ini, secara lisan maupun dalam hati, bukanlah tanda ambisi yang lemah. Sebenarnya ini tanda keamanan, karena berarti identitas dan kedamaian kita tidak sepenuhnya bergantung pada apakah rencana kita berhasil persis seperti yang dirancang.
-
-Saat renungan singkat ini berakhir, cobalah menuliskan satu rencana yang sedang kau susun — untuk karier, keluarga, atau masa depanmu — dan sederhana saja tambahkan ungkapan ini dengan kata-katamu sendiri. Bukan sebagai formalitas, melainkan sebagai penyerahan yang sungguh-sungguh: ini, Tuhan, jika Engkau menghendakinya. Biarlah itu menjadi peta yang kau bawa, menggantikan peta yang kau gambar sendirian.',
-    'What plan could you offer to God today with an honest ''if it is Your will'' instead of a demand?', 'Rencana apa yang bisa kau serahkan kepada Allah hari ini dengan ucapan jujur ''jika Engkau menghendakinya'', bukan sebuah tuntutan?',
-    'Father, my life is a gift, not a guarantee, and my plans belong inside Your will, not the other way around. I offer You my plans today — my career, my family, my future — and ask that Your will be done, even when it reshapes mine. Amen.', 'Bapa, hidupku adalah anugerah, bukan jaminan, dan rencanaku berada di dalam kehendak-Mu, bukan sebaliknya. Aku menyerahkan rencanaku kepada-Mu hari ini — karierku, keluargaku, masa depanku — dan memohon agar kehendak-Mu jadi, bahkan ketika itu membentuk ulang rencanaku. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'James 4:13-15', 'WEB', 'Now listen, you who say, ''Today or tomorrow we will go to this or that city, spend a year there, carry on business and make money.'' Instead, you ought to say, ''If it is the Lord''s will, we will live and do this or that.''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yakobus 4:13-15', 'TB', 'Jadi sekarang, hai kamu yang berkata: ''Hari ini atau besok kami berangkat ke kota ini atau itu, dan berdagang setahun di sana, dan mendapat untung.'' Sebaliknya kamu harus berkata: ''Jika Tuhan menghendakinya, kami akan hidup dan berbuat ini atau itu.''');
-
-  -- Plan: Bread for the Unknown Road
-  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
-  VALUES (
-    v_cat_id,
-    'Bread for the Unknown Road',
-    'Roti bagi Jalan yang Tak Diketahui',
-    'Trusting God''s provision when you cannot see tomorrow',
-    'Mempercayai penyediaan Allah ketika esok tak terlihat',
+    'Letting Go, Holding On in Prayer',
+    'Melepaskan, namun Tetap Berpegang dalam Doa',
+    'A seven-day journey of entrusting your children to God',
+    'Perjalanan tujuh hari mempercayakan anak-anak Anda kepada Tuhan',
     7,
-    'A seven-day walk through God''s promises of provision, for anyone facing an unknown road — a career shift, a diagnosis, a move, a decision with no clear outcome. Drawing on stories of manna, sparrows, and shepherds, this plan builds a steady, week-long confidence that the God who provided yesterday can be trusted with tomorrow, one day''s bread at a time.',
-    'Perjalanan tujuh hari menyusuri janji-janji penyediaan Allah, bagi siapa saja yang menghadapi jalan yang tak diketahui — perubahan karier, diagnosis, kepindahan, atau keputusan tanpa hasil yang pasti. Berlandaskan kisah manna, burung pipit, dan gembala, renungan ini membangun keyakinan yang mantap selama seminggu bahwa Allah yang menyediakan kemarin dapat dipercaya untuk esok, sehari demi sehari.',
-    '/images/devotions/bread-for-the-unknown-road.jpeg'
+    'A seven-day devotional for parents learning the lifelong art of releasing their children into God''s hands — through prayer, trust, and surrender — rather than trying to control every outcome, drawing on the examples of Hannah, the psalmists, and the promises of a Father who never stops watching over our children.',
+    'Renungan tujuh hari bagi orang tua yang sedang belajar seni seumur hidup untuk melepaskan anak-anak mereka ke dalam tangan Tuhan — melalui doa, kepercayaan, dan penyerahan diri — alih-alih berusaha mengendalikan setiap hasil, dengan belajar dari teladan Hana, para pemazmur, dan janji-janji Bapa yang tidak pernah berhenti menjaga anak-anak kita.',
+    '/images/devotions/letting-go-holding-on-in-prayer.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -358,29 +232,25 @@ Saat renungan singkat ini berakhir, cobalah menuliskan satu rencana yang sedang 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'The God Who Sees What You Need', 'Allah yang Tahu Kebutuhanmu',
-    'Uncertainty about the future almost always comes wrapped in a question about resources. Will there be enough? Enough time, enough money, enough strength, enough support to get through what''s ahead. When we can''t see the road, our minds instinctively start counting supplies, as if we were the ones responsible for stocking the entire journey ourselves.
+    'A Prayer Before They Existed', 'Doa Sebelum Mereka Ada',
+    'Hannah''s story begins not with a child, but with years of longing and a desperate prayer poured out before God in the temple. When her son Samuel was finally born, she did something remarkable: she dedicated him back to the Lord, keeping her promise even though it meant releasing him into the temple''s care while still young. Her love for Samuel was not diminished by this surrender — if anything, it was purified by it.
 
-Paul wrote to the Philippians from a place with very little control over his own circumstances — a prison cell, dependent on the gifts of a church far away to meet his basic needs. And yet from that place he writes one of the most confident promises in all of Scripture: my God will meet all your needs. Not some needs, not the needs he approves of, but all of them, according to the riches of His glory, not according to what''s left over.
+Many parents pray fervently for a child before that child ever exists — for conception, for a safe birth, for a healthy start. But somewhere in the daily grind of parenting, that posture of surrendered prayer can quietly shift into a posture of control, as if the goal were now to manage every outcome ourselves rather than continuing to entrust this child to the God who gave them in the first place.
 
-Notice the source of this confidence. Paul isn''t promising provision because he has a clever plan or a financial safety net. He is promising it because of who God is — rich, generous, and personally attentive to His children. The riches of God''s glory in Christ Jesus are not a limited account that might run dry when too many people ask at once. They are inexhaustible, the way sunlight doesn''t run low no matter how many plants turn toward it.
+Hannah''s prayer of dedication offers a corrective. It reminds us that our children were never truly ours to begin with — they were asked for, prayed over, and given. The same posture that brought us to our knees in longing can bring us back to our knees in trust, again and again, at every stage of a child''s life, not just at the beginning.
 
-As you begin this week, bring your specific uncertainty to God honestly — not just the vague fear of ''the unknown,'' but the actual thing you are worried about running out of. He is not intimidated by the specifics, and He already knows the need before you say it out loud.', 'Ketidakpastian tentang masa depan hampir selalu datang berbalut pertanyaan tentang sumber daya. Akankah cukup? Cukup waktu, cukup uang, cukup kekuatan, cukup dukungan untuk melewati apa yang ada di depan. Ketika kita tidak bisa melihat jalannya, pikiran kita secara naluriah mulai menghitung perbekalan, seolah-olah kitalah yang bertanggung jawab menyediakan seluruh perjalanan itu sendiri.
+Today, consider returning to that original posture of prayer — the one you may have had before your child was even born, or when they were first placed in your arms. What would it look like to entrust them to God again today, as freshly as you did then?', 'Kisah Hana dimulai bukan dengan seorang anak, melainkan dengan bertahun-tahun kerinduan dan doa yang tercurah dengan putus asa di hadapan Tuhan di bait suci. Ketika putranya, Samuel, akhirnya lahir, ia melakukan sesuatu yang luar biasa: ia mempersembahkan Samuel kembali kepada TUHAN, menepati janjinya meskipun itu berarti melepaskannya ke dalam perawatan bait suci sejak usia dini. Kasihnya kepada Samuel tidak berkurang karena penyerahan ini — justru, kasih itu dimurnikan olehnya.
 
-Paulus menulis kepada jemaat di Filipi dari tempat dengan sangat sedikit kendali atas keadaannya sendiri — sebuah sel penjara, bergantung pada pemberian dari sebuah jemaat yang jauh untuk memenuhi kebutuhan dasarnya. Namun justru dari tempat itu ia menulis salah satu janji paling penuh keyakinan dalam seluruh Alkitab: Allahku akan memenuhi segala keperluanmu. Bukan sebagian keperluan, bukan hanya yang Ia setujui, melainkan segala keperluanmu, menurut kekayaan kemuliaan-Nya, bukan menurut sisa yang ada.
+Banyak orang tua berdoa dengan sungguh-sungguh untuk seorang anak bahkan sebelum anak itu ada — untuk kehamilan, untuk kelahiran yang selamat, untuk permulaan yang sehat. Namun di suatu titik dalam kesibukan sehari-hari mendidik anak, sikap doa yang penuh penyerahan itu bisa diam-diam bergeser menjadi sikap mengendalikan, seolah-olah tujuannya kini adalah mengatur sendiri setiap hasil, bukannya terus mempercayakan anak ini kepada Tuhan yang memberikannya sejak semula.
 
-Perhatikan sumber keyakinan ini. Paulus tidak menjanjikan penyediaan karena ia memiliki rencana cerdik atau jaring pengaman finansial. Ia menjanjikannya karena siapa Allah itu — kaya, murah hati, dan penuh perhatian secara pribadi kepada anak-anak-Nya. Kekayaan kemuliaan Allah dalam Kristus Yesus bukanlah rekening terbatas yang bisa habis jika terlalu banyak orang meminta sekaligus. Itu tak terbatas, seperti sinar matahari yang tidak berkurang betapa pun banyak tanaman yang menghadap kepadanya.
+Doa pentahbisan Hana memberikan koreksi. Ini mengingatkan kita bahwa anak-anak kita sesungguhnya tidak pernah sepenuhnya milik kita — mereka diminta, didoakan, dan diberikan. Sikap yang sama yang membawa kita berlutut dalam kerinduan dapat membawa kita kembali berlutut dalam kepercayaan, berulang kali, di setiap tahap kehidupan seorang anak, bukan hanya di awal.
 
-Saat memulai minggu ini, bawalah ketidakpastianmu yang spesifik kepada Allah dengan jujur — bukan sekadar ketakutan samar tentang ''yang tak diketahui'', melainkan hal nyata yang kau khawatirkan akan habis. Ia tidak gentar dengan hal-hal yang spesifik, dan Ia sudah tahu kebutuhan itu bahkan sebelum kau mengucapkannya.',
-    'What specific resource are you afraid of running out of? Name it honestly to God today.', 'Sumber daya spesifik apa yang kau khawatirkan akan habis? Sebutkanlah dengan jujur kepada Allah hari ini.',
-    'Father, You already know what I am afraid I won''t have enough of. Thank You that Your resources are not limited the way mine are. Meet my specific need today according to Your riches, not according to what I can see in my own hands. Amen.', 'Bapa, Engkau sudah tahu apa yang kutakutkan tidak akan cukup. Terima kasih karena sumber daya-Mu tidak terbatas seperti milikku. Penuhilah kebutuhanku yang spesifik hari ini menurut kekayaan-Mu, bukan menurut apa yang bisa kulihat di tanganku sendiri. Amin.'
+Hari ini, pertimbangkan untuk kembali ke sikap doa yang semula itu — sikap yang mungkin Anda miliki sebelum anak Anda bahkan lahir, atau ketika mereka pertama kali diletakkan di pelukan Anda. Seperti apa rasanya mempercayakan mereka kepada Tuhan lagi hari ini, sesegar saat itu?',
+    'What would it look like to entrust your child to God again today, as freshly as the day they were given to you?', 'Seperti apa rasanya mempercayakan anak Anda kepada Tuhan lagi hari ini, sesegar hari ketika mereka diberikan kepada Anda?',
+    'Lord, this child was always Yours before he or she was mine. Help me return, again and again, to a posture of surrendered prayer rather than anxious control. I entrust my child to You today, just as freshly as the day You gave them to me. Amen.', 'Tuhan, anak ini selalu menjadi milik-Mu sebelum menjadi milikku. Tolong aku untuk kembali, berulang kali, kepada sikap doa yang penuh penyerahan dan bukan kendali yang cemas. Aku mempercayakan anakku kepada-Mu hari ini, sesegar hari ketika Engkau memberikannya kepadaku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 4:19', 'WEB', 'And my God will meet all your needs according to the riches of his glory in Christ Jesus.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 4:19', 'TB', 'Allahku akan memenuhi segala keperluanmu menurut kekayaan dan kemuliaan-Nya dalam Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Samuel 1:27', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Samuel 1:27', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -390,29 +260,25 @@ Saat memulai minggu ini, bawalah ketidakpastianmu yang spesifik kepada Allah den
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'More Valuable Than Sparrows', 'Lebih Berharga daripada Burung Pipit',
-    'Jesus points to birds in the middle of His most famous sermon, right after warning His listeners not to worry. Look at the birds of the air, He says — creatures with no storehouse, no harvest, no salary, and yet they are fed. It''s a strange comfort at first. If you''re staring down an uncertain future, being compared to a bird with no plan doesn''t sound especially reassuring.
+    'The Weight We Were Never Meant to Carry', 'Beban yang Tidak Pernah Dimaksudkan untuk Kita Pikul',
+    'Anxiety about our children can be one of the heaviest burdens a parent carries. Will they be safe? Will they make good choices? Will they keep the faith we''ve tried to give them? These worries are not foolish — they come from real love — but left unchecked, they can grow into a weight we were never designed to bear alone.
 
-But look again at the actual logic Jesus is building. He isn''t saying don''t plan, don''t work, don''t prepare — He worked with His hands for years before His ministry began. He is making an argument from lesser to greater: if the Father tends this carefully to a creature that cannot pray, cannot plan, cannot even understand its own need, how much more attentive is He to you, someone He calls by name, someone made in His image?
+Paul''s words to the Philippians were not written to parents specifically, but they land with particular force in a parent''s heart: do not be anxious about anything, but in every situation, through prayer and petition, present your requests to God. This is not a call to stop caring. It is an invitation to stop carrying the anxiety alone and instead hand it, specifically and repeatedly, to God.
 
-This isn''t a promise that hard seasons never come. Even the ravens that fed Elijah appeared during one of the worst droughts in Israel''s history. What the birds and the ravens teach us is not that need disappears, but that God notices need and moves toward it, often through means we never would have planned or predicted ourselves.
+There is a real difference between concern and anxiety. Concern moves us to pray, to guide, to have honest conversations with our children. Anxiety, by contrast, often just circles endlessly in our minds, solving nothing, exhausting us, and sometimes even communicating fear to our children rather than faith. The peace Paul promises — a peace that transcends understanding — is not the absence of a reason to worry. It is God''s presence guarding our hearts even while real challenges remain.
 
-Today, whatever uncertain road you''re facing, let this comparison sink in slowly: if God is this attentive to a sparrow, He has not stopped being attentive to you. Your worth to Him was never in question, and neither is His willingness to notice what you actually need.', 'Yesus menunjuk ke arah burung-burung di tengah khotbah-Nya yang paling terkenal, tepat setelah memperingatkan para pendengar-Nya untuk tidak kuatir. Pandanglah burung-burung di langit, kata-Nya — makhluk tanpa lumbung, tanpa panen, tanpa gaji, namun tetap diberi makan. Awalnya ini terdengar seperti penghiburan yang aneh. Jika kau sedang menatap masa depan yang tidak pasti, dibandingkan dengan burung tanpa rencana rasanya kurang meyakinkan.
+Today, try naming one specific worry about your child out loud in prayer, handing it to God by name rather than letting it circle silently in your mind. Notice whether simply speaking it as a prayer, rather than carrying it as a private burden, begins to loosen its grip.', 'Kecemasan tentang anak-anak kita bisa menjadi salah satu beban terberat yang dipikul seorang orang tua. Akankah mereka aman? Akankah mereka membuat pilihan yang baik? Akankah mereka mempertahankan iman yang telah kita coba berikan? Kekhawatiran ini bukanlah hal yang bodoh — ia lahir dari kasih yang sungguh — tetapi jika dibiarkan, ia dapat tumbuh menjadi beban yang tidak pernah dirancang untuk kita pikul sendirian.
 
-Tetapi perhatikan kembali logika yang sebenarnya sedang dibangun Yesus. Ia tidak berkata jangan merencanakan, jangan bekerja, jangan bersiap — Ia sendiri bekerja dengan tangan-Nya selama bertahun-tahun sebelum pelayanan-Nya dimulai. Ia sedang membuat argumen dari yang lebih kecil ke yang lebih besar: jika Bapa begitu teliti memelihara makhluk yang bahkan tidak bisa berdoa, tidak bisa merencanakan, bahkan tidak memahami kebutuhannya sendiri, betapa lebih Ia memperhatikan dirimu, seseorang yang Ia panggil dengan nama, seseorang yang diciptakan menurut gambar-Nya?
+Kata-kata Paulus kepada jemaat di Filipi tidak ditulis khusus untuk para orang tua, tetapi kata-kata itu mengena dengan kekuatan tersendiri di hati seorang orang tua: janganlah hendaknya kamu kuatir tentang apa pun juga, tetapi dalam segala hal nyatakanlah keinginanmu kepada Allah dalam doa dan permohonan. Ini bukan ajakan untuk berhenti peduli. Ini adalah undangan untuk berhenti memikul kecemasan itu sendirian dan sebaliknya menyerahkannya, secara khusus dan berulang kali, kepada Tuhan.
 
-Ini bukan janji bahwa musim sulit tidak akan pernah datang. Bahkan burung-burung gagak yang memberi makan Elia muncul di tengah salah satu masa kekeringan terburuk dalam sejarah Israel. Yang diajarkan oleh burung-burung dan burung gagak itu bukanlah bahwa kebutuhan lenyap, melainkan bahwa Allah memperhatikan kebutuhan itu dan bergerak menuju kepadanya, sering kali melalui cara yang tak pernah kita rencanakan atau perkirakan sendiri.
+Ada perbedaan nyata antara kepedulian dan kecemasan. Kepedulian menggerakkan kita untuk berdoa, membimbing, dan berbicara secara jujur dengan anak-anak kita. Kecemasan, sebaliknya, sering kali hanya berputar-putar tanpa henti dalam pikiran kita, tidak menyelesaikan apa pun, menguras tenaga kita, dan kadang bahkan menyampaikan rasa takut kepada anak-anak kita, bukan iman. Damai sejahtera yang dijanjikan Paulus — damai yang melampaui segala akal — bukanlah ketiadaan alasan untuk khawatir. Itu adalah kehadiran Tuhan yang menjaga hati kita bahkan ketika tantangan yang nyata masih ada.
 
-Hari ini, apa pun jalan tak pasti yang sedang kau hadapi, biarlah perbandingan ini meresap perlahan: jika Allah sedemikian penuh perhatian pada seekor burung pipit, Ia tidak pernah berhenti memperhatikanmu. Nilaimu di mata-Nya tidak pernah dipertanyakan, begitu pula kesediaan-Nya untuk memperhatikan apa yang benar-benar kau butuhkan.',
-    'Where have you been quietly doubting your own worth to God because of an uncertain circumstance?', 'Di bagian mana selama ini engkau diam-diam meragukan nilaimu di mata Allah karena sebuah keadaan yang tidak pasti?',
-    'Lord, help me believe today that I am more valuable to You than the birds You already feed so faithfully. Quiet the doubt that says I might be forgotten. I am not a sparrow left to figure this out alone. Amen.', 'Tuhan, tolong aku percaya hari ini bahwa aku lebih berharga bagi-Mu daripada burung-burung yang begitu setia Kau beri makan. Diamkan keraguan yang berkata aku mungkin terlupakan. Aku bukan burung pipit yang dibiarkan menyelesaikan ini sendirian. Amin.'
+Hari ini, cobalah menyebutkan satu kekhawatiran tertentu tentang anak Anda dengan suara, dalam doa, menyerahkannya kepada Tuhan dengan nama, alih-alih membiarkannya berputar diam-diam dalam pikiran Anda. Perhatikan apakah sekadar mengucapkannya sebagai doa, alih-alih memikulnya sebagai beban pribadi, mulai melonggarkan cengkeramannya.',
+    'What one worry about your child can you name out loud to God today, instead of carrying it silently?', 'Kekhawatiran apa tentang anak Anda yang dapat Anda ucapkan dengan suara kepada Tuhan hari ini, alih-alih memikulnya diam-diam?',
+    'Father, I bring You my worries about my child, named one by one. I was never meant to carry this weight alone. Guard my heart and mind with Your peace, even while real challenges remain, and remind me that You love my child more than my anxiety ever could protect them. Amen.', 'Bapa, aku membawa kepada-Mu kekhawatiranku tentang anakku, satu per satu dengan nama. Aku tidak pernah dimaksudkan untuk memikul beban ini sendirian. Jagalah hati dan pikiranku dengan damai sejahtera-Mu, bahkan ketika tantangan yang nyata masih ada, dan ingatkan aku bahwa Engkau mengasihi anakku lebih daripada kecemasanku pernah bisa melindunginya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 6:26', 'WEB', 'Look at the birds of the air; they do not sow or reap or store away in barns, and yet your heavenly Father feeds them. Are you not much more valuable than they?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 6:26', 'TB', 'Pandanglah burung-burung di langit, yang tidak menabur dan tidak menuai dan tidak mengumpulkan bekal dalam lumbung, namun diberi makan oleh Bapamu yang di sorga. Bukankah kamu jauh melebihi burung-burung itu?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 4:6-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 4:6-7', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -422,29 +288,25 @@ Hari ini, apa pun jalan tak pasti yang sedang kau hadapi, biarlah perbandingan i
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'The Shepherd Who Does Not Let Me Want', 'Gembala yang Tak Membiarkan Aku Kekurangan',
-    'Psalm 23 opens with a sentence so familiar it can be easy to skip past: the Lord is my shepherd, I lack nothing. Before the green pastures, before the still waters, before the valley of the shadow, before the table prepared in front of enemies, there is this simple declaration of trust. Everything else in the psalm is really just an unpacking of what it means to believe this first line.
+    'Taught by the Lord', 'Diajar oleh TUHAN',
+    'Isaiah 54:13 carries a promise that quiets the heart of any parent who wonders whether they are teaching their child enough, well enough, or in the right way: ''All your children will be taught by the Lord, and great will be their peace.'' It is a striking reminder that God Himself is the primary teacher of our children''s souls — we are important participants, but not the only, or even the final, source of their formation.
 
-A shepherd''s job in the ancient world was not glamorous. It meant knowing where the water was during a drought, scouting ahead for danger, staying awake through cold nights, physically placing the body between the flock and a predator. When David — himself a former shepherd — calls God his shepherd, he isn''t reaching for a decorative metaphor. He is describing someone who does the unseen, unglamorous work of provision long before the sheep ever notice they were in danger of lacking.
+This does not excuse us from our responsibility to teach and model faith. But it does relieve us of an impossible burden many parents unconsciously carry: the sense that our child''s entire spiritual future rests solely on our performance as parents. It doesn''t. God has been pursuing this child''s heart since before they were born, and He will continue long after they''ve grown and left home, through people, circumstances, and quiet moments we will never see or know about.
 
-''I lack nothing'' is not a claim that David had everything he wanted. It is a claim that under this shepherd''s care, nothing essential would be missing when it mattered most. That is a very different promise than ''you will get everything you ask for.'' It is the promise of a caretaker who knows the difference between what you want and what you truly need, and provides the second even when the first isn''t given.
+This truth is especially comforting on the days when we feel we''ve failed — when patience ran out, when we snapped instead of taught, when a lesson didn''t land the way we hoped. God is not limited by our best or worst days. He is teaching our children in ways that run alongside our efforts, filling gaps we didn''t even know were there.
 
-On an unknown road, it helps to remember you are not walking it as a lone traveler responsible for your own supplies. You are walking it as a sheep under a shepherd who has never once, in all of history, let His flock starve in the wilderness. Rest in that today, even if you cannot yet see the pasture ahead.', 'Mazmur 23 dibuka dengan kalimat yang begitu akrab sehingga mudah dilewati begitu saja: TUHAN adalah gembalaku, takkan kekurangan aku. Sebelum padang rumput hijau, sebelum air yang tenang, sebelum lembah kekelaman, sebelum meja yang disediakan di hadapan musuh, ada pernyataan sederhana tentang kepercayaan ini. Sisa mazmur ini sebenarnya hanyalah penjabaran dari apa artinya percaya pada baris pertama ini.
+Today, release the pressure of being your child''s only teacher of faith. Ask God to keep teaching them directly, in ways only He can, even through the parts of parenting you feel you''re getting wrong.', 'Yesaya 54:13 membawa janji yang menenangkan hati setiap orang tua yang bertanya-tanya apakah mereka telah mengajar anak mereka cukup, cukup baik, atau dengan cara yang benar: ''Semua anakmu akan menjadi murid TUHAN, dan besarlah kesejahteraan anak-anakmu.'' Ini adalah pengingat yang mencolok bahwa Allah sendirilah pengajar utama jiwa anak-anak kita — kita adalah peserta yang penting, tetapi bukan satu-satunya, atau bahkan bukan sumber akhir, dari pembentukan mereka.
 
-Pekerjaan seorang gembala di dunia kuno bukanlah pekerjaan yang mentereng. Itu berarti mengetahui di mana air berada saat kekeringan, mengintai bahaya di depan, terjaga sepanjang malam yang dingin, secara fisik menempatkan diri di antara kawanan domba dan pemangsa. Ketika Daud — yang dulunya sendiri seorang gembala — menyebut Allah sebagai gembalanya, ia tidak sedang meraih sebuah kiasan yang indah semata. Ia sedang menggambarkan seseorang yang melakukan pekerjaan penyediaan yang tak terlihat dan tak mentereng, jauh sebelum domba-domba itu bahkan menyadari mereka nyaris kekurangan.
+Ini tidak membebaskan kita dari tanggung jawab untuk mengajar dan menjadi teladan iman. Tetapi ini meringankan kita dari beban yang mustahil yang secara tidak sadar dipikul banyak orang tua: perasaan bahwa seluruh masa depan rohani anak kita bergantung semata-mata pada kinerja kita sebagai orang tua. Tidak demikian. Allah telah mengejar hati anak ini sejak sebelum mereka lahir, dan Ia akan terus melakukannya jauh setelah mereka dewasa dan meninggalkan rumah, melalui orang-orang, keadaan, dan momen-momen tenang yang tidak akan pernah kita lihat atau ketahui.
 
-''Takkan kekurangan aku'' bukanlah klaim bahwa Daud memiliki segala yang ia inginkan. Ini adalah klaim bahwa di bawah pemeliharaan gembala ini, tidak ada yang esensial akan hilang saat itu benar-benar penting. Itu adalah janji yang sangat berbeda dari ''kamu akan mendapatkan semua yang kau minta.'' Ini adalah janji dari seorang penjaga yang tahu perbedaan antara apa yang kau inginkan dan apa yang sungguh kau butuhkan, dan menyediakan yang kedua bahkan ketika yang pertama tidak diberikan.
+Kebenaran ini sangat menghibur pada hari-hari ketika kita merasa telah gagal — ketika kesabaran habis, ketika kita membentak alih-alih mengajar, ketika sebuah pelajaran tidak tersampaikan seperti yang kita harapkan. Allah tidak dibatasi oleh hari terbaik atau terburuk kita. Ia sedang mengajar anak-anak kita dengan cara yang berjalan bersama usaha kita, mengisi celah-celah yang bahkan tidak kita sadari ada.
 
-Di jalan yang tak diketahui, ada baiknya mengingat bahwa kau tidak berjalan sebagai musafir sendirian yang bertanggung jawab atas perbekalanmu sendiri. Kau berjalan sebagai domba di bawah gembala yang tidak pernah sekalipun, dalam sepanjang sejarah, membiarkan kawanan-Nya kelaparan di padang gurun. Beristirahatlah dalam kebenaran ini hari ini, sekalipun kau belum bisa melihat padang rumput di depan.',
-    'What is the difference, for you today, between what you want and what you actually need?', 'Apa perbedaan, bagimu hari ini, antara apa yang kau inginkan dan apa yang sungguh kau butuhkan?',
-    'Shepherd of my life, thank You for the unseen ways You have already been providing for me. Help me trust that under Your care, I will not lack what truly matters, even on this uncertain road. Lead me to rest today. Amen.', 'Gembala hidupku, terima kasih atas cara-cara tak terlihat yang telah Kau lakukan untuk menyediakan bagiku. Tolong aku percaya bahwa di bawah pemeliharaan-Mu, aku tidak akan kekurangan apa yang sungguh penting, bahkan di jalan yang tak pasti ini. Tuntunlah aku untuk beristirahat hari ini. Amin.'
+Hari ini, lepaskan tekanan menjadi satu-satunya pengajar iman bagi anak Anda. Mintalah Tuhan untuk terus mengajar mereka secara langsung, dengan cara yang hanya Ia yang bisa, bahkan melalui bagian-bagian mendidik anak yang Anda rasa telah Anda lakukan dengan salah.',
+    'Where do you need to release the pressure of being your child''s only teacher of faith?', 'Di bagian mana Anda perlu melepaskan tekanan menjadi satu-satunya pengajar iman bagi anak Anda?',
+    'Lord, teach my child in ways I cannot. On the days I fall short, keep pursuing their heart directly. Thank You that their faith does not rest on my performance alone, but on Your faithfulness. Amen.', 'Tuhan, ajarilah anakku dengan cara yang tidak dapat kulakukan. Pada hari-hari aku gagal, teruslah mengejar hati mereka secara langsung. Terima kasih bahwa iman mereka tidak bergantung semata-mata pada kinerjaku, tetapi pada kesetiaan-Mu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 23:1', 'WEB', 'The LORD is my shepherd, I lack nothing.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 23:1', 'TB', 'TUHAN adalah gembalaku, takkan kekurangan aku.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 54:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 54:13', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -454,29 +316,25 @@ Di jalan yang tak diketahui, ada baiknya mengingat bahwa kau tidak berjalan seba
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'Plans to Prosper, Not to Harm', 'Rancangan Damai Sejahtera, Bukan Kecelakaan',
-    'Jeremiah 29:11 is one of the most beloved verses in Scripture, and also one of the most misunderstood if we forget its context. God speaks these words not to people enjoying comfortable circumstances, but to Israelites who had just been carried off into exile in Babylon — their homeland lost, their temple destroyed, their future completely unclear. This promise was given inside genuine uncertainty, not instead of it.
+    'Trust With Your Whole Heart', 'Percayalah dengan Segenap Hatimu',
+    'Proverbs 3:5-6 is a verse most of us learned long before we became parents, but it takes on new depth once we are the ones watching over a child: ''Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.'' Parenting has a way of exposing exactly how much we still lean on our own understanding — our plans, our timelines, our idea of what a ''successful'' child looks like.
 
-What makes the verse remarkable is not that God promised an easy or quick resolution. In fact, the surrounding verses tell the exiles to settle down, build houses, plant gardens, and expect to be there for decades. God''s plan for their flourishing unfolded slowly, inside a hard season they did not choose and could not shorten by force of will. And yet He still calls His intentions toward them plans to prosper and not to harm, plans for hope and a future.
+There are seasons in parenting when our own understanding runs completely dry. A child''s illness, a struggle we can''t fix, a choice they make that we never would have chosen for them — these moments strip away the illusion that we can reason or plan our way to a guaranteed good outcome. It is precisely in these moments that this proverb becomes less of a nice sentiment and more of a lifeline.
 
-This is worth sitting with if your own uncertain road feels long rather than short. God''s good plans for you are not disproven by the fact that things are taking time, or that the path looks nothing like what you expected. The exiles could not see how they would ever return home, and yet God''s plan was already moving underneath the surface of their ordinary, difficult days.
+Trusting with ''all your heart'' does not mean pretending not to have your own understanding or ideas. It means holding those ideas loosely, checking them against God''s ways, and being willing to be redirected. Many parents find that their most meaningful growth in faith happens not during the easy seasons of parenting, but during the ones where they were forced to genuinely let go and trust.
 
-Today, hold this promise with both hands: not as a guarantee that your circumstances will resolve on your preferred timeline, but as a settled confidence in the character behind the plan. The God who spoke this over an exiled, uncertain people has not changed His posture toward His children.', 'Yeremia 29:11 adalah salah satu ayat yang paling dicintai dalam Alkitab, dan juga salah satu yang paling sering disalahpahami jika kita lupa konteksnya. Allah mengucapkan kata-kata ini bukan kepada orang-orang yang menikmati keadaan nyaman, melainkan kepada orang Israel yang baru saja dibawa ke pembuangan di Babel — tanah air mereka hilang, bait suci mereka hancur, masa depan mereka sama sekali tidak jelas. Janji ini diberikan di tengah ketidakpastian yang nyata, bukan sebagai gantinya.
+Today, name one area of your child''s life where you are leaning heavily on your own understanding — your own plan for how things should go. Practice, even briefly, handing that plan back to God and asking Him to make the path straight in His own way and timing.', 'Amsal 3:5-6 adalah ayat yang kita banyak pelajari jauh sebelum kita menjadi orang tua, tetapi ayat ini memiliki kedalaman baru begitu kita menjadi orang yang menjaga seorang anak: ''Percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri. Akuilah Dia dalam segala lakumu, maka Ia akan meluruskan jalanmu.'' Mendidik anak memiliki cara untuk mengungkapkan sejauh mana kita masih bersandar pada pengertian kita sendiri — rencana kita, jadwal kita, gambaran kita tentang seperti apa anak yang ''berhasil''.
 
-Yang membuat ayat ini luar biasa bukanlah karena Allah menjanjikan penyelesaian yang mudah atau cepat. Faktanya, ayat-ayat di sekitarnya menyuruh para buangan untuk menetap, membangun rumah, menanam kebun, dan bersiap tinggal di sana selama puluhan tahun. Rencana Allah bagi kesejahteraan mereka terwujud secara perlahan, di dalam musim sulit yang tidak mereka pilih dan tidak dapat dipersingkat dengan kemauan mereka sendiri. Namun Ia tetap menyebut niat-Nya bagi mereka sebagai rancangan damai sejahtera dan bukan rancangan kecelakaan, rancangan untuk memberi harapan dan hari depan.
+Ada musim-musim dalam mendidik anak ketika pengertian kita sendiri benar-benar habis. Sakitnya seorang anak, pergumulan yang tidak dapat kita perbaiki, pilihan yang mereka buat yang tidak akan pernah kita pilihkan untuk mereka — momen-momen ini melucuti ilusi bahwa kita dapat bernalar atau merencanakan jalan menuju hasil yang baik yang terjamin. Justru di momen-momen inilah amsal ini menjadi lebih dari sekadar kata-kata yang indah, melainkan tali penyelamat.
 
-Ini patut direnungkan jika jalan tak pastimu sendiri terasa panjang, bukan singkat. Rencana baik Allah bagimu tidak terbantahkan oleh fakta bahwa segalanya membutuhkan waktu, atau bahwa jalannya sama sekali tidak seperti yang kau harapkan. Para buangan itu tidak dapat melihat bagaimana mereka akan pernah pulang, namun rencana Allah sudah bergerak di bawah permukaan hari-hari biasa mereka yang sulit.
+Percaya dengan ''segenap hati'' tidak berarti berpura-pura tidak memiliki pengertian atau gagasan sendiri. Ini berarti memegang gagasan-gagasan itu dengan longgar, memeriksanya terhadap jalan-jalan Tuhan, dan bersedia diarahkan ulang. Banyak orang tua merasa bahwa pertumbuhan iman mereka yang paling berarti terjadi bukan pada musim-musim mudah dalam mendidik anak, tetapi pada musim-musim ketika mereka dipaksa untuk sungguh-sungguh melepaskan dan percaya.
 
-Hari ini, peganglah janji ini dengan kedua tangan: bukan sebagai jaminan bahwa keadaanmu akan terselesaikan sesuai jadwal yang kau sukai, melainkan sebagai kepercayaan yang mantap pada karakter di balik rencana itu. Allah yang mengucapkan ini kepada umat buangan yang tidak pasti tidak pernah mengubah sikap-Nya terhadap anak-anak-Nya.',
-    'If God''s good plan for you is unfolding slowly rather than quickly, what would it mean to trust Him inside the slowness?', 'Jika rencana baik Allah bagimu terwujud perlahan, bukan cepat, apa artinya mempercayai-Nya di dalam kelambatan itu?',
-    'Lord, I don''t know how long this road will be, but I trust that Your plans for me are for good and not for harm. Give me patience like the exiles had to have, and confidence that You are already at work beneath what I can see. Amen.', 'Tuhan, aku tidak tahu berapa panjang jalan ini, tetapi aku percaya bahwa rencana-Mu bagiku adalah untuk kebaikan, bukan kecelakaan. Berilah aku kesabaran seperti yang harus dimiliki umat buangan itu, dan keyakinan bahwa Engkau sudah bekerja di balik apa yang bisa kulihat. Amin.'
+Hari ini, sebutkan satu bidang dalam kehidupan anak Anda di mana Anda sangat bersandar pada pengertian Anda sendiri — rencana Anda sendiri tentang bagaimana seharusnya segala sesuatu berjalan. Latihlah, bahkan sejenak, menyerahkan rencana itu kembali kepada Tuhan dan memohon agar Ia meluruskan jalan itu dengan cara dan waktu-Nya sendiri.',
+    'Where are you leaning on your own understanding of your child''s life instead of trusting God''s path for them?', 'Di bagian mana Anda bersandar pada pengertian Anda sendiri tentang kehidupan anak Anda, alih-alih mempercayai jalan Tuhan bagi mereka?',
+    'Lord, I confess how tightly I hold my own plans for my child. Teach me to trust You with all my heart, especially where I cannot see the way forward. Make their paths straight in Your timing, not mine. Amen.', 'Tuhan, aku mengakui betapa erat aku memegang rencanaku sendiri bagi anakku. Ajarku untuk percaya kepada-Mu dengan segenap hatiku, terutama di tempat aku tidak dapat melihat jalan ke depan. Luruskanlah jalan mereka menurut waktu-Mu, bukan waktuku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Jeremiah 29:11', 'WEB', 'For I know the plans I have for you,'' declares the LORD, ''plans to prosper you and not to harm you, plans to give you hope and a future.''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yeremia 29:11', 'TB', 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, demikianlah firman TUHAN, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -486,29 +344,25 @@ Hari ini, peganglah janji ini dengan kedua tangan: bukan sebagai jaminan bahwa k
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 5,
-    'Grace Sufficient for Every Season', 'Anugerah yang Cukup bagi Setiap Musim',
-    'One of the quiet fears of an uncertain future is that we might run out — not just of money or resources, but of grace itself. What if the season ahead requires more patience, more strength, more faith than we have in us? What if we simply aren''t equipped for whatever is coming next?
+    'Watching Over Their Coming and Going', 'Menjaga Keluar Masuk Mereka',
+    'There is a particular kind of fear that grips a parent the moment a child walks out the door alone for the first time — the first day of school, the first solo errand, the first time driving a car. In that instant, control visibly ends, and trust must begin, whether or not we feel ready for it. Psalm 121 was written for exactly this feeling: ''the Lord will watch over your coming and going both now and forevermore.''
 
-Paul''s second letter to the Corinthians was written to a church he had appealed to for generosity, and in the middle of that appeal he makes a sweeping promise about God''s ability to provide: God is able to bless you abundantly, so that in all things at all times, having all that you need, you will abound in every good work. Notice the phrase ''at all times'' — not just in the easy seasons, but in every season, including the ones we cannot yet see coming.
+This psalm was originally a song for travelers, sung on the way up to worship in Jerusalem, offering assurance that God''s watchfulness did not pause when a person left the safety of home. It applies with striking directness to parents watching their children step, again and again, beyond the reach of our own eyes and hands — to school, to friends'' houses, eventually into their own independent adult lives.
 
-This is a promise about sufficiency, not excess. It doesn''t guarantee comfort or ease. It guarantees enough — enough grace to meet whatever the day requires, released at the pace we need it rather than all at once in advance. This is the same principle behind the manna in the wilderness: God gave the Israelites exactly enough for each day, no more, teaching them to trust Him again tomorrow rather than stockpile today out of fear.
+We cannot follow our children everywhere. We were never meant to. But God can, and does. He watches their coming and going not with distant oversight but with the same tender attentiveness a parent has for a child, and far more consistently than we ever could manage ourselves. This truth does not eliminate the ache of releasing a child into the world piece by piece — but it does offer a place to put that ache.
 
-You do not need to have, right now, all the grace an entire uncertain future will require. You only need what today requires, and God has already promised that much. Trust that tomorrow''s portion will be there tomorrow, the same way it always has been.', 'Salah satu ketakutan diam-diam tentang masa depan yang tidak pasti adalah kita mungkin kehabisan — bukan hanya uang atau sumber daya, melainkan anugerah itu sendiri. Bagaimana jika musim di depan membutuhkan lebih banyak kesabaran, lebih banyak kekuatan, lebih banyak iman daripada yang kita miliki? Bagaimana jika kita sekadar tidak siap untuk apa pun yang akan datang berikutnya?
+Today, as your child leaves your side for school, for play, for any small independence, try silently praying this psalm over their coming and going. Let it become a habit that outlasts the specific fears of any one day.', 'Ada ketakutan tertentu yang mencengkeram seorang orang tua pada saat seorang anak melangkah keluar pintu sendirian untuk pertama kalinya — hari pertama sekolah, tugas pertama sendirian, kali pertama mengemudikan mobil. Pada saat itu, kendali secara nyata berakhir, dan kepercayaan harus dimulai, entah kita merasa siap atau tidak. Mazmur 121 ditulis justru untuk perasaan ini: ''TUHAN akan menjaga keluar masukmu, dari sekarang sampai selama-lamanya.''
 
-Surat kedua Paulus kepada jemaat Korintus ditulis kepada gereja yang ia mintai kemurahan hati, dan di tengah permintaan itu ia membuat janji yang luas tentang kemampuan Allah untuk menyediakan: Allah sanggup melimpahkan segala kasih karunia kepada kamu, supaya kamu senantiasa berkecukupan di dalam segala sesuatu dan malah berkelebihan di dalam segala kebajikan. Perhatikan frasa ''senantiasa'' — bukan hanya pada musim yang mudah, melainkan pada setiap musim, termasuk yang belum bisa kita lihat datangnya.
+Mazmur ini awalnya adalah nyanyian bagi para musafir, dinyanyikan dalam perjalanan naik untuk beribadah di Yerusalem, memberikan jaminan bahwa kewaspadaan Tuhan tidak berhenti ketika seseorang meninggalkan keamanan rumah. Ini berlaku dengan sangat nyata bagi para orang tua yang menyaksikan anak-anak mereka melangkah, berulang kali, di luar jangkauan mata dan tangan kita sendiri — ke sekolah, ke rumah teman, akhirnya ke dalam kehidupan mandiri mereka sendiri sebagai orang dewasa.
 
-Ini adalah janji tentang kecukupan, bukan kelimpahan berlebihan. Ia tidak menjamin kenyamanan atau kemudahan. Ia menjamin kecukupan — anugerah yang cukup untuk memenuhi apa pun yang dibutuhkan hari itu, dilepaskan sesuai kecepatan yang kita perlukan, bukan sekaligus di muka. Ini adalah prinsip yang sama di balik manna di padang gurun: Allah memberi orang Israel tepat cukup untuk setiap hari, tidak lebih, mengajar mereka untuk percaya kepada-Nya lagi esok hari, bukan menimbun hari ini karena takut.
+Kita tidak dapat mengikuti anak-anak kita ke mana-mana. Kita memang tidak pernah dimaksudkan untuk itu. Tetapi Tuhan bisa, dan Ia melakukannya. Ia menjaga keluar masuk mereka bukan dengan pengawasan yang jauh, melainkan dengan perhatian yang lembut yang sama seperti yang dimiliki seorang orang tua bagi anaknya, dan jauh lebih konsisten daripada yang pernah bisa kita kelola sendiri. Kebenaran ini tidak menghilangkan rasa sakit melepaskan seorang anak ke dunia sedikit demi sedikit — tetapi ini menawarkan tempat untuk meletakkan rasa sakit itu.
 
-Kau tidak perlu memiliki, saat ini juga, seluruh anugerah yang dibutuhkan oleh masa depan yang tidak pasti. Kau hanya membutuhkan apa yang dibutuhkan hari ini, dan Allah telah menjanjikan sebanyak itu. Percayalah bahwa jatah esok akan ada besok, sebagaimana selalu terjadi.',
-    'Are you trying to carry grace for a future you can''t yet see, instead of trusting God for today''s portion?', 'Apakah engkau sedang mencoba memikul anugerah untuk masa depan yang belum bisa kau lihat, alih-alih mempercayai Allah untuk jatah hari ini?',
-    'Father, I confess I''ve been worrying about having enough grace for a future I cannot see. Thank You that Your grace comes at the pace I need it, not all at once. Give me what today requires, and I will trust You for tomorrow''s portion when it comes. Amen.', 'Bapa, aku mengaku telah mengkhawatirkan apakah aku punya cukup anugerah untuk masa depan yang belum bisa kulihat. Terima kasih karena anugerah-Mu datang sesuai kecepatan yang kubutuhkan, bukan sekaligus. Berilah aku apa yang dibutuhkan hari ini, dan aku akan mempercayakan jatah esok kepada-Mu ketika ia tiba. Amin.'
+Hari ini, saat anak Anda meninggalkan sisi Anda untuk sekolah, untuk bermain, untuk kemandirian kecil apa pun, cobalah berdoa diam-diam mazmur ini atas keluar masuk mereka. Biarkan ini menjadi kebiasaan yang bertahan lebih lama dari ketakutan spesifik pada hari tertentu.',
+    'Can you turn today''s moment of letting your child go — even a small one — into a silent prayer of this psalm?', 'Dapatkah Anda mengubah momen melepaskan anak Anda hari ini — bahkan yang kecil sekalipun — menjadi doa diam-diam dari mazmur ini?',
+    'Lord, watch over my child''s coming and going today, in the places I can follow and the places I cannot. Steady my heart with the knowledge that Your care for them does not end where my sight ends. Amen.', 'Tuhan, jagalah keluar masuk anakku hari ini, di tempat-tempat yang dapat kuikuti maupun yang tidak. Teguhkanlah hatiku dengan pengetahuan bahwa perhatian-Mu bagi mereka tidak berakhir di mana pandanganku berakhir. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Corinthians 9:8', 'WEB', 'And God is able to bless you abundantly, so that in all things at all times, having all that you need, you will abound in every good work.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Korintus 9:8', 'TB', 'Dan Allah sanggup melimpahkan segala kasih karunia kepada kamu, supaya kamu senantiasa berkecukupan di dalam segala sesuatu dan malah berkelebihan di dalam segala kebajikan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 121:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 121:8', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -518,29 +372,25 @@ Kau tidak perlu memiliki, saat ini juga, seluruh anugerah yang dibutuhkan oleh m
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 6,
-    'Bread That Never Fails', 'Roti yang Tak Pernah Gagal',
-    'Psalm 37 is written by someone with decades of life behind him, looking back over a long stretch of years and drawing a conclusion he clearly considers hard-won: I was young and now I am old, yet I have never seen the righteous forsaken or their children begging bread. This isn''t a naive statement from someone who never faced hardship. It''s the testimony of someone who watched God''s faithfulness prove itself across an entire lifetime.
+    'Nothing Is Impossible', 'Tidak Ada yang Mustahil',
+    'Every parent eventually faces at least one situation with a child that seems, from a purely human perspective, unsolvable — a struggle that won''t budge, a heart that seems closed, a distance that feels too wide to cross. In these moments, it is tempting to believe the situation is simply beyond hope. The angel Gabriel''s words to Mary carry a truth meant for exactly this kind of moment: ''For no word from God will ever fail.''
 
-There''s something powerful about hearing this from an elder rather than a beginner. Anyone can say ''God will provide'' in a moment of fresh optimism. It means something different coming from someone who has actually lived long enough to test the claim — through good years and lean years, through plans that worked and plans that fell apart — and can still say, on the other side of all of it, that God did not abandon those who trusted Him.
+This verse was spoken about the most extraordinary event imaginable — a virgin conceiving a son who would be the Son of God. If God''s power was sufficient for that, it is not too small a request to bring Him our own children''s struggles, however impossible they may seem from where we stand. Nothing is too far gone, too stubborn, too broken for God to work within.
 
-This verse doesn''t promise a life free of hardship or want in the moment. The psalmist himself elsewhere describes real struggle. What it promises is a pattern observed over time: God''s faithfulness to His people holds, generation after generation, even when any single day inside that story looked uncertain or difficult. We are often too close to our own moment to see the pattern; the psalmist offers us his longer view as a gift.
+This is not a promise that every specific outcome we hope for will happen exactly as we imagine it. God''s work in a person''s life often unfolds on a timeline and in a shape we would not have chosen ourselves. But it is a promise that our children''s stories are not sealed shut against grace. The same God who did the impossible for Mary is still doing quiet, patient, impossible work in the hearts of children today, including the child you are praying for right now.
 
-As you continue on your own unknown road, let this ancient testimony lend you its confidence. You may not yet have decades of hindsight to look back on, but you are joining a very long line of people who can say, honestly, that God''s provision held even when the path ahead was unclear.', 'Mazmur 37 ditulis oleh seseorang dengan puluhan tahun kehidupan di belakangnya, menoleh ke belakang sepanjang rentang tahun yang panjang dan menarik kesimpulan yang jelas ia anggap sebagai hasil perjuangan: Dahulu aku muda, sekarang telah menjadi tua, tetapi tidak pernah kulihat orang benar ditinggalkan, atau anak cucunya meminta-minta roti. Ini bukan pernyataan naif dari seseorang yang tidak pernah menghadapi kesulitan. Ini adalah kesaksian dari seseorang yang menyaksikan kesetiaan Allah membuktikan dirinya sepanjang seumur hidup.
+Today, bring to God the situation with your child that feels most impossible — the habit, the distance, the closed door. Speak this promise over it, not as wishful thinking, but as a declaration of who God is.', 'Setiap orang tua pada akhirnya menghadapi setidaknya satu situasi dengan seorang anak yang tampak, dari sudut pandang manusia semata, tidak dapat diselesaikan — pergumulan yang tidak kunjung berubah, hati yang tampak tertutup, jarak yang terasa terlalu lebar untuk diseberangi. Dalam momen-momen ini, sangat menggoda untuk percaya bahwa situasi itu memang di luar harapan. Kata-kata malaikat Gabriel kepada Maria membawa kebenaran yang ditujukan justru untuk momen seperti ini: ''Sebab bagi Allah tidak ada yang mustahil.''
 
-Ada sesuatu yang kuat dalam mendengar ini dari seorang tua, bukan dari seorang pemula. Siapa pun bisa berkata ''Allah akan menyediakan'' dalam momen optimisme yang baru. Namun artinya berbeda ketika diucapkan oleh seseorang yang benar-benar telah hidup cukup lama untuk menguji klaim itu — melewati tahun-tahun baik dan tahun-tahun sulit, melewati rencana yang berhasil dan rencana yang gagal — dan tetap bisa berkata, di ujung semua itu, bahwa Allah tidak meninggalkan mereka yang percaya kepada-Nya.
+Ayat ini diucapkan tentang peristiwa paling luar biasa yang dapat dibayangkan — seorang perawan mengandung seorang putra yang akan menjadi Anak Allah. Jika kuasa Allah cukup untuk hal itu, bukanlah permintaan yang terlalu kecil untuk membawa kepada-Nya pergumulan anak-anak kita sendiri, sesulit apa pun itu tampak dari tempat kita berdiri. Tidak ada yang terlalu jauh, terlalu keras kepala, terlalu rusak bagi Allah untuk bekerja di dalamnya.
 
-Ayat ini tidak menjanjikan kehidupan yang bebas dari kesulitan atau kekurangan saat itu terjadi. Pemazmur sendiri di bagian lain menggambarkan perjuangan yang nyata. Yang dijanjikan adalah pola yang diamati sepanjang waktu: kesetiaan Allah kepada umat-Nya bertahan, dari generasi ke generasi, bahkan ketika satu hari saja di dalam kisah itu tampak tidak pasti atau sulit. Kita sering kali terlalu dekat dengan momen kita sendiri untuk melihat polanya; pemazmur menawarkan pandangan jangka panjangnya sebagai sebuah hadiah bagi kita.
+Ini bukan janji bahwa setiap hasil spesifik yang kita harapkan akan terjadi persis seperti yang kita bayangkan. Karya Allah dalam kehidupan seseorang sering berlangsung dalam waktu dan bentuk yang tidak akan pernah kita pilih sendiri. Tetapi ini adalah janji bahwa kisah anak-anak kita tidak tertutup rapat terhadap anugerah. Allah yang sama yang melakukan hal mustahil bagi Maria masih melakukan karya yang tenang, sabar, dan mustahil dalam hati anak-anak hari ini, termasuk anak yang sedang Anda doakan sekarang ini.
 
-Saat engkau melanjutkan perjalananmu sendiri di jalan yang tak diketahui, biarlah kesaksian kuno ini meminjamkan keyakinannya kepadamu. Kau mungkin belum memiliki puluhan tahun untuk ditengok ke belakang, tetapi kau sedang bergabung dengan barisan panjang orang-orang yang bisa berkata, dengan jujur, bahwa penyediaan Allah tetap bertahan bahkan ketika jalan di depan tidak jelas.',
-    'Whose long testimony of God''s faithfulness could you lean on today when your own view feels too close to see clearly?', 'Kesaksian panjang siapa tentang kesetiaan Allah yang bisa kau jadikan sandaran hari ini, saat pandanganmu sendiri terasa terlalu dekat untuk melihat dengan jelas?',
-    'Lord, I borrow the confidence of those who have walked this road before me and can testify to Your faithfulness. I have not seen the whole pattern yet, but I trust that You do not abandon those who trust You. Hold me steady today. Amen.', 'Tuhan, aku meminjam keyakinan dari mereka yang telah berjalan di jalan ini sebelum aku dan dapat bersaksi tentang kesetiaan-Mu. Aku belum melihat keseluruhan polanya, tetapi aku percaya bahwa Engkau tidak meninggalkan mereka yang percaya kepada-Mu. Teguhkan aku hari ini. Amin.'
+Hari ini, bawalah kepada Tuhan situasi dengan anak Anda yang terasa paling mustahil — kebiasaan itu, jarak itu, pintu yang tertutup itu. Ucapkanlah janji ini atasnya, bukan sebagai angan-angan, melainkan sebagai deklarasi tentang siapa Allah itu.',
+    'What situation with your child feels impossible right now, and can you name it before God as a place He is still at work?', 'Situasi apa dengan anak Anda yang terasa mustahil saat ini, dan dapatkah Anda menyebutkannya di hadapan Tuhan sebagai tempat Ia masih bekerja?',
+    'Lord, nothing is impossible for You, including this situation with my child that feels unsolvable from where I stand. I release my need to fix it myself, and I ask You to keep working, in Your time and Your way. Amen.', 'Tuhan, tidak ada yang mustahil bagi-Mu, termasuk situasi dengan anakku ini yang terasa tak terpecahkan dari tempatku berdiri. Aku melepaskan keinginanku untuk memperbaikinya sendiri, dan aku memohon Engkau terus bekerja, dalam waktu dan cara-Mu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 37:25', 'WEB', 'I was young and now I am old, yet I have never seen the righteous forsaken or their children begging bread.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 37:25', 'TB', 'Dahulu aku muda, sekarang telah menjadi tua, tetapi tidak pernah kulihat orang benar ditinggalkan, atau anak cucunya meminta-minta roti.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 1:37', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 1:37', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -550,56 +400,136 @@ Saat engkau melanjutkan perjalananmu sendiri di jalan yang tak diketahui, biarla
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 7,
-    'Seek First, Trust the Rest', 'Carilah Dahulu, Percayakan Selebihnya',
-    'This week began with a promise about provision and ends with an instruction about priority. Jesus, still teaching in the Sermon on the Mount, having already covered birds, flowers, and tomorrow''s worries, arrives at a single sentence that reorders everything: seek first His kingdom and His righteousness, and all these things will be given to you as well.
+    'Plans to Give Hope and a Future', 'Rancangan untuk Memberi Harapan dan Masa Depan',
+    'Jeremiah 29:11 is often quoted in isolation, but it means even more in its original context: it was spoken to a people in exile, far from home, in a season that felt like loss rather than promise. God''s word to them was that He had not abandoned His plans for their good — plans for a hope and a future — even though the present moment looked nothing like that hope yet.
 
-It''s worth noticing the order here. Jesus doesn''t say ignore your needs, or pretend they don''t matter. He says put them second, not first — not because they''re unimportant, but because chasing provision directly, as the main goal of your life, tends to produce anxiety rather than peace. Seeking the kingdom first means orienting your whole life — your decisions, your trust, your daily posture — around God and His purposes, and trusting that the practical needs will be met as a byproduct of that pursuit, not as the main project.
+Parenting has its own seasons of exile — periods when the family you imagined and the family you''re actually living in look nothing alike. A child struggling, a relationship strained, a faith that seems to have gone quiet. In these seasons, it can feel as though God''s good plans have stalled or disappeared entirely. Jeremiah''s words insist otherwise: the plan has not changed, even when the view has.
 
-This is easier to hear than to live, especially on an unclear road where the practical needs feel urgent and the kingdom can feel abstract by comparison. But this teaching isn''t asking you to stop being practical. It''s asking you to place your deepest trust somewhere sturdier than your own ability to secure your future — in the God whose kingdom does not run out, whose righteousness does not fail, and who has promised, again and again this week, in a dozen different ways, that He notices and provides for those who seek Him first.
+This final day of the week is a good moment to zoom out. You have spent seven days practicing the discipline of letting go and holding on in prayer — a discipline you will need to practice again and again for the rest of your life as a parent. That is not a failure of this week''s work; it is simply what surrender looks like. It is not one decision made once, but a returning, day after day, to open hands and a trusting heart.
 
-As this seven-day journey closes, carry this with you: you don''t need to see the whole unknown road today. You need enough bread for today, a Shepherd who has never once let His flock go truly wanting, and a heart set on seeking Him first. The rest — the timing, the outcome, the how — has always belonged to Him, and it still does.', 'Minggu ini dimulai dengan janji tentang penyediaan dan diakhiri dengan instruksi tentang prioritas. Yesus, masih mengajar dalam Khotbah di Bukit, setelah membahas burung, bunga, dan kekhawatiran hari esok, tiba pada satu kalimat yang menata ulang segalanya: carilah dahulu Kerajaan Allah dan kebenarannya, maka semuanya itu akan ditambahkan kepadamu.
+As you close this week, speak this promise over your child''s whole future — not just the season you can currently see, but the plans God has for them across a lifetime you will not get to witness in full. Let hope, not fear, be the last word.', 'Yeremia 29:11 sering dikutip secara terpisah, tetapi maknanya bahkan lebih dalam dalam konteks aslinya: ayat ini diucapkan kepada umat yang berada dalam pembuangan, jauh dari rumah, dalam musim yang terasa seperti kehilangan, bukan janji. Firman Tuhan kepada mereka adalah bahwa Ia tidak meninggalkan rancangan-Nya bagi kebaikan mereka — rancangan untuk memberi harapan dan masa depan — meskipun keadaan saat itu belum tampak seperti harapan itu sama sekali.
 
-Perlu diperhatikan urutan di sini. Yesus tidak berkata abaikan kebutuhanmu, atau berpura-pura kebutuhan itu tidak penting. Ia berkata letakkan itu di urutan kedua, bukan pertama — bukan karena tidak penting, melainkan karena mengejar penyediaan secara langsung, sebagai tujuan utama hidupmu, cenderung menghasilkan kecemasan, bukan damai. Mencari Kerajaan Allah lebih dulu berarti mengarahkan seluruh hidupmu — keputusanmu, kepercayaanmu, sikap harianmu — di sekitar Allah dan tujuan-Nya, dan mempercayai bahwa kebutuhan praktis akan terpenuhi sebagai hasil sampingan dari pengejaran itu, bukan sebagai proyek utama.
+Mendidik anak memiliki musim pembuangannya sendiri — periode ketika keluarga yang kita bayangkan dan keluarga yang sesungguhnya kita jalani tampak sama sekali berbeda. Seorang anak yang bergumul, hubungan yang tegang, iman yang tampak diam. Dalam musim-musim ini, dapat terasa seolah-olah rancangan baik Allah telah terhenti atau lenyap sepenuhnya. Kata-kata Yeremia menegaskan sebaliknya: rancangan itu tidak berubah, meskipun pemandangannya berubah.
 
-Ini lebih mudah didengar daripada dijalani, terutama di jalan yang tak jelas di mana kebutuhan praktis terasa mendesak dan Kerajaan Allah bisa terasa abstrak jika dibandingkan. Namun ajaran ini tidak memintamu berhenti bersikap praktis. Ini memintamu meletakkan kepercayaanmu yang paling dalam di tempat yang lebih kokoh daripada kemampuanmu sendiri untuk mengamankan masa depanmu — pada Allah yang Kerajaan-Nya tidak pernah habis, yang kebenaran-Nya tidak pernah gagal, dan yang telah berjanji, berulang kali sepanjang minggu ini, dengan berbagai cara, bahwa Ia memperhatikan dan menyediakan bagi mereka yang mencari-Nya lebih dulu.
+Hari terakhir minggu ini adalah momen yang baik untuk memandang lebih luas. Anda telah menghabiskan tujuh hari melatih disiplin melepaskan sekaligus tetap berpegang dalam doa — disiplin yang perlu Anda praktikkan berulang kali sepanjang sisa hidup Anda sebagai orang tua. Itu bukanlah kegagalan dari kerja minggu ini; itu justru seperti apa rupa penyerahan diri yang sesungguhnya. Bukan satu keputusan yang dibuat sekali, melainkan kembali, hari demi hari, kepada tangan yang terbuka dan hati yang percaya.
 
-Saat perjalanan tujuh hari ini berakhir, bawalah ini bersamamu: kau tidak perlu melihat seluruh jalan yang tak diketahui itu hari ini. Kau membutuhkan roti yang cukup untuk hari ini, seorang Gembala yang tidak pernah sekalipun membiarkan kawanan-Nya benar-benar kekurangan, dan hati yang tertuju untuk mencari-Nya lebih dulu. Sisanya — waktunya, hasilnya, caranya — selalu menjadi milik-Nya, dan tetap demikian.',
-    'What would change today if you sought God first and trusted Him with the order of everything else?', 'Apa yang akan berubah hari ini jika engkau mencari Allah lebih dahulu dan mempercayakan urutan segala sesuatu yang lain kepada-Nya?',
-    'Lord, teach me to seek You first, not as one priority among many, but as the center everything else orbits around. I release my grip on figuring out the unknown road on my own. Provide for me as You always have, and let my heart rest in seeking You. Amen.', 'Tuhan, ajarlah aku mencari-Mu lebih dahulu, bukan sekadar salah satu prioritas di antara banyak hal, melainkan pusat yang mengelilingi segala yang lain. Aku melepaskan genggamanku untuk memecahkan sendiri jalan yang tak diketahui ini. Sediakanlah bagiku sebagaimana selalu Kau lakukan, dan biarlah hatiku beristirahat dalam mencari-Mu. Amin.'
+Saat Anda menutup minggu ini, ucapkanlah janji ini atas seluruh masa depan anak Anda — bukan hanya musim yang dapat Anda lihat sekarang, melainkan rancangan yang Allah miliki bagi mereka sepanjang hidup yang tidak akan sepenuhnya Anda saksikan. Biarkan harapan, bukan rasa takut, menjadi kata terakhir.',
+    'Even in a season that doesn''t look like hope, can you trust that God''s plans for your child''s future remain unchanged?', 'Bahkan dalam musim yang tidak tampak seperti harapan, dapatkah Anda percaya bahwa rancangan Allah bagi masa depan anak Anda tetap tidak berubah?',
+    'Lord, I entrust my child''s whole future to You today — the parts I can see and the parts I cannot. Thank You that Your plans for them are plans of hope, even in seasons that don''t look like it yet. Help me hold on to You in prayer, again and again, for as long as I am given to be their parent. Amen.', 'Tuhan, aku mempercayakan seluruh masa depan anakku kepada-Mu hari ini — bagian yang dapat kulihat dan bagian yang tidak dapat kulihat. Terima kasih bahwa rancangan-Mu bagi mereka adalah rancangan harapan, bahkan dalam musim yang belum tampak seperti itu. Tolong aku untuk terus berpegang kepada-Mu dalam doa, berulang kali, selama aku diberi kesempatan menjadi orang tua mereka. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Jeremiah 29:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yeremia 29:11', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 6:33', 'WEB', 'But seek first his kingdom and his righteousness, and all these things will be given to you as well.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 6:33', 'TB', 'Tetapi carilah dahulu Kerajaan Allah dan kebenarannya, maka semuanya itu akan ditambahkan kepadamu.');
-
-  -- Sub-category: Faith in Trials --------------------------------------------------------
-  SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Faith in Trials' AND parent_id = v_family_id
-    ORDER BY created_at ASC
-    LIMIT 1;
-  IF v_cat_id IS NULL THEN
-    INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Faith in Trials', 'Iman dalam Pencobaan', v_family_id)
-      RETURNING id INTO v_cat_id;
-  ELSE
-    UPDATE public.devotion_categories SET name_id = 'Iman dalam Pencobaan'
-      WHERE id = v_cat_id;
-  END IF;
-
-  -- Plan: Faith When the Paycheck Doesn't Stretch
+  -- Plan: Discipline Rooted in Grace
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Faith When the Paycheck Doesn''t Stretch',
-    'Iman Ketika Gaji Tak Cukup',
-    'Trusting God''s provision through job loss and lean seasons',
-    'Percaya pada Penyertaan Tuhan di Masa Kehilangan Pekerjaan dan Serba Kekurangan',
+    'Discipline Rooted in Grace',
+    'Disiplin yang Berakar pada Kasih Karunia',
+    'Three days on correcting your children with patience and love',
+    'Tiga hari merenungkan cara mendidik anak dengan sabar dan kasih',
+    3,
+    'A short three-day devotional for parents in the middle of the daily work of correction and discipline, exploring how discipline done in love — rather than anger or frustration — forms character without crushing a child''s spirit, and how patience is itself a form of witness to a child watching how we handle their mistakes.',
+    'Renungan singkat tiga hari bagi orang tua yang tengah menjalani kerja harian menegur dan mendisiplinkan anak, menelusuri bagaimana disiplin yang dilakukan dengan kasih — bukan amarah atau frustrasi — membentuk karakter tanpa mematahkan semangat seorang anak, dan bagaimana kesabaran itu sendiri menjadi kesaksian bagi seorang anak yang memperhatikan cara kita menanggapi kesalahan mereka.',
+    '/images/devotions/discipline-rooted-in-grace.jpeg'
+  ) RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'Discipline Without Exasperation', 'Mendisiplin Tanpa Membangkitkan Amarah',
+    'Ephesians 6:4 speaks directly and pointedly to parents: ''Fathers, do not exasperate your children; instead, bring them up in the training and instruction of the Lord.'' It is a short verse, but it carries a warning most of us need to hear on our hardest parenting days — that discipline delivered in exasperation, in irritation, in a raised voice born of our own depleted patience, is not the same thing as discipline delivered in love, even if the rule being enforced is identical.
+
+It is worth being honest about how easily this happens. A long day, a repeated misbehavior, a child who seems determined to test the same boundary for the fifth time — these are the conditions under which exasperated discipline is born. In the moment, it can even feel justified; after all, the correction itself may be entirely appropriate. But children absorb tone as much as content. A correction delivered in anger teaches a lesson about anger as much as it teaches the lesson intended.
+
+The alternative Paul offers is not permissiveness — ''training and instruction of the Lord'' is still real, still firm, still consistent. But it is discipline with a different center of gravity: aimed at forming the child''s character rather than venting the parent''s frustration. This kind of discipline usually requires a pause before it requires words — a breath, a moment to steady our own hearts before we address our child''s behavior.
+
+Today, when a moment for correction arises, try building in that brief pause before you speak. Ask yourself quietly: am I about to train, or am I about to vent? The difference will be audible to your child, even if they could never explain why.', 'Efesus 6:4 berbicara secara langsung dan tajam kepada para orang tua: ''Bapa-bapa, janganlah bangkitkan amarah di dalam hati anak-anakmu, tetapi didiklah mereka di dalam ajaran dan nasihat Tuhan.'' Ini ayat yang singkat, tetapi membawa peringatan yang perlu didengar kebanyakan dari kita pada hari-hari mendidik anak yang paling sulit — bahwa disiplin yang disampaikan dalam amarah, dalam kejengkelan, dalam suara yang meninggi karena kesabaran kita sendiri telah habis, bukanlah hal yang sama dengan disiplin yang disampaikan dengan kasih, bahkan jika aturan yang ditegakkan itu sama persis.
+
+Perlu diakui dengan jujur betapa mudahnya hal ini terjadi. Hari yang panjang, kesalahan yang berulang, seorang anak yang tampak bertekad menguji batas yang sama untuk kelima kalinya — inilah kondisi tempat disiplin yang penuh amarah dilahirkan. Pada saat itu, hal ini bahkan bisa terasa dibenarkan; bagaimanapun, teguran itu sendiri mungkin sepenuhnya tepat. Namun anak-anak menyerap nada suara sama seperti mereka menyerap isi. Teguran yang disampaikan dalam amarah mengajarkan pelajaran tentang amarah, sama besarnya dengan pelajaran yang dimaksudkan.
+
+Alternatif yang ditawarkan Paulus bukanlah sikap serba membolehkan — ''ajaran dan nasihat Tuhan'' tetaplah nyata, tetap tegas, tetap konsisten. Tetapi ini adalah disiplin dengan pusat gravitasi yang berbeda: ditujukan untuk membentuk karakter anak, bukan melampiaskan frustrasi orang tua. Disiplin semacam ini biasanya memerlukan jeda sebelum memerlukan kata-kata — sebuah tarikan napas, saat untuk menenangkan hati kita sendiri sebelum kita menanggapi perilaku anak kita.
+
+Hari ini, ketika muncul momen untuk menegur, cobalah membangun jeda singkat itu sebelum Anda berbicara. Tanyakan pada diri sendiri dengan tenang: apakah aku akan mendidik, atau apakah aku akan melampiaskan? Perbedaan itu akan terdengar oleh anak Anda, bahkan jika mereka tidak pernah bisa menjelaskan mengapa.',
+    'Before your next correction, can you pause long enough to ask whether you are about to train or simply to vent?', 'Sebelum teguran berikutnya, dapatkah Anda berhenti sejenak untuk bertanya apakah Anda akan mendidik atau sekadar melampiaskan amarah?',
+    'Lord, when I feel exasperated with my child, slow me down before I speak. Help my correction come from love and steadiness, not from my own depleted patience. Form my child''s character through me, not my frustration. Amen.', 'Tuhan, ketika aku merasa jengkel kepada anakku, perlambatlah aku sebelum aku berbicara. Tolong agar teguranku lahir dari kasih dan ketenangan, bukan dari kesabaranku yang telah habis. Bentuklah karakter anakku melalui aku, bukan melalui frustrasiku. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 6:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 6:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'The Harvest That Comes Later', 'Buah yang Datang Kemudian',
+    '''No discipline seems pleasant at the time, but painful. Later on, however, it produces a harvest of righteousness and peace for those who have been trained by it.'' Hebrews 12:11 is honest about something we often try to avoid admitting: discipline does not feel good in the moment, for the child receiving it or for the parent giving it. There is no shortcut around that discomfort.
+
+This delayed-harvest principle matters enormously for parents in the exhausting middle of daily correction — the fifth time reminding a child to be kind to a sibling, the fortieth time insisting on honesty over a small lie. In the moment, it can feel like nothing is sinking in, like the same lesson has to be repeated endlessly with no visible progress. Hebrews reassures us that the fruit of consistent, loving discipline is not meant to be visible immediately. It is a harvest, which means it takes a season to grow.
+
+This should change our expectations for what discipline is supposed to feel like day to day. We are not looking for instant transformation after a single correction. We are planting, season after season, trusting that patient consistency compounds over years into character that outlasts any single lesson. The parent who keeps training gently, even without seeing quick results, is doing exactly the slow work this verse describes.
+
+Today, if you find yourself discouraged by a lesson that doesn''t seem to be landing, remember the harvest language of this verse. You may not see the righteousness and peace it produces for years. Keep planting anyway.', '''Memang tiap-tiap ganjaran pada waktu ia diberikan tidak mendatangkan sukacita, tetapi dukacita. Tetapi kemudian ia menghasilkan buah kebenaran yang memberikan damai kepada mereka yang dilatih olehnya.'' Ibrani 12:11 jujur tentang sesuatu yang sering ingin kita hindari untuk diakui: disiplin tidak terasa menyenangkan pada saat itu, baik bagi anak yang menerimanya maupun bagi orang tua yang memberikannya. Tidak ada jalan pintas untuk melewati ketidaknyamanan itu.
+
+Prinsip buah yang tertunda ini sangat penting bagi orang tua yang berada di tengah-tengah kerja harian menegur yang melelahkan — kelima kalinya mengingatkan anak untuk bersikap baik kepada saudaranya, keempat puluh kalinya menuntut kejujuran daripada kebohongan kecil. Pada saat itu, bisa terasa seolah-olah tidak ada yang meresap, seolah-olah pelajaran yang sama harus diulangi tanpa henti tanpa kemajuan yang terlihat. Ibrani meyakinkan kita bahwa buah dari disiplin yang konsisten dan penuh kasih tidak dimaksudkan untuk terlihat segera. Ini adalah panen, yang berarti memerlukan satu musim untuk bertumbuh.
+
+Ini seharusnya mengubah harapan kita tentang bagaimana rasanya disiplin sehari-hari. Kita tidak sedang mencari transformasi instan setelah satu teguran. Kita sedang menanam, musim demi musim, percaya bahwa konsistensi yang sabar akan berlipat ganda selama bertahun-tahun menjadi karakter yang bertahan lebih lama dari pelajaran mana pun. Orang tua yang terus mendidik dengan lembut, bahkan tanpa melihat hasil yang cepat, sedang melakukan tepat kerja lambat yang digambarkan ayat ini.
+
+Hari ini, jika Anda merasa patah semangat oleh sebuah pelajaran yang tampaknya tidak meresap, ingatlah bahasa panen dari ayat ini. Anda mungkin tidak akan melihat buah kebenaran dan damai yang dihasilkannya selama bertahun-tahun. Teruslah menanam.',
+    'What discipline are you patiently repeating even without visible fruit yet, and can you trust the harvest is still coming?', 'Disiplin apa yang sedang Anda ulangi dengan sabar meski belum melihat buahnya, dan dapatkah Anda percaya bahwa panen itu masih akan datang?',
+    'Lord, give me patience for the slow work of raising my child well. When discipline feels repetitive and unrewarded, remind me that You are growing a harvest I cannot yet see. Keep me faithful in the planting. Amen.', 'Tuhan, berilah aku kesabaran untuk kerja yang lambat dalam mendidik anakku dengan baik. Ketika disiplin terasa berulang dan tanpa hasil, ingatkan aku bahwa Engkau sedang menumbuhkan panen yang belum dapat kulihat. Jagalah aku tetap setia dalam menanam. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 12:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 12:11', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'Correction That Doesn''t Discourage', 'Teguran yang Tidak Mematahkan Semangat',
+    'Colossians 3:21 echoes and deepens the warning of Ephesians 6:4, but adds a specific outcome to watch for: ''Fathers, do not embitter your children, or they will become discouraged.'' Paul names the risk plainly — discipline done poorly does not just fail to correct behavior, it can actually crush a child''s spirit, leaving them discouraged rather than formed.
+
+There is a real difference between correction that says ''what you did was wrong, and I still love and believe in you,'' and correction that communicates, even unintentionally, ''you are a disappointment.'' Children are remarkably good at hearing which message is actually being sent, regardless of the words we choose. A discouraged child often stops trying altogether — not because they no longer care, but because they''ve concluded that trying only leads to more disapproval.
+
+This is why the tone and aftermath of discipline matter as much as the discipline itself. A correction followed by continued warmth — a hug, a reassurance, a return to normal affection — teaches a child that they are loved even when corrected, that mistakes do not threaten the relationship. A correction followed by prolonged coldness or repeated reminders of past failures teaches something very different, and often something we did not intend to teach at all.
+
+Today, if you need to correct your child, consider how you will follow it. A word of reassurance after discipline is not weakness — it is the very thing that keeps correction from tipping into discouragement, and it may be the part of the lesson your child remembers longest.', 'Kolose 3:21 menggemakan dan memperdalam peringatan Efesus 6:4, tetapi menambahkan akibat khusus yang perlu diwaspadai: ''Hai bapa-bapa, janganlah sakiti hati anakmu, supaya jangan tawar hatinya.'' Paulus menyebut risiko itu dengan jelas — disiplin yang dilakukan dengan buruk tidak hanya gagal memperbaiki perilaku, tetapi benar-benar dapat mematahkan semangat seorang anak, meninggalkan mereka putus asa alih-alih terbentuk.
+
+Ada perbedaan nyata antara teguran yang mengatakan ''apa yang kamu lakukan salah, dan aku tetap mengasihi dan percaya padamu,'' dan teguran yang menyampaikan, bahkan tanpa sengaja, ''kamu mengecewakan.'' Anak-anak sangat pandai mendengar pesan mana yang sebenarnya sedang disampaikan, terlepas dari kata-kata yang kita pilih. Seorang anak yang tawar hati sering berhenti mencoba sama sekali — bukan karena mereka tidak lagi peduli, tetapi karena mereka telah menyimpulkan bahwa mencoba hanya akan mendatangkan lebih banyak ketidaksetujuan.
+
+Inilah sebabnya nada dan dampak setelah disiplin sama pentingnya dengan disiplin itu sendiri. Teguran yang diikuti dengan kehangatan yang berlanjut — pelukan, penenteraman hati, kembali ke kasih sayang yang biasa — mengajarkan seorang anak bahwa mereka tetap dikasihi bahkan ketika ditegur, bahwa kesalahan tidak mengancam hubungan itu. Teguran yang diikuti dengan kedinginan yang berkepanjangan atau pengingat berulang tentang kegagalan masa lalu mengajarkan sesuatu yang sangat berbeda, dan sering sesuatu yang sama sekali tidak kita maksudkan untuk diajarkan.
+
+Hari ini, jika Anda perlu menegur anak Anda, pikirkan bagaimana Anda akan menindaklanjutinya. Kata penenteram hati setelah disiplin bukanlah kelemahan — itu justru hal yang menjaga teguran agar tidak berubah menjadi keputusasaan, dan itu mungkin bagian dari pelajaran yang paling lama diingat oleh anak Anda.',
+    'After your next correction, what small word or gesture of reassurance could keep your child from feeling discouraged?', 'Setelah teguran Anda berikutnya, kata atau tindakan penenteram hati kecil apa yang dapat mencegah anak Anda merasa putus asa?',
+    'Lord, help me correct my child in a way that forms without discouraging. After every teaching moment, give me the wisdom to follow with reassurance, so my child always knows that love, not disappointment, has the final word. Amen.', 'Tuhan, tolong aku menegur anakku dengan cara yang membentuk tanpa mematahkan semangat. Setelah setiap momen pengajaran, berilah aku hikmat untuk menindaklanjutinya dengan penenteraman hati, sehingga anakku selalu tahu bahwa kasih, bukan kekecewaan, yang memiliki kata terakhir. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:21', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:21', 'TB', 1);
+
+  -- Plan: Raising Faith-Filled Teens
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'Raising Faith-Filled Teens',
+    'Membesarkan Remaja yang Berakar Iman',
+    'Four days on parenting adolescents who are finding their own faith',
+    'Empat hari merenungkan cara mendampingi remaja yang sedang menemukan imannya sendiri',
     4,
-    'A short four-day plan for anyone lying awake doing math that doesn''t add up — a lost job, a shrinking account, bills that outrun the paycheck. Each day turns to a well-loved promise of God''s provision, not as a formula for instant riches, but as an invitation to trust the Provider even when the numbers still look frightening.',
-    'Rencana renungan empat hari yang singkat bagi siapa saja yang terjaga di malam hari menghitung angka yang tidak pernah cukup — pekerjaan yang hilang, tabungan yang menipis, tagihan yang lebih cepat datang daripada gaji. Setiap hari kita kembali kepada janji Tuhan yang sudah lama kita kenal, bukan sebagai rumus kekayaan instan, melainkan sebagai undangan untuk tetap percaya kepada Sang Penyedia, sekalipun angka-angka di depan kita masih terasa menakutkan.',
-    '/images/devotions/faith-when-the-paycheck-doesn-t-stretch.jpeg'
+    'A four-day devotional for parents of teenagers navigating the delicate season when a child''s faith stops being borrowed from their parents and starts becoming genuinely their own — full of questions, pulling away, and the slow, patient work of staying present without gripping too tightly.',
+    'Renungan empat hari bagi orang tua dengan anak remaja yang sedang menjalani musim yang rumit, ketika iman seorang anak berhenti menjadi pinjaman dari orang tuanya dan mulai menjadi benar-benar miliknya sendiri — penuh pertanyaan, penarikan diri, dan kerja yang lambat dan sabar untuk tetap hadir tanpa mencengkeram terlalu erat.',
+    '/images/devotions/raising-faith-filled-teens.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -610,29 +540,25 @@ Saat perjalanan tujuh hari ini berakhir, bawalah ini bersamamu: kau tidak perlu 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'The God Who Sees the Empty Column', 'Allah yang Melihat Kolom yang Kosong',
-    'There is a particular kind of tired that comes from doing math at midnight — moving numbers from one column to another, hoping that somehow they will add up differently this time. If you have opened a banking app more times in one week than you can count, or stared at a stack of bills wondering which one can wait another month, you already know this tiredness. It is not only about money. It is about the fear underneath the money: am I going to be okay?
+    'Wisdom for the Years Ahead', 'Hikmat untuk Tahun-Tahun ke Depan',
+    'The transition from parenting a child to parenting a teenager can feel disorienting. The methods that worked so reliably a few years earlier — clear instructions, consistent consequences, a simple explanation of right and wrong — suddenly meet resistance, eye-rolls, or a closed bedroom door. It is tempting to interpret this as rebellion against faith itself, when often it is simply the ordinary, necessary work of a young person beginning to think for themselves.
 
-Scripture never pretends that financial hardship is imaginary or that faith makes bills disappear. What it does insist on, again and again, is that God is not distant from the empty column in your ledger. He is not embarrassed by your circumstances, and He has not lost track of your address. The same God who fed a nation of former slaves in a wilderness with no grocery store in sight is the God who sees your particular shortfall today.
+Proverbs 3:1-2 offers words that a parent might once have spoken to a small child, but that now must be entrusted to a growing teenager to internalize on their own: ''My son, do not forget my teaching, but keep my commands in your heart, for they will prolong your life many years and bring you peace and prosperity.'' Notice the shift implicit in this verse — it is addressed to the child directly, inviting them to keep these commands in their own heart, not simply to obey a parent''s rule from the outside.
 
-Paul wrote to the church at Philippi from a prison cell, and yet it is in that letter — not from a place of comfort, but from real hardship — that we get one of the most quoted promises about provision in all of Scripture. That matters. This is not a promise written by someone who never worried about resources. It was written by a man who had learned, the hard way, what it meant to depend on God when his own circumstances offered no security at all.
+This is, in many ways, exactly the shift happening during adolescence. Faith that once lived primarily in a parent''s instruction must gradually become faith that lives in a teenager''s own heart. That transition is rarely smooth. It often includes questioning, testing, and even temporary distance, as a young person works out whether the faith they were given is genuinely their own or merely inherited. This is not always a sign that something has gone wrong; it is frequently a sign that something real is happening.
 
-So today, if you are the one doing the midnight math, let this be less about arriving at a solution and more about naming who you are bringing your need to. You are not shouting into an empty sky. You are speaking to a Father who already knows the number you are afraid to say out loud.', 'Ada satu jenis lelah yang datang dari menghitung angka di tengah malam — memindahkan nominal dari satu kolom ke kolom lain, berharap kali ini hasilnya berbeda. Jika minggu ini kamu sudah membuka aplikasi rekening lebih sering daripada yang bisa kamu hitung, atau menatap tumpukan tagihan sambil bertanya-tanya mana yang bisa ditunda sebulan lagi, kamu sudah mengenal kelelahan ini. Ini bukan sekadar soal uang. Ini soal ketakutan yang tersembunyi di baliknya: akankah aku baik-baik saja?
+Today, if your teenager is questioning, pulling back, or testing boundaries around faith, try resisting the urge to immediately clamp down or panic. Consider instead praying that the teaching planted in their heart over many years is now doing exactly the deep, quiet work this proverb describes — becoming truly theirs.', 'Peralihan dari mendidik seorang anak menjadi mendampingi seorang remaja bisa terasa membingungkan. Metode-metode yang beberapa tahun sebelumnya begitu dapat diandalkan — instruksi yang jelas, konsekuensi yang konsisten, penjelasan sederhana tentang benar dan salah — tiba-tiba bertemu dengan penolakan, tatapan sinis, atau pintu kamar yang tertutup. Sangat menggoda untuk menafsirkan ini sebagai pemberontakan terhadap iman itu sendiri, padahal seringkali ini hanyalah kerja yang biasa dan perlu dari seorang muda yang mulai berpikir sendiri.
 
-Alkitab tidak pernah berpura-pura bahwa kesulitan keuangan itu hanya khayalan, atau bahwa iman membuat tagihan lenyap begitu saja. Tetapi yang terus ditegaskan berulang kali adalah bahwa Allah tidak jauh dari kolom kosong dalam catatan keuanganmu. Ia tidak malu dengan keadaanmu, dan Ia tidak lupa alamatmu. Allah yang sama yang memberi makan satu bangsa mantan budak di padang gurun tanpa satu pun toko kelontong di sekitarnya, adalah Allah yang melihat kekuranganmu hari ini.
+Amsal 3:1-2 menawarkan kata-kata yang dahulu mungkin diucapkan seorang orang tua kepada anak kecilnya, tetapi kini harus dipercayakan kepada seorang remaja yang sedang bertumbuh untuk diresapi sendiri: ''Hai anakku, janganlah engkau melupakan ajaranku, dan biarlah hatimu memelihara perintahku, karena panjang umur dan tahun-tahun hidupmu serta sejahtera akan ditambahkannya kepadamu.'' Perhatikan pergeseran yang tersirat dalam ayat ini — ayat ini ditujukan langsung kepada sang anak, mengundang mereka untuk memelihara perintah-perintah ini dalam hati mereka sendiri, bukan sekadar menaati aturan orang tua dari luar.
 
-Paulus menulis surat kepada jemaat di Filipi dari dalam penjara, dan justru dari surat itu — bukan dari tempat yang nyaman, melainkan dari kesulitan yang nyata — kita menerima salah satu janji tentang penyediaan yang paling sering dikutip dalam seluruh Alkitab. Ini penting. Janji ini bukan ditulis oleh seseorang yang tidak pernah mengkhawatirkan sumber daya. Ia ditulis oleh seseorang yang telah belajar, dengan cara yang sulit, apa artinya bergantung kepada Allah ketika keadaannya sendiri sama sekali tidak menawarkan rasa aman.
+Ini, dalam banyak hal, adalah persis pergeseran yang terjadi selama masa remaja. Iman yang dahulu hidup terutama dalam ajaran orang tua harus secara bertahap menjadi iman yang hidup dalam hati sang remaja sendiri. Peralihan itu jarang berjalan mulus. Sering kali disertai pertanyaan, pengujian, dan bahkan jarak sementara, ketika seorang muda mengolah apakah iman yang diberikan kepadanya benar-benar miliknya sendiri atau sekadar warisan. Ini tidak selalu tanda bahwa ada yang salah; ini sering kali justru tanda bahwa sesuatu yang nyata sedang terjadi.
 
-Jadi hari ini, jika kamulah yang sedang menghitung angka di tengah malam, biarlah ini bukan tentang segera menemukan solusi, melainkan tentang mengenali kepada siapa kamu membawa kebutuhanmu. Kamu tidak sedang berteriak ke langit yang kosong. Kamu sedang berbicara kepada Bapa yang sudah mengetahui angka yang bahkan takut kamu ucapkan.',
-    'Name one specific need out loud today, and hand it to God as plainly as you would tell a trusted friend.', 'Sebutkan satu kebutuhan yang konkret hari ini, dan serahkanlah kepada Tuhan sesederhana ketika kamu bercerita kepada sahabat yang kau percaya.',
-    'Father, You see the numbers I am afraid to say out loud. Thank You that my situation does not embarrass You and does not exceed Your care. Meet me in this shortfall, steady my heart while I wait, and help me trust You even before I see the answer. In Jesus'' name, Amen.', 'Bapa, Engkau melihat angka-angka yang bahkan aku takut ucapkan. Terima kasih karena keadaanku tidak membuat-Mu malu dan tidak melampaui kepedulian-Mu. Jumpai aku dalam kekurangan ini, teguhkan hatiku selagi aku menanti, dan tolong aku tetap percaya kepada-Mu bahkan sebelum aku melihat jawabannya. Dalam nama Yesus, Amin.'
+Hari ini, jika remaja Anda sedang mempertanyakan, menarik diri, atau menguji batas-batas seputar iman, cobalah menahan dorongan untuk segera mengekang atau panik. Pertimbangkan sebaliknya untuk berdoa agar ajaran yang ditanamkan dalam hati mereka selama bertahun-tahun kini sedang melakukan tepat kerja yang dalam dan tenang yang digambarkan amsal ini — menjadi benar-benar milik mereka.',
+    'Can you trust that your teenager''s questioning is part of faith becoming genuinely their own, rather than a sign it is being lost?', 'Dapatkah Anda percaya bahwa pertanyaan-pertanyaan remaja Anda adalah bagian dari iman yang sedang menjadi benar-benar milik mereka sendiri, bukan tanda bahwa iman itu sedang hilang?',
+    'Lord, let the teaching planted in my teenager''s heart over these years now take root as their own. Give me patience with their questions and their distance, and help me trust the deep work You are doing, even when I cannot see it clearly. Amen.', 'Tuhan, biarlah ajaran yang ditanamkan dalam hati remajaku selama bertahun-tahun ini kini berakar sebagai milik mereka sendiri. Berilah aku kesabaran menghadapi pertanyaan dan jarak mereka, dan tolong aku mempercayai karya yang dalam yang sedang Engkau kerjakan, bahkan ketika aku tidak dapat melihatnya dengan jelas. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 4:19', 'WEB', 'And my God will meet all your needs according to the riches of his glory in Christ Jesus.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 4:19', 'TB', 'Allahku akan memenuhi segala keperluanmu menurut kekayaan dan kemuliaan-Nya dalam Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 3:1-2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 3:1-2', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -642,29 +568,25 @@ Jadi hari ini, jika kamulah yang sedang menghitung angka di tengah malam, biarla
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'Fed Without a Storehouse', 'Diberi Makan Tanpa Lumbung',
-    'Jesus once pointed to birds in the middle of a sermon about worry. It seems like an odd illustration until you remember His audience — people who understood scarcity firsthand, farmers and fishermen and day laborers who knew exactly how thin the margin between enough and not enough could be. He was not being naive about hardship. He was redirecting their eyes toward something they had stopped noticing: birds with no storehouse, no harvest of their own, no salary, and yet they are fed.
+    'As for Me and My House', 'Aku dan Seisi Rumahku',
+    'Joshua''s famous declaration — ''as for me and my household, we will serve the Lord'' — was made at a pivotal moment, as the Israelites stood at a genuine crossroads of competing loyalties. It is often quoted as a statement of authority: a leader declaring the direction his family will go. But by the time children reach their teenage years, this verse takes on a slightly different, more vulnerable meaning for parents. We can declare our own commitment. We cannot make that same choice for a teenager who is old enough to choose for themselves.
 
-It can feel almost insulting to hear this verse when you are unemployed and the birds seem to be doing better than you are. But look again at what Jesus is actually arguing. He is not saying work doesn''t matter, or that planning is pointless — He worked with His hands for years. He is making a comparison of value: if the Father tends to a creature with no capacity to plan, save, or apply for another position, how much more attentive is He to a son or daughter made in His image, capable of prayer, worry, and hope?
+This can feel like a loss of control at exactly the moment when we most want reassurance that our years of teaching will hold. But Joshua''s declaration is instructive precisely because of what it does and doesn''t claim. He commits himself and speaks for those still under his direct care, but the verse itself exists within a larger story where each subsequent generation of Israel had to choose again, for themselves, whether to serve the Lord. Faith has never been fully transferable by declaration alone; it has always required each generation''s own choosing.
 
-This is not a promise that you will never have a hungry season. Scripture is full of people who fasted, who ran low, who genuinely wondered where the next provision would come from — Elijah among them, fed by ravens in a drought he did not create and could not end on his own. What the birds teach us is not the absence of need, but the presence of a Father who notices need and responds to it, even through unlikely means we would never have planned for ourselves.
+What we can do, as parents of teenagers, is continue to be the ''as for me'' half of this verse — visibly, consistently choosing to serve the Lord ourselves, regardless of whether our teenager is currently choosing the same. Our own steady faith becomes both an example and, quietly, an invitation, without becoming a demand we can enforce. Many parents find that a teenager who pulls away from a parent''s faith in the moment often circles back to it later, especially when that faith was lived consistently rather than merely insisted upon.
 
-If today is a day of scanning job listings, refreshing an inbox, or wondering if the interview will call back, let this be underneath all of it: you are not forgotten. The same attentiveness that keeps sparrows fed has not lifted off of your life.', 'Suatu kali Yesus menunjuk ke arah burung-burung di tengah khotbah tentang kekhawatiran. Ilustrasi ini terasa aneh sampai kita ingat siapa pendengar-Nya — orang-orang yang memahami kekurangan secara langsung, para petani, nelayan, dan buruh harian yang tahu persis betapa tipisnya jarak antara cukup dan tidak cukup. Yesus tidak sedang naif soal kesulitan hidup. Ia sedang mengarahkan pandangan mereka pada sesuatu yang sudah berhenti mereka perhatikan: burung tanpa lumbung, tanpa panen sendiri, tanpa gaji, namun tetap diberi makan.
+Today, renew your own ''as for me'' declaration, regardless of where your teenager currently stands. Let your own faithfulness be steady enough to still be there, visibly, whenever they are ready to choose it for themselves.', 'Deklarasi Yosua yang terkenal — ''aku dan seisi rumahku, kami akan beribadah kepada TUHAN'' — diucapkan pada momen yang menentukan, ketika bangsa Israel berada di persimpangan nyata antara kesetiaan-kesetiaan yang saling bersaing. Ayat ini sering dikutip sebagai pernyataan otoritas: seorang pemimpin mendeklarasikan arah yang akan ditempuh keluarganya. Namun ketika anak-anak mencapai usia remaja, ayat ini mengambil makna yang sedikit berbeda dan lebih rentan bagi orang tua. Kita dapat mendeklarasikan komitmen kita sendiri. Kita tidak dapat membuat pilihan yang sama itu untuk seorang remaja yang sudah cukup dewasa untuk memilih sendiri.
 
-Rasanya hampir menyakitkan mendengar ayat ini ketika kamu sedang menganggur dan burung-burung tampak lebih baik keadaannya darimu. Tetapi perhatikan kembali apa yang sesungguhnya Yesus katakan. Ia tidak berkata bahwa bekerja tidak penting, atau bahwa merencanakan itu sia-sia — Ia sendiri bekerja dengan tangan-Nya selama bertahun-tahun. Ia sedang membuat perbandingan nilai: jika Bapa memelihara makhluk yang bahkan tidak mampu merencanakan, menabung, atau melamar pekerjaan lain, betapa lebih Ia memperhatikan anak-anak-Nya yang diciptakan menurut gambar-Nya, yang mampu berdoa, khawatir, dan berharap?
+Ini bisa terasa seperti kehilangan kendali justru pada saat kita paling menginginkan jaminan bahwa tahun-tahun mengajar kita akan bertahan. Namun deklarasi Yosua bersifat mendidik justru karena apa yang diklaim dan tidak diklaimnya. Ia berkomitmen bagi dirinya sendiri dan berbicara atas nama mereka yang masih berada dalam perawatan langsungnya, tetapi ayat ini ada dalam kisah yang lebih besar di mana setiap generasi Israel berikutnya harus memilih lagi, bagi diri mereka sendiri, apakah akan beribadah kepada TUHAN. Iman tidak pernah dapat sepenuhnya dipindahkan hanya melalui deklarasi; iman selalu memerlukan pilihan dari setiap generasi sendiri.
 
-Ini bukan janji bahwa kamu tidak akan pernah mengalami masa lapar. Alkitab penuh dengan orang-orang yang berpuasa, yang kehabisan, yang benar-benar bertanya-tanya dari mana penyediaan berikutnya akan datang — termasuk Elia, yang diberi makan oleh burung gagak di tengah masa kekeringan yang bukan ia ciptakan dan tidak bisa ia akhiri sendiri. Yang burung-burung ajarkan bukanlah ketiadaan kebutuhan, melainkan kehadiran seorang Bapa yang memperhatikan kebutuhan itu dan menjawabnya, bahkan lewat cara yang tak pernah kita rencanakan sendiri.
+Yang dapat kita lakukan, sebagai orang tua remaja, adalah terus menjadi bagian ''aku'' dari ayat ini — secara nyata dan konsisten memilih untuk beribadah kepada TUHAN sendiri, terlepas dari apakah remaja kita saat ini memilih hal yang sama. Iman kita yang teguh menjadi teladan sekaligus, secara diam-diam, undangan, tanpa menjadi tuntutan yang dapat kita paksakan. Banyak orang tua merasa bahwa seorang remaja yang menjauh dari iman orang tuanya pada suatu masa sering kembali kepadanya kemudian, terutama ketika iman itu dihidupi secara konsisten dan bukan sekadar dipaksakan.
 
-Jika hari ini adalah hari mencari lowongan pekerjaan, memeriksa kotak masuk berulang kali, atau menunggu kabar dari wawancara, biarlah ini menjadi dasar di bawah semuanya: kamu tidak dilupakan. Perhatian yang sama yang memberi makan burung pipit belum pernah lepas dari hidupmu.',
-    'Where have you been quietly measuring your worth by your income? Let the Father''s attentiveness say something truer about your value today.', 'Di mana selama ini kamu diam-diam mengukur nilai dirimu dari penghasilanmu? Biarkan perhatian Bapa berbicara sesuatu yang lebih benar tentang nilaimu hari ini.',
-    'Lord, forgive me for measuring my worth by my paycheck. Thank You for watching over me the way You watch over the smallest bird. Give me eyes to notice the ways You are already providing, even before this season ends. Amen.', 'Tuhan, ampuni aku karena mengukur nilai diriku dari gajiku. Terima kasih karena Engkau menjaga aku sebagaimana Engkau menjaga burung yang paling kecil sekalipun. Berikan aku mata untuk melihat cara-cara Engkau sudah menyediakan, bahkan sebelum masa sulit ini berakhir. Amin.'
+Hari ini, perbarui deklarasi ''aku'' Anda sendiri, terlepas dari di mana remaja Anda saat ini berada. Biarkan kesetiaan Anda sendiri cukup teguh untuk tetap hadir, secara nyata, kapan pun mereka siap memilihnya sendiri.',
+    'How can your own steady, visible faith be an invitation to your teenager rather than a demand?', 'Bagaimana iman Anda sendiri yang teguh dan nyata dapat menjadi undangan bagi remaja Anda, bukan tuntutan?',
+    'Lord, as for me, I choose to serve You, whatever choices my teenager is currently making. Let my own faith be steady and visible, an open door rather than a closed demand, so that when they are ready to choose for themselves, they find me still faithfully standing here. Amen.', 'Tuhan, aku memilih untuk beribadah kepada-Mu, apa pun pilihan yang sedang diambil remajaku saat ini. Biarlah imanku sendiri teguh dan nyata, menjadi pintu yang terbuka dan bukan tuntutan yang tertutup, sehingga ketika mereka siap memilih sendiri, mereka mendapati aku masih berdiri di sini dengan setia. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 6:26', 'WEB', 'Look at the birds of the air; they do not sow or reap or store away in barns, and yet your heavenly Father feeds them. Are you not much more valuable than they?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 6:26', 'TB', 'Pandanglah burung-burung di langit, yang tidak menabur dan tidak menuai dan tidak mengumpulkan bekal dalam lumbung, namun diberi makan oleh Bapamu yang di sorga; bukankah kamu jauh melebihi burung-burung itu?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Joshua 24:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yosua 24:15', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -674,29 +596,25 @@ Jika hari ini adalah hari mencari lowongan pekerjaan, memeriksa kotak masuk beru
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'When You Can''t See the Whole Path', 'Ketika Kamu Tak Bisa Melihat Seluruh Jalan',
-    'One of the hardest parts of financial hardship is not the lack itself but the uncertainty around it. If you knew exactly when the job would come, exactly when the debt would clear, exactly how the next six months would unfold, you could brace yourself and push through. What wears people down is not knowing — applying for the tenth position with no reply, watching a due date approach with no clear way to meet it, making a decision about which bill to pay first without knowing if it''s the right call.
+    'An Example, Not Just a Rule-Giver', 'Teladan, Bukan Sekadar Pemberi Aturan',
+    'Paul''s words to young Timothy carry a special resonance for teenagers navigating faith: ''Don''t let anyone look down on you because you are young, but set an example for the believers in speech, in conduct, in love, in faith and in purity.'' It is easy to forget that this was written to a young person, encouraging them to lead by example rather than waiting until they were older to be taken seriously.
 
-Proverbs 3 was written into exactly that kind of uncertainty. "Lean not on your own understanding" is not an instruction to stop thinking, planning, or being wise with what you have. It is an honest acknowledgment that your own understanding has limits — you cannot see around the corner, you cannot control an employer''s decision, you cannot force a market to recover on your timeline. Trusting God with all your heart means bringing Him into the parts of the plan you cannot see, not just the parts you can.
+This verse is a helpful reminder for parents too, in a slightly different direction. As our children move into adolescence, we often shift our energy toward monitoring and correcting — checking behavior, enforcing rules, catching mistakes. All of this has its place. But Timothy''s calling reminds us that a teenager''s faith is not only formed by what they are told to avoid; it is formed by what they are invited to become. Teenagers, like Timothy, often rise to the dignity of a real calling far more than they respond to a list of restrictions.
 
-There is real freedom in this. It means you do not have to have it all figured out today. You do not need a five-year plan to take one faithful step this afternoon — sending one more application, having one honest conversation about a payment plan, asking for help without shame. The promise is not that the path will be visible all at once, but that it will be made straight as you walk it with Him, one step revealed at a time.
+Many parents find that shifting even a portion of their conversations with a teenager from ''here is what not to do'' toward ''here is who you are becoming, and here is how God might use you'' changes the entire tone of the relationship. It treats a teenager not merely as a child to be managed until adulthood, but as a young disciple already capable of meaningful faith, speech, conduct, love, and purity, right now, not merely someday.
 
-If you have been carrying the weight of needing to know how this all resolves, consider setting that weight down today. You are allowed to take the next right step without seeing the last one.', 'Salah satu bagian tersulit dari kesulitan keuangan bukanlah kekurangan itu sendiri, melainkan ketidakpastian di sekitarnya. Jika kamu tahu persis kapan pekerjaan itu akan datang, kapan utang akan lunas, bagaimana enam bulan ke depan akan berjalan, kamu bisa bersiap dan terus melangkah. Yang membuat orang lelah adalah ketidaktahuan — melamar untuk kesepuluh kalinya tanpa balasan, melihat tanggal jatuh tempo semakin dekat tanpa cara yang jelas untuk memenuhinya, memutuskan tagihan mana yang harus dibayar lebih dulu tanpa tahu apakah itu pilihan yang tepat.
+Today, consider one way you might speak to your teenager about who they are becoming, rather than only what they need to stop doing. Let them hear that you see real spiritual potential in them already, not just future potential once they''ve matured.', 'Kata-kata Paulus kepada Timotius muda memiliki gema khusus bagi para remaja yang sedang menjalani iman mereka: ''Jangan seorang pun menganggap engkau rendah karena engkau muda. Jadilah teladan bagi orang-orang percaya, dalam perkataanmu, dalam tingkah lakumu, dalam kasihmu, dalam kesetiaanmu dan dalam kesucianmu.'' Mudah untuk melupakan bahwa ini ditulis kepada seorang yang masih muda, mendorongnya untuk memimpin lewat teladan, bukan menunggu hingga lebih tua untuk dianggap serius.
 
-Amsal pasal 3 ditulis tepat ke dalam ketidakpastian semacam itu. "Janganlah bersandar kepada pengertianmu sendiri" bukanlah perintah untuk berhenti berpikir, merencanakan, atau bijaksana dengan apa yang kamu miliki. Ini adalah pengakuan jujur bahwa pengertianmu sendiri ada batasnya — kamu tidak bisa melihat apa yang ada di balik tikungan, kamu tidak bisa mengendalikan keputusan seorang atasan, kamu tidak bisa memaksa pasar pulih sesuai jadwalmu. Percaya kepada TUHAN dengan segenap hati berarti melibatkan Dia dalam bagian-bagian rencana yang tak bisa kamu lihat, bukan hanya bagian yang bisa.
+Ayat ini juga menjadi pengingat yang berguna bagi orang tua, dengan arah yang sedikit berbeda. Ketika anak-anak kita memasuki masa remaja, kita sering mengalihkan energi kita ke arah mengawasi dan menegur — memeriksa perilaku, menegakkan aturan, menangkap kesalahan. Semua ini ada tempatnya. Namun panggilan Timotius mengingatkan kita bahwa iman seorang remaja tidak hanya dibentuk oleh apa yang diperintahkan untuk dihindari; iman itu dibentuk oleh apa yang diundang untuk menjadi. Remaja, seperti Timotius, sering naik ke martabat sebuah panggilan yang nyata jauh lebih daripada mereka merespons daftar larangan.
 
-Ada kebebasan yang nyata dalam hal ini. Artinya kamu tidak harus sudah tahu semuanya hari ini. Kamu tidak butuh rencana lima tahun untuk mengambil satu langkah setia sore ini — mengirim satu lamaran lagi, melakukan satu percakapan jujur tentang cicilan pembayaran, meminta bantuan tanpa rasa malu. Janji itu bukan bahwa seluruh jalan akan langsung terlihat, melainkan bahwa jalan itu akan diluruskan selagi kamu berjalan bersama-Nya, satu langkah demi satu langkah dinyatakan.
+Banyak orang tua merasa bahwa mengalihkan bahkan sebagian dari percakapan mereka dengan seorang remaja dari ''inilah yang tidak boleh dilakukan'' menuju ''inilah siapa dirimu yang sedang bertumbuh, dan inilah bagaimana Tuhan mungkin memakaimu'' mengubah seluruh nada hubungan itu. Ini memperlakukan seorang remaja bukan sekadar sebagai anak yang harus dikelola hingga dewasa, tetapi sebagai seorang murid muda yang sudah mampu memiliki iman, perkataan, tingkah laku, kasih, dan kesucian yang bermakna, sekarang, bukan hanya suatu hari nanti.
 
-Jika selama ini kamu memikul beban harus tahu bagaimana semua ini akan berakhir, pertimbangkan untuk meletakkan beban itu hari ini. Kamu diizinkan mengambil langkah benar berikutnya tanpa harus melihat langkah terakhir.',
-    'What is one faithful next step you can take today, even without knowing the whole outcome?', 'Apa satu langkah setia berikutnya yang bisa kamu ambil hari ini, sekalipun kamu belum tahu hasil akhirnya?',
-    'Lord, I don''t need to see the whole path today — I just need to trust the One walking it with me. Straighten what I cannot see, and give me courage for the next honest step. Amen.', 'Tuhan, aku tidak perlu melihat seluruh jalan hari ini — aku hanya perlu percaya kepada Pribadi yang berjalan bersamaku. Luruskanlah apa yang tak bisa kulihat, dan berikan aku keberanian untuk langkah jujur berikutnya. Amin.'
+Hari ini, pertimbangkan satu cara Anda dapat berbicara kepada remaja Anda tentang siapa mereka yang sedang bertumbuh, bukan hanya apa yang perlu mereka hentikan. Biarkan mereka mendengar bahwa Anda sudah melihat potensi rohani yang nyata dalam diri mereka sekarang, bukan hanya potensi di masa depan setelah mereka dewasa.',
+    'What might change if you spoke to your teenager more about who they are becoming than about what they need to stop doing?', 'Apa yang mungkin berubah jika Anda berbicara kepada remaja Anda lebih tentang siapa mereka yang sedang bertumbuh daripada tentang apa yang perlu mereka hentikan?',
+    'Lord, help me see and speak to the real spiritual potential already present in my teenager. Let my words build them up as young disciples, not only correct their mistakes. Give them courage, like Timothy, to live their faith boldly even while young. Amen.', 'Tuhan, tolong aku melihat dan berbicara tentang potensi rohani yang nyata yang sudah ada dalam diri remajaku. Biarlah kata-kataku membangun mereka sebagai murid muda, bukan hanya menegur kesalahan mereka. Berilah mereka keberanian, seperti Timotius, untuk menghidupi iman mereka dengan berani meski masih muda. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Proverbs 3:5-6', 'WEB', 'Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Amsal 3:5-6', 'TB', 'Percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri. Akuilah Dia dalam segala lakumu, maka Ia akan meluruskan jalanmu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timothy 4:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timotius 4:12', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -706,578 +624,52 @@ Jika selama ini kamu memikul beban harus tahu bagaimana semua ini akan berakhir,
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'The Presence That Doesn''t Get Repossessed', 'Penyertaan yang Tak Pernah Bisa Disita',
-    'There is a specific fear that financial hardship stirs up that has nothing to do with math: the fear of being alone in it. Of watching people quietly step back because your situation makes them uncomfortable. Of feeling like a burden to family, a disappointment to yourself, someone other people politely avoid asking too much about. Scarcity does not just threaten your bank account — it can threaten your sense of belonging.
+    'Not Growing Weary', 'Jangan Menjadi Lesu',
+    'Parenting a teenager is often a long game with few visible checkpoints. Unlike the early years, where milestones are frequent and obvious — first words, first steps, first prayer — adolescence can feel like a long stretch of quiet, ambiguous progress, punctuated by conflict, silence, and the occasional discouraging setback. It is precisely this kind of long, unglamorous effort that Galatians 6:9 addresses: ''Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.''
 
-The writer of Hebrews places a promise about God''s presence right alongside a warning about the love of money, and that placement is not an accident. It''s as if he is saying: whatever this season costs you, whatever it takes from your accounts, there is one thing hardship cannot repossess — the nearness of God to you. Job loss can end an employment contract. It cannot end this one.
+The phrase ''at the proper time'' is worth sitting with. It does not promise a harvest on our schedule. Many parents of now-grown children describe a season during the teenage years that felt discouraging, even hopeless at times, followed years later by a return to faith, a meaningful conversation, or a quiet moment of gratitude from a child who once seemed distant. The proper time was not visible while they were in the middle of it. It rarely is.
 
-This promise, quoting words originally spoken to Joshua as he faced an intimidating, uncertain future, has carried God''s people through wilderness wandering, exile, and every kind of scarcity since. It was never a promise that circumstances would be easy. It was a promise that they would not be walked through alone. That is not a small thing when hardship makes you feel invisible.
+Weariness in parenting a teenager is real and should not be dismissed with easy encouragement. The daily doing good — the patient conversations, the consistent boundaries held with love, the prayers offered even when they seem to go unanswered, the choice to stay present even when pushed away — is genuinely hard, sustained work. Galatians does not pretend otherwise; it simply insists that this work is not wasted, even when the harvest is delayed past what we can currently see.
 
-As this short plan closes, let this be what stays with you: your bank balance may rise and fall, your job status may change more than once before this season is over, but the presence of God over your life is not contingent on any of it. He has not left, and He will not leave. Whatever this week holds, you walk into it accompanied.', 'Ada ketakutan tertentu yang muncul akibat kesulitan keuangan yang sama sekali tidak berkaitan dengan angka: ketakutan akan sendirian menghadapinya. Melihat orang-orang diam-diam menjauh karena keadaanmu membuat mereka tidak nyaman. Merasa menjadi beban bagi keluarga, kekecewaan bagi diri sendiri, seseorang yang orang lain sungkan tanyakan lebih jauh. Kekurangan tidak hanya mengancam rekening bankmu — ia bisa mengancam rasa memilikimu.
+As you close this short devotional, take an honest inventory of your own weariness in this season of parenting a teenager. Bring it to God, not as a confession of failure, but as an honest request for endurance. The proper time is still coming, even on the days it feels farthest away.', 'Mendampingi seorang remaja sering kali merupakan permainan jangka panjang dengan sedikit titik pencapaian yang terlihat. Berbeda dengan tahun-tahun awal, ketika tonggak-tonggak perkembangan sering dan jelas terlihat — kata pertama, langkah pertama, doa pertama — masa remaja bisa terasa seperti rentang panjang kemajuan yang tenang dan ambigu, diselingi konflik, keheningan, dan sesekali kemunduran yang mengecewakan. Justru jenis usaha yang panjang dan tidak dramatis inilah yang dibicarakan Galatia 6:9: ''Janganlah kita jemu-jemu berbuat baik, karena apabila sudah datang waktunya, kita akan menuai, jika kita tidak menjadi lemah.''
 
-Penulis Ibrani menempatkan janji tentang kehadiran Allah tepat di sebelah peringatan tentang cinta akan uang, dan penempatan itu bukan kebetulan. Seolah-olah ia berkata: apa pun yang direnggut oleh musim ini darimu, apa pun yang diambil dari rekeningmu, ada satu hal yang tidak bisa disita oleh kesulitan — kedekatan Allah denganmu. Kehilangan pekerjaan bisa mengakhiri sebuah kontrak kerja. Ia tidak bisa mengakhiri kedekatan yang satu ini.
+Frasa ''apabila sudah datang waktunya'' patut direnungkan. Ini bukan janji panen sesuai jadwal kita. Banyak orang tua dengan anak yang kini sudah dewasa menceritakan musim pada masa remaja yang terasa mengecewakan, bahkan kadang tanpa harapan, yang diikuti bertahun-tahun kemudian oleh kembalinya iman, percakapan yang bermakna, atau momen syukur yang tenang dari seorang anak yang dahulu tampak menjauh. Waktu yang tepat itu tidak terlihat ketika mereka berada di tengah-tengahnya. Ia memang jarang terlihat.
 
-Janji ini, yang mengutip kata-kata yang mula-mula diucapkan kepada Yosua saat ia menghadapi masa depan yang menakutkan dan tidak pasti, telah menopang umat Allah melewati pengembaraan di padang gurun, pembuangan, dan segala jenis kekurangan sejak itu. Janji ini tidak pernah berarti bahwa keadaan akan menjadi mudah. Ia adalah janji bahwa mereka tidak akan menjalaninya sendirian. Itu bukan hal kecil ketika kesulitan membuatmu merasa tak terlihat.
+Kelelahan dalam mendampingi seorang remaja itu nyata dan tidak boleh diremehkan dengan penghiburan yang mudah. Berbuat baik setiap hari — percakapan yang sabar, batasan yang konsisten yang dipegang dengan kasih, doa yang dipanjatkan bahkan ketika tampaknya tidak terjawab, pilihan untuk tetap hadir bahkan ketika ditolak — benar-benar merupakan kerja yang berat dan berkelanjutan. Galatia tidak berpura-pura sebaliknya; ayat ini hanya menegaskan bahwa kerja ini tidak sia-sia, bahkan ketika panennya tertunda melampaui apa yang dapat kita lihat sekarang.
 
-Saat rencana singkat ini berakhir, biarlah inilah yang tetap tinggal bersamamu: saldo rekeningmu mungkin naik turun, status pekerjaanmu mungkin berubah lebih dari sekali sebelum musim ini berlalu, tetapi penyertaan Allah atas hidupmu tidak bergantung pada semua itu. Ia belum pergi, dan Ia tidak akan pergi. Apa pun yang dibawa minggu ini, kamu akan menjalaninya dengan ditemani.',
-    'Who is one person you could let in on this hardship this week, instead of carrying it alone?', 'Siapa satu orang yang bisa kamu libatkan dalam kesulitan ini minggu ini, alih-alih memikulnya sendirian?',
-    'Father, thank You that Your presence is not something this season can take from me. When I feel forgotten, remind me that You have not left. Give me courage to let others walk with me too. Amen.', 'Bapa, terima kasih karena kehadiran-Mu bukanlah sesuatu yang bisa direnggut oleh musim ini. Saat aku merasa dilupakan, ingatkan aku bahwa Engkau belum pergi. Berikan aku keberanian untuk membiarkan orang lain juga berjalan bersamaku. Amin.'
+Saat Anda menutup renungan singkat ini, lakukan penilaian yang jujur atas kelelahan Anda sendiri dalam musim mendampingi remaja ini. Bawalah itu kepada Tuhan, bukan sebagai pengakuan kegagalan, tetapi sebagai permohonan yang jujur untuk ketahanan. Waktu yang tepat itu masih akan datang, bahkan pada hari-hari ketika itu terasa paling jauh.',
+    'Where do you feel weary in parenting your teenager, and can you ask God for endurance rather than giving up?', 'Di bagian mana Anda merasa lelah dalam mendampingi remaja Anda, dan dapatkah Anda memohon ketahanan kepada Tuhan alih-alih menyerah?',
+    'Lord, I am honest with You about my weariness in this season. Renew my strength to keep doing good, even without visible results yet. I trust that the proper time for a harvest in my teenager''s life is still coming, even on the days it feels farthest away. Amen.', 'Tuhan, aku jujur kepada-Mu tentang kelelahanku dalam musim ini. Perbaruilah kekuatanku untuk terus berbuat baik, bahkan tanpa hasil yang terlihat saat ini. Aku percaya bahwa waktu yang tepat untuk panen dalam kehidupan remajaku masih akan datang, bahkan pada hari-hari ketika itu terasa paling jauh. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:9', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Hebrews 13:5', 'WEB', 'Keep your lives free from the love of money and be content with what you have, because God has said, "Never will I leave you; never will I forsake you."');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ibrani 13:5', 'TB', 'Janganlah kamu menjadi hamba uang dan cukupkanlah dirimu dengan apa yang ada padamu, sebab Allah telah berfirman: "Aku sekali-kali tidak akan membiarkan engkau dan Aku sekali-kali tidak akan meninggalkan engkau."');
-
-  -- Plan: Strength for the Weary Body
-  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
-  VALUES (
-    v_cat_id,
-    'Strength for the Weary Body',
-    'Kekuatan bagi Tubuh yang Letih',
-    'Holding on to faith through illness, fatigue, and long recovery',
-    'Tetap Berpegang pada Iman di Tengah Sakit, Kelelahan, dan Masa Pemulihan yang Panjang',
-    7,
-    'A seven-day companion for anyone whose body has become the site of their hardest waiting — a diagnosis, a chronic condition, an exhaustion that sleep no longer fixes. Each day sits with a familiar promise about God''s nearness to the weak and weary, not to rush anyone toward healing, but to keep faith breathing through the slow, uncertain middle of sickness and recovery.',
-    'Rencana pendamping tujuh hari bagi siapa saja yang tubuhnya telah menjadi tempat penantian tersulit — sebuah diagnosis, kondisi kronis, kelelahan yang bahkan tidur pun tak lagi bisa memulihkan. Setiap hari kita berdiam bersama janji Allah yang sudah dikenal tentang kedekatan-Nya dengan yang lemah dan letih, bukan untuk terburu-buru menuju kesembuhan, melainkan untuk menjaga iman tetap bernapas melalui masa tengah yang lambat dan tidak pasti dari sakit dan pemulihan.',
-    '/images/devotions/strength-for-the-weary-body.jpeg'
-  ) RETURNING id INTO v_plan_id;
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 1,
-    'When the Body Won''t Cooperate', 'Ketika Tubuh Tak Lagi Mau Bekerja Sama',
-    'There is a particular grief in a body that no longer does what you ask of it. Maybe it''s a diagnosis that rearranged your calendar overnight, a chronic condition that has quietly redefined what a good day looks like, or an exhaustion so deep that even rest doesn''t seem to touch it. Illness has a way of shrinking the world down to symptoms and appointments, and faith can feel like one more thing you don''t have the energy to hold onto.
-
-Isaiah wrote these familiar words about renewed strength to a weary, exiled people who had every reason to feel forgotten. He does not promise that the waiting will be short or that the eagle''s flight comes without effort. What he promises is a source of strength that does not originate in the body''s own reserves — a strength that comes from hoping in the Lord rather than from having enough left in the tank on your own.
-
-There''s a progression tucked into this verse that many overlook: soaring like eagles, running without growing weary, walking without fainting. Sometimes faith during illness looks like soaring days, full of clarity and hope. More often, especially in a long recovery, it looks like the slower posture — simply walking, one unremarkable step following another, without collapsing. That, too, is the strength being described here. It does not always look dramatic. It often looks like getting up again tomorrow.
-
-If today all you can manage is the walking kind of faith, that is not a lesser faith. Hoping in the Lord does not require energy you don''t have — it requires only a willingness to keep turning your face toward Him, even from a hospital bed, even from the couch, even from wherever this illness has confined you today.', 'Ada duka tersendiri dalam sebuah tubuh yang tidak lagi mau melakukan apa yang kamu minta. Mungkin itu diagnosis yang mengubah seluruh jadwalmu dalam semalam, kondisi kronis yang diam-diam mendefinisikan ulang seperti apa hari yang baik itu, atau kelelahan yang begitu dalam sehingga istirahat pun tampaknya tidak menyentuhnya. Sakit punya cara mempersempit dunia menjadi sekadar gejala dan jadwal kontrol dokter, dan iman bisa terasa seperti satu hal lagi yang tak lagi punya energi untuk dipegang.
-
-Yesaya menuliskan kata-kata yang dikenal ini tentang kekuatan yang diperbarui kepada umat yang letih dan terbuang, yang punya segala alasan untuk merasa dilupakan. Ia tidak menjanjikan bahwa penantian akan singkat atau bahwa terbang seperti rajawali datang tanpa usaha. Yang ia janjikan adalah sumber kekuatan yang bukan berasal dari cadangan tubuh sendiri — kekuatan yang datang dari menanti-nantikan TUHAN, bukan dari cukup tidaknya tenaga yang tersisa dalam dirimu sendiri.
-
-Ada tahapan tersembunyi dalam ayat ini yang sering terlewat: terbang tinggi seperti rajawali, berlari tanpa menjadi lesu, berjalan tanpa menjadi lelah. Kadang iman di tengah sakit tampak seperti hari-hari yang terbang tinggi, penuh kejernihan dan harapan. Namun lebih sering, terutama dalam pemulihan yang panjang, ia tampak seperti sikap yang lebih lambat — sekadar berjalan, satu langkah biasa mengikuti langkah lain, tanpa roboh. Itu juga kekuatan yang digambarkan di sini. Ia tidak selalu tampak dramatis. Ia sering kali hanya tampak seperti bangun lagi besok.
-
-Jika hari ini yang bisa kamu lakukan hanyalah iman yang seperti berjalan, itu bukan iman yang lebih rendah. Menanti-nantikan TUHAN tidak menuntut energi yang tak kamu miliki — ia hanya menuntut kesediaan untuk terus mengarahkan wajahmu kepada-Nya, bahkan dari ranjang rumah sakit, bahkan dari sofa, bahkan dari mana pun sakit ini mengurungmu hari ini.',
-    'What does faithfulness look like for you today — soaring, running, or simply walking? Give yourself permission for whichever it is.', 'Seperti apa kesetiaan bagimu hari ini — terbang tinggi, berlari, atau sekadar berjalan? Izinkan dirimu menerima yang mana pun itu.',
-    'Lord, my body is tired in ways I cannot always explain. Renew my strength according to Your promise, not according to what I have left on my own. Meet me in the walking days as much as the soaring ones. Amen.', 'Tuhan, tubuhku lelah dengan cara yang tidak selalu bisa kujelaskan. Perbaruilah kekuatanku menurut janji-Mu, bukan menurut apa yang tersisa dari diriku sendiri. Jumpai aku di hari-hari yang hanya berjalan, sama seperti di hari-hari yang terbang tinggi. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 40:31', 'WEB', 'But those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 40:31', 'TB', 'tetapi orang-orang yang menanti-nantikan TUHAN mendapat kekuatan baru: mereka seumpama rajawali yang naik terbang dengan kekuatan sayap seperti burung rajawali; mereka berlari dan tidak menjadi lesu, mereka berjalan dan tidak menjadi lelah.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 2,
-    'A Shepherd in the Waiting Room', 'Gembala di Ruang Tunggu',
-    'Waiting rooms have a particular kind of silence — the low hum of fluorescent lights, the sound of a name being called, the strange mixture of hope and dread that comes before test results. Illness does not just take a toll on the body; it takes a toll on the imagination, filling it with scenarios both possible and unlikely. In that silence, it can be hard to picture God as anything other than distant, occupied with bigger concerns than your particular scan or your particular pain.
-
-Psalm 23 was written by someone who knew what it meant to be hunted, hungry, and afraid — a shepherd himself before he was a king, familiar with the real dangers sheep faced in rocky, shadowed terrain. When David writes about green pastures and quiet waters, he is not describing an easy life free of threat. He is describing a shepherd''s active care in the middle of a life that included real valleys, real darkness, real reason to fear.
-
-Notice what the psalm does not say: it does not say the valley is avoided. It says, ''even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me.'' The comfort is not the absence of the valley. It is the presence of the Shepherd inside it. That is precisely the kind of comfort illness calls for — not a promise that hard seasons will bypass you, but a promise that you do not walk through them followed at a distance. You are led through them, staff and rod both, protection and guidance close at hand.
-
-If today feels like a valley — a hard appointment, a diagnosis you''re still absorbing, a body that keeps surprising you in ways you didn''t ask for — let the ancient shepherd''s words be true again: He is with you. Not watching from far off, but walking the terrain beside you, restoring your soul even when your body cannot yet be restored.', 'Ruang tunggu punya kesunyian tersendiri — dengungan lampu neon yang samar, suara nama dipanggil, campuran aneh antara harapan dan kecemasan sebelum hasil tes keluar. Sakit tidak hanya membebani tubuh; ia membebani imajinasi, mengisinya dengan berbagai kemungkinan, baik yang masuk akal maupun yang tidak. Dalam kesunyian itu, sulit membayangkan Allah sebagai apa pun selain jauh, sibuk dengan urusan yang lebih besar daripada hasil pindaimu atau rasa sakitmu yang khusus itu.
-
-Mazmur 23 ditulis oleh seseorang yang tahu betul artinya diburu, lapar, dan takut — seorang gembala sebelum ia menjadi raja, akrab dengan bahaya nyata yang dihadapi domba di medan berbatu dan gelap. Ketika Daud menulis tentang padang rumput hijau dan air yang tenang, ia tidak sedang menggambarkan hidup yang mudah dan bebas ancaman. Ia sedang menggambarkan perhatian aktif seorang gembala di tengah kehidupan yang mencakup lembah nyata, kegelapan nyata, alasan nyata untuk takut.
-
-Perhatikan apa yang tidak dikatakan mazmur ini: ia tidak berkata lembah itu dihindari. Ia berkata, ''sekalipun aku berjalan dalam lembah kekelaman, aku tidak takut bahaya, sebab Engkau besertaku.'' Penghiburan itu bukanlah ketiadaan lembah. Penghiburan itu adalah kehadiran Sang Gembala di dalamnya. Itulah tepatnya jenis penghiburan yang dibutuhkan sakit — bukan janji bahwa masa-masa sulit akan melewatimu, melainkan janji bahwa kamu tidak menjalaninya diikuti dari kejauhan. Kamu dituntun melewatinya, gada dan tongkat sekaligus, perlindungan dan bimbingan dekat di tanganmu.
-
-Jika hari ini terasa seperti lembah — janji temu yang berat, diagnosis yang masih kamu cerna, tubuh yang terus mengejutkanmu dengan cara yang tak kamu minta — biarlah kata-kata gembala kuno itu kembali menjadi nyata: Ia besertamu. Bukan mengawasi dari jauh, melainkan berjalan di medan itu di sampingmu, menyegarkan jiwamu bahkan ketika tubuhmu belum bisa dipulihkan.',
-    'In your current ''valley,'' where have you felt God''s presence, even faintly — through a person, a moment of peace, an answered small prayer?', 'Dalam ''lembah'' yang sedang kamu jalani, di mana kamu merasakan kehadiran Allah, sekalipun samar — lewat seseorang, momen damai, atau doa kecil yang terjawab?',
-    'Good Shepherd, this valley feels long and I cannot see the other side yet. Thank You for walking it with me rather than watching from far away. Refresh my soul today, even where my body cannot yet be refreshed. Amen.', 'Gembala yang baik, lembah ini terasa panjang dan aku belum bisa melihat ujungnya. Terima kasih karena Engkau berjalan bersamaku, bukan sekadar mengawasi dari kejauhan. Segarkanlah jiwaku hari ini, sekalipun tubuhku belum bisa disegarkan. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 23:1-4', 'WEB', 'The LORD is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul. Even though I walk through the darkest valley, I will fear no evil, for you are with me.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 23:1-4', 'TB', 'TUHAN adalah gembalaku, takkan kekurangan aku. Ia membaringkan aku di padang yang berumput hijau, Ia membimbing aku ke air yang tenang; Ia menyegarkan jiwaku. Sekalipun aku berjalan dalam lembah kekelaman, aku tidak takut bahaya, sebab Engkau besertaku.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 3,
-    'Grace That Meets Weakness', 'Kasih Karunia yang Menjumpai Kelemahan',
-    'Chronic illness has a way of teaching you your own limits in a merciless kind of detail. You learn exactly how far you can push before your body pushes back, exactly which activities cost more than they''re worth, exactly what it feels like to cancel plans again because today simply isn''t a good day. There is grief in that learning, and there is often shame tangled up in it too — a quiet sense that you should be able to do more, be more, keep up more.
-
-Paul understood this kind of limitation intimately. He describes a persistent, painful affliction he calls a ''thorn in the flesh,'' something he pleaded with God three times to remove. We don''t know exactly what it was — chronic pain, a vision problem, a recurring illness — but we know God''s answer, and it isn''t the one Paul asked for. Instead of removing the weakness, God gave Paul something else: the assurance that His grace was enough to carry Paul through it.
-
-This is one of the more countercultural claims in all of Scripture: that weakness is not simply tolerated by God but can become the very place where His power is most clearly seen. Not because suffering is good in itself, but because weakness strips away the illusion that we are sustaining ourselves. When you are too tired to fake strength, grace has room to be visibly, undeniably present.
-
-If your body has taught you your limits this week, you are in good company with the apostle who wrote some of the New Testament''s most hope-filled letters from a place of real physical limitation. His weakness did not disqualify him from being used by God. In many ways, it became the very context in which God''s power was displayed most clearly. The same can be true in your story, even if you cannot yet see how.', 'Sakit kronis punya cara mengajarkanmu batasanmu sendiri dengan detail yang tanpa ampun. Kamu belajar persis seberapa jauh kamu bisa mendorong diri sebelum tubuhmu melawan balik, persis aktivitas mana yang lebih mahal daripada manfaatnya, persis bagaimana rasanya membatalkan rencana lagi karena hari ini bukan hari yang baik. Ada duka dalam pembelajaran itu, dan sering kali ada rasa malu yang terjalin di dalamnya juga — perasaan diam-diam bahwa seharusnya kamu bisa melakukan lebih, menjadi lebih, mengikuti lebih.
-
-Paulus memahami betul jenis keterbatasan ini. Ia menggambarkan sebuah penderitaan yang terus-menerus dan menyakitkan yang ia sebut ''duri dalam daging,'' sesuatu yang ia mohonkan kepada Allah sebanyak tiga kali agar diangkat. Kita tidak tahu persis apa itu — rasa sakit kronis, masalah penglihatan, penyakit yang berulang — tetapi kita tahu jawaban Allah, dan itu bukan jawaban yang Paulus minta. Alih-alih mengangkat kelemahan itu, Allah memberi Paulus sesuatu yang lain: jaminan bahwa kasih karunia-Nya cukup untuk menopang Paulus melaluinya.
-
-Ini adalah salah satu pernyataan yang paling melawan arus dalam seluruh Alkitab: bahwa kelemahan bukan sekadar ditoleransi oleh Allah, melainkan bisa menjadi tempat di mana kuasa-Nya paling jelas terlihat. Bukan karena penderitaan itu baik dengan sendirinya, melainkan karena kelemahan menyingkirkan ilusi bahwa kita menopang diri sendiri. Ketika kamu terlalu lelah untuk berpura-pura kuat, kasih karunia mendapat ruang untuk hadir secara nyata dan tak terbantahkan.
-
-Jika tubuhmu telah mengajarkanmu batasanmu minggu ini, kamu berada dalam kebersamaan yang baik dengan rasul yang menulis beberapa surat Perjanjian Baru yang paling penuh harapan justru dari tempat keterbatasan fisik yang nyata. Kelemahannya tidak mendiskualifikasi dia untuk dipakai Allah. Dalam banyak hal, itu justru menjadi konteks di mana kuasa Allah dinyatakan paling jelas. Hal yang sama bisa terjadi dalam kisahmu, sekalipun kamu belum bisa melihat bagaimana caranya.',
-    'Where has shame crept into your limitations? Try replacing it today with Paul''s honesty: this is a weakness, and grace is meeting me in it.', 'Di mana rasa malu telah menyusup ke dalam keterbatasanmu? Cobalah gantikan hari ini dengan kejujuran Paulus: ini adalah kelemahan, dan kasih karunia sedang menjumpaiku di dalamnya.',
-    'Lord, I am tired of my own limits, and sometimes ashamed of them. Thank You that Your grace does not require my strength to be enough. Let Your power be seen in me, especially in the places I feel weakest. Amen.', 'Tuhan, aku lelah dengan batasanku sendiri, dan kadang malu karenanya. Terima kasih karena kasih karunia-Mu tidak menuntut kekuatanku harus cukup. Biarlah kuasa-Mu terlihat dalam diriku, terutama di tempat-tempat aku merasa paling lemah. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Corinthians 12:9', 'WEB', 'But he said to me, "My grace is sufficient for you, for my power is made perfect in weakness." Therefore I will boast all the more gladly about my weaknesses, so that Christ''s power may rest on me.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Korintus 12:9', 'TB', 'Tetapi jawab Tuhan kepadaku: "Cukuplah kasih karunia-Ku bagimu, sebab justru dalam kelemahanlah kuasa-Ku menjadi sempurna." Sebab itu terlebih suka aku bermegah atas kelemahanku, supaya kuasa Kristus turun menaungi aku.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 4,
-    'Near to the Broken', 'Dekat dengan yang Patah Hati',
-    'Long illness has a way of wearing down more than the body. It wears down the spirit too — the discouragement of a treatment that isn''t working as hoped, the loneliness of friends who don''t know what to say anymore, the quiet grief over a version of life you thought you''d be living by now. It is entirely possible to be a person of real faith and still find yourself brokenhearted in the middle of a health crisis. Those two things are not contradictions.
-
-The psalmist doesn''t shy away from naming that brokenness plainly. Psalm 34 was written by David during one of the more humiliating episodes of his life, and yet it turns, verse after verse, toward praise and toward a promise: that the Lord is close to the brokenhearted. Not close to those who have it together. Not close to those who have moved past their pain into tidy resolution. Close to the brokenhearted — meaning close to exactly where you might be standing today.
-
-This closeness is not sentimental language. The Hebrew word behind ''crushed in spirit'' describes something genuinely shattered, not merely disappointed. God is not distant from that kind of pain, waiting for you to pull yourself together before He''ll draw near. The nearness comes first. It meets you in the collapse, not only after the recovery.
-
-If illness has left your spirit as tired as your body, you do not have to perform wellness to be near to God today. He is already near to you — not because you''ve earned it through resilience, but because brokenheartedness is precisely the condition this promise was written for.', 'Sakit yang berkepanjangan punya cara mengikis lebih dari sekadar tubuh. Ia mengikis jiwa juga — kekecewaan karena pengobatan yang tidak berjalan seperti diharapkan, kesepian karena teman-teman yang tak lagi tahu harus berkata apa, duka yang tersembunyi atas versi kehidupan yang kau kira sudah kau jalani sekarang. Sangat mungkin menjadi orang yang benar-benar beriman dan tetap mendapati dirimu patah hati di tengah krisis kesehatan. Kedua hal itu bukanlah pertentangan.
-
-Sang pemazmur tidak segan menyebut kepatahan itu secara jelas. Mazmur 34 ditulis Daud pada salah satu episode paling memalukan dalam hidupnya, namun ia berbalik, ayat demi ayat, menuju pujian dan menuju sebuah janji: bahwa TUHAN dekat kepada orang-orang yang patah hati. Bukan dekat kepada mereka yang sudah baik-baik saja. Bukan dekat kepada mereka yang sudah melewati rasa sakitnya menuju penyelesaian yang rapi. Dekat kepada yang patah hati — artinya dekat tepat di tempat kamu mungkin sedang berdiri hari ini.
-
-Kedekatan ini bukanlah bahasa sentimental belaka. Kata Ibrani di balik ''remuk jiwanya'' menggambarkan sesuatu yang benar-benar hancur, bukan sekadar kecewa. Allah tidak jauh dari jenis rasa sakit itu, menunggu kamu memulihkan diri lebih dulu sebelum Ia mendekat. Kedekatan itu datang lebih dulu. Ia menjumpaimu dalam keruntuhan, bukan hanya setelah pemulihan.
-
-Jika sakit telah membuat jiwamu selelah tubuhmu, kamu tidak perlu berpura-pura sehat untuk dekat dengan Allah hari ini. Ia sudah dekat denganmu — bukan karena kamu telah mendapatkannya lewat ketangguhan, melainkan karena patah hati justru adalah kondisi yang untuknya janji ini ditulis.',
-    'You do not have to feel strong to be close to God today. What would it look like to bring Him your discouragement honestly, exactly as it is?', 'Kamu tidak perlu merasa kuat untuk dekat dengan Allah hari ini. Seperti apa jadinya jika kamu membawa kekecewaanmu kepada-Nya dengan jujur, persis seperti adanya?',
-    'Lord, my spirit is tired along with my body. Thank You that You are close to me exactly as broken as I feel right now, with no performance required. Meet my discouragement with Your nearness today. Amen.', 'Tuhan, jiwaku lelah bersama tubuhku. Terima kasih karena Engkau dekat denganku persis dalam kepatahan yang kurasakan sekarang, tanpa perlu pura-pura kuat. Jumpai kekecewaanku dengan kedekatan-Mu hari ini. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 34:18', 'WEB', 'The LORD is close to the brokenhearted and saves those who are crushed in spirit.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 34:19', 'TB', 'TUHAN dekat kepada orang-orang yang patah hati, dan menyelamatkan orang-orang yang remuk jiwanya.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 5,
-    'An Invitation, Not a Demand', 'Sebuah Undangan, Bukan Tuntutan',
-    'Illness often arrives with a long list of demands: appointments to keep, medications to remember, forms to fill out, questions from well-meaning people that require energy you don''t have to answer. In the middle of all that, it can be easy to assume God has demands too — that faith means one more obligation to meet, one more thing to get right while you''re already running on empty.
-
-Jesus'' words in Matthew 11 read very differently. He does not say, ''Come to me, all who have proven themselves strong enough.'' He says, ''Come to me, all you who are weary and burdened.'' The weariness itself is the qualification. He is not asking the tired to first become less tired before approaching Him. He is inviting the exhausted exactly as they are, mid-exhaustion, to come find rest in Him.
-
-The rest Jesus offers is not necessarily the removal of the illness or the burden itself — many who came to Him carried their conditions with them into His presence and found something there beyond physical relief. It is a rest for the soul, a place where you don''t have to hold everything together, where the posture is not performance but simply coming. That kind of rest is available in a hospital bed as much as anywhere else.
-
-If today has felt like one more demand on a body and spirit that have little left to give, hear this invitation freshly: you are not being asked to arrive strong. You are being invited to arrive tired, and to let that be enough.', 'Sakit sering datang dengan daftar tuntutan yang panjang: janji temu yang harus dipenuhi, obat yang harus diingat, formulir yang harus diisi, pertanyaan dari orang-orang yang bermaksud baik namun membutuhkan energi yang tak kamu miliki untuk menjawabnya. Di tengah semua itu, mudah untuk mengira Allah pun punya tuntutan — bahwa iman berarti satu kewajiban lagi yang harus dipenuhi, satu hal lagi yang harus dilakukan dengan benar sementara kamu sudah kehabisan tenaga.
-
-Kata-kata Yesus dalam Matius 11 terdengar sangat berbeda. Ia tidak berkata, ''Marilah kepada-Ku, semua yang telah membuktikan diri cukup kuat.'' Ia berkata, ''Marilah kepada-Ku, semua yang letih lesu dan berbeban berat.'' Kelelahan itu sendiri adalah syaratnya. Ia tidak meminta yang lelah untuk lebih dulu menjadi kurang lelah sebelum mendekat kepada-Nya. Ia mengundang yang kelelahan persis seperti adanya, di tengah kelelahan itu, untuk datang menemukan kelegaan di dalam Dia.
-
-Kelegaan yang Yesus tawarkan tidak selalu berarti hilangnya sakit atau beban itu sendiri — banyak yang datang kepada-Nya membawa kondisi mereka ke dalam hadirat-Nya dan menemukan sesuatu di sana yang melampaui kelegaan fisik. Ini adalah kelegaan bagi jiwa, sebuah tempat di mana kamu tidak harus menahan semuanya sendiri, di mana sikap yang dibutuhkan bukanlah unjuk kekuatan, melainkan sekadar datang. Kelegaan semacam itu tersedia di ranjang rumah sakit sama seperti di tempat mana pun.
-
-Jika hari ini terasa seperti satu tuntutan lagi bagi tubuh dan jiwa yang sudah tak banyak tersisa untuk diberikan, dengarkanlah undangan ini kembali dengan segar: kamu tidak diminta untuk datang dengan kuat. Kamu diundang untuk datang dengan lelah, dan biarkan itu menjadi cukup.',
-    'What would it look like to bring your exhaustion to Jesus today without first trying to fix it yourself?', 'Seperti apa jadinya jika kamu membawa kelelahanmu kepada Yesus hari ini tanpa lebih dulu mencoba memperbaikinya sendiri?',
-    'Jesus, I am weary and I don''t have to pretend otherwise with You. Thank You for inviting me exactly as tired as I am. Give my soul the rest my body still needs to find. Amen.', 'Yesus, aku letih dan aku tidak perlu berpura-pura lain di hadapan-Mu. Terima kasih karena Engkau mengundangku persis selelah apa adanya diriku. Berikan jiwaku kelegaan yang tubuhku masih perlu temukan. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 11:28', 'WEB', 'Come to me, all you who are weary and burdened, and I will give you rest.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 11:28', 'TB', 'Marilah kepada-Ku, semua yang letih lesu dan berbeban berat, Aku akan memberi kelegaan kepadamu.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 6,
-    'Working Even Here', 'Tetap Bekerja Bahkan di Sini',
-    'Romans 8:28 is one of those verses that can be misused if it''s handed to someone too quickly, too casually, as though it explains away real suffering. It doesn''t say that illness is good. It doesn''t say that pain has an obvious silver lining you''re supposed to go find. Read carefully, it says something more careful and more durable than that: that God works in all things — not that all things are good in themselves, but that God is actively working within them toward good, for those who love Him.
-
-This is a promise about God''s ongoing activity, not a promise about your circumstances'' inherent value. A diagnosis is not a blessing in disguise to be thanked for. But even inside a diagnosis, even inside a long recovery with no guaranteed timeline, this verse insists God has not stepped back to watch from a distance. He remains at work, weaving purpose through even the hardest chapters, in ways that are not always visible from inside the chapter itself.
-
-Paul wrote this letter as someone well acquainted with hardship — imprisonment, physical suffering, uncertainty about his own future. He was not offering easy comfort from a position of safety. He had tested this promise against real affliction and found it durable enough to build a theology on. That should give the promise more weight, not less, when you''re the one testing it now.
-
-You may not see the good yet. You may not see it for years, or ever fully in this life. But this verse asks you to trust the direction of God''s work rather than the visibility of its results — to believe that even this current chapter, as hard as it is, is not outside the reach of His purposes for you.', 'Roma 8:28 adalah salah satu ayat yang bisa disalahgunakan jika disampaikan terlalu cepat, terlalu ringan, seakan-akan ia menjelaskan habis penderitaan yang nyata. Ayat ini tidak berkata bahwa sakit itu baik. Ia tidak berkata bahwa rasa sakit punya sisi terang yang jelas dan harus kau temukan. Dibaca dengan saksama, ayat ini mengatakan sesuatu yang lebih hati-hati dan lebih tahan lama daripada itu: bahwa Allah bekerja dalam segala sesuatu — bukan berarti segala sesuatu itu baik dengan sendirinya, melainkan bahwa Allah secara aktif bekerja di dalamnya menuju kebaikan, bagi mereka yang mengasihi-Nya.
-
-Ini adalah janji tentang aktivitas Allah yang terus berlangsung, bukan janji tentang nilai bawaan dari keadaanmu. Diagnosis bukanlah berkat terselubung yang harus disyukuri begitu saja. Tetapi bahkan di dalam sebuah diagnosis, bahkan di dalam pemulihan panjang tanpa jadwal yang pasti, ayat ini menegaskan bahwa Allah tidak mundur untuk sekadar mengawasi dari kejauhan. Ia tetap bekerja, menenun tujuan bahkan melalui pasal-pasal tersulit, dengan cara yang tidak selalu terlihat dari dalam pasal itu sendiri.
-
-Paulus menulis surat ini sebagai seseorang yang sangat akrab dengan kesulitan — pemenjaraan, penderitaan fisik, ketidakpastian tentang masa depannya sendiri. Ia tidak menawarkan penghiburan mudah dari posisi yang aman. Ia telah menguji janji ini melawan penderitaan yang nyata dan mendapatinya cukup kokoh untuk membangun teologi di atasnya. Itu seharusnya memberi bobot lebih pada janji ini, bukan lebih sedikit, ketika kamulah yang sedang mengujinya sekarang.
-
-Kamu mungkin belum melihat kebaikan itu. Kamu mungkin tidak melihatnya selama bertahun-tahun, atau bahkan tidak sepenuhnya dalam hidup ini. Tetapi ayat ini memintamu untuk percaya pada arah pekerjaan Allah, bukan pada keterlihatan hasilnya — untuk percaya bahwa bahkan pasal yang sedang kau jalani sekarang, sesulit apa pun itu, tidak berada di luar jangkauan rencana-Nya bagimu.',
-    'Where might you be waiting to see ''the good'' before you trust that God is working? What would it mean to trust the work even before you see the result?', 'Di manakah selama ini kamu menunggu melihat ''kebaikan'' itu sebelum percaya bahwa Allah sedang bekerja? Apa artinya mempercayai pekerjaan-Nya bahkan sebelum kamu melihat hasilnya?',
-    'Lord, I don''t ask You to explain this illness to me today — I ask You to keep working within it, even where I cannot see. Help me trust Your ongoing work more than I trust visible results. Amen.', 'Tuhan, aku tidak meminta-Mu menjelaskan sakit ini kepadaku hari ini — aku memohon Engkau tetap bekerja di dalamnya, bahkan di tempat yang tak bisa kulihat. Tolong aku mempercayai pekerjaan-Mu yang terus berlangsung lebih daripada aku mempercayai hasil yang terlihat. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 8:28', 'WEB', 'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 8:28', 'TB', 'Kita tahu sekarang, bahwa Allah turut bekerja dalam segala sesuatu untuk mendatangkan kebaikan bagi mereka yang mengasihi Dia, yaitu bagi mereka yang terpanggil sesuai dengan rencana Allah.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 7,
-    'A Hope Bigger Than This Body', 'Harapan yang Lebih Besar dari Tubuh Ini',
-    'Seven days into sitting with a weary body is enough time to feel the weight of a simple question: how long? Illness, especially chronic or long-term illness, has a way of making the future feel foggy, uncertain, sometimes frightening to even imagine. It''s tempting, in that fog, to let hope shrink down to the size of the next test result, the next treatment, the next okay day.
-
-Revelation 21 offers something bigger than the next appointment. Written to a persecuted, suffering church, it does not describe an escape from hardship achieved through cleverness or willpower — it describes God Himself doing the healing, personally, tenderly: ''He will wipe every tear from their eyes.'' Not a distant decree from a throne room, but an intimate, close gesture, the kind a parent makes for a crying child.
-
-This is not a promise meant to minimize what your body is carrying right now, as though the pain doesn''t matter because eternity is coming. It matters enormously, and God is not indifferent to it in the meantime — as the earlier days of this plan have shown, He is near, He is working, His grace is present in the weakness. But this final promise widens the horizon. Death, mourning, crying, and pain are described as part of ''the old order of things'' — real, but not final. Your body''s story does not end where illness currently has it.
-
-As this plan closes, let your hope stretch beyond this diagnosis, this treatment plan, this weary season, without dismissing how hard it is to live inside right now. You are held by a God who is present in today''s fatigue and who has already secured a day when fatigue itself will be undone. Both are true. Hold onto both.', 'Tujuh hari berdiam bersama tubuh yang letih sudah cukup untuk merasakan beratnya satu pertanyaan sederhana: sampai kapan? Sakit, terutama yang kronis atau berkepanjangan, punya cara membuat masa depan terasa kabur, tidak pasti, kadang menakutkan untuk sekadar dibayangkan. Dalam kabut itu, ada godaan untuk membiarkan harapan menyusut sebesar hasil tes berikutnya, pengobatan berikutnya, satu hari baik berikutnya.
-
-Wahyu pasal 21 menawarkan sesuatu yang lebih besar daripada janji temu berikutnya. Ditulis kepada jemaat yang dianiaya dan menderita, pasal ini tidak menggambarkan pelarian dari kesulitan yang dicapai lewat kecerdikan atau kemauan keras — ia menggambarkan Allah sendiri yang menyembuhkan, secara pribadi, dengan lembut: ''Ia akan menghapus segala air mata dari mata mereka.'' Bukan keputusan jauh dari singgasana, melainkan gestur yang intim dan dekat, seperti yang dilakukan orang tua bagi anaknya yang menangis.
-
-Ini bukan janji yang dimaksudkan untuk meremehkan apa yang sedang dipikul tubuhmu sekarang, seolah-olah rasa sakit itu tidak penting karena kekekalan sedang datang. Rasa sakit itu sangat penting, dan Allah tidak acuh terhadapnya sementara ini berlangsung — sebagaimana hari-hari sebelumnya dalam rencana ini telah menunjukkan, Ia dekat, Ia bekerja, kasih karunia-Nya hadir dalam kelemahan itu. Tetapi janji terakhir ini melebarkan cakrawala. Maut, perkabungan, ratap tangis, dan dukacita digambarkan sebagai bagian dari ''segala sesuatu yang lama'' — nyata, tetapi bukan akhir. Kisah tubuhmu tidak berakhir di tempat sakit ini sekarang berada.
-
-Saat rencana ini berakhir, biarlah harapanmu terentang melampaui diagnosis ini, rencana pengobatan ini, musim lelah ini, tanpa mengabaikan betapa sulitnya menjalaninya sekarang. Kamu dipegang oleh Allah yang hadir dalam kelelahan hari ini dan yang telah menyediakan hari ketika kelelahan itu sendiri akan ditiadakan. Keduanya benar. Peganglah keduanya.',
-    'How might holding this bigger hope change how you carry today''s smaller, harder moments — not by dismissing them, but by placing them inside a larger story?', 'Bagaimana memegang harapan yang lebih besar ini bisa mengubah cara kamu menjalani momen-momen kecil dan sulit hari ini — bukan dengan mengabaikannya, melainkan dengan menempatkannya dalam kisah yang lebih besar?',
-    'Lord, thank You for the hope that reaches beyond this body and this season. Hold me in today''s weariness, and let me trust the day You have promised when every tear will finally be wiped away. Amen.', 'Tuhan, terima kasih untuk harapan yang menjangkau melampaui tubuh dan musim ini. Peganglah aku dalam kelelahan hari ini, dan biarkan aku percaya pada hari yang telah Engkau janjikan, ketika setiap air mata akhirnya akan dihapuskan. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Revelation 21:4', 'WEB', 'He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain, for the old order of things has passed away.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Wahyu 21:4', 'TB', 'Dan Ia akan menghapus segala air mata dari mata mereka, dan maut tidak akan ada lagi; tidak akan ada lagi perkabungan, atau ratap tangis, atau dukacita, sebab segala sesuatu yang lama itu telah berlalu.');
-
-  -- Plan: When Heaven Feels Silent
-  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
-  VALUES (
-    v_cat_id,
-    'When Heaven Feels Silent',
-    'Ketika Langit Terasa Diam',
-    'Holding on to faith when your prayers seem unanswered',
-    'Tetap Berpegang pada Iman Ketika Doa Terasa Tak Terjawab',
-    5,
-    'A five-day plan for the honest ache of praying the same prayer for weeks, months, or years without a clear answer. Rather than offering easy explanations for God''s silence, this plan sits in the tension of real biblical prayers of complaint and confusion, and points toward a faith sturdy enough to keep speaking even when heaven feels quiet.',
-    'Rencana renungan lima hari untuk pergumulan jujur karena menaikkan doa yang sama selama berminggu-minggu, berbulan-bulan, atau bertahun-tahun tanpa jawaban yang jelas. Alih-alih menawarkan penjelasan mudah atas kesunyian Allah, rencana ini berdiam dalam ketegangan doa-doa keluh kesah dan kebingungan yang nyata dalam Alkitab, serta mengarahkan pada iman yang cukup kokoh untuk terus berbicara bahkan ketika langit terasa diam.',
-    '/images/devotions/when-heaven-feels-silent.jpeg'
-  ) RETURNING id INTO v_plan_id;
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 1,
-    'Joy Before the Answer Arrives', 'Sukacita Sebelum Jawaban Tiba',
-    'There is a specific weariness that comes from praying for something and watching the situation stay exactly the same, week after week. Maybe it''s a job that still hasn''t come, a relationship that hasn''t healed, a health report that hasn''t changed, a wayward loved one who hasn''t turned around. You have prayed sincerely, you have believed genuinely, and the silence on the other end can start to feel less like mystery and more like rejection.
-
-The prophet Habakkuk knew this particular ache. His book opens with him confronting God directly, almost accusingly, about injustice he sees going unanswered around him. By the time we reach the closing verses, quoted below, nothing about his outward circumstances has changed. The fig tree still doesn''t bud. The fields still fail. The flocks are still gone. He is not writing from a place where God finally fixed everything. He is writing from the middle of ongoing loss.
-
-And yet Habakkuk chooses something remarkable in that unchanged landscape: he chooses to rejoice in the Lord, not in his circumstances. This distinction matters enormously. He is not manufacturing false cheerfulness or denying that the harvest failed. He is locating his joy in a different place than his outcomes — in the character and presence of God, which remains constant even when the fig tree does not bud on schedule.
-
-This is not a call to pretend your unanswered prayer doesn''t hurt. Habakkuk names the loss specifically before he ever gets to rejoicing. But it is an invitation to notice that your joy does not have to wait for your circumstances to change. It can be planted in God Himself, today, even in a season where nothing outward has shifted yet.', 'Ada kelelahan tersendiri yang muncul karena mendoakan sesuatu dan menyaksikan keadaan tetap sama persis, minggu demi minggu. Mungkin itu pekerjaan yang belum juga datang, hubungan yang belum pulih, hasil pemeriksaan kesehatan yang belum berubah, orang terkasih yang menyimpang dan belum kembali. Kamu sudah berdoa dengan sungguh-sungguh, kamu sudah percaya dengan tulus, dan kesunyian di seberang sana bisa mulai terasa bukan lagi misteri, melainkan penolakan.
-
-Nabi Habakuk mengenal betul kepedihan semacam ini. Kitabnya dibuka dengan ia berhadapan langsung dengan Allah, hampir menuduh, tentang ketidakadilan yang ia lihat berlangsung tanpa jawaban di sekelilingnya. Ketika kita sampai pada ayat-ayat penutup yang dikutip di bawah, tidak ada yang berubah dari keadaan luarnya. Pohon ara masih tidak berbunga. Ladang masih gagal. Kawanan ternak masih hilang. Ia tidak menulis dari tempat di mana Allah akhirnya membereskan segalanya. Ia menulis dari tengah kehilangan yang masih berlangsung.
-
-Namun Habakuk memilih sesuatu yang luar biasa di tengah lanskap yang tak berubah itu: ia memilih bersorak-sorak di dalam TUHAN, bukan di dalam keadaannya. Perbedaan ini sangat penting. Ia tidak sedang menciptakan keceriaan palsu atau menyangkal bahwa panen telah gagal. Ia sedang menempatkan sukacitanya di tempat yang berbeda dari hasil yang ia harapkan — pada karakter dan kehadiran Allah, yang tetap sama bahkan ketika pohon ara tidak berbunga pada waktunya.
-
-Ini bukan ajakan untuk berpura-pura bahwa doamu yang belum terjawab tidak menyakitkan. Habakuk menyebut kehilangan itu secara spesifik sebelum ia sampai pada sukacita. Tetapi ini adalah undangan untuk menyadari bahwa sukacitamu tidak harus menunggu keadaanmu berubah. Ia bisa ditanam di dalam Allah sendiri, hari ini, bahkan di musim ketika belum ada apa pun yang bergeser secara lahiriah.',
-    'Name honestly what hasn''t changed yet in your life. Then, without pretending it doesn''t hurt, name one thing about God''s character you can still rejoice in today.', 'Sebutkan dengan jujur apa yang belum berubah dalam hidupmu. Lalu, tanpa berpura-pura itu tidak sakit, sebutkan satu hal tentang karakter Allah yang masih bisa kamu syukuri hari ini.',
-    'Lord, my circumstances haven''t changed and I won''t pretend they have. But You have not changed either. Let my joy today be rooted in who You are, not only in what You''ve done for me yet. Amen.', 'Tuhan, keadaanku belum berubah dan aku tidak akan berpura-pura sudah berubah. Tetapi Engkau pun tidak berubah. Biarlah sukacitaku hari ini berakar pada siapa Engkau, bukan hanya pada apa yang telah Engkau lakukan bagiku. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Habakkuk 3:17-18', 'WEB', 'Though the fig tree does not bud and there are no grapes on the vines, though the olive crop fails and the fields produce no food, though there are no sheep in the pen and no cattle in the stalls, yet I will rejoice in the LORD, I will be joyful in God my Savior.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Habakuk 3:17-18', 'TB', 'Sekalipun pohon ara tidak berbunga, pohon anggur tidak berbuah, hasil pohon zaitun mengecewakan, sekalipun ladang tidak menghasilkan bahan makanan, sekalipun kambing domba terhalau dari kurungan dan tidak ada lembu sapi dalam kandang, namun aku akan bersorak-sorak di dalam TUHAN, beria-ria di dalam Allah yang menyelamatkan aku.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 2,
-    'What Testing Is Actually Doing', 'Apa yang Sesungguhnya Sedang Dikerjakan Ujian Ini',
-    'It''s an odd instruction, on the surface: consider it pure joy whenever you face trials. Most of us do not experience unanswered prayer, delay, or hardship as anything close to joy while we''re inside it. James is not asking his readers to feel a happy emotion about their pain. He is asking them to hold a settled conviction underneath the pain — a trust in what the trial is producing, even while the trial itself remains genuinely hard.
-
-The word James uses for testing carries the image of metal being refined, impurities being separated out under heat that the metal itself did not choose and cannot escape. Nobody enjoys the furnace. But a refiner does not apply heat randomly or cruelly — the heat has a purpose, and that purpose is to produce something purer than what went in. James applies this image to faith itself: the testing of your faith, he says, produces perseverance, and perseverance, allowed to finish its work, produces a maturity and completeness that shortcuts around the trial could never produce.
-
-This reframes what an unanswered prayer might actually be doing, even when it feels like nothing is happening. The absence of the answer you''re praying for is not necessarily the absence of God''s activity. Something may genuinely be forming in you during this waiting — a depth of trust, a resilience, a knowledge of God gained only through persistence — that a quick yes to your prayer might never have produced.
-
-This is not a tidy explanation for every hardship, and James never claims it is. Some suffering remains mysterious this side of eternity. But for the specific ache of praying and waiting, it offers something sturdier than false comfort: the testing itself may be working, even now, toward a version of your faith not yet finished.', 'Ini instruksi yang terdengar aneh pada awalnya: anggaplah sebagai kebahagiaan penuh setiap kali kamu menghadapi berbagai pencobaan. Kebanyakan dari kita tidak mengalami doa yang tak terjawab, penundaan, atau kesulitan sebagai sesuatu yang mendekati sukacita selagi kita berada di dalamnya. Yakobus tidak meminta pembacanya merasakan emosi bahagia atas rasa sakit mereka. Ia meminta mereka memegang keyakinan yang mantap di bawah rasa sakit itu — kepercayaan pada apa yang sedang dihasilkan oleh ujian tersebut, sekalipun ujian itu sendiri tetap benar-benar sulit.
-
-Kata yang dipakai Yakobus untuk ujian membawa gambaran logam yang sedang dimurnikan, kotoran yang dipisahkan di bawah panas yang tidak dipilih oleh logam itu sendiri dan tidak bisa dihindarinya. Tidak ada yang menikmati tungku pembakaran. Tetapi seorang pemurni tidak menerapkan panas secara sembarangan atau kejam — panas itu punya tujuan, dan tujuannya adalah menghasilkan sesuatu yang lebih murni daripada apa yang masuk. Yakobus menerapkan gambaran ini pada iman itu sendiri: ujian terhadap imanmu, katanya, menghasilkan ketekunan, dan ketekunan, jika dibiarkan menyelesaikan pekerjaannya, menghasilkan kedewasaan dan kelengkapan yang tak akan pernah dihasilkan oleh jalan pintas yang menghindari ujian.
-
-Ini membingkai ulang apa yang sesungguhnya sedang dikerjakan oleh doa yang belum terjawab, bahkan ketika terasa seolah tidak ada yang terjadi. Ketiadaan jawaban yang kamu doakan bukan berarti ketiadaan aktivitas Allah. Sesuatu mungkin benar-benar sedang dibentuk dalam dirimu selama masa penantian ini — kedalaman kepercayaan, ketangguhan, pengenalan akan Allah yang hanya bisa diperoleh melalui ketekunan — yang tak akan pernah dihasilkan oleh jawaban ''ya'' yang cepat atas doamu.
-
-Ini bukan penjelasan yang rapi untuk setiap kesulitan, dan Yakobus tidak pernah mengklaim demikian. Sebagian penderitaan tetap menjadi misteri di sisi kekekalan ini. Tetapi untuk kepedihan khusus karena berdoa dan menanti, ini menawarkan sesuatu yang lebih kokoh daripada penghiburan palsu: ujian itu sendiri mungkin sedang bekerja, bahkan sekarang, menuju versi imanmu yang belum selesai dibentuk.',
-    'What might be forming in you during this waiting that a quick answer could not have produced?', 'Apa yang mungkin sedang dibentuk dalam dirimu selama masa penantian ini, yang tak akan bisa dihasilkan oleh jawaban yang cepat?',
-    'Lord, this waiting doesn''t feel like joy, but I trust it is not wasted. Let perseverance finish its work in me. Shape something in this season that a fast answer never could have shaped. Amen.', 'Tuhan, penantian ini tidak terasa seperti sukacita, tetapi aku percaya ini tidak sia-sia. Biarlah ketekunan menyelesaikan pekerjaannya dalam diriku. Bentuklah sesuatu dalam musim ini yang tak akan pernah bisa dibentuk oleh jawaban yang cepat. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'James 1:2-4', 'WEB', 'Consider it pure joy, my brothers and sisters, whenever you face trials of many kinds, because you know that the testing of your faith produces perseverance. Let perseverance finish its work so that you may be mature and complete, not lacking anything.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yakobus 1:2-4', 'TB', 'Saudara-saudaraku, anggaplah sebagai suatu kebahagiaan, apabila kamu jatuh ke dalam berbagai-bagai pencobaan, sebab kamu tahu, bahwa ujian terhadap imanmu itu menghasilkan ketekunan. Dan biarkanlah ketekunan itu memperoleh buah yang matang, supaya kamu menjadi sempurna dan utuh dan tak kekurangan suatu apa pun.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 3,
-    'Permission to Ask How Long', 'Izin untuk Bertanya Sampai Kapan',
-    'Some devotional writing skips over the psalms of complaint, preferring to land quickly on the ones full of resolved praise. But the Bible itself does not skip them. Psalm 13 opens with a question repeated four times in two verses: how long, LORD? How long will you forget me? How long will you hide your face? How long must I wrestle with my thoughts? This is not a psalm of quiet trust dressed up in polite language. It is a raw, repeated demand for God to explain His silence.
-
-What is striking is that this psalm made it into Scripture at all — inspired, preserved, sung by generations of God''s people, without an editor softening David''s frustration into something more comfortable. This tells us something important: honest questioning of God''s timing is not the opposite of faith. It can be an expression of it. David is not walking away from God in these verses. He is walking toward Him, loudly, with real complaint, because he still believes God is listening even in the silence.
-
-If you have prayed the same prayer so many times you''ve started to feel embarrassed repeating it, or if ''how long'' has become a question you''re almost afraid to ask out loud, this psalm gives you permission and even language. You do not have to pretend the delay doesn''t confuse or hurt you. The delay is real. The confusion is allowed. God has made room in His own Scripture for exactly this kind of prayer.
-
-What''s worth noticing is where the psalm goes next, in the verses that follow what''s quoted here — David does not stay only in the complaint. He moves, without denying the pain, toward trust again. But that movement was made possible by first being fully honest about the how long. Faith in trials does not require skipping the hard question. It can begin with asking it.', 'Sebagian tulisan renungan melewati begitu saja mazmur-mazmur keluh kesah, lebih memilih segera sampai pada mazmur yang penuh pujian yang sudah terselesaikan. Tetapi Alkitab sendiri tidak melewatinya. Mazmur 13 dibuka dengan sebuah pertanyaan yang diulang empat kali dalam dua ayat: berapa lama lagi, TUHAN? Berapa lama lagi Engkau melupakan aku? Berapa lama lagi Engkau menyembunyikan wajah-Mu? Berapa lama lagi aku harus bergumul dengan pikiranku? Ini bukan mazmur kepercayaan yang tenang, dibalut dengan bahasa yang sopan. Ini adalah tuntutan yang mentah dan berulang agar Allah menjelaskan kesunyian-Nya.
-
-Yang mencolok adalah mazmur ini sungguh masuk ke dalam Alkitab — diilhamkan, dipelihara, dinyanyikan oleh generasi umat Allah, tanpa ada penyunting yang melunakkan kefrustrasian Daud menjadi sesuatu yang lebih nyaman. Ini memberi tahu kita sesuatu yang penting: mempertanyakan waktu Allah secara jujur bukanlah lawan dari iman. Itu bisa menjadi ungkapan dari iman itu sendiri. Daud tidak sedang menjauh dari Allah dalam ayat-ayat ini. Ia sedang berjalan menuju Dia, dengan suara keras, dengan keluh kesah yang nyata, karena ia masih percaya Allah mendengarkan bahkan di tengah kesunyian.
-
-Jika kamu telah menaikkan doa yang sama begitu sering hingga mulai merasa malu mengulanginya, atau jika ''sampai kapan'' telah menjadi pertanyaan yang bahkan hampir tak berani kamu ucapkan keras-keras, mazmur ini memberimu izin dan bahkan kata-kata untuk itu. Kamu tidak perlu berpura-pura bahwa penundaan itu tidak membingungkan atau menyakitkanmu. Penundaan itu nyata. Kebingungan itu diperbolehkan. Allah telah menyediakan ruang dalam firman-Nya sendiri untuk doa semacam ini.
-
-Yang patut diperhatikan adalah ke mana mazmur ini melangkah selanjutnya, dalam ayat-ayat setelah yang dikutip di sini — Daud tidak berhenti hanya pada keluh kesah. Ia bergerak, tanpa menyangkal rasa sakitnya, menuju kepercayaan kembali. Tetapi pergerakan itu dimungkinkan karena lebih dulu benar-benar jujur tentang sampai kapan itu. Iman dalam pencobaan tidak menuntut kita melewati pertanyaan sulit begitu saja. Iman itu bisa dimulai dengan mengajukannya.',
-    'What is the ''how long'' question you''ve been afraid to say out loud to God? Try praying it honestly today, exactly as David did.', 'Apa pertanyaan ''sampai kapan'' yang selama ini takut kamu ucapkan kepada Allah? Cobalah doakan itu dengan jujur hari ini, persis seperti yang dilakukan Daud.',
-    'Lord, how long? I ask it honestly, the way David did, believing You can hold my frustration without turning away from me. Meet my complaint with Your patience, and lead me back toward trust in Your timing. Amen.', 'Tuhan, sampai kapan? Aku bertanya ini dengan jujur, seperti yang Daud lakukan, percaya bahwa Engkau bisa menampung kekecewaanku tanpa berpaling dariku. Jumpai keluh kesahku dengan kesabaran-Mu, dan tuntunlah aku kembali menuju kepercayaan pada waktu-Mu. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 13:1-2', 'WEB', 'How long, LORD? Will you forget me forever? How long will you hide your face from me? How long must I wrestle with my thoughts and day after day have sorrow in my heart?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 13:2-3', 'TB', 'Berapa lama lagi, TUHAN, Kaulupakan aku terus-menerus? Berapa lama lagi Engkau menyembunyikan wajah-Mu terhadap aku? Berapa lama lagi aku akan menaruh rancangan dalam jiwaku, dan pergumulan dalam hatiku sepanjang hari?');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 4,
-    'Casting, Not Carrying Alone', 'Menyerahkan, Bukan Memikul Sendirian',
-    'Unanswered prayer has a particular way of turning into a private weight. You might mention it in passing to a friend or in a small group once or twice, but as the months stretch on, it becomes tempting to stop bringing it up at all — not because you''ve stopped caring, but because you''re tired of watching people''s faces when you admit the prayer still hasn''t been answered. So it becomes something you carry quietly, alone, revisited mostly in the middle of sleepless nights.
-
-Peter''s instruction to ''cast'' anxiety onto God uses a vivid image — the same word used elsewhere in Greek literature for throwing a burden decisively off one''s own shoulders and onto someone else''s. It is not a gentle suggestion to think positive thoughts. It is an active, repeated motion: taking the specific weight of this unanswered prayer and physically, deliberately, handing it over, rather than continuing to sling it back onto your own back the moment you finish praying.
-
-The reason Peter gives is not that anxiety is unspiritual or a sign of weak faith. The reason is relational: because he cares for you. This is not a transaction where you earn relief by performing enough trust. It is an invitation rooted in God''s genuine care for you personally — not for prayer requests in the abstract, but for you, the specific person still waiting, still hoping, still tired of holding this alone.
-
-If you have been quietly carrying an unanswered prayer without telling anyone how heavy it has become, consider two things today: telling God plainly, again, in whatever words come honestly, and telling one trusted person too. Casting a burden does not always mean it disappears immediately. But it does mean you were never meant to carry it entirely by yourself.', 'Doa yang tak terjawab punya cara khusus untuk berubah menjadi beban pribadi. Mungkin kamu pernah menyinggungnya sekilas kepada teman atau dalam kelompok kecil satu dua kali, tetapi seiring berjalannya bulan, muncul godaan untuk berhenti membicarakannya sama sekali — bukan karena kamu berhenti peduli, melainkan karena kamu lelah melihat raut wajah orang saat kamu mengaku doa itu masih belum terjawab. Maka ia menjadi sesuatu yang kamu pikul diam-diam, sendirian, dikunjungi kembali kebanyakan di tengah malam-malam yang tak bisa tidur.
-
-Instruksi Petrus untuk ''menyerahkan'' kekhawatiran kepada Allah memakai gambaran yang hidup — kata yang sama yang dipakai di tempat lain dalam kesusastraan Yunani untuk melemparkan beban secara tegas dari pundak sendiri ke pundak orang lain. Ini bukan sekadar saran lembut untuk berpikir positif. Ini adalah gerakan aktif dan berulang: mengambil beban khusus dari doa yang belum terjawab ini dan secara fisik, dengan sengaja, menyerahkannya, alih-alih terus melemparkannya kembali ke pundak sendiri begitu selesai berdoa.
-
-Alasan yang Petrus berikan bukanlah bahwa kekhawatiran itu tidak rohani atau tanda iman yang lemah. Alasannya bersifat relasional: sebab Ia memelihara kamu. Ini bukan transaksi di mana kamu memperoleh kelegaan dengan menunjukkan cukup kepercayaan. Ini adalah undangan yang berakar pada kepedulian Allah yang sungguh-sungguh bagimu secara pribadi — bukan bagi permohonan doa secara abstrak, melainkan bagimu, orang tertentu yang masih menanti, masih berharap, masih lelah memikul ini sendirian.
-
-Jika selama ini kamu diam-diam memikul sebuah doa yang tak terjawab tanpa memberi tahu siapa pun betapa beratnya itu, pertimbangkan dua hal hari ini: mengatakannya kepada Allah dengan jelas, sekali lagi, dengan kata-kata apa pun yang keluar dengan jujur, dan mengatakannya kepada satu orang yang kamu percaya juga. Menyerahkan beban tidak selalu berarti ia langsung lenyap. Tetapi itu berarti kamu memang tidak pernah dimaksudkan untuk memikulnya seluruhnya sendirian.',
-    'Is there an unanswered prayer you have started carrying quietly and alone? Who is one person you could bring it to this week?', 'Adakah doa yang belum terjawab yang mulai kamu pikul diam-diam dan sendirian? Siapa satu orang yang bisa kamu ajak bicara tentang hal ini minggu ini?',
-    'Father, I have been carrying this alone longer than I should have. I cast this specific weight onto You now, not because I''ve earned relief, but because You care for me. Help me let others help carry it too. Amen.', 'Bapa, aku telah memikul ini sendirian lebih lama daripada seharusnya. Aku menyerahkan beban khusus ini kepada-Mu sekarang, bukan karena aku telah pantas mendapat kelegaan, melainkan karena Engkau memelihara aku. Tolong aku membiarkan orang lain turut membantu memikulnya juga. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Peter 5:7', 'WEB', 'Cast all your anxiety on him because he cares for you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Petrus 5:7', 'TB', 'Serahkanlah segala kekuatiranmu kepada-Nya, sebab Ia yang memelihara kamu.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 5,
-    'When You Don''t Even Know What to Pray', 'Ketika Kamu Bahkan Tak Tahu Harus Berdoa Apa',
-    'After days of praying the same request and watching it go seemingly unanswered, a strange kind of exhaustion can set in — not just tiredness of the situation, but tiredness of the praying itself. The words start to feel repetitive, hollow, like you''re saying the same sentence to a closed door. Some people describe reaching a point where they genuinely do not know what to pray anymore, or how to pray it in a way that hasn''t already been said a hundred times without visible effect.
-
-Paul addresses this exact condition directly in Romans 8, and what he offers is not a better technique for prayer, not a formula that finally gets through. He offers something more surprising: the admission that ''we do not know what we ought to pray for,'' paired with the promise that the Holy Spirit intercedes for us in groans too deep for words. In other words, the moment your own prayers run dry is not the moment prayer stops. It''s the moment the Spirit''s own intercession becomes most necessary.
-
-This should be a relief to anyone who has felt guilty for running out of words. Your prayer life was never meant to depend solely on your own articulate faith. When you kneel in confused silence, unsure what to even ask for anymore, the Spirit is not waiting for you to find better words. He is already praying on your behalf, translating your wordless groaning into something the Father fully understands, even when you cannot.
-
-As this plan on unanswered prayer closes, let this be the truest thing you carry forward: heaven''s silence toward your specific request is not the same as heaven''s absence. Even in seasons where you cannot find words, even in seasons where the answer still has not come, the Spirit is interceding, the Son is interceding, and the Father who sees in secret has not stopped listening. Keep praying — even the groaning kind. It still counts.', 'Setelah berhari-hari menaikkan permintaan yang sama dan menyaksikannya tampak tak terjawab, sejenis kelelahan yang aneh bisa muncul — bukan sekadar lelah dengan keadaannya, melainkan lelah dengan doa itu sendiri. Kata-kata mulai terasa berulang, hampa, seperti mengucapkan kalimat yang sama kepada pintu yang tertutup. Sebagian orang menggambarkan sampai pada titik ketika mereka benar-benar tidak tahu lagi harus berdoa apa, atau bagaimana mendoakannya dengan cara yang belum pernah diucapkan ratusan kali tanpa hasil yang terlihat.
-
-Paulus membahas kondisi ini secara langsung dalam Roma 8, dan apa yang ia tawarkan bukanlah teknik berdoa yang lebih baik, bukan rumus yang akhirnya berhasil menembus. Ia menawarkan sesuatu yang lebih mengejutkan: pengakuan bahwa ''kita tidak tahu bagaimana sebenarnya harus berdoa,'' dipadukan dengan janji bahwa Roh Kudus sendiri berdoa untuk kita dengan keluhan-keluhan yang tidak terucapkan. Dengan kata lain, saat doamu sendiri mulai kering bukanlah saat doa berhenti. Itu justru saat syafaat Roh sendiri menjadi paling dibutuhkan.
-
-Ini seharusnya menjadi kelegaan bagi siapa pun yang merasa bersalah karena kehabisan kata-kata. Kehidupan doamu tidak pernah dimaksudkan untuk bergantung semata pada iman verbalmu sendiri. Ketika kamu berlutut dalam kesunyian yang membingungkan, tidak yakin lagi harus meminta apa, Roh tidak sedang menunggumu menemukan kata-kata yang lebih baik. Ia sudah berdoa untukmu, menerjemahkan keluhanmu yang tanpa kata menjadi sesuatu yang sepenuhnya dipahami Bapa, bahkan ketika kamu sendiri tidak bisa.
-
-Saat rencana renungan tentang doa yang tak terjawab ini berakhir, biarlah ini menjadi kebenaran yang paling kamu bawa: kesunyian langit terhadap permohonanmu yang khusus bukanlah sama dengan ketiadaan langit. Bahkan di musim ketika kamu tak bisa menemukan kata-kata, bahkan di musim ketika jawaban itu masih belum datang, Roh sedang berdoa syafaat, Sang Anak sedang berdoa syafaat, dan Bapa yang melihat yang tersembunyi belum berhenti mendengarkan. Teruslah berdoa — bahkan doa yang berupa keluhan sekalipun. Itu tetap berarti.',
-    'If you have run out of words for this prayer, what would it look like to simply bring your wordless groaning to God today and trust the Spirit to carry the rest?', 'Jika kamu sudah kehabisan kata-kata untuk doa ini, seperti apa jadinya jika hari ini kamu sekadar membawa keluhanmu yang tanpa kata kepada Allah dan mempercayai Roh untuk memikul sisanya?',
-    'Spirit of God, I don''t always know what to pray anymore, and I''m tired of repeating the same words. Thank You for interceding for me even in my silence. Carry what I cannot put into words, and keep me close to the Father while I wait. Amen.', 'Roh Allah, aku tidak selalu tahu lagi harus berdoa apa, dan aku lelah mengulang kata-kata yang sama. Terima kasih karena Engkau berdoa syafaat bagiku bahkan dalam kesunyianku. Pikullah apa yang tak bisa kuungkapkan dengan kata-kata, dan jagalah aku tetap dekat dengan Bapa selagi aku menanti. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 8:26', 'WEB', 'In the same way, the Spirit helps us in our weakness. We do not know what we ought to pray for, but the Spirit himself intercedes for us through wordless groans.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 8:26', 'TB', 'Demikian juga Roh membantu kita dalam kelemahan kita; sebab kita tidak tahu, bagaimana sebenarnya harus berdoa; tetapi Roh sendiri berdoa untuk kita kepada Allah dengan keluhan-keluhan yang tidak terucapkan.');
-
-  -- Sub-category: Growing in Faith --------------------------------------------------------
+  -- Sub-category: Honoring Parents & Elders --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Growing in Faith' AND parent_id = v_family_id
+    WHERE name = 'Honoring Parents & Elders' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Growing in Faith', 'Bertumbuh dalam Iman', v_family_id)
+      VALUES ('Honoring Parents & Elders', 'Menghormati Orang Tua dan yang Lebih Tua', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
-    UPDATE public.devotion_categories SET name_id = 'Bertumbuh dalam Iman'
+    UPDATE public.devotion_categories SET name_id = 'Menghormati Orang Tua dan yang Lebih Tua'
       WHERE id = v_cat_id;
   END IF;
 
-  -- Plan: Small Beginnings: A Daily Prayer Habit
+  -- Plan: Grateful Hearts
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Small Beginnings: A Daily Prayer Habit',
-    'Awal yang Kecil: Kebiasaan Doa Harian',
-    'Three days to open a conversation with God that never has to close',
-    'Tiga hari membuka percakapan dengan Tuhan yang tak pernah harus berhenti',
-    3,
-    'For anyone who has ever wanted to pray more but never known where to start, this short plan is a gentle on-ramp. Over three days we look at showing up honestly before God, finding a quiet place to meet Him, and letting prayer become less an event on a schedule and more the air we breathe. There is no pressure to get it right — only an invitation to begin.',
-    'Bagi siapa saja yang ingin lebih banyak berdoa tetapi tidak tahu harus mulai dari mana, rencana singkat ini adalah jalan masuk yang lembut. Selama tiga hari kita belajar untuk datang dengan jujur di hadapan Tuhan, menemukan tempat sunyi untuk berjumpa dengan-Nya, dan membiarkan doa berubah bukan sekadar agenda dalam jadwal, melainkan udara yang kita hirup. Tidak ada tekanan untuk melakukannya dengan sempurna — hanya undangan untuk memulai.',
-    '/images/devotions/small-beginnings-a-daily-prayer-habit.jpeg'
-  ) RETURNING id INTO v_plan_id;
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 1,
-    'Showing Up As You Are', 'Datang Apa Adanya',
-    'Most of us imagine that prayer requires the right words, the right posture, the right amount of quiet in our hearts before we''re allowed to begin. But Scripture never asks us to arrive polished. It only asks us to arrive. The psalmist writes about laying his requests before God ''in the morning'' and waiting expectantly, not because his heart was already sorted out, but because that was simply the habit he kept — showing up, day after day, exactly as he was.
-
-Many of us find that the hardest part of building a prayer habit isn''t theological, it''s logistical and emotional. We don''t know what to say, we feel awkward in the silence, we worry our minds will wander. All of that is normal, and none of it disqualifies us. A relationship doesn''t grow because every conversation is eloquent; it grows because the two people keep choosing to talk. God is not grading our vocabulary. He is delighting in our presence.
-
-It helps to remember that the God we''re speaking to already knows everything we''re about to say before we say it. That should take the pressure off entirely. We are not informing Him of anything — we are simply choosing, on purpose, to include Him in our day rather than carry it alone. That small shift, from performing prayer to simply showing up for it, is often where a lasting habit is actually born.
-
-So today, the goal isn''t eloquence. It''s arrival. Whatever your morning looks like — coffee in hand, kids stirring in the next room, an alarm you''re tempted to snooze — the invitation is the same one the psalmist knew: bring your unfinished, unpolished self to God, and let Him meet you there.', 'Banyak dari kita membayangkan bahwa doa membutuhkan kata-kata yang tepat, sikap tubuh yang benar, dan hati yang sudah tenang sebelum kita boleh mulai. Namun Alkitab tidak pernah meminta kita datang dalam keadaan sempurna. Ia hanya meminta kita datang. Sang pemazmur menulis tentang membawa permohonannya kepada Tuhan ''pada waktu pagi'' dan menantikan jawaban dengan penuh harap, bukan karena hatinya sudah tertata rapi, melainkan karena itulah kebiasaan yang ia jaga — datang, hari demi hari, apa adanya.
-
-Banyak dari kita merasa bahwa bagian tersulit membangun kebiasaan doa bukanlah soal teologi, melainkan soal praktis dan perasaan. Kita tidak tahu harus berkata apa, kita merasa canggung dalam keheningan, kita khawatir pikiran kita akan mengembara. Semua itu wajar, dan tidak satu pun mendiskualifikasi kita. Sebuah hubungan tidak bertumbuh karena setiap percakapan berjalan fasih; ia bertumbuh karena kedua pihak terus memilih untuk berbicara. Tuhan tidak sedang menilai kosakata kita. Ia bersukacita atas kehadiran kita.
-
-Ada baiknya kita ingat bahwa Tuhan yang sedang kita ajak bicara sudah tahu segala yang akan kita katakan, bahkan sebelum kita mengucapkannya. Itu semestinya melepaskan segala tekanan. Kita bukan sedang memberi tahu-Nya sesuatu — kita hanya memilih, dengan sengaja, untuk melibatkan-Nya dalam hari kita, alih-alih memikulnya sendirian. Pergeseran kecil itu, dari doa sebagai pertunjukan menjadi doa sebagai kehadiran, sering kali adalah tempat kebiasaan yang bertahan lama sungguh dimulai.
-
-Jadi hari ini, tujuannya bukan kefasihan. Tujuannya adalah kehadiran. Apa pun rupa pagimu — secangkir kopi di tangan, anak-anak yang mulai bangun di kamar sebelah, alarm yang ingin sekali kau tunda — undangannya sama seperti yang diketahui sang pemazmur: bawalah dirimu yang belum selesai dan belum rapi kepada Tuhan, dan biarkan Ia menjumpaimu di sana.',
-    'You don''t need the right words to begin — you only need to show up. What would it look like to bring your actual, unedited self to God tomorrow morning?', 'Kau tidak butuh kata-kata yang tepat untuk memulai — kau hanya perlu datang. Seperti apa rasanya membawa dirimu yang sesungguhnya, tanpa disunting, kepada Tuhan besok pagi?',
-    'Lord, I don''t always know what to say, and I don''t always feel ready. Thank You that You don''t require me to be ready — only willing. Teach me to show up honestly before You today, trusting that You delight in my presence far more than my performance. Amen.', 'Tuhan, aku tidak selalu tahu harus berkata apa, dan aku tidak selalu merasa siap. Terima kasih karena Engkau tidak menuntutku untuk siap — hanya untuk bersedia. Ajarku untuk datang dengan jujur di hadapan-Mu hari ini, percaya bahwa Engkau lebih bersukacita atas kehadiranku daripada penampilanku. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 5:3', 'WEB', 'In the morning, LORD, you hear my voice; in the morning I lay my requests before you and wait expectantly.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 5:4', 'TB', 'TUHAN, pada waktu pagi Engkau mendengar suaraku, pada waktu pagi aku mengatur persembahanku bagi-Mu dan aku menunggu-nunggu.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 2,
-    'A Room, a Door, a Father', 'Sebuah Kamar, Sebuah Pintu, Seorang Bapa',
-    'Jesus gave surprisingly practical instructions about prayer. He didn''t tell His followers to wait for a mystical feeling or a perfect moment. He told them to go somewhere specific: into a room, and shut the door. There is something almost startlingly ordinary about that advice, and that''s exactly the point. A daily prayer habit doesn''t need a mountaintop. It needs a chair, a corner, a closed door — a small, unremarkable space set apart on purpose.
-
-Many of us live lives so full of noise — notifications, obligations, other people''s voices — that we rarely experience true quiet at all. The ''shut door'' Jesus describes isn''t only about a physical room; it''s about creating a boundary, a pocket of time that belongs to nobody but you and God. That boundary might be five minutes before the household wakes, or a few minutes in the car before walking into work. What matters is that it''s set apart, protected, returned to.
-
-What makes this practice bearable, even desirable, over the long run is what Jesus says next: your Father, who sees what is done in secret, will reward you. This isn''t a transaction so much as a promise of intimacy. Nobody else has to know about your closed door. Nobody applauds it. But the Father who sees it meets you there, and that meeting is the actual reward — not a performance for an audience, but a relationship nurtured in private.
-
-Over time, that private, unglamorous room becomes sacred simply because of who you keep meeting there. The habit isn''t about willpower alone; it''s about return. Go back to your room, your five minutes, your closed door, again tomorrow — and trust that the Father who sees in secret is already waiting.', 'Yesus memberikan petunjuk yang sangat praktis tentang doa. Ia tidak menyuruh murid-murid-Nya menunggu perasaan mistis atau momen yang sempurna. Ia menyuruh mereka pergi ke tempat tertentu: masuk ke dalam kamar, dan menutup pintu. Ada sesuatu yang hampir mengejutkan sederhananya dari nasihat itu, dan justru di situlah intinya. Kebiasaan doa harian tidak membutuhkan puncak gunung. Ia membutuhkan sebuah kursi, sebuah sudut, sebuah pintu tertutup — ruang kecil yang biasa saja namun sengaja disisihkan.
-
-Banyak dari kita menjalani hidup yang begitu penuh kebisingan — notifikasi, kewajiban, suara orang lain — sehingga kita jarang benar-benar mengalami keheningan sejati. ''Pintu tertutup'' yang digambarkan Yesus bukan hanya soal ruang fisik; ini soal menciptakan batas, sekantong waktu yang bukan milik siapa pun kecuali dirimu dan Tuhan. Batas itu bisa berupa lima menit sebelum rumah bangun, atau beberapa menit di dalam mobil sebelum masuk kerja. Yang penting, waktu itu disisihkan, dijaga, dan didatangi kembali.
-
-Yang membuat kebiasaan ini terasa ringan, bahkan dirindukan, dalam jangka panjang adalah kata-kata Yesus selanjutnya: Bapamu yang melihat yang tersembunyi akan membalasnya. Ini bukan sekadar transaksi, melainkan janji keintiman. Tidak ada orang lain yang perlu tahu tentang pintu tertutupmu. Tidak ada yang bertepuk tangan untuk itu. Tetapi Bapa yang melihat menjumpaimu di sana, dan perjumpaan itulah upah yang sesungguhnya — bukan pertunjukan bagi penonton, melainkan hubungan yang dipupuk dalam kesunyian.
-
-Seiring waktu, ruang pribadi yang sederhana itu menjadi kudus semata-mata karena siapa yang terus kau temui di sana. Kebiasaan ini bukan hanya soal kemauan keras; ini soal kembali. Kembalilah ke kamarmu, ke lima menitmu, ke pintu tertutupmu, lagi besok — dan percayalah bahwa Bapa yang melihat yang tersembunyi sudah menantimu.',
-    'You don''t need a perfect setting to pray — just a small, set-apart space you return to. Where could your ''closed door'' be this week?', 'Kau tidak butuh tempat yang sempurna untuk berdoa — hanya ruang kecil yang disisihkan dan didatangi kembali. Di manakah ''pintu tertutup''-mu minggu ini?',
-    'Father, thank You that I don''t need an audience or a perfect setting to meet with You. Help me find and protect a small space set apart for prayer, trusting that You are already there, seeing what is unseen, waiting to meet me. Amen.', 'Bapa, terima kasih karena aku tidak butuh penonton atau tempat yang sempurna untuk berjumpa dengan-Mu. Tolonglah aku menemukan dan menjaga ruang kecil yang disisihkan untuk berdoa, percaya bahwa Engkau sudah ada di sana, melihat yang tersembunyi, menantikan perjumpaan denganku. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 6:6', 'WEB', 'But when you pray, go into your room, close the door and pray to your Father, who is unseen. Then your Father, who sees what is done in secret, will reward you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 6:6', 'TB', 'Tetapi jika engkau berdoa, masuklah ke dalam kamarmu, tutuplah pintu dan berdoalah kepada Bapamu yang ada di tempat tersembunyi. Maka Bapamu yang melihat yang tersembunyi akan membalasnya kepadamu.');
-
-  INSERT INTO public.devotion_plan_days (
-    plan_id, day_number, 
-    devotional_title, devotional_title_id,
-    devotional_content, devotional_content_id,
-    reflection, reflection_id,
-    prayer, prayer_id
-  ) VALUES (
-    v_plan_id, 3,
-    'Praying Without Ceasing', 'Berdoa Tanpa Henti',
-    'By the third day of any new habit, the initial enthusiasm often starts to fade, and the question quietly arrives: can I actually keep this up? It''s worth noticing that Paul''s instruction to ''pray continually'' was never meant to describe an unbroken stream of formal words. It describes an orientation of the heart — a life lived with one ear always turned toward God, ready to whisper a thank-you, a plea, a confession, at any moment, in any place.
-
-This reframes the whole project. A daily prayer habit isn''t primarily about protecting an unbreakable streak or hitting a certain number of minutes. It''s about becoming the kind of person who talks to God while waiting in line, while driving, while doing dishes — not instead of a set time of prayer, but woven around it, so that the set time and the scattered moments start to feel like one continuous conversation rather than separate appointments.
-
-Many of us find that once a small anchor habit is in place — even just a few minutes each morning — those scattered moments of prayer throughout the day become far more natural. The morning time isn''t the whole relationship; it''s the doorway into it. It reminds us, before the noise of the day begins, that we belong to Someone who is already listening, which makes it easier to keep talking to Him as the hours unfold.
-
-So as you finish these three days, don''t measure success by whether you felt something extraordinary. Measure it by whether you showed up. And then trust that showing up, day after ordinary day, is exactly how a habit becomes a home — a place where prayer stops being a task on a list and starts being simply how you live.', 'Pada hari ketiga dari kebiasaan baru apa pun, semangat awal sering kali mulai memudar, dan pertanyaan pun diam-diam muncul: benarkah aku bisa terus melakukannya? Perlu diperhatikan bahwa perintah Paulus untuk ''tetap berdoa'' tidak pernah dimaksudkan sebagai aliran kata-kata formal yang tak terputus. Itu menggambarkan arah hati — sebuah hidup yang dijalani dengan satu telinga selalu menghadap Tuhan, siap membisikkan ucapan syukur, permohonan, atau pengakuan, kapan saja, di mana saja.
-
-Ini mengubah cara kita memandang seluruh proyek ini. Kebiasaan doa harian bukan terutama soal menjaga rentetan yang tak terputus atau mencapai jumlah menit tertentu. Ini soal menjadi orang yang berbicara kepada Tuhan sambil mengantre, sambil menyetir, sambil mencuci piring — bukan sebagai pengganti waktu doa yang tetap, melainkan terjalin di sekelilingnya, sehingga waktu tetap itu dan momen-momen yang tersebar terasa seperti satu percakapan yang berkesinambungan, bukan janji temu yang terpisah-pisah.
-
-Banyak dari kita menemukan bahwa begitu satu kebiasaan jangkar kecil sudah tertanam — bahkan hanya beberapa menit setiap pagi — momen-momen doa yang tersebar sepanjang hari menjadi jauh lebih alami. Waktu pagi itu bukan seluruh hubungan; ia adalah pintu masuk menuju hubungan itu. Ia mengingatkan kita, sebelum kebisingan hari dimulai, bahwa kita milik Seseorang yang sudah mendengarkan, yang membuat kita lebih mudah terus berbicara kepada-Nya seiring berjalannya jam-jam berikutnya.
-
-Maka saat kau menyelesaikan tiga hari ini, jangan ukur keberhasilan dari apakah kau merasakan sesuatu yang luar biasa. Ukurlah dari apakah kau datang. Dan percayalah bahwa datang, hari demi hari yang biasa saja, adalah justru cara sebuah kebiasaan berubah menjadi rumah — tempat di mana doa berhenti menjadi tugas dalam daftar dan mulai menjadi sekadar cara kau hidup.',
-    'A prayer habit isn''t an unbroken streak of perfect focus — it''s a life oriented toward God. What small moment today could become a whispered prayer?', 'Kebiasaan doa bukanlah rentetan fokus sempurna yang tak terputus — melainkan hidup yang mengarah kepada Tuhan. Momen kecil apa hari ini yang bisa menjadi doa bisikan?',
-    'Lord, teach me to carry You with me through the ordinary moments of today — the waiting, the driving, the dishes — so that my whole day becomes one long, unhurried conversation with You. Thank You for meeting me in the small and the constant. Amen.', 'Tuhan, ajarku untuk membawa-Mu bersamaku melalui momen-momen biasa hari ini — saat menunggu, menyetir, mencuci piring — sehingga seluruh hariku menjadi satu percakapan panjang yang tak tergesa-gesa dengan-Mu. Terima kasih telah menjumpaiku dalam hal-hal kecil dan tetap. Amin.'
-  ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Thessalonians 5:16-17', 'WEB', 'Rejoice always, pray continually,');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Tesalonika 5:16-17', 'TB', 'Bersukacitalah senantiasa. Tetaplah berdoa.');
-
-  -- Plan: Bread for the Journey: Growing Through Scripture
-  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
-  VALUES (
-    v_cat_id,
-    'Bread for the Journey: Growing Through Scripture',
-    'Roti untuk Perjalanan: Bertumbuh Melalui Firman',
-    'Five days to fall in love with the Word of God',
-    'Lima hari untuk jatuh cinta pada Firman Tuhan',
+    'Grateful Hearts',
+    'Hati yang Bersyukur',
+    'Five days of thanksgiving for the parents who raised you',
+    'Lima hari bersyukur untuk orang tua yang membesarkanmu',
     5,
-    'Scripture can feel like a book we know we should read more but never quite know how to approach. This five-day plan walks through why the Bible is worth returning to daily: as a lamp for our next step, as food that nourishes rather than merely informs, as a living word that reaches into the heart, as God-breathed truth that shapes us, and as the very thing that plants and deepens faith itself. It''s an invitation to move from duty to delight.',
-    'Alkitab kadang terasa seperti buku yang kita tahu seharusnya lebih sering kita baca, tetapi tidak pernah benar-benar tahu bagaimana mendekatinya. Rencana lima hari ini menelusuri mengapa Alkitab layak untuk terus kita kunjungi setiap hari: sebagai pelita bagi langkah berikutnya, sebagai makanan yang menyehatkan bukan sekadar memberi informasi, sebagai firman yang hidup dan menembus hati, sebagai kebenaran yang dinapaskan Allah dan membentuk kita, serta sebagai hal yang menanam dan memperdalam iman itu sendiri. Ini adalah undangan untuk berpindah dari kewajiban menuju kerinduan.',
-    '/images/devotions/bread-for-the-journey-growing-through-scripture.jpeg'
+    'A five-day devotional for adult children who want to pause and give thanks for their upbringing, however imperfect it was. Each day looks at gratitude through Scripture, honoring the sacrifices, prayers, and quiet love of the people who raised us, and inviting us to say thank you before it''s too late.',
+    'Renungan lima hari bagi anak-anak dewasa yang ingin berhenti sejenak untuk bersyukur atas cara mereka dibesarkan, sekalipun tidak sempurna. Setiap hari melihat rasa syukur melalui Firman Tuhan, menghargai pengorbanan, doa, dan kasih diam-diam dari orang-orang yang membesarkan kita, serta mengajak kita mengucap terima kasih selagi masih ada waktu.',
+    '/images/devotions/grateful-hearts.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -1288,29 +680,25 @@ Maka saat kau menyelesaikan tiga hari ini, jangan ukur keberhasilan dari apakah 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'A Lamp for the Next Step', 'Pelita untuk Langkah Berikutnya',
-    'The psalmist doesn''t describe God''s word as a floodlight illuminating the whole horizon. He calls it a lamp for his feet and a light for his path — enough to see the next step clearly, even when the destination stays hazy in the distance. That image matters, because so many of us hesitate to open Scripture unless we expect it to answer every question about our future at once. It rarely works that way. More often, it simply shows us where to place our foot right now.
+    'The Command Wrapped in a Promise', 'Perintah yang Dibungkus dengan Janji',
+    'Of all the Ten Commandments, only one comes with a promise attached. ''Honor your father and your mother, so that you may live long in the land the Lord your God is giving you.'' God did not simply command honor; He wrapped it in blessing, as if to say that a life rooted in gratitude toward parents is a life rooted well. Before we ever learn to honor God with our lips, many of us first learn what honor even looks like by watching how we treat the people who fed us, corrected us, and stayed up worrying about us.
 
-Many of us find that the seasons we grow the most in faith are not the seasons where everything is clear, but the seasons where we''ve learned to trust the small circle of light we''ve been given. We don''t need to see the whole road to walk faithfully. We need only enough illumination for the step in front of us, and Scripture, read patiently and returned to often, provides exactly that.
+Gratitude toward parents rarely arrives all at once. It tends to grow slowly, often only after we ourselves have carried some of the weight they carried — a late bill, a sick child, a long night of worry. It is easy, in the busyness of adult life, to let appreciation stay unspoken, tucked away as something we assume our parents already know. But assumed gratitude is still unspoken gratitude, and unspoken things have a way of staying that way.
 
-There is also something deeply personal in the psalmist''s language — ''a lamp for my feet,'' not for feet in general. The Word of God is not only a set of truths about the universe; it is truth applied, personally, to the actual walking, wandering, uncertain life each of us is living. That is why the same verse can strike one person one way on a hard Tuesday and another way entirely on a hopeful Friday. It meets us where our feet actually are.
+This week is an invitation to notice again. Not to pretend our upbringing was flawless — few are — but to look honestly at what was given: meals cooked without complaint, sacrifices made quietly, prayers said on our behalf that we may never fully know about. Honoring parents does not require ignoring their faults; it requires choosing to see the fuller picture, the years of ordinary faithfulness that don''t make headlines but make a life.
 
-As you begin this five-day journey through Scripture, don''t come looking for the whole map. Come looking for enough light for today. Trust that the God who gave this lamp to the psalmist is just as willing to hold it steady for you, one faithful step at a time.', 'Pemazmur tidak menggambarkan firman Tuhan sebagai lampu sorot yang menerangi seluruh cakrawala. Ia menyebutnya pelita bagi kakinya dan terang bagi jalannya — cukup untuk melihat langkah berikutnya dengan jelas, meski tujuan akhirnya masih samar di kejauhan. Gambaran itu penting, sebab banyak dari kita ragu membuka Alkitab kecuali kita mengharapkan jawaban atas semua pertanyaan tentang masa depan sekaligus. Jarang sekali itu terjadi. Lebih sering, Firman hanya menunjukkan di mana kita harus melangkahkan kaki sekarang.
+As we begin, ask God simply to soften your heart toward gratitude. Not guilt, not obligation — gratitude, freely given, the kind that flows naturally once we start counting what was actually given to us rather than what was lacking.', 'Dari sepuluh perintah Allah, hanya satu yang disertai janji. ''Hormatilah ayahmu dan ibumu, supaya lanjut umurmu di tanah yang diberikan TUHAN, Allahmu, kepadamu.'' Allah tidak sekadar memerintahkan penghormatan; Ia membungkusnya dengan berkat, seolah hendak berkata bahwa hidup yang berakar pada rasa syukur kepada orang tua adalah hidup yang berakar dengan baik. Sebelum kita belajar menghormati Allah dengan bibir kita, banyak dari kita lebih dulu belajar seperti apa penghormatan itu dengan memperhatikan bagaimana kita memperlakukan orang-orang yang memberi kita makan, menegur kita, dan berjaga khawatir demi kita.
 
-Banyak dari kita menemukan bahwa musim-musim ketika iman kita paling bertumbuh bukanlah musim ketika segalanya jelas, melainkan musim ketika kita belajar mempercayai lingkaran cahaya kecil yang telah diberikan kepada kita. Kita tidak perlu melihat seluruh jalan untuk melangkah dengan setia. Kita hanya butuh cukup terang untuk langkah di depan kita, dan Alkitab, jika dibaca dengan sabar dan terus dikunjungi, memberikan tepat itu.
+Rasa syukur kepada orang tua jarang datang sekaligus. Ia cenderung tumbuh perlahan, sering kali baru setelah kita sendiri memikul sebagian dari beban yang pernah mereka pikul — tagihan yang terlambat, anak yang sakit, malam panjang yang penuh kekhawatiran. Dalam kesibukan hidup dewasa, mudah sekali membiarkan rasa terima kasih tetap tak terucap, disimpan sebagai sesuatu yang kita anggap sudah diketahui orang tua kita. Namun rasa syukur yang hanya diasumsikan tetaplah rasa syukur yang tak terucap, dan hal-hal yang tak terucap cenderung tetap seperti itu.
 
-Ada juga sesuatu yang sangat pribadi dalam bahasa sang pemazmur — ''pelita bagi kakiku,'' bukan bagi kaki pada umumnya. Firman Tuhan bukan hanya sekumpulan kebenaran tentang alam semesta; ia adalah kebenaran yang diterapkan secara pribadi, pada hidup yang benar-benar sedang berjalan, mengembara, dan tidak pasti dari setiap kita. Itulah sebabnya ayat yang sama bisa menyentuh seseorang dengan satu cara pada Selasa yang berat, dan dengan cara yang sama sekali berbeda pada Jumat yang penuh harap. Ia menjumpai kita tepat di tempat kaki kita berpijak.
+Minggu ini adalah undangan untuk memperhatikan kembali. Bukan untuk berpura-pura bahwa masa kecil kita sempurna — jarang ada yang seperti itu — tetapi untuk melihat dengan jujur apa yang telah diberikan: makanan yang dimasak tanpa keluhan, pengorbanan yang dilakukan diam-diam, doa-doa yang dipanjatkan bagi kita yang mungkin tak pernah sepenuhnya kita ketahui. Menghormati orang tua tidak berarti mengabaikan kekurangan mereka; itu berarti memilih untuk melihat gambaran yang lebih utuh, tahun-tahun kesetiaan sederhana yang tidak menjadi berita utama tetapi membentuk sebuah kehidupan.
 
-Saat kau memulai perjalanan lima hari melalui Alkitab ini, jangan datang mencari seluruh peta. Datanglah mencari cukup terang untuk hari ini. Percayalah bahwa Tuhan yang memberikan pelita ini kepada sang pemazmur sama bersedianya untuk memegangnya tetap bagimu, satu langkah setia demi satu langkah.',
-    'You don''t need the whole map to walk faithfully — just enough light for the next step. What step is God''s Word illuminating for you today?', 'Kau tidak perlu seluruh peta untuk melangkah dengan setia — hanya cukup terang untuk langkah berikutnya. Langkah apa yang sedang diterangi Firman Tuhan bagimu hari ini?',
-    'Lord, thank You that Your word doesn''t demand I see the whole road ahead. Give me eyes to see just the next faithful step, and a heart willing to take it. Let Your Word be a steady lamp in my hand today. Amen.', 'Tuhan, terima kasih karena Firman-Mu tidak menuntutku melihat seluruh jalan di depan. Berilah aku mata untuk melihat langkah setia berikutnya saja, dan hati yang bersedia mengambilnya. Biarlah Firman-Mu menjadi pelita yang tetap di tanganku hari ini. Amin.'
+Saat kita memulai, mintalah Allah dengan sederhana untuk melembutkan hatimu menuju rasa syukur. Bukan rasa bersalah, bukan kewajiban — melainkan rasa syukur yang diberikan dengan bebas, yang mengalir secara alami begitu kita mulai menghitung apa yang sungguh diberikan kepada kita, bukan apa yang kurang.',
+    'What is one specific thing your parents gave you that you have never said thank you for aloud?', 'Apa satu hal khusus yang diberikan orang tuamu yang belum pernah kamu ucapkan terima kasih dengan lantang?',
+    'Lord, thank You for the parents You gave me. Soften my heart toward gratitude today, and help me see clearly all that was given, not only what was lacking. Amen.', 'Tuhan, terima kasih atas orang tua yang Engkau berikan kepadaku. Lembutkan hatiku menuju rasa syukur hari ini, dan tolong aku melihat dengan jelas semua yang telah diberikan, bukan hanya apa yang kurang. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 119:105', 'WEB', 'Your word is a lamp for my feet, a light on my path.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 119:105', 'TB', 'Firman-Mu itu pelita bagi kakiku dan terang bagi jalanku.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Exodus 20:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Keluaran 20:12', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1320,29 +708,25 @@ Saat kau memulai perjalanan lima hari melalui Alkitab ini, jangan datang mencari
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'Meditate Day and Night', 'Merenungkannya Siang dan Malam',
-    'When God commissions Joshua for the enormous task ahead of him, He doesn''t tell him to muster more courage from within himself. He points him to a book. ''Keep this Book of the Law always on your lips; meditate on it day and night.'' The instruction is almost surprising in its simplicity — not a strategy session, not a pep talk, but a call to stay close to the written word, to let it be the constant companion of both his mouth and his mind.
+    'Do Not Despise Her When She Is Old', 'Jangan Menghina Ibumu Ketika Ia Sudah Tua',
+    'Proverbs offers a gentle but pointed instruction: listen to your father, and do not despise your mother when she is old. There is something quietly wise in pairing these two ideas — listening and not despising — because gratitude toward parents is tested most not in childhood, when we depend on them completely, but in adulthood, when their pace slows, their memory falters, or their opinions start to feel outdated to us. It is easy to honor strength. It takes grace to honor someone as they grow frail.
 
-The word translated ''meditate'' here carries the sense of a low murmur, a rumination — the kind of thing a person does almost without noticing, turning a phrase over and over the way one might hum a familiar tune. This isn''t a single intense study session and then moving on. It''s a slow, repeated return to the same truths until they become part of how we think, not just something we once read.
+Many of us find ourselves, without meaning to, growing impatient with parents as they age — sighing at a story told twice, correcting them in front of others, treating their questions as burdens rather than invitations to connect. Scripture calls this despising, and it is a strong word for what often feels like a small, everyday impatience. But small impatiences, repeated, shape how our parents experience their later years: either as a season of being cherished, or a season of being tolerated.
 
-Many of us find that faith grows less through occasional dramatic insight and more through this kind of unglamorous repetition — reading a familiar passage again, letting a verse sit with us through an ordinary afternoon, coming back to words we''ve read a hundred times before and finding, somehow, that they still have something new to say. That is meditation: not novelty, but faithfulness to the same well, drawn from again and again.
+Gratitude reframes the picture. If we remember that this same voice once sang us to sleep, once explained the world to us patiently a hundred times over, our irritation softens into tenderness. The slowness we notice now is often the very patience they once poured into us without complaint. Honoring them in this later season is simply returning, in smaller measure, what was given so generously in the beginning.
 
-God''s promise to Joshua was tied directly to this practice: ''then you will be prosperous and successful.'' Not because the words were magic, but because a life saturated in truth tends to make wiser choices, walk steadier paths, and endure harder seasons. The same offer stands for us. Let the Word be on your lips today — not once, but again and again.', 'Ketika Tuhan menugaskan Yosua untuk tugas besar yang ada di hadapannya, Ia tidak menyuruhnya mengumpulkan lebih banyak keberanian dari dalam dirinya sendiri. Ia mengarahkannya kepada sebuah kitab. ''Janganlah engkau lupa memperkatakan Kitab Taurat ini, tetapi renungkanlah itu siang dan malam.'' Perintah itu hampir mengejutkan karena kesederhanaannya — bukan sesi strategi, bukan pidato penyemangat, melainkan panggilan untuk tetap dekat dengan firman tertulis, membiarkannya menjadi sahabat tetap bagi mulut dan pikirannya.
+Today, consider one way you can practice listening rather than correcting, receiving rather than dismissing. Gratitude is not only a feeling; it is a posture we choose again and again, especially when it is least convenient.', 'Kitab Amsal memberikan nasihat yang lembut namun tajam: dengarkanlah ayahmu, dan jangan menghina ibumu ketika ia sudah tua. Ada kebijaksanaan yang tenang dalam memasangkan dua gagasan ini — mendengarkan dan tidak menghina — karena rasa syukur kepada orang tua paling diuji bukan pada masa kecil, ketika kita sepenuhnya bergantung pada mereka, tetapi pada masa dewasa, ketika langkah mereka melambat, ingatan mereka mulai kabur, atau pendapat mereka mulai terasa ketinggalan zaman bagi kita. Menghormati kekuatan itu mudah. Menghormati seseorang yang mulai lemah membutuhkan anugerah.
 
-Kata yang diterjemahkan ''merenungkan'' di sini membawa makna gumaman pelan, sebuah pengulangan yang dilakukan hampir tanpa disadari — seperti seseorang menggumamkan lagu yang sudah dikenalnya berulang-ulang. Ini bukan satu sesi belajar yang intens lalu berlalu. Ini adalah kembali secara perlahan dan berulang kepada kebenaran yang sama, sampai kebenaran itu menjadi bagian dari cara kita berpikir, bukan sekadar sesuatu yang pernah kita baca.
+Banyak dari kita mendapati diri, tanpa bermaksud demikian, mulai tidak sabar terhadap orang tua yang menua — mendesah saat cerita yang sama diulang, mengoreksi mereka di depan orang lain, memperlakukan pertanyaan mereka sebagai beban alih-alih undangan untuk terhubung. Firman Tuhan menyebut ini penghinaan, sebuah kata yang kuat untuk sesuatu yang sering terasa seperti ketidaksabaran kecil sehari-hari. Namun ketidaksabaran kecil yang berulang membentuk bagaimana orang tua kita menjalani masa tua mereka: sebagai musim ketika mereka disayangi, atau musim ketika mereka hanya ditoleransi.
 
-Banyak dari kita menemukan bahwa iman bertumbuh bukan terutama melalui wawasan dramatis sesekali, melainkan melalui pengulangan sederhana semacam ini — membaca kembali bagian yang sudah dikenal, membiarkan sebuah ayat menetap bersama kita sepanjang sore yang biasa, kembali kepada kata-kata yang sudah kita baca beratus kali dan menemukan, entah bagaimana, bahwa kata-kata itu masih punya sesuatu yang baru untuk dikatakan. Itulah perenungan: bukan kebaruan, melainkan kesetiaan pada sumur yang sama, yang terus ditimba lagi dan lagi.
+Rasa syukur mengubah cara pandang itu. Jika kita mengingat bahwa suara yang sama ini pernah menyanyikan kita untuk tidur, pernah menjelaskan dunia kepada kita dengan sabar berulang-ulang kali, kejengkelan kita melunak menjadi kelembutan. Kelambatan yang kita perhatikan sekarang sering kali adalah kesabaran yang dahulu mereka curahkan kepada kita tanpa keluhan. Menghormati mereka pada musim ini hanyalah mengembalikan, dalam ukuran yang lebih kecil, apa yang telah diberikan dengan begitu murah hati sejak awal.
 
-Janji Tuhan kepada Yosua terikat langsung pada praktik ini: ''maka engkau akan beruntung dan akan berhasil dalam segala usahamu.'' Bukan karena kata-kata itu bersifat magis, melainkan karena hidup yang direndam dalam kebenaran cenderung membuat pilihan yang lebih bijak, melangkah di jalan yang lebih mantap, dan bertahan melalui musim yang lebih sulit. Tawaran yang sama berlaku bagi kita. Biarlah Firman ada di bibirmu hari ini — bukan sekali, melainkan berulang kali.',
-    'Growth in faith often comes not from novelty but from returning again and again to the same truths. What familiar verse could you sit with today rather than rush past?', 'Pertumbuhan iman sering datang bukan dari hal baru, melainkan dari kembali berulang kali kepada kebenaran yang sama. Ayat familiar mana yang bisa kau renungkan hari ini, bukan sekadar kau lewati?',
-    'Lord, teach me the slow, repeated rhythm of meditating on Your word rather than always chasing something new. Let Your truth settle into my mind and mouth until it shapes how I think and choose. Amen.', 'Tuhan, ajarku irama yang perlahan dan berulang dalam merenungkan Firman-Mu, alih-alih selalu mengejar hal baru. Biarlah kebenaran-Mu meresap ke dalam pikiran dan mulutku sampai membentuk cara aku berpikir dan memilih. Amin.'
+Hari ini, pikirkan satu cara kamu bisa berlatih mendengarkan alih-alih mengoreksi, menerima alih-alih mengabaikan. Rasa syukur bukan hanya perasaan; itu adalah sikap yang kita pilih berulang-ulang, terutama ketika hal itu paling tidak nyaman.',
+    'Where have small impatience crept into how you treat your aging parent, and how might you practice patience instead this week?', 'Di mana ketidaksabaran kecil mulai merasuki caramu memperlakukan orang tuamu yang menua, dan bagaimana kamu bisa berlatih kesabaran minggu ini?',
+    'Father, forgive me for the moments I have grown impatient with my parents. Teach me to listen well and to honor them with patience, especially as the years slow them down. Amen.', 'Bapa, ampuni aku untuk saat-saat aku menjadi tidak sabar terhadap orang tuaku. Ajari aku untuk mendengarkan dengan baik dan menghormati mereka dengan kesabaran, terutama ketika usia memperlambat langkah mereka. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Joshua 1:8', 'WEB', 'Keep this Book of the Law always on your lips; meditate on it day and night, so that you may be careful to do everything written in it. Then you will be prosperous and successful.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yosua 1:8', 'TB', 'Janganlah engkau lupa memperkatakan kitab Taurat ini, tetapi renungkanlah itu siang dan malam, supaya engkau bertindak hati-hati sesuai dengan segala yang tertulis di dalamnya, sebab dengan demikian perjalananmu akan berhasil dan engkau akan beruntung.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 23:22', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 23:22', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1352,29 +736,25 @@ Janji Tuhan kepada Yosua terikat langsung pada praktik ini: ''maka engkau akan b
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'Living and Active', 'Hidup dan Kuat Bekerja',
-    'It would be easy to think of the Bible as a historical document — words spoken long ago, preserved carefully, but essentially finished and static. The letter to the Hebrews insists on something far more startling: that the word of God is living and active. Not was living once. Is living, now, today, in whatever page you happen to open.
+    'Obedience That Becomes Honor', 'Ketaatan yang Berubah Menjadi Penghormatan',
+    'Paul''s instruction to children — obey your parents in everything, for this pleases the Lord — was written first for those still under a parent''s roof. But there is a deeper current beneath the verse that stays true long after we''ve moved out and built our own households: the posture of a heart willing to be taught, willing to receive correction, willing to consider that our parents might still have something worth teaching us.
 
-This changes how we can expect Scripture to work on us. A living word doesn''t just sit on the page waiting to be studied like a fossil; it moves, it presses, it searches. The writer describes it as sharper than any double-edged sword, able to penetrate all the way to the place where soul and spirit meet, joints and marrow — the deepest, most hidden parts of who we are. That''s not language, that''s surgery.
+As adults, we naturally shift from obedience to something more like partnership or even, at times, caretaking. Yet gratitude keeps a thread of that childhood posture alive — not blind compliance, but a genuine openness to our parents'' wisdom, forged over decades we haven''t lived yet. It is a strange kind of humility to admit that the people who once packed our lunches might still understand something about life, marriage, or faith that we are only beginning to learn.
 
-Many of us have had the experience of reading a passage we''d read a dozen times before, only to have it suddenly land differently — convicting us of something we''d been avoiding, or comforting us in exactly the way we needed that day, as though the words had been written specifically for that moment. That is what a living word does. It doesn''t merely inform us about God; it meets us, uncomfortably and tenderly, exactly where we are.
+This is especially true in matters of faith. Many of us first heard the name of Jesus from a parent''s lips, first watched what prayer looked like at a kitchen table or a bedside, first learned that Sunday meant something different from the rest of the week because of a parent''s quiet consistency. Gratitude asks us to acknowledge that gift specifically — not the abstract idea of an upbringing, but the concrete moments faith was modeled for us before we had words for it.
 
-So when Scripture feels sharp today — when a verse convicts more than comforts — take that as evidence it''s doing precisely what it was always meant to do. Let it search. A word that is truly alive doesn''t leave us unchanged, and that discomfort is often the very shape that growth takes.', 'Akan mudah untuk menganggap Alkitab sebagai dokumen sejarah — kata-kata yang diucapkan lama berselang, dijaga dengan hati-hati, tetapi pada dasarnya sudah selesai dan diam. Surat Ibrani menegaskan sesuatu yang jauh lebih mengejutkan: bahwa firman Allah itu hidup dan kuat. Bukan pernah hidup dahulu. Ia hidup, sekarang, hari ini, pada halaman apa pun yang kebetulan kau buka.
+Today, thank God for whatever thread of faith, however thin, was handed to you by your parents. And consider one piece of wisdom from them you have been slow to receive.', 'Nasihat Paulus kepada anak-anak — taatilah orang tuamu dalam segala hal, karena itulah yang indah di dalam Tuhan — pertama-tama ditulis bagi mereka yang masih tinggal di bawah atap orang tua. Namun ada arus yang lebih dalam di balik ayat ini yang tetap benar lama setelah kita pindah dan membangun rumah tangga sendiri: sikap hati yang bersedia diajar, bersedia menerima teguran, bersedia mempertimbangkan bahwa orang tua kita mungkin masih memiliki sesuatu yang layak diajarkan kepada kita.
 
-Ini mengubah cara kita menantikan Alkitab bekerja pada diri kita. Firman yang hidup tidak hanya diam di atas kertas menunggu dipelajari seperti fosil; ia bergerak, ia menekan, ia menyelidiki. Penulis surat itu menggambarkannya lebih tajam dari pedang bermata dua mana pun, sanggup menembus sampai memisahkan jiwa dan roh, sendi-sendi dan sumsum — bagian-bagian yang paling dalam dan tersembunyi dari diri kita. Itu bukan sekadar bahasa, itu adalah pembedahan.
+Sebagai orang dewasa, kita secara alami bergeser dari ketaatan menjadi sesuatu yang lebih seperti kemitraan atau bahkan, kadang-kadang, pengasuhan balik. Namun rasa syukur tetap menjaga benang sikap masa kecil itu tetap hidup — bukan kepatuhan buta, melainkan keterbukaan yang tulus terhadap kebijaksanaan orang tua kita, yang ditempa selama puluhan tahun yang belum kita jalani. Ada semacam kerendahan hati yang aneh untuk mengakui bahwa orang-orang yang dahulu menyiapkan bekal makan siang kita mungkin masih memahami sesuatu tentang kehidupan, pernikahan, atau iman yang baru saja mulai kita pelajari.
 
-Banyak dari kita pernah mengalami membaca bagian yang sudah puluhan kali kita baca, namun tiba-tiba menyentuh dengan cara yang berbeda — menegur kita atas sesuatu yang selama ini kita hindari, atau menghibur kita dengan tepat cara yang kita butuhkan hari itu, seolah kata-kata itu ditulis khusus untuk momen tersebut. Itulah yang dilakukan firman yang hidup. Ia tidak sekadar memberi kita informasi tentang Allah; ia menjumpai kita, dengan cara yang tidak nyaman sekaligus lembut, tepat di tempat kita berada.
+Ini terutama benar dalam hal iman. Banyak dari kita pertama kali mendengar nama Yesus dari bibir orang tua, pertama kali melihat seperti apa doa itu di meja makan atau di sisi tempat tidur, pertama kali belajar bahwa hari Minggu berarti sesuatu yang berbeda dari hari-hari lain karena konsistensi diam-diam orang tua kita. Rasa syukur meminta kita mengakui pemberian itu secara khusus — bukan gagasan abstrak tentang cara dibesarkan, tetapi momen-momen konkret ketika iman dicontohkan bagi kita sebelum kita punya kata-kata untuknya.
 
-Jadi ketika Alkitab terasa tajam hari ini — ketika sebuah ayat lebih menegur daripada menghibur — anggaplah itu bukti bahwa firman itu sedang melakukan tepat apa yang selalu dimaksudkan untuk dilakukannya. Biarkan ia menyelidiki. Firman yang benar-benar hidup tidak membiarkan kita tetap sama, dan ketidaknyamanan itu sering kali adalah bentuk nyata dari pertumbuhan.',
-    'A living word doesn''t leave us unchanged. Where might Scripture be pressing on something you''ve been avoiding lately?', 'Firman yang hidup tidak membiarkan kita tetap sama. Di manakah mungkin Alkitab sedang menekan sesuatu yang belakangan ini kau hindari?',
-    'Father, Your word is alive, and I open myself to let it work in me today — to convict where I need conviction and comfort where I need comfort. Search my heart, Lord, and don''t let me stay unchanged. Amen.', 'Bapa, Firman-Mu hidup, dan aku membuka diriku agar ia bekerja dalam diriku hari ini — menegur di mana aku perlu ditegur dan menghibur di mana aku perlu dihibur. Selidikilah hatiku, Tuhan, dan jangan biarkan aku tetap sama. Amin.'
+Hari ini, bersyukurlah kepada Allah untuk benang iman apa pun, sekecil apa pun, yang diwariskan orang tuamu kepadamu. Dan pikirkan satu bagian kebijaksanaan dari mereka yang selama ini lambat kamu terima.',
+    'What piece of wisdom has your parent offered that you have been slow to accept — and why not receive it with fresh humility today?', 'Kebijaksanaan apa yang pernah ditawarkan orang tuamu tetapi lambat kamu terima — mengapa tidak menerimanya dengan kerendahan hati yang baru hari ini?',
+    'Lord, thank You for the faith modeled to me by my parents. Give me humility to keep learning from them, and gratitude for every quiet lesson I may have overlooked. Amen.', 'Tuhan, terima kasih atas iman yang dicontohkan orang tuaku kepadaku. Berilah aku kerendahan hati untuk terus belajar dari mereka, dan rasa syukur untuk setiap pelajaran diam-diam yang mungkin pernah kuabaikan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Hebrews 4:12', 'WEB', 'For the word of God is alive and active. Sharper than any double-edged sword, it penetrates even to dividing soul and spirit, joints and marrow; it judges the thoughts and attitudes of the heart.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ibrani 4:12', 'TB', 'Sebab firman Allah hidup dan kuat dan lebih tajam dari pada pedang bermata dua manapun; ia menusuk amat dalam sampai memisahkan jiwa dan roh, sendi-sendi dan sumsum; ia sanggup membedakan pertimbangan dan pikiran hati kita.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:20', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1384,29 +764,25 @@ Jadi ketika Alkitab terasa tajam hari ini — ketika sebuah ayat lebih menegur d
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'God-Breathed and Useful', 'Dinapaskan Allah dan Bermanfaat',
-    'Paul''s words to Timothy give us one of the most complete pictures in Scripture of what the Bible is actually for. He calls it God-breathed — a striking image, suggesting these words carry the very breath of God within them, not merely human wisdom about God. And then, almost immediately, he turns practical: this breathed-out word is useful for teaching, rebuking, correcting, and training in righteousness.
+    'A Heritage from the Lord', 'Milik Pusaka dari TUHAN',
+    'The Psalmist writes that children are a heritage from the Lord, a reward. It''s easy to read this verse only from a parent''s perspective, thinking of the gift of having children. But there is another way to sit with it: we, too, were once someone''s heritage, someone''s reward, someone''s answered prayer. Before we were anything else, we were wanted — held, prayed over, hoped for.
 
-Notice the range of that list. Scripture isn''t only for teaching us new information, though it does that. It''s also for rebuking — naming what''s wrong plainly. And for correcting — showing us a better way. And for training — the slow, repeated discipline that shapes character over time, the way an athlete trains a muscle. God''s word is meant to touch every part of how we think and live, not just the parts we''re comfortable examining.
+This truth reframes gratitude at its root. Our existence itself, and the care that sustained it through infancy and childhood, was not owed to us by nature; it was a gift chosen and given, day after day, by two imperfect people doing their best with what they had. Even in families marked by hardship, there was, in most cases, a baseline of care that kept us alive, fed, and moving toward adulthood — care that cost something real in time, money, sleep, and worry.
 
-Many of us prefer the teaching and skip the rebuking, welcome the encouragement and resist the correction. But a faith that only wants the comfortable parts of Scripture will stay shallow. Real growth asks us to sit with the verses that challenge us just as readily as the ones that console us, trusting that both come from the same good and breathed-out source.
+Gratitude grows when we stop taking that baseline for granted. It is tempting, especially in a culture that celebrates independence, to think of ourselves as self-made. But none of us raised ourselves. Somewhere behind every adult stands a parent, a grandparent, a guardian who absorbed exhaustion so that we could simply grow up.
 
-Paul''s purpose statement at the end is worth holding onto: all of this is ''so that the servant of God may be thoroughly equipped for every good work.'' Scripture isn''t an end in itself — it equips us for something. It shapes us so we''re ready for whatever act of love, service, or courage God calls us to next. That is what it means to let the Word form us, not just inform us.', 'Kata-kata Paulus kepada Timotius memberi kita salah satu gambaran paling lengkap dalam Alkitab tentang untuk apa Alkitab itu sebenarnya. Ia menyebutnya dinapaskan Allah — sebuah gambaran yang mencolok, menunjukkan bahwa kata-kata itu membawa napas Allah sendiri di dalamnya, bukan sekadar hikmat manusia tentang Allah. Dan kemudian, hampir seketika, ia beralih ke hal praktis: firman yang dinapaskan ini bermanfaat untuk mengajar, menyatakan kesalahan, memperbaiki kelakuan, dan mendidik orang dalam kebenaran.
+Take a moment today to thank God specifically for the fact of your own life and upbringing — not comparing it to anyone else''s, just receiving it honestly as a gift that was given at real cost.', 'Sang pemazmur menulis bahwa anak-anak adalah milik pusaka dari TUHAN, sebuah upah. Mudah sekali membaca ayat ini hanya dari sudut pandang orang tua, memikirkan anugerah memiliki anak. Namun ada cara lain untuk merenungkannya: kita pun pernah menjadi milik pusaka seseorang, upah seseorang, jawaban doa seseorang. Sebelum kita menjadi apa pun yang lain, kita diinginkan — didekap, didoakan, dinanti-nantikan.
 
-Perhatikan luasnya daftar itu. Alkitab bukan hanya untuk mengajarkan kita informasi baru, meski itu juga dilakukannya. Ia juga untuk menyatakan kesalahan — menyebut dengan jelas apa yang salah. Dan untuk memperbaiki — menunjukkan jalan yang lebih baik. Dan untuk mendidik — disiplin yang perlahan dan berulang yang membentuk karakter dari waktu ke waktu, seperti seorang atlet melatih ototnya. Firman Allah dimaksudkan untuk menyentuh setiap bagian dari cara kita berpikir dan hidup, bukan hanya bagian-bagian yang nyaman kita periksa.
+Kebenaran ini mengubah akar rasa syukur kita. Keberadaan kita sendiri, dan perawatan yang menopangnya sepanjang masa bayi dan kanak-kanak, bukanlah sesuatu yang menjadi hak kita secara alami; itu adalah anugerah yang dipilih dan diberikan, hari demi hari, oleh dua orang yang tidak sempurna, melakukan yang terbaik dengan apa yang mereka miliki. Bahkan dalam keluarga yang ditandai kesulitan, dalam kebanyakan kasus tetap ada perawatan dasar yang menjaga kita tetap hidup, terberi makan, dan bertumbuh menuju kedewasaan — perawatan yang menuntut sesuatu yang nyata berupa waktu, uang, tidur, dan kekhawatiran.
 
-Banyak dari kita lebih suka pengajaran dan menghindari teguran, menyambut hiburan dan menolak perbaikan. Tetapi iman yang hanya menginginkan bagian-bagian nyaman dari Alkitab akan tetap dangkal. Pertumbuhan yang sesungguhnya meminta kita untuk duduk bersama ayat-ayat yang menantang kita sama siapnya dengan ayat-ayat yang menghibur kita, percaya bahwa keduanya berasal dari sumber yang sama, baik dan dinapaskan Allah.
+Rasa syukur bertumbuh ketika kita berhenti menganggap perawatan dasar itu sebagai hal yang wajar. Sangat menggoda, terutama dalam budaya yang merayakan kemandirian, untuk menganggap diri kita membesarkan diri sendiri. Namun tak seorang pun dari kita membesarkan diri sendiri. Di balik setiap orang dewasa berdiri seorang orang tua, kakek atau nenek, atau wali yang menanggung kelelahan agar kita bisa sekadar tumbuh dewasa.
 
-Pernyataan tujuan Paulus di akhir patut kita pegang: semua ini ''supaya manusia kepunyaan Allah diperlengkapi untuk setiap perbuatan baik.'' Alkitab bukan tujuan akhir itu sendiri — ia memperlengkapi kita untuk sesuatu. Ia membentuk kita agar siap untuk perbuatan kasih, pelayanan, atau keberanian apa pun yang selanjutnya dipanggil Allah dari kita. Itulah arti membiarkan Firman membentuk kita, bukan sekadar memberi kita informasi.',
-    'Scripture forms us, not just informs us. Is there a hard verse you''ve been avoiding that might be exactly what you need right now?', 'Alkitab membentuk kita, bukan sekadar memberi kita informasi. Adakah ayat yang sulit yang selama ini kau hindari, yang justru mungkin tepat kau butuhkan sekarang?',
-    'Lord, I welcome all of Your word today — not just the parts that comfort me, but the parts that correct and train me too. Equip me through Scripture for whatever good work You have for me. Amen.', 'Tuhan, aku menyambut seluruh Firman-Mu hari ini — bukan hanya bagian yang menghiburku, tetapi juga bagian yang memperbaiki dan mendidikku. Perlengkapilah aku melalui Alkitab untuk perbuatan baik apa pun yang Engkau sediakan bagiku. Amin.'
+Luangkan waktu hari ini untuk bersyukur kepada Allah secara khusus atas fakta hidup dan cara dibesarkanmu sendiri — bukan membandingkannya dengan siapa pun, hanya menerimanya dengan jujur sebagai anugerah yang diberikan dengan harga yang nyata.',
+    'What real cost — in time, money, sleep, or worry — did your upbringing require of your parents that you have never fully acknowledged?', 'Harga nyata apa — waktu, uang, tidur, atau kekhawatiran — yang dituntut oleh cara kamu dibesarkan dari orang tuamu, yang belum pernah sepenuhnya kamu akui?',
+    'Lord, thank You for choosing to give me life through my parents, and for every ordinary sacrifice that sustained me. Help me never take that gift for granted. Amen.', 'Tuhan, terima kasih telah memilih memberiku hidup melalui orang tuaku, dan atas setiap pengorbanan sederhana yang menopang hidupku. Tolong aku untuk tidak pernah menganggap anugerah itu sebagai hal yang biasa. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Timothy 3:16-17', 'WEB', 'All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness, so that the servant of God may be thoroughly equipped for every good work.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Timotius 3:16-17', 'TB', 'Segala tulisan yang diilhamkan Allah memang bermanfaat untuk mengajar, untuk menyatakan kesalahan, untuk memperbaiki kelakuan dan untuk mendidik orang dalam kebenaran. Dengan demikian tiap-tiap manusia kepunyaan Allah diperlengkapi untuk setiap perbuatan baik.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 127:3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 127:3', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1416,42 +792,38 @@ Pernyataan tujuan Paulus di akhir patut kita pegang: semua ini ''supaya manusia 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 5,
-    'Faith Comes by Hearing', 'Iman Timbul dari Pendengaran',
-    'By the end of a week spent turning our attention toward Scripture, it''s worth asking the deeper question: why does any of this matter for faith itself? Paul answers plainly in his letter to the Romans — faith comes from hearing the message, and the message is heard through the word about Christ. Faith isn''t primarily something we manufacture through willpower or emotion. It''s something that grows in us as we keep listening to the truth about who God is and what He has done.
+    'The Promise That Follows Honor', 'Janji yang Mengikuti Penghormatan',
+    'Paul repeats the commandment to the Ephesians, calling it the first commandment with a promise: honor your father and mother so that it may go well with you. Across two testaments, God returns to this same instruction, as though He knows how easily we drift from it, and how much depends on getting it right. Honor, it seems, is not a peripheral virtue but a foundational one — the training ground where we first learn to love people we did not choose, in ways that cost us something.
 
-That means the times we feel our faith weakest are often exactly the times we''ve drifted furthest from the Word — not because God has moved, but because we''ve stopped listening as closely. And it means the remedy isn''t to try harder to feel more faithful. The remedy is to return to hearing: to open Scripture again, to let the message about Christ reach our ears and hearts once more, and to trust that faith will rise the way it always has — not from striving, but from listening.
+As we close this week, it''s worth asking what honoring our parents actually looks like in practice, beyond warm feelings. It might mean a phone call made instead of postponed. It might mean visiting even when conversation feels effortful. It might mean speaking well of them to others rather than only trading complaints. It might mean simply saying, out loud, the words ''thank you'' before assuming there will always be another chance to say them.
 
-Many of us find this deeply freeing. We don''t have to conjure belief out of nothing. We simply have to keep showing up to hear, and let God do what only He can do with that hearing — planting, watering, and growing faith in us over time, the way He always has for every believer who came before us.
+Gratitude, left unexpressed, tends to fade into background noise — a feeling we have but never voice. But gratitude spoken becomes a gift twice over: once to the parent who hears it, and once to us, who are shaped by the practice of naming our blessings rather than only our burdens.
 
-As you close this five-day journey, consider what it might look like to keep hearing well beyond today — a regular return to Scripture not as an obligation to check off, but as the very place where your faith is fed, strengthened, and renewed. Bread for the journey isn''t eaten once. It''s eaten daily, for as long as the road continues.', 'Menjelang akhir sepekan mengarahkan perhatian kita kepada Alkitab, ada baiknya kita bertanya lebih dalam: mengapa semua ini penting bagi iman itu sendiri? Paulus menjawab dengan jelas dalam suratnya kepada jemaat di Roma — iman timbul dari pendengaran, dan pendengaran itu oleh firman Kristus. Iman bukan terutama sesuatu yang kita ciptakan melalui kemauan keras atau perasaan. Ia adalah sesuatu yang bertumbuh dalam diri kita seiring kita terus mendengarkan kebenaran tentang siapa Allah dan apa yang telah Ia lakukan.
+Let this week end not with a feeling but with an action. Choose one concrete way, this week, to say thank you to a parent — in words, in a note, in time given freely. Let honor become something practiced, not just something believed.', 'Paulus mengulangi perintah ini kepada jemaat Efesus, menyebutnya perintah pertama yang disertai janji: hormatilah ayah dan ibumu supaya kamu berbahagia. Sepanjang dua perjanjian, Allah kembali kepada instruksi yang sama, seolah Ia tahu betapa mudahnya kita menyimpang darinya, dan betapa banyak yang bergantung pada melakukannya dengan benar. Penghormatan, tampaknya, bukanlah kebajikan pinggiran melainkan kebajikan yang mendasar — tempat latihan pertama kita belajar mengasihi orang-orang yang tidak kita pilih, dengan cara yang menuntut sesuatu dari kita.
 
-Itu berarti saat-saat kita merasa iman kita paling lemah sering kali justru adalah saat-saat kita paling jauh menyimpang dari Firman — bukan karena Allah yang berpindah, melainkan karena kita berhenti mendengarkan dengan saksama. Dan itu berarti solusinya bukanlah berusaha lebih keras untuk merasa lebih beriman. Solusinya adalah kembali mendengar: membuka Alkitab lagi, membiarkan firman tentang Kristus mencapai telinga dan hati kita sekali lagi, dan percaya bahwa iman akan bangkit seperti biasanya — bukan dari usaha keras, melainkan dari pendengaran.
+Saat kita mengakhiri minggu ini, layak untuk bertanya seperti apa sebenarnya menghormati orang tua kita dalam praktiknya, di luar sekadar perasaan hangat. Itu mungkin berarti telepon yang dilakukan, bukan ditunda. Mungkin berarti berkunjung bahkan ketika percakapan terasa berat. Mungkin berarti membicarakan hal baik tentang mereka kepada orang lain, bukan hanya bertukar keluhan. Mungkin berarti sekadar mengucapkan, dengan suara nyata, kata ''terima kasih'' sebelum menganggap akan selalu ada kesempatan lain untuk mengucapkannya.
 
-Banyak dari kita menemukan ini sangat melegakan. Kita tidak harus menciptakan kepercayaan dari kekosongan. Kita hanya perlu terus datang untuk mendengar, dan membiarkan Allah melakukan apa yang hanya Dia bisa lakukan dengan pendengaran itu — menanam, menyiram, dan menumbuhkan iman dalam diri kita seiring waktu, sebagaimana selalu Ia lakukan bagi setiap orang percaya sebelum kita.
+Rasa syukur yang tidak diungkapkan cenderung memudar menjadi kebisingan latar belakang — sebuah perasaan yang kita miliki tetapi tak pernah suarakan. Namun rasa syukur yang diucapkan menjadi anugerah dua kali lipat: sekali bagi orang tua yang mendengarnya, dan sekali bagi kita, yang dibentuk oleh kebiasaan menyebut berkat kita, bukan hanya beban kita.
 
-Saat kau menutup perjalanan lima hari ini, pertimbangkan seperti apa rasanya terus mendengar jauh melampaui hari ini — kembali secara teratur kepada Alkitab bukan sebagai kewajiban yang harus dicentang, melainkan sebagai tempat sesungguhnya di mana imanmu diberi makan, dikuatkan, dan diperbarui. Roti untuk perjalanan tidak dimakan sekali. Ia dimakan setiap hari, selama jalan itu masih berlanjut.',
-    'Faith grows through listening, not striving. What would it look like to make hearing God''s word a lasting, daily rhythm rather than a five-day experiment?', 'Iman bertumbuh melalui mendengar, bukan berusaha keras. Seperti apa rasanya menjadikan mendengar Firman Tuhan sebagai irama harian yang bertahan lama, bukan sekadar eksperimen lima hari?',
-    'Lord, thank You for the reminder that my faith grows as I keep listening to You. Give me a lasting hunger for Your word long after these five days end, and let Scripture continue to be bread for my journey. Amen.', 'Tuhan, terima kasih atas pengingat bahwa imanku bertumbuh seiring aku terus mendengarkan-Mu. Berilah aku kerinduan yang bertahan lama akan Firman-Mu jauh setelah lima hari ini berakhir, dan biarlah Alkitab terus menjadi roti bagi perjalananku. Amin.'
+Biarlah minggu ini berakhir bukan dengan sebuah perasaan, melainkan sebuah tindakan. Pilih satu cara nyata, minggu ini, untuk mengucapkan terima kasih kepada orang tuamu — dalam kata-kata, dalam sepucuk catatan, dalam waktu yang diberikan dengan bebas. Biarlah penghormatan menjadi sesuatu yang dipraktikkan, bukan hanya diyakini.',
+    'What is one concrete act of honor you will offer your parent this week, rather than leaving gratitude unspoken?', 'Apa satu tindakan nyata penghormatan yang akan kamu berikan kepada orang tuamu minggu ini, alih-alih membiarkan rasa syukur tetap tak terucap?',
+    'Lord, turn my gratitude into action. Give me courage to say thank you plainly, and let honoring my parents become a daily practice, not just a passing feeling. Amen.', 'Tuhan, ubahlah rasa syukurku menjadi tindakan. Berilah aku keberanian untuk mengucapkan terima kasih dengan jelas, dan biarlah menghormati orang tuaku menjadi praktik harian, bukan hanya perasaan yang berlalu. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 6:2-3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 6:2-3', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 10:17', 'WEB', 'Consequently, faith comes from hearing the message, and the message is heard through the word about Christ.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 10:17', 'TB', 'Jadi, iman timbul dari pendengaran, dan pendengaran oleh firman Kristus.');
-
-  -- Plan: Roots in Dry Ground: Faith That Matures
+  -- Plan: Honoring the Autumn Years
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Roots in Dry Ground: Faith That Matures',
-    'Akar di Tanah Kering: Iman yang Bertumbuh Dewasa',
-    'Seven days for the ordinary seasons and the dry ones',
-    'Tujuh hari untuk musim yang biasa dan musim yang kering',
+    'Honoring the Autumn Years',
+    'Menghormati Musim Senja',
+    'A seven-day devotional for caring well for aging and elderly parents',
+    'Renungan tujuh hari untuk merawat orang tua yang menua dengan baik',
     7,
-    'Faith doesn''t mature in the dramatic moments alone — it deepens in the long, quiet stretches when feelings run dry and life stays ordinary. Over seven days, this plan walks through the honest terrain of belief that endures: trusting God even when we don''t feel Him, finding joy hidden inside trials, refusing to give up in the monotony, waiting on renewed strength, thirsting honestly for more of God, resting in His unfailing mercy, and trusting the slow work He is still finishing in us.',
-    'Iman tidak hanya bertumbuh dewasa pada momen-momen dramatis — ia semakin dalam dalam rentang waktu yang panjang dan sunyi, ketika perasaan mengering dan hidup tetap biasa saja. Selama tujuh hari, rencana ini menelusuri medan kepercayaan yang jujur dan bertahan: memercayai Tuhan bahkan ketika kita tidak merasakan-Nya, menemukan sukacita yang tersembunyi di dalam pencobaan, menolak untuk menyerah dalam kemonotonan, menantikan kekuatan yang diperbarui, merindukan Tuhan dengan jujur, beristirahat dalam kasih setia-Nya yang tak pernah berkesudahan, dan memercayai karya perlahan yang masih Ia selesaikan dalam diri kita.',
-    '/images/devotions/roots-in-dry-ground-faith-that-matures.jpeg'
+    'A seven-day journey for the sons and daughters walking beside parents in the later stages of life — through health struggles, slower conversations, caregiving decisions, and the quiet holiness of showing up. Scripture becomes a companion for the practical and emotional weight of caring for aging parents with dignity, patience, and love.',
+    'Perjalanan tujuh hari bagi putra dan putri yang mendampingi orang tua pada tahap-tahap akhir kehidupan — melalui pergumulan kesehatan, percakapan yang melambat, keputusan-keputusan perawatan, dan kekudusan diam-diam dari kehadiran. Firman Tuhan menjadi teman dalam beban praktis dan emosional merawat orang tua yang menua dengan martabat, kesabaran, dan kasih.',
+    '/images/devotions/honoring-the-autumn-years.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -1462,29 +834,25 @@ Saat kau menutup perjalanan lima hari ini, pertimbangkan seperti apa rasanya ter
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'Even If Not', 'Sekalipun Tidak',
-    'The prophet Habakkuk writes one of the most honest passages in all of Scripture — a description of total agricultural and economic collapse, fig trees barren, fields producing no food, flocks and herds gone. And then, astonishingly, in the very next breath: yet I will rejoice in the LORD, I will be joyful in God my Savior. Not because circumstances changed. They hadn''t. But because his joy had quietly relocated from his circumstances to his God.
+    'Rise Before the Gray Head', 'Berdirilah di Depan Orang yang Beruban',
+    'The instruction in Leviticus is almost physical in its simplicity: rise in the presence of the aged, and show respect for the elderly. In an ancient world where physical strength was survival, this command stood against the grain, insisting that worth was not measured by what a body could still do, but by the years it had already lived and the wisdom those years carried. It remains a countercultural word today, in a world that often quietly moves the elderly to the margins.
 
-Many of us assume that mature faith means circumstances eventually stop shaking us — that enough spiritual growth should produce a kind of immunity to hardship. Habakkuk suggests something different. Mature faith doesn''t deny the empty field. It names it plainly, without pretending. And then it makes a decision, apart from feeling, to rejoice anyway, because the object of our joy was never meant to be our circumstances in the first place.
+Caring for an aging parent is one of the most sacred and most exhausting assignments many of us will ever carry. It can mean managing medications, sitting through doctor''s appointments, learning a new vocabulary of diagnoses, and watching someone who once seemed invincible become someone who needs help standing up. It is disorienting. The roles we knew — child needing parent — begin, slowly, to reverse.
 
-This is sometimes called an ''even if not'' faith, echoing the three young men in Daniel who declared that God was able to save them from the fire, but even if He did not, they would still not bow. That posture — trusting God''s character even when His action in our specific situation remains unclear or unwelcome — is not a lesser faith than the kind that only trusts when everything is going well. It may in fact be the deeper one.
+In the middle of that disorientation, this ancient command offers something steadying: rise. Not out of pity, but out of respect — a physical posture that says, your years matter, your presence matters, you are not a burden to be managed but a person to be honored. Every small act of respect we offer an aging parent — listening fully, asking their opinion, treating their preferences as valid — is a way of rising before the gray head, even when no one else is watching.
 
-Wherever your fields feel empty this week — a relationship, a finance, a health concern, a hope deferred — Habakkuk doesn''t ask you to pretend it''s fine. He simply invites you to relocate your joy, on purpose, to the God who remains faithful even when the field does not.', 'Nabi Habakuk menuliskan salah satu bagian paling jujur dalam seluruh Alkitab — gambaran keruntuhan pertanian dan ekonomi total, pohon ara yang tidak berbuah, ladang yang tidak menghasilkan bahan makanan, kawanan domba dan ternak yang lenyap. Dan kemudian, secara mengejutkan, tepat setelahnya: namun aku akan bersorak-sorak di dalam TUHAN, beria-ria di dalam Allah yang menyelamatkan aku. Bukan karena keadaan berubah. Keadaan itu tidak berubah. Melainkan karena sukacitanya secara diam-diam telah berpindah dari keadaannya kepada Allahnya.
+If you are caring for an aging parent right now, know that this work, however tiring, is holy work. God sees the quiet, unglamorous faithfulness of showing up again and again, and He calls it honor.', 'Perintah dalam kitab Imamat hampir bersifat fisik dalam kesederhanaannya: berdirilah di depan orang yang beruban dan hormatilah orang yang tua. Dalam dunia kuno di mana kekuatan fisik berarti kelangsungan hidup, perintah ini melawan arus, menegaskan bahwa nilai seseorang tidak diukur dari apa yang masih bisa dilakukan tubuhnya, melainkan dari tahun-tahun yang telah dijalaninya dan kebijaksanaan yang dibawa tahun-tahun itu. Perintah ini tetap menjadi kata yang melawan arus zaman hari ini, dalam dunia yang sering diam-diam menggeser para lansia ke pinggiran.
 
-Banyak dari kita mengira bahwa iman yang dewasa berarti keadaan akhirnya berhenti mengguncang kita — bahwa cukup banyak pertumbuhan rohani seharusnya menghasilkan semacam kekebalan terhadap kesulitan. Habakuk menyarankan sesuatu yang berbeda. Iman yang dewasa tidak menyangkal ladang yang kosong. Ia menyebutnya dengan terus terang, tanpa berpura-pura. Dan kemudian ia membuat keputusan, terlepas dari perasaan, untuk tetap bersukacita, sebab objek sukacita kita memang tidak pernah dimaksudkan untuk menjadi keadaan kita.
+Merawat orang tua yang menua adalah salah satu tugas paling kudus sekaligus paling melelahkan yang akan dipikul banyak dari kita. Ini bisa berarti mengatur obat-obatan, duduk lama di ruang tunggu dokter, mempelajari kosakata diagnosis yang baru, dan menyaksikan seseorang yang dahulu tampak tak terkalahkan menjadi seseorang yang membutuhkan bantuan untuk berdiri. Itu mendisorientasi. Peran-peran yang kita kenal — anak membutuhkan orang tua — perlahan mulai berbalik.
 
-Ini kadang disebut iman ''sekalipun tidak'', bergema dari tiga pemuda dalam kitab Daniel yang menyatakan bahwa Allah sanggup menyelamatkan mereka dari api, tetapi sekalipun Ia tidak melakukannya, mereka tetap tidak akan sujud menyembah. Sikap itu — memercayai karakter Allah bahkan ketika tindakan-Nya dalam situasi khusus kita masih belum jelas atau tidak kita sukai — bukanlah iman yang lebih rendah daripada iman yang hanya percaya ketika segalanya berjalan baik. Bahkan mungkin justru itulah iman yang lebih dalam.
+Di tengah disorientasi itu, perintah kuno ini menawarkan sesuatu yang menenangkan: berdirilah. Bukan karena kasihan, melainkan karena hormat — sikap fisik yang berkata, tahun-tahunmu berarti, kehadiranmu berarti, kamu bukan beban yang harus dikelola tetapi pribadi yang harus dihormati. Setiap tindakan hormat kecil yang kita berikan kepada orang tua yang menua — mendengarkan sepenuhnya, menanyakan pendapat mereka, memperlakukan preferensi mereka sebagai sah — adalah cara kita berdiri di depan orang yang beruban, bahkan ketika tak ada yang melihat.
 
-Di mana pun ladangmu terasa kosong minggu ini — sebuah hubungan, keuangan, kesehatan, harapan yang tertunda — Habakuk tidak memintamu berpura-pura semua baik-baik saja. Ia hanya mengundangmu untuk memindahkan sukacitamu, dengan sengaja, kepada Allah yang tetap setia bahkan ketika ladang itu tidak.',
-    'Mature faith doesn''t deny the empty field — it relocates joy to God rather than circumstances. Where is your ''even if not'' being tested this week?', 'Iman yang dewasa tidak menyangkal ladang yang kosong — ia memindahkan sukacita kepada Allah, bukan pada keadaan. Di manakah ''sekalipun tidak''-mu sedang diuji minggu ini?',
-    'Lord, my circumstances aren''t what I hoped for, and I won''t pretend otherwise. But I choose today to rejoice in You rather than in what I can see. Be my joy when the field is empty. Amen.', 'Tuhan, keadaanku tidak seperti yang kuharapkan, dan aku tidak akan berpura-pura sebaliknya. Namun hari ini aku memilih bersukacita di dalam Engkau, bukan di dalam apa yang bisa kulihat. Jadilah sukacitaku ketika ladang ini kosong. Amin.'
+Jika kamu sedang merawat orang tua yang menua saat ini, ketahuilah bahwa pekerjaan ini, sekalipun melelahkan, adalah pekerjaan yang kudus. Allah melihat kesetiaan yang diam-diam dan tidak gemerlap dari kehadiran yang berulang kali, dan Ia menyebutnya penghormatan.',
+    'In what small, everyday way could you show your aging parent that their presence and opinions still matter deeply?', 'Dengan cara kecil dan sehari-hari apa kamu bisa menunjukkan kepada orang tuamu yang menua bahwa kehadiran dan pendapat mereka masih sangat berarti?',
+    'Lord, give me strength for the work of caring for my aging parent, and help me see it as holy work, even on the tiring days. Amen.', 'Tuhan, berikanlah aku kekuatan untuk pekerjaan merawat orang tuaku yang menua, dan tolong aku melihatnya sebagai pekerjaan yang kudus, bahkan pada hari-hari yang melelahkan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Habakkuk 3:17-18', 'WEB', 'Though the fig tree does not bud and there are no grapes on the vines, though the olive crop fails and the fields produce no food... yet I will rejoice in the LORD, I will be joyful in God my Savior.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Habakuk 3:17-18', 'TB', 'Sekalipun pohon ara tidak berbunga, pohon anggur tidak berbuah, hasil pohon zaitun mengecewakan, sawah ladang tidak menghasilkan bahan makanan... namun aku akan bersorak-sorak di dalam TUHAN, beria-ria di dalam Allah yang menyelamatkan aku.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Leviticus 19:32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Imamat 19:32', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1494,29 +862,25 @@ Di mana pun ladangmu terasa kosong minggu ini — sebuah hubungan, keuangan, kes
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'Joy Hidden Inside Trials', 'Sukacita yang Tersembunyi di Dalam Pencobaan',
-    'James doesn''t tell his readers to feel joy despite trials, but to consider it pure joy whenever they face trials of many kinds — a subtle but important difference. It''s not that the trial itself is pleasant. It''s that something valuable is being produced inside it, and James wants us trained to look for that produce rather than only feel the pain of the process.
+    'A Tumpuan for Their Old Age', 'Menjadi Tumpuan pada Hari Tua',
+    'Paul, writing to Timothy about the care of widows, gives instruction that reaches far beyond the ancient household: children and grandchildren should learn to put their faith into practice by caring for their own family, repaying their parents and grandparents, because this is pleasing to God. Faith, in this passage, is not only measured by what we believe but by whom we care for when caring costs us something.
 
-He names what that produce is: the testing of faith produces perseverance, and perseverance, allowed to finish its work, produces maturity — a faith that is complete, lacking nothing. That sequence only happens over time, and it only happens through resistance. Muscle doesn''t grow without the strain of a weight it must push against. Faith doesn''t mature without the strain of a circumstance it must trust God through.
+There is a phrase worth sitting with here: repaying. It reframes caregiving not as charity extended downward, but as debt honorably settled — a return on decades of investment we may not have consciously noticed being made. Every diaper changed, every fever tended through the night, every lesson patiently retaught, was a deposit. Caring for our parents in their old age is simply the natural, faithful return.
 
-Many of us wish for spiritual maturity without the process that actually produces it — we want the strength without the strain. But James is clear that perseverance needs to ''finish its work.'' That means some trials in our lives are not detours from our growth in faith; they are, painfully, the very curriculum of it. Rushing past them, or numbing ourselves to them, may rob us of exactly what God intended to build in us.
+This does not mean caregiving is easy, or that it should be done alone, or without wisdom about boundaries and shared family responsibility. But it does mean that when we grow weary of doctor visits, financial planning, or difficult conversations about care, we can remember: this is not an unusual burden. It is what faith looks like in practice — ordinary, costly, and pleasing to God.
 
-So today, if you''re in the middle of something hard, you''re allowed to name it as hard. But try also, gently, to consider what perseverance might be quietly forming in you even now — a patience, a trust, a depth of character that could not have grown any other way. That is not a small thing. That is maturity being built, one difficult day at a time.', 'Yakobus tidak menyuruh para pembacanya merasa sukacita di tengah pencobaan, melainkan menganggapnya sebagai suatu kebahagiaan setiap kali mereka jatuh ke dalam berbagai-bagai pencobaan — perbedaan yang halus namun penting. Bukan berarti pencobaan itu sendiri menyenangkan. Melainkan ada sesuatu yang berharga sedang dihasilkan di dalamnya, dan Yakobus ingin kita dilatih untuk mencari hasil itu, bukan hanya merasakan sakitnya proses.
+If caregiving currently falls heavily on your shoulders, ask God for both strength and wisdom to share the load where possible, and to receive help without guilt. Faithfulness does not require you to do everything alone.', 'Paulus, menulis kepada Timotius tentang perawatan para janda, memberikan instruksi yang menjangkau jauh melampaui rumah tangga kuno: anak-anak dan cucu-cucu hendaknya belajar mempraktikkan iman mereka dengan merawat keluarga mereka sendiri, membalas budi kepada orang tua dan kakek nenek mereka, karena itulah yang berkenan kepada Allah. Iman, dalam ayat ini, tidak hanya diukur dari apa yang kita percaya, tetapi dari siapa yang kita rawat ketika merawat itu menuntut sesuatu dari kita.
 
-Ia menyebutkan apa hasil itu: ujian terhadap imanmu menghasilkan ketekunan, dan ketekunan, jika dibiarkan menyelesaikan pekerjaannya, menghasilkan kedewasaan — iman yang sempurna, tidak kekurangan suatu apa pun. Urutan itu hanya terjadi seiring waktu, dan hanya terjadi melalui perlawanan. Otot tidak bertumbuh tanpa tekanan beban yang harus didorongnya. Iman tidak menjadi dewasa tanpa tekanan keadaan yang harus dilaluinya sambil memercayai Tuhan.
+Ada satu frasa yang layak kita renungkan di sini: membalas budi. Ini mengubah cara pandang tentang perawatan, bukan sebagai belas kasihan yang diberikan ke bawah, melainkan sebagai utang yang dilunasi dengan terhormat — imbal hasil dari puluhan tahun investasi yang mungkin tak kita sadari sedang ditanamkan. Setiap popok yang diganti, setiap demam yang dirawat sepanjang malam, setiap pelajaran yang diulang dengan sabar, adalah sebuah setoran. Merawat orang tua kita di hari tua mereka hanyalah pengembalian yang alami dan setia.
 
-Banyak dari kita menginginkan kedewasaan rohani tanpa proses yang sesungguhnya menghasilkannya — kita menginginkan kekuatan tanpa tekanan. Tetapi Yakobus jelas bahwa ketekunan perlu ''menyelesaikan pekerjaannya.'' Itu berarti beberapa pencobaan dalam hidup kita bukanlah jalan memutar dari pertumbuhan iman kita; melainkan, dengan menyakitkan, justru kurikulum sesungguhnya darinya. Terburu-buru melewatinya, atau membuat diri kita mati rasa terhadapnya, mungkin merampas justru apa yang Tuhan maksudkan untuk dibangun dalam diri kita.
+Ini bukan berarti merawat itu mudah, atau bahwa itu harus dilakukan sendirian, atau tanpa kebijaksanaan tentang batasan dan tanggung jawab keluarga bersama. Namun ini berarti bahwa ketika kita lelah dengan kunjungan dokter, perencanaan keuangan, atau percakapan sulit tentang perawatan, kita bisa mengingat: ini bukan beban yang tidak biasa. Inilah wujud iman dalam praktik — sederhana, mahal harganya, dan berkenan kepada Allah.
 
-Jadi hari ini, jika kau sedang berada di tengah sesuatu yang sulit, kau diizinkan menyebutnya sulit. Tetapi cobalah juga, dengan lembut, mempertimbangkan ketekunan apa yang sedang diam-diam dibentuk dalam dirimu bahkan sekarang — kesabaran, kepercayaan, kedalaman karakter yang tidak mungkin bertumbuh dengan cara lain. Itu bukan hal kecil. Itu adalah kedewasaan yang sedang dibangun, satu hari sulit demi satu hari sulit.',
-    'Trials aren''t detours from faith''s growth — they''re often the curriculum. What perseverance might God be quietly forming in you right now?', 'Pencobaan bukanlah jalan memutar dari pertumbuhan iman — sering kali itulah kurikulumnya. Ketekunan apa yang mungkin sedang diam-diam dibentuk Tuhan dalam dirimu sekarang?',
-    'Lord, this trial is hard, and I won''t pretend it isn''t. But I ask You to finish the work of perseverance in me, so that what feels like loss now becomes maturity later. Help me trust the process even when I can''t see the outcome. Amen.', 'Tuhan, pencobaan ini sulit, dan aku tidak akan berpura-pura sebaliknya. Namun aku memohon Engkau menyelesaikan pekerjaan ketekunan dalam diriku, sehingga apa yang terasa seperti kerugian sekarang menjadi kedewasaan kelak. Tolonglah aku memercayai proses ini bahkan ketika aku tidak bisa melihat hasilnya. Amin.'
+Jika perawatan saat ini jatuh berat di pundakmu, mintalah kepada Allah kekuatan sekaligus kebijaksanaan untuk membagi beban itu bila memungkinkan, dan untuk menerima bantuan tanpa rasa bersalah. Kesetiaan tidak menuntutmu melakukan segalanya sendirian.',
+    'Where might you need to ask for help or share the caregiving load rather than carrying it entirely alone?', 'Di mana kamu mungkin perlu meminta bantuan atau membagi beban perawatan, alih-alih memikulnya sepenuhnya sendirian?',
+    'Lord, help me see caregiving as a faithful return of love, not merely a duty. Give me wisdom to share the load and grace for the days it feels too heavy. Amen.', 'Tuhan, tolong aku melihat perawatan ini sebagai balasan kasih yang setia, bukan sekadar kewajiban. Berilah aku kebijaksanaan untuk membagi beban dan anugerah untuk hari-hari ketika terasa terlalu berat. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'James 1:2-4', 'WEB', 'Consider it pure joy, my brothers and sisters, whenever you face trials of many kinds, because you know that the testing of your faith produces perseverance. Let perseverance finish its work so that you may be mature and complete, not lacking anything.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yakobus 1:2-4', 'TB', 'Saudara-saudaraku, anggaplah sebagai suatu kebahagiaan, apabila kamu jatuh ke dalam berbagai-bagai pencobaan, sebab kamu tahu, bahwa ujian terhadap imanmu itu menghasilkan ketekunan. Dan biarkanlah ketekunan itu memperoleh buah yang matang, supaya kamu menjadi sempurna dan utuh dan tak kekurangan suatu apapun.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timothy 5:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Timotius 5:4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1526,29 +890,25 @@ Jadi hari ini, jika kau sedang berada di tengah sesuatu yang sulit, kau diizinka
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'Do Not Grow Weary', 'Janganlah Kita Jemu-Jemu',
-    'Paul''s exhortation to the Galatians is aimed less at dramatic failure and more at a quieter danger: growing weary in doing good. It''s not usually the big collapses of faith that end a person''s walk with God — it''s the slow erosion of a thousand small days where showing up for prayer, for kindness, for faithfulness, simply feels too tiring to keep doing.
+    'A Crown of Splendor', 'Mahkota yang Indah',
+    'Gray hair, Proverbs says, is a crown of splendor, gained by living a righteous life. It is a striking image in a world obsessed with youth — the very sign we often try to hide or dye away is described here as a crown, an honor, a mark of a life well lived. When we look at our aging parents, this verse invites us to see not decline but achievement: decades survived, faith kept, a family raised, a life still being lived faithfully.
 
-This is one of the most honest realities of a maturing faith: the ordinary rhythms of belief — prayer, service, patience with difficult people, small acts of goodness that no one notices — can start to feel monotonous. Nobody applauds the fortieth act of quiet kindness the way they applauded the first. And yet Paul insists that it is precisely in these unremarkable, repeated acts that a harvest is being prepared, even if we cannot yet see it.
+This reframing matters because caregiving can quietly shift how we see our parents. It''s easy, amid appointments and worry, to start seeing them primarily as a set of needs to manage rather than as a whole person with a rich, textured history. But the man now needing help with his shoes once carried you on his shoulders. The woman who repeats herself once stayed up through your every childhood fever. Their gray hair is not merely a sign of decline; it is a record of everything they survived to get here.
 
-''At the proper time we will reap a harvest if we do not give up.'' That phrase, ''if we do not give up,'' names the real battlefield of maturing faith. It''s not usually a single dramatic temptation that derails us. It''s the slow accumulation of tiredness that convinces us the good we''re doing doesn''t matter, isn''t seen, isn''t worth continuing. Paul''s counsel is simple and stubborn: keep going anyway. The harvest is coming, even when the field looks unchanged.
+Practically, this might mean asking your parents to tell their stories again, even ones you''ve heard before — not out of obligation, but because their history deserves an audience. It might mean speaking to them, not just about them, in medical settings. It might mean resisting the urge to talk over them or make decisions without their input simply because it is faster.
 
-Many of us find encouragement in remembering that faithfulness is rarely glamorous in the moment it''s happening. It becomes meaningful in hindsight, when the harvest finally shows itself. So if today feels like one more ordinary day of doing good with no visible reward, take heart — you are exactly where a maturing faith is meant to be: still planting, still trusting, not yet grown weary.', 'Nasihat Paulus kepada jemaat di Galatia diarahkan bukan terutama pada kegagalan dramatis, melainkan pada bahaya yang lebih diam-diam: menjadi jemu berbuat baik. Biasanya bukan keruntuhan besar iman yang mengakhiri perjalanan seseorang dengan Tuhan — melainkan erosi perlahan dari seribu hari kecil ketika datang untuk berdoa, untuk berbuat baik, untuk setia, terasa terlalu melelahkan untuk terus dilakukan.
+Today, look for the crown. See your parent not only through the lens of what care they now need, but through the lens of the whole life that earned them, in God''s eyes, the honor Scripture describes.', 'Rambut putih, kata kitab Amsal, adalah mahkota yang indah, yang didapat pada jalan kebenaran. Ini gambaran yang mencolok di dunia yang terobsesi dengan kemudaan — tanda yang sering kita coba sembunyikan atau cat ulang justru digambarkan di sini sebagai mahkota, sebuah kehormatan, tanda dari hidup yang dijalani dengan baik. Ketika kita memandang orang tua kita yang menua, ayat ini mengajak kita untuk melihat bukan kemunduran, melainkan pencapaian: puluhan tahun yang dilewati, iman yang dijaga, keluarga yang dibesarkan, sebuah hidup yang masih dijalani dengan setia.
 
-Ini adalah salah satu kenyataan paling jujur dari iman yang sedang bertumbuh dewasa: irama biasa dari kepercayaan — doa, pelayanan, kesabaran terhadap orang-orang yang sulit, perbuatan baik kecil yang tidak diperhatikan siapa pun — dapat mulai terasa monoton. Tidak ada yang bertepuk tangan untuk perbuatan baik yang keempat puluh sebagaimana mereka bertepuk tangan untuk yang pertama. Namun Paulus menegaskan bahwa justru dalam perbuatan-perbuatan yang biasa dan berulang inilah panen sedang dipersiapkan, meski kita belum bisa melihatnya.
+Perubahan cara pandang ini penting karena merawat orang tua bisa diam-diam mengubah cara kita melihat mereka. Mudah sekali, di tengah janji temu dokter dan kekhawatiran, mulai melihat mereka terutama sebagai sekumpulan kebutuhan yang harus dikelola, bukan sebagai pribadi utuh dengan sejarah yang kaya dan bertekstur. Namun pria yang kini butuh bantuan memakai sepatu itu pernah menggendongmu di pundaknya. Wanita yang mengulang-ulang cerita itu pernah berjaga sepanjang setiap demammu di masa kecil. Rambut putih mereka bukan sekadar tanda kemunduran; itu adalah catatan dari segala hal yang mereka lewati untuk sampai di titik ini.
 
-''Kita akan menuai pada waktunya, jika kita tidak menjadi lemah.'' Frasa itu, ''jika kita tidak menjadi lemah,'' menyebutkan medan pertempuran sesungguhnya dari iman yang sedang dewasa. Biasanya bukan satu godaan dramatis yang menggagalkan kita. Melainkan akumulasi perlahan dari rasa lelah yang meyakinkan kita bahwa kebaikan yang kita lakukan tidak penting, tidak dilihat, tidak layak dilanjutkan. Nasihat Paulus sederhana dan tegas: teruslah maju meski begitu. Panen itu akan datang, bahkan ketika ladang tampak tidak berubah.
+Secara praktis, ini mungkin berarti meminta orang tuamu bercerita lagi, bahkan yang sudah pernah kamu dengar — bukan karena kewajiban, tetapi karena sejarah mereka layak mendapat pendengar. Ini mungkin berarti berbicara kepada mereka, bukan hanya tentang mereka, di ruang periksa dokter. Ini mungkin berarti menahan diri dari keinginan untuk memotong pembicaraan mereka atau mengambil keputusan tanpa masukan mereka hanya karena itu lebih cepat.
 
-Banyak dari kita menemukan penghiburan dengan mengingat bahwa kesetiaan jarang terasa megah pada saat sedang dijalani. Ia menjadi bermakna dalam kilas balik, ketika panen akhirnya menampakkan diri. Jadi jika hari ini terasa seperti satu hari biasa lagi berbuat baik tanpa imbalan yang tampak, kuatkanlah hatimu — kau berada tepat di tempat iman yang sedang dewasa seharusnya berada: masih menanam, masih percaya, belum menjadi jemu.',
-    'It''s rarely a single failure that ends faithfulness — it''s slow weariness. What small act of good are you tempted to quit that''s worth continuing today?', 'Jarang sekali satu kegagalan yang mengakhiri kesetiaan — biasanya kelelahan yang perlahan. Perbuatan baik kecil apa yang tergoda ingin kau hentikan, padahal layak dilanjutkan hari ini?',
-    'Lord, the ordinary faithfulness of daily life feels tiring sometimes, and I confess I''m tempted to give up on things no one seems to notice. Renew my strength today. Help me trust that the harvest is coming, even when I can''t see it yet. Amen.', 'Tuhan, kesetiaan yang biasa dalam hidup sehari-hari kadang terasa melelahkan, dan aku mengakui aku tergoda untuk menyerah pada hal-hal yang tampaknya tidak diperhatikan siapa pun. Perbaruilah kekuatanku hari ini. Tolonglah aku percaya bahwa panen itu akan datang, meski aku belum bisa melihatnya. Amin.'
+Hari ini, carilah mahkota itu. Pandanglah orang tuamu bukan hanya melalui lensa perawatan apa yang mereka butuhkan sekarang, tetapi melalui lensa keseluruhan hidup yang, di mata Allah, membuat mereka layak mendapat kehormatan yang digambarkan Firman-Nya.',
+    'How might you honor the whole story of your parent''s life today, not just manage their present needs?', 'Bagaimana kamu bisa menghormati keseluruhan kisah hidup orang tuamu hari ini, bukan hanya mengelola kebutuhan mereka saat ini?',
+    'Lord, help me see my parent''s gray hair as the crown You call it — a record of a life well lived. Teach me to honor their whole story, not just their present needs. Amen.', 'Tuhan, tolong aku melihat rambut putih orang tuaku sebagai mahkota seperti yang Engkau sebutkan — catatan dari hidup yang dijalani dengan baik. Ajari aku menghormati keseluruhan kisah hidup mereka, bukan hanya kebutuhan mereka saat ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Galatians 6:9', 'WEB', 'Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Galatia 6:9', 'TB', 'Janganlah kita jemu-jemu berbuat baik, karena apabila kita tidak menjadi lemah, kita akan menuai pada waktunya.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 16:31', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 16:31', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1558,29 +918,25 @@ Banyak dari kita menemukan penghiburan dengan mengingat bahwa kesetiaan jarang t
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'Renewed Strength', 'Kekuatan yang Baru',
-    'Isaiah writes to a weary people who have every reason to feel forgotten, and his answer isn''t a call to try harder. It''s a promise: those who hope in the LORD will renew their strength. The image that follows is deliberately layered — soaring on wings like eagles, running without growing weary, walking without fainting. Notice the order isn''t accidental. Soaring is dramatic and rare. Running is strenuous but common. Walking is the most ordinary act of all, and yet it is named too, because most of a maturing faith is not soaring, it''s simply walking without fainting, day after day.
+    'Carried Even to Gray Hairs', 'Digendong Sampai Rambut Memutih',
+    'Isaiah gives us one of Scripture''s most tender pictures of God''s faithfulness: even to your old age I am He, and to gray hairs I will carry you. I have made you and I will bear you; I will sustain you and I will rescue you. This is God speaking directly to His aging people, promising that His care does not lessen as strength fails — if anything, He draws nearer, carrying what can no longer be carried alone.
 
-This matters for anyone in a season that feels less like flight and more like a long, plain road. We sometimes measure our spiritual health by whether we feel dramatic, soaring faith, and when we don''t, we assume something has gone wrong. But Isaiah''s promise covers the walking too. Renewed strength doesn''t always look spectacular. Sometimes it looks like simply not fainting — showing up again tomorrow, in the same ordinary way, sustained by a hope that isn''t loud but is real.
+This verse offers a model for how we might care for our own aging parents. Not with reluctant duty, but with the same kind of steady, active carrying — a willingness to bear what they can no longer bear themselves, whether that''s a physical task, a difficult decision, or simply the emotional weight of feeling less capable than they once were. To carry someone is different from simply being present; it means taking on weight that belongs to them.
 
-The key word is ''hope in the LORD'' — not hope in our own reserves, not hope that circumstances will improve on our timeline, but a settled trust that God Himself is the source of the strength we need. Our own strength runs out; even young people, Isaiah says elsewhere in this passage, grow tired and weary. But God''s strength is not like ours. It renews. It replenishes what we cannot replenish ourselves.
+There is something deeply moving about a God who does not abandon His people to weakness, but instead promises to carry them precisely when they can no longer carry themselves. When we do the same for our parents — driving them to appointments, managing their finances, sitting beside a hospital bed — we are, in a small and real way, extending God''s own faithfulness through our hands.
 
-So in whatever dry season you find yourself this week, take Isaiah''s promise as an honest invitation, not a magic formula: keep hoping in the Lord, even in the plain, unremarkable walking, and trust that renewed strength — whether it comes as soaring or simply as one more faithful step — is exactly what He has promised to those who wait on Him.', 'Yesaya menulis kepada umat yang lelah dan memiliki segala alasan untuk merasa terlupakan, dan jawabannya bukanlah panggilan untuk berusaha lebih keras. Itu adalah janji: orang-orang yang menanti-nantikan TUHAN akan mendapat kekuatan baru. Gambaran yang mengikutinya disengaja bertingkat — naik terbang dengan kekuatan seperti rajawali, berlari dan tidak menjadi lesu, berjalan dan tidak menjadi lelah. Perhatikan urutan itu bukan kebetulan. Terbang itu dramatis dan langka. Berlari itu berat namun umum. Berjalan adalah tindakan paling biasa dari semuanya, namun itu juga disebutkan, sebab sebagian besar dari iman yang sedang dewasa bukanlah terbang, melainkan sekadar berjalan tanpa menjadi lelah, hari demi hari.
+It is exhausting work, and it will not always feel rewarding in the moment. But remember: the God who carries His people to gray hairs is the same God who will carry you through the work of caring for them.', 'Yesaya memberi kita salah satu gambaran paling lembut dalam Firman Tuhan tentang kesetiaan Allah: sampai masa tuamu Aku tetap Dia dan sampai kamu putih rambutnya Aku akan menggendong kamu. Aku telah melakukannya dan Aku akan tetap menanggung kamu; Aku akan menggendong dan menyelamatkan kamu. Ini Allah berbicara langsung kepada umat-Nya yang menua, berjanji bahwa perhatian-Nya tidak berkurang seiring melemahnya kekuatan — justru sebaliknya, Ia semakin mendekat, menggendong apa yang tak lagi bisa dipikul sendiri.
 
-Ini penting bagi siapa saja yang berada dalam musim yang terasa kurang seperti terbang dan lebih seperti jalan yang panjang dan biasa. Kita kadang mengukur kesehatan rohani kita dari apakah kita merasakan iman yang dramatis, iman yang terbang, dan ketika kita tidak merasakannya, kita mengira ada yang salah. Namun janji Yesaya juga mencakup berjalan. Kekuatan yang baru tidak selalu tampak spektakuler. Kadang ia tampak seperti sekadar tidak menjadi lelah — datang lagi besok, dengan cara yang sama biasanya, disokong oleh harapan yang tidak nyaring namun nyata.
+Ayat ini menawarkan sebuah teladan bagi bagaimana kita bisa merawat orang tua kita sendiri yang menua. Bukan dengan kewajiban yang enggan, melainkan dengan jenis penggendongan yang stabil dan aktif yang sama — kesediaan untuk menanggung apa yang tak lagi bisa mereka tanggung sendiri, entah itu tugas fisik, keputusan sulit, atau sekadar beban emosional karena merasa kurang mampu dibanding dahulu. Menggendong seseorang berbeda dari sekadar hadir; itu berarti mengambil alih beban yang menjadi milik mereka.
 
-Kata kuncinya adalah ''menanti-nantikan TUHAN'' — bukan berharap pada cadangan kekuatan kita sendiri, bukan berharap keadaan akan membaik sesuai jadwal kita, melainkan kepercayaan yang mantap bahwa Allah sendirilah sumber kekuatan yang kita butuhkan. Kekuatan kita sendiri habis; bahkan orang muda, kata Yesaya di bagian lain nas ini, menjadi lelah dan lesu. Tetapi kekuatan Allah tidak seperti kekuatan kita. Ia diperbarui. Ia mengisi kembali apa yang tidak bisa kita isi sendiri.
+Ada sesuatu yang sangat menyentuh tentang Allah yang tidak meninggalkan umat-Nya dalam kelemahan, melainkan berjanji untuk menggendong mereka tepat ketika mereka tak lagi bisa menggendong diri sendiri. Ketika kita melakukan hal yang sama bagi orang tua kita — mengantar mereka ke janji temu, mengelola keuangan mereka, duduk di samping ranjang rumah sakit — kita, dalam cara yang kecil dan nyata, memperpanjang kesetiaan Allah sendiri melalui tangan kita.
 
-Jadi dalam musim kering apa pun yang sedang kau alami minggu ini, terimalah janji Yesaya sebagai undangan yang jujur, bukan rumus ajaib: teruslah menanti-nantikan TUHAN, bahkan dalam berjalan yang biasa dan tak mencolok, dan percayalah bahwa kekuatan yang baru — entah datang sebagai terbang atau sekadar satu langkah setia lagi — adalah tepat apa yang telah Ia janjikan kepada mereka yang menanti-nantikan-Nya.',
-    'Most of faith isn''t soaring, it''s simply walking without fainting. Where do you need renewed strength for the ordinary walk today, not a dramatic flight?', 'Sebagian besar iman bukanlah terbang, melainkan sekadar berjalan tanpa menjadi lelah. Di manakah kau butuh kekuatan baru untuk berjalan biasa hari ini, bukan terbang yang dramatis?',
-    'Lord, I don''t need a dramatic breakthrough today — I need strength to keep walking faithfully. Renew what has run dry in me, and let my hope rest in You, not in how I feel. Amen.', 'Tuhan, aku tidak butuh terobosan dramatis hari ini — aku butuh kekuatan untuk terus berjalan dengan setia. Perbaruilah apa yang telah mengering dalam diriku, dan biarlah harapanku bersandar pada-Mu, bukan pada apa yang kurasakan. Amin.'
+Ini pekerjaan yang melelahkan, dan tidak akan selalu terasa memuaskan pada saatnya. Namun ingatlah: Allah yang menggendong umat-Nya sampai rambut memutih adalah Allah yang sama yang akan menggendongmu melalui pekerjaan merawat mereka.',
+    'What weight are you currently carrying for your parent, and how might remembering God carries you too change how you carry it?', 'Beban apa yang sedang kamu tanggung bagi orang tuamu saat ini, dan bagaimana mengingat bahwa Allah juga menggendongmu bisa mengubah caramu memikulnya?',
+    'Lord, thank You for carrying Your people even to gray hairs. Carry me now as I carry my parent, and give me strength for the weight I bear on their behalf. Amen.', 'Tuhan, terima kasih telah menggendong umat-Mu bahkan sampai rambut memutih. Gendonglah aku sekarang saat aku menggendong orang tuaku, dan berilah aku kekuatan untuk beban yang kupikul demi mereka. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 40:31', 'WEB', 'But those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 40:31', 'TB', 'Tetapi orang-orang yang menanti-nantikan TUHAN mendapat kekuatan baru: mereka seumpama rajawali yang naik terbang dengan kekuatan sayapnya; mereka berlari dan tidak menjadi lesu, mereka berjalan dan tidak menjadi lelah.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 46:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 46:4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1590,29 +946,25 @@ Jadi dalam musim kering apa pun yang sedang kau alami minggu ini, terimalah janj
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 5,
-    'Thirsting for God', 'Merindukan Allah',
-    'The psalmist doesn''t hide his longing behind polite language. As the deer pants for streams of water, so my soul pants for you, my God. It''s a raw, physical image — the desperate thirst of an animal that has traveled far without water, driven by pure need rather than duty. That image gives us permission for something many of us rarely allow ourselves in our faith: honest, uncomfortable longing.
+    'The Crown of the Aged', 'Mahkota Orang Tua',
+    'Proverbs turns the picture around: the crown of the aged is their children''s children, and the parents are the pride of their children. Honor, in Scripture, moves both directions — parents take pride in the generations that follow them, and children find in their parents and grandparents a source of identity and pride as well. Caring for an aging parent is not one-directional charity; it is the continuation of a relationship of mutual honor that began the day we were born.
 
-So often we imagine spiritual maturity as a kind of calm satisfaction — arriving, finally, at a place where we no longer feel the ache. But this psalm suggests otherwise. The psalmist, clearly a person deep in relationship with God, is still panting, still thirsting, still asking, ''When can I go and meet with God?'' Longing itself is not evidence of immaturity. It may be one of the clearest signs that our faith is alive.
+This matters because caregiving can sometimes feel like it strips a relationship down to logistics — medication schedules, doctor''s names, insurance forms. It is easy to lose sight of the relationship underneath all the tasks: the fact that this is still your father, still your mother, someone who is proud of you even now, someone whose pride in you does not diminish as their body weakens.
 
-Many of us go through seasons where God feels distant, where prayer feels dry, where the presence we once sensed so clearly seems to have quieted. This psalm was likely written in exactly such a season — the psalmist recalls, almost wistfully, how he used to lead the procession to the house of God with shouts of joy and praise, and now finds himself instead remembering those days with tears. That contrast is honest, not shameful. Dry seasons are part of the terrain of a maturing faith, not a detour from it.
+One practical way to keep this mutual honor alive is to keep including your parent in your life, not only managing theirs. Tell them what''s happening with your children, your work, your faith. Ask their advice even on small things. Let them still feel like a parent to you, not only a patient. Dignity is preserved not just through good physical care but through being treated as someone whose voice and opinion still matter in the family''s ongoing story.
 
-What matters is what we do with the thirst. The psalmist doesn''t numb it or deny it — he brings it directly to God, panting, honest, unresolved. That is itself an act of faith: to keep bringing our thirst to the only source that can actually satisfy it, trusting that even our longing is a form of worship.', 'Pemazmur tidak menyembunyikan kerinduannya di balik bahasa yang sopan. Seperti rusa merindukan sungai yang berair, demikianlah jiwaku merindukan Engkau, ya Allah. Ini gambaran yang mentah dan jasmani — dahaga putus asa dari seekor binatang yang telah menempuh jarak jauh tanpa air, didorong oleh kebutuhan murni, bukan kewajiban. Gambaran itu memberi kita izin untuk sesuatu yang jarang kita perbolehkan bagi diri kita dalam iman: kerinduan yang jujur dan tidak nyaman.
+Today, consider one way you can let your parent be proud of you again — not through achievement, but through simply sharing your life with them as an act of honor.', 'Kitab Amsal membalikkan gambarannya: mahkota orang tua adalah anak cucu, dan kehormatan anak-anak ialah nenek moyang mereka. Penghormatan, dalam Firman Tuhan, bergerak ke dua arah — orang tua bangga akan generasi yang mengikuti mereka, dan anak-anak menemukan dalam orang tua dan kakek nenek mereka sumber identitas dan kebanggaan juga. Merawat orang tua yang menua bukanlah belas kasihan satu arah; itu adalah kelanjutan dari hubungan penghormatan timbal balik yang dimulai sejak hari kita lahir.
 
-Begitu sering kita membayangkan kedewasaan rohani sebagai semacam kepuasan yang tenang — akhirnya tiba di tempat di mana kita tidak lagi merasakan kerinduan itu. Tetapi mazmur ini menyarankan hal yang berbeda. Sang pemazmur, yang jelas adalah orang yang dalam hubungannya dengan Allah, masih terengah-engah, masih dahaga, masih bertanya, ''Bilakah aku akan datang melihat Allah?'' Kerinduan itu sendiri bukanlah bukti ketidakdewasaan. Bahkan mungkin justru salah satu tanda paling jelas bahwa iman kita hidup.
+Ini penting karena merawat kadang bisa terasa seperti menyederhanakan sebuah hubungan hanya menjadi urusan logistik — jadwal obat, nama dokter, formulir asuransi. Mudah sekali kehilangan pandangan akan hubungan di balik semua tugas itu: fakta bahwa ini masih ayahmu, masih ibumu, seseorang yang tetap bangga padamu bahkan sekarang, seseorang yang kebanggaannya padamu tidak berkurang seiring melemahnya tubuh mereka.
 
-Banyak dari kita melewati musim ketika Allah terasa jauh, ketika doa terasa kering, ketika kehadiran yang dulu begitu jelas kita rasakan tampak telah menyunyi. Mazmur ini kemungkinan besar ditulis tepat dalam musim semacam itu — sang pemazmur mengenang, hampir dengan rindu, bagaimana dahulu ia memimpin arak-arakan ke rumah Allah dengan sorak-sorai dan syukur, dan kini justru mendapati dirinya mengenang hari-hari itu dengan air mata. Kontras itu jujur, bukan memalukan. Musim kering adalah bagian dari medan iman yang sedang dewasa, bukan jalan memutar darinya.
+Salah satu cara praktis untuk menjaga penghormatan timbal balik ini tetap hidup adalah dengan terus melibatkan orang tuamu dalam hidupmu, bukan hanya mengelola hidup mereka. Ceritakan kepada mereka apa yang terjadi dengan anak-anakmu, pekerjaanmu, imanmu. Mintalah nasihat mereka bahkan untuk hal-hal kecil. Biarkan mereka tetap merasa menjadi orang tua bagimu, bukan hanya seorang pasien. Martabat dijaga bukan hanya melalui perawatan fisik yang baik, tetapi melalui diperlakukan sebagai seseorang yang suara dan pendapatnya masih berarti dalam kisah keluarga yang terus berlangsung.
 
-Yang penting adalah apa yang kita lakukan dengan dahaga itu. Sang pemazmur tidak membuatnya mati rasa atau menyangkalnya — ia membawanya langsung kepada Allah, terengah-engah, jujur, belum terselesaikan. Itu sendiri adalah tindakan iman: terus membawa dahaga kita kepada satu-satunya sumber yang benar-benar dapat memuaskannya, percaya bahwa bahkan kerinduan kita adalah bentuk penyembahan.',
-    'Longing for God is not a sign of weak faith — it may be a sign of a heart still alive to Him. What honest thirst can you bring to God today rather than hide?', 'Rindu akan Allah bukanlah tanda iman yang lemah — bisa jadi itu tanda hati yang masih hidup bagi-Nya. Dahaga jujur apa yang bisa kau bawa kepada Allah hari ini, alih-alih kau sembunyikan?',
-    'God, I bring You my honest longing today — the ache, the dryness, the questions I don''t have answers to. I don''t need to hide my thirst from You. Meet me in it, as You have always met those who seek You. Amen.', 'Ya Allah, aku membawa kerinduanku yang jujur kepada-Mu hari ini — dahaga, kekeringan, pertanyaan-pertanyaan yang belum kutemukan jawabannya. Aku tidak perlu menyembunyikan dahagaku dari-Mu. Jumpailah aku di dalamnya, sebagaimana Engkau selalu menjumpai mereka yang mencari-Mu. Amin.'
+Hari ini, pikirkan satu cara kamu bisa membiarkan orang tuamu kembali bangga padamu — bukan melalui pencapaian, tetapi sekadar dengan membagikan hidupmu kepada mereka sebagai tindakan penghormatan.',
+    'How can you keep the mutual relationship alive with your parent this week, letting them still feel like your parent, not only someone you care for?', 'Bagaimana kamu bisa menjaga hubungan timbal balik dengan orang tuamu tetap hidup minggu ini, membiarkan mereka tetap merasa menjadi orang tuamu, bukan hanya seseorang yang kamu rawat?',
+    'Lord, help me remember that caregiving does not erase relationship. Let my parent still feel like my parent, proud and included, even as I care for their needs. Amen.', 'Tuhan, tolong aku mengingat bahwa merawat tidak menghapus hubungan. Biarlah orang tuaku tetap merasa menjadi orang tuaku, bangga dan dilibatkan, bahkan saat aku merawat kebutuhan mereka. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 42:1-2', 'WEB', 'As the deer pants for streams of water, so my soul pants for you, my God. My soul thirsts for God, for the living God. When can I go and meet with God?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 42:2-3', 'TB', 'Seperti rusa merindukan sungai yang berair, demikianlah jiwaku merindukan Engkau, ya Allah. Jiwaku haus kepada Allah, kepada Allah yang hidup. Bilakah aku akan datang melihat Allah?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 17:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 17:6', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1622,29 +974,25 @@ Yang penting adalah apa yang kita lakukan dengan dahaga itu. Sang pemazmur tidak
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 6,
-    'New Every Morning', 'Baru Setiap Pagi',
-    'It is worth remembering that the book of Lamentations, of all places, contains one of Scripture''s most tender declarations of hope. Written amid grief and ruin, in the middle of describing genuine devastation, the writer suddenly turns: yet this I call to mind and therefore I have hope — the LORD''s mercies never come to an end, they are new every morning. Hope, here, doesn''t come from circumstances improving. It comes from remembering something true about God even while circumstances remain bleak.
+    'Where You Go, I Will Go', 'Ke Mana Engkau Pergi, ke Situ Jugalah Aku Pergi',
+    'Ruth''s declaration to Naomi is often read at weddings, but it was first spoken as a vow of loyalty from a younger woman to an aging, grieving mother-in-law who had nothing left to offer her — no husband, no wealth, no promise of a comfortable future. Ruth chose to stay anyway: where you go, I will go, and where you stay, I will stay. It is one of Scripture''s clearest pictures of steadfast love that asks nothing in return.
 
-That phrase ''new every morning'' matters especially for a maturing faith, because it resists a common but exhausting misunderstanding — the idea that we need enough stored-up faithfulness or emotional reserve to carry us through every future difficulty in advance. We don''t. God''s mercy isn''t a single deposit we draw down until it''s gone. It is renewed, freshly, each morning, sized exactly for that day''s need, no more hoarded ahead of time than the manna the Israelites gathered daily in the wilderness.
+Caring for an aging parent sometimes reaches this same point — a season where there is little the relationship offers us in practical terms, and everything is instead about what we choose to give. The parent who once provided for us may now provide nothing but their presence, perhaps not even full memory of who we are. Yet the call to loyalty remains, not because of what we receive, but because of who they have always been to us.
 
-Many of us find this a relief precisely because we tend to worry in advance — bracing for a hardship that hasn''t arrived yet, wondering if we''ll have enough faith, enough strength, enough patience when it comes. But mercy doesn''t work that way. It meets us on the day it''s needed, not before. We are never asked to face tomorrow''s trouble with today''s grace; tomorrow will have its own fresh portion waiting.
+Ruth''s loyalty was not passive; it was active and costly. She left her homeland, her people, her gods, and walked into an uncertain future beside Naomi. Caring for our own parents may ask something similar of us — rearranging schedules, sacrificing convenience, showing up even when it is inconvenient or emotionally difficult, choosing presence over distance.
 
-So whatever ache or disappointment marked yesterday, this promise doesn''t erase it, but it does interrupt it: this morning carries mercy that has never been used before, entirely new, entirely sufficient for today. That is not a small thing to hold onto in a long or dry season. It''s actually everything.', 'Ada baiknya kita ingat bahwa kitab Ratapan, dari semua tempat, justru memuat salah satu pernyataan harapan yang paling lembut dalam Alkitab. Ditulis di tengah dukacita dan reruntuhan, di tengah menggambarkan kehancuran yang nyata, sang penulis tiba-tiba berbalik: tetapi hal-hal ini kuperhatikan, oleh karena itu aku ada harapan — kasih setia TUHAN tak pernah berhenti, rahmat-Nya tak pernah habis, selalu baru tiap pagi. Harapan, di sini, tidak datang dari keadaan yang membaik. Ia datang dari mengingat sesuatu yang benar tentang Allah bahkan ketika keadaan masih suram.
+If you are in a season where caregiving feels like it offers little back, remember Ruth. Her loyalty was not wasted; it became part of the story that led, generations later, to King David and ultimately to Christ. Faithful, unglamorous love in the hardest seasons is never wasted in God''s economy.', 'Pernyataan Rut kepada Naomi sering dibacakan dalam pernikahan, tetapi awalnya diucapkan sebagai sumpah kesetiaan dari seorang wanita muda kepada mertuanya yang menua dan berduka, yang tak punya apa-apa lagi untuk ditawarkan kepadanya — tanpa suami, tanpa harta, tanpa janji masa depan yang nyaman. Rut tetap memilih untuk tinggal: ke mana engkau pergi, ke situ jugalah aku pergi, dan di mana engkau bermalam, di situ jugalah aku bermalam. Ini salah satu gambaran paling jelas dalam Firman Tuhan tentang kasih yang teguh yang tidak menuntut balasan apa pun.
 
-Ungkapan ''baru tiap pagi'' itu penting terutama bagi iman yang sedang dewasa, sebab ia melawan kesalahpahaman yang umum namun melelahkan — gagasan bahwa kita membutuhkan cukup banyak kesetiaan tersimpan atau cadangan emosi untuk membawa kita melewati setiap kesulitan di masa depan sekaligus. Kita tidak membutuhkannya. Kasih setia Allah bukanlah satu simpanan tunggal yang kita ambil terus sampai habis. Ia diperbarui, dengan segar, setiap pagi, tepat sesuai kebutuhan hari itu, tidak lebih ditimbun lebih dahulu daripada manna yang dikumpulkan bangsa Israel setiap hari di padang gurun.
+Merawat orang tua yang menua kadang mencapai titik yang sama — sebuah musim ketika hubungan itu hanya sedikit menawarkan sesuatu bagi kita secara praktis, dan segalanya justru menjadi tentang apa yang kita pilih untuk berikan. Orang tua yang dahulu menyediakan bagi kita mungkin sekarang tidak menyediakan apa-apa selain kehadiran mereka, bahkan mungkin tidak lagi sepenuhnya mengingat siapa kita. Namun panggilan untuk setia tetap ada, bukan karena apa yang kita terima, melainkan karena siapa mereka selalu bagi kita.
 
-Banyak dari kita menemukan ini melegakan justru karena kita cenderung mencemaskan hal-hal di muka — bersiap-siap untuk kesulitan yang belum datang, bertanya-tanya apakah kita akan punya cukup iman, cukup kekuatan, cukup kesabaran ketika itu tiba. Tetapi kasih setia tidak bekerja seperti itu. Ia menjumpai kita pada hari ia dibutuhkan, bukan sebelumnya. Kita tidak pernah diminta menghadapi kesulitan besok dengan anugerah hari ini; besok akan memiliki bagiannya sendiri yang segar yang sudah menanti.
+Kesetiaan Rut bukanlah sesuatu yang pasif; itu aktif dan berharga mahal. Ia meninggalkan tanah airnya, bangsanya, ilah-ilahnya, dan melangkah ke masa depan yang tidak pasti di samping Naomi. Merawat orang tua kita sendiri mungkin menuntut hal serupa dari kita — mengatur ulang jadwal, mengorbankan kenyamanan, tetap hadir bahkan ketika itu merepotkan atau secara emosional sulit, memilih kehadiran daripada jarak.
 
-Jadi apa pun kepedihan atau kekecewaan yang mewarnai kemarin, janji ini tidak menghapusnya, tetapi ia menyelanya: pagi ini membawa kasih setia yang belum pernah dipakai sebelumnya, sepenuhnya baru, sepenuhnya cukup untuk hari ini. Itu bukan hal kecil untuk dipegang dalam musim yang panjang atau kering. Itu sesungguhnya adalah segalanya.',
-    'God''s mercy is renewed daily, not stockpiled in advance. What would it look like to face today with today''s mercy, instead of worrying about tomorrow''s?', 'Kasih setia Allah diperbarui setiap hari, bukan ditimbun terlebih dahulu. Seperti apa rasanya menghadapi hari ini dengan kasih setia hari ini, alih-alih mencemaskan hari esok?',
-    'Lord, thank You that Your mercy is new this morning, sized exactly for today. I release my worry about tomorrow''s troubles and receive Your faithfulness for right now. Great is Your faithfulness to me. Amen.', 'Tuhan, terima kasih karena kasih setia-Mu baru pagi ini, tepat sesuai ukuran hari ini. Aku melepaskan kekhawatiranku tentang kesulitan besok dan menerima kesetiaan-Mu untuk saat ini. Besar kesetiaan-Mu bagiku. Amin.'
+Jika kamu berada dalam musim ketika perawatan terasa hanya sedikit memberi balasan, ingatlah Rut. Kesetiaannya tidak sia-sia; itu menjadi bagian dari kisah yang, beberapa generasi kemudian, membawa kepada Raja Daud dan akhirnya kepada Kristus. Kasih yang setia dan tidak gemerlap di musim-musim tersulit tidak pernah sia-sia dalam rencana Allah.',
+    'Where is caregiving asking you to give loyalty without expecting anything back — and how does Ruth''s example encourage you?', 'Di mana perawatan menuntutmu memberi kesetiaan tanpa mengharapkan balasan — dan bagaimana teladan Rut menguatkanmu?',
+    'Lord, give me Ruth''s steadfast loyalty. Let me love my parent faithfully even in seasons when little is given back, trusting that You see and honor this love. Amen.', 'Tuhan, berilah aku kesetiaan Rut yang teguh. Biarlah aku mengasihi orang tuaku dengan setia bahkan di musim ketika sedikit yang diberikan kembali, percaya bahwa Engkau melihat dan menghargai kasih ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 'Because of the LORD''s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 'Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi; besar kesetiaan-Mu!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ruth 1:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Rut 1:16', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1654,56 +1002,276 @@ Jadi apa pun kepedihan atau kekecewaan yang mewarnai kemarin, janji ini tidak me
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 7,
-    'He Who Began a Good Work', 'Dia yang Telah Memulai Pekerjaan yang Baik',
-    'As this week closes, it''s worth returning to a promise Paul makes almost in passing, as if it were simply obvious: he who began a good work in you will carry it on to completion. Notice the tenses. Began — past. Will carry on — ongoing. To completion — future. Paul is describing a single unbroken project spanning our entire life, one that God started and God alone will finish.
+    'Do Not Cast Me Off in Old Age', 'Jangan Membuang Aku pada Masa Tuaku',
+    'The Psalmist prays, do not cast me off in the time of old age; do not forsake me when my strength is spent. It is a raw and vulnerable prayer, one that reveals a very human fear — the fear of becoming a burden, of being set aside once we can no longer contribute in the ways we once could. It is worth imagining our own parents may carry some version of this fear quietly, even if they never say it aloud.
 
-This matters enormously for anyone who has spent a week, or a season, or years, feeling like their faith is stuck, slow, or unimpressive compared to the dramatic stories others seem to tell. Maturity in faith is rarely a straight line of visible triumphs. It''s closer to a construction project seen only in fragments — a foundation poured here, a wall raised there, long stretches where nothing seems to be happening at all, even though work continues beneath the surface.
+As we close this seven-day journey, this verse is a good place to let our hearts settle. Every effort we make to care for our aging parents — every visit, every patient conversation, every inconvenient errand — is, in a real sense, an answer to this ancient prayer. We become the hands and presence that assure them: you are not forsaken, not cast off, not left behind, even now.
 
-Many of us are tempted to judge our spiritual progress by how we feel on a given day, forgetting that the person doing the actual building was never us alone. It is God who began this work, and it is God''s faithfulness, not our consistency, that guarantees its completion. That should relieve an enormous amount of pressure. We are not responsible for finishing what only God can finish. We are only asked to keep showing up to the process, trusting the Builder.
+This work will not always feel triumphant. Some days it will feel like grief, watching someone you love become less than they were. Other days it will feel like exhaustion, stretched thin between your own family and theirs. But underneath all of it is something eternal: love that refuses to abandon, echoing the love of the God who never abandons His own, even to gray hairs.
 
-So as you finish this seven-day journey through the dry seasons and the ordinary ones, hold onto this: nothing about your faith this week — the doubts, the dry prayers, the small faithful steps, the moments of surprising joy — has gone unnoticed or unused. God, who began this good work in you, is not finished. He is still building, still carrying it forward, and He will bring it to completion. That is a promise mature enough to rest your whole life on.', 'Saat minggu ini berakhir, ada baiknya kita kembali kepada sebuah janji yang diucapkan Paulus hampir sekilas, seolah itu sesuatu yang sudah jelas: Dia, yang memulai pekerjaan yang baik di antara kamu, akan meneruskannya sampai pada akhirnya. Perhatikan bentuk waktunya. Memulai — masa lampau. Akan meneruskan — sedang berlangsung. Sampai akhirnya — masa depan. Paulus sedang menggambarkan satu proyek tak terputus yang membentang sepanjang seluruh hidup kita, yang Allah mulai dan hanya Allah yang akan menyelesaikannya.
+As you finish this week, thank God for the strength He has given you so far, and ask Him for renewed strength for the road ahead. Whatever season of caregiving you are in, you do not walk it alone — the same God who promises never to forsake His people walks with you, sustaining you as you sustain them.', 'Sang pemazmur berdoa, janganlah membuang aku pada masa tuaku, janganlah meninggalkan aku apabila kekuatanku habis. Ini doa yang jujur dan rentan, yang menyingkapkan ketakutan yang sangat manusiawi — ketakutan menjadi beban, ditinggalkan begitu kita tak lagi bisa memberi kontribusi seperti dahulu. Layak untuk membayangkan bahwa orang tua kita sendiri mungkin diam-diam memikul semacam ketakutan ini, bahkan jika mereka tak pernah mengucapkannya.
 
-Ini sangat penting bagi siapa saja yang telah menghabiskan satu minggu, atau satu musim, atau bertahun-tahun, merasa imannya macet, lambat, atau tidak semengesankan dibandingkan cerita-cerita dramatis yang tampaknya diceritakan orang lain. Kedewasaan dalam iman jarang berupa garis lurus kemenangan yang tampak. Ia lebih mirip proyek pembangunan yang hanya terlihat dalam potongan-potongan — sebuah fondasi dituang di sini, sebuah dinding didirikan di sana, rentang waktu panjang di mana tampaknya tidak terjadi apa-apa sama sekali, meski pekerjaan terus berlangsung di bawah permukaan.
+Saat kita mengakhiri perjalanan tujuh hari ini, ayat ini menjadi tempat yang baik untuk menenangkan hati kita. Setiap usaha yang kita lakukan untuk merawat orang tua kita yang menua — setiap kunjungan, setiap percakapan yang sabar, setiap urusan yang merepotkan — dalam arti yang nyata, adalah jawaban atas doa kuno ini. Kita menjadi tangan dan kehadiran yang meyakinkan mereka: kamu tidak ditinggalkan, tidak dibuang, tidak tertinggal, bahkan sekarang.
 
-Banyak dari kita tergoda menilai kemajuan rohani kita dari bagaimana perasaan kita pada hari tertentu, lupa bahwa yang sesungguhnya membangun tidak pernah hanya diri kita sendiri. Allahlah yang memulai pekerjaan ini, dan kesetiaan Allah, bukan konsistensi kita, yang menjamin penyelesaiannya. Itu seharusnya melepaskan tekanan yang sangat besar. Kita tidak bertanggung jawab menyelesaikan apa yang hanya bisa diselesaikan Allah. Kita hanya diminta terus datang kepada proses itu, percaya kepada Sang Pembangun.
+Pekerjaan ini tidak akan selalu terasa penuh kemenangan. Ada hari-hari yang terasa seperti dukacita, menyaksikan seseorang yang kamu kasihi menjadi kurang dari dirinya yang dahulu. Ada hari-hari lain yang terasa seperti kelelahan, terbagi tipis antara keluargamu sendiri dan keluarga mereka. Namun di balik semuanya ada sesuatu yang kekal: kasih yang menolak untuk meninggalkan, menggemakan kasih Allah yang tak pernah meninggalkan umat-Nya, bahkan sampai rambut memutih.
 
-Jadi saat kau menyelesaikan perjalanan tujuh hari melalui musim kering dan musim biasa ini, peganglah ini: tidak ada satu pun dari imanmu minggu ini — keraguan, doa yang kering, langkah-langkah setia yang kecil, momen-momen sukacita yang mengejutkan — yang luput diperhatikan atau sia-sia digunakan. Allah, yang telah memulai pekerjaan baik ini dalam dirimu, belum selesai. Ia masih membangun, masih meneruskannya, dan Ia akan menuntaskannya. Itu adalah janji yang cukup dewasa untuk menopang seluruh hidupmu.',
-    'You are not responsible for finishing what only God can finish. Where do you need to trust the Builder rather than measure your own progress this week?', 'Kau tidak bertanggung jawab menyelesaikan apa yang hanya bisa diselesaikan Allah. Di manakah kau perlu memercayai Sang Pembangun, alih-alih mengukur kemajuanmu sendiri minggu ini?',
-    'Lord, thank You for beginning a good work in me and for promising to finish it. When I feel stuck or slow, remind me that You are still building, still faithful, still carrying this forward. I trust You with what I cannot finish myself. Amen.', 'Tuhan, terima kasih telah memulai pekerjaan yang baik dalam diriku dan telah berjanji untuk menyelesaikannya. Ketika aku merasa macet atau lambat, ingatkan aku bahwa Engkau masih membangun, masih setia, masih meneruskannya. Aku memercayakan kepada-Mu apa yang tidak bisa kuselesaikan sendiri. Amin.'
+Saat kamu menutup minggu ini, bersyukurlah kepada Allah atas kekuatan yang telah diberikan-Nya sejauh ini, dan mintalah kepada-Nya kekuatan yang diperbarui untuk jalan ke depan. Musim perawatan apa pun yang sedang kamu jalani, kamu tidak berjalan sendirian — Allah yang sama yang berjanji tak pernah meninggalkan umat-Nya berjalan bersamamu, menopangmu saat kamu menopang mereka.',
+    'How does your caregiving become a living answer to your parent''s unspoken fear of being forsaken in old age?', 'Bagaimana perawatanmu menjadi jawaban hidup atas ketakutan tak terucap orang tuamu untuk ditinggalkan di masa tua?',
+    'Lord, thank You for sustaining me through this season of caring for my parent. Renew my strength for the road ahead, and let my love be a living answer to their fear of being forsaken. Amen.', 'Tuhan, terima kasih telah menopangku sepanjang musim merawat orang tuaku ini. Perbaruilah kekuatanku untuk jalan ke depan, dan biarlah kasihku menjadi jawaban hidup atas ketakutan mereka untuk ditinggalkan. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 71:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 71:9', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 1:6', 'WEB', 'Being confident of this, that he who began a good work in you will carry it on to completion until the day of Christ Jesus.');
+  -- Plan: Bridging the Distance
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'Bridging the Distance',
+    'Menjembatani Jarak',
+    'Four days toward healing tension and distance with a parent',
+    'Empat hari menuju pemulihan ketegangan dan jarak dengan orang tua',
+    4,
+    'A four-day devotional for adult children carrying tension, hurt, or emotional distance in their relationship with a parent. Through Scripture on forgiveness and peacemaking, this plan gently opens a path toward softened hearts, honest prayer, and small steps back toward each other, without minimizing real pain along the way.',
+    'Renungan empat hari bagi anak-anak dewasa yang membawa ketegangan, luka, atau jarak emosional dalam hubungan mereka dengan orang tua. Melalui Firman Tuhan tentang pengampunan dan membawa damai, renungan ini dengan lembut membuka jalan menuju hati yang melunak, doa yang jujur, dan langkah-langkah kecil untuk kembali mendekat, tanpa meremehkan luka yang nyata di sepanjang jalan.',
+    '/images/devotions/bridging-the-distance.jpeg'
+  ) RETURNING id INTO v_plan_id;
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 1:6', 'TB', 'Aku yakin sepenuhnya, bahwa Ia, yang memulai pekerjaan yang baik di antara kamu, akan meneruskannya sampai pada akhirnya pada hari Kristus Yesus.');
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'Naming What Is Real', 'Menamai Apa yang Nyata',
+    'Not every relationship with a parent is easy to honor. Some carry years of hurt, misunderstanding, unspoken disappointment, or simply the slow drift that happens when two people grow into very different lives. If that describes your relationship, this devotional is not going to ask you to pretend otherwise. Honoring a parent does not mean denying real pain; it means bringing that pain honestly before God rather than burying it or letting it calcify into permanent distance.
 
-  -- Sub-category: Faith and Doubt --------------------------------------------------------
+Many of us find it easier to keep a difficult relationship at a safe distance than to look directly at what happened, what was said, what was never said, what wounds are still tender. But unexamined distance rarely heals on its own. It tends to harden, season after season, into something that feels normal simply because it has lasted so long.
+
+God is not afraid of our complicated family stories. Scripture itself is full of strained parent-child relationships — Jacob''s favoritism, Absalom''s rebellion, the prodigal son''s broken years away from home. These stories were not hidden from Scripture; they were included, because God meets us honestly in the mess, not only in the tidy testimonies.
+
+Today, before seeking any resolution, simply name what is true. Not to stay stuck there, but because healing usually has to start with honesty rather than performance. Bring the real state of your relationship to God, exactly as it is.', 'Tidak setiap hubungan dengan orang tua mudah untuk dihormati. Beberapa membawa luka bertahun-tahun, kesalahpahaman, kekecewaan yang tak terucap, atau sekadar pergeseran perlahan yang terjadi ketika dua orang tumbuh menuju kehidupan yang sangat berbeda. Jika itu menggambarkan hubunganmu, renungan ini tidak akan memintamu berpura-pura sebaliknya. Menghormati orang tua tidak berarti menyangkal rasa sakit yang nyata; itu berarti membawa rasa sakit itu dengan jujur di hadapan Allah, alih-alih menguburnya atau membiarkannya mengeras menjadi jarak yang permanen.
+
+Banyak dari kita merasa lebih mudah menjaga hubungan yang sulit pada jarak aman daripada melihat langsung apa yang terjadi, apa yang dikatakan, apa yang tak pernah dikatakan, luka mana yang masih terasa nyeri. Namun jarak yang tak pernah diperiksa jarang sembuh dengan sendirinya. Ia cenderung mengeras, musim demi musim, menjadi sesuatu yang terasa normal hanya karena sudah berlangsung begitu lama.
+
+Allah tidak takut dengan kisah keluarga kita yang rumit. Firman Tuhan sendiri penuh dengan hubungan orang tua-anak yang tegang — sikap pilih kasih Yakub, pemberontakan Absalom, tahun-tahun putus asa anak yang hilang jauh dari rumah. Kisah-kisah ini tidak disembunyikan dari Alkitab; kisah-kisah ini disertakan, karena Allah menemui kita dengan jujur dalam kekacauan, bukan hanya dalam kesaksian yang rapi.
+
+Hari ini, sebelum mencari penyelesaian apa pun, sederhana saja namai apa yang benar. Bukan untuk terjebak di sana, melainkan karena pemulihan biasanya harus dimulai dengan kejujuran, bukan sandiwara. Bawalah keadaan sebenarnya dari hubunganmu kepada Allah, persis seperti adanya.',
+    'What is the honest, unpolished truth about your relationship with your parent right now, and have you brought it fully before God?', 'Apa kebenaran yang jujur dan belum dipoles tentang hubunganmu dengan orang tuamu saat ini, dan sudahkah kamu membawanya sepenuhnya kepada Allah?',
+    'Lord, I bring the real, unresolved state of my relationship with my parent before You today. I don''t ask for a quick fix, only for Your presence in the honest truth of it. Amen.', 'Tuhan, aku membawa keadaan sebenarnya dan belum terselesaikan dari hubunganku dengan orang tuaku di hadapan-Mu hari ini. Aku tidak meminta penyelesaian cepat, hanya kehadiran-Mu dalam kebenaran yang jujur ini. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:32', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'Blessed Are the Peacemakers', 'Berbahagialah Orang yang Membawa Damai',
+    'Jesus calls peacemakers blessed, and He calls them children of God — not peace-keepers, who avoid conflict by staying silent, but peace-makers, who actively work toward reconciliation even when it is difficult. This distinction matters in strained family relationships. It is possible to avoid open conflict with a parent for years while the underlying distance only deepens. Peacemaking asks for something more active than mere avoidance.
+
+Peacemaking with a parent does not always mean a dramatic reconciliation or a resolved conversation where everything is finally said and understood. Sometimes it looks smaller: a phone call resumed after a long silence, an apology offered even if it isn''t fully received, a boundary set with kindness instead of resentment, a decision to stop rehearsing old grievances in your mind.
+
+It''s worth being honest that peacemaking is not always safe or wise in every situation — some relationships carry real harm that requires protective distance, professional guidance, or time. Honoring a parent does not mean tolerating ongoing abuse or erasing legitimate boundaries. But for many of us, the distance is less about danger and more about pride, hurt feelings, or simply not knowing how to take the first step back.
+
+Ask God today whether there is one small step of peacemaking available to you — not a full resolution, just one step. Peacemakers are not those who solve everything at once; they are those who keep choosing the harder, gentler path, one step at a time.', 'Yesus menyebut para pembawa damai berbahagia, dan Ia menyebut mereka anak-anak Allah — bukan penjaga damai yang menghindari konflik dengan berdiam diri, melainkan pembawa damai yang secara aktif berupaya menuju pemulihan bahkan ketika itu sulit. Perbedaan ini penting dalam hubungan keluarga yang tegang. Sangat mungkin menghindari konflik terbuka dengan orang tua selama bertahun-tahun sementara jarak yang mendasarinya justru semakin dalam. Membawa damai menuntut sesuatu yang lebih aktif daripada sekadar menghindar.
+
+Membawa damai dengan orang tua tidak selalu berarti pemulihan yang dramatis atau percakapan yang terselesaikan di mana segalanya akhirnya diucapkan dan dipahami. Kadang itu tampak lebih kecil: telepon yang dilanjutkan kembali setelah keheningan panjang, permintaan maaf yang ditawarkan meskipun belum sepenuhnya diterima, batasan yang ditetapkan dengan kebaikan alih-alih kebencian, keputusan untuk berhenti mengulang-ulang keluhan lama dalam pikiran.
+
+Layak diakui dengan jujur bahwa membawa damai tidak selalu aman atau bijaksana dalam setiap situasi — beberapa hubungan membawa luka yang nyata yang membutuhkan jarak perlindungan, bimbingan profesional, atau waktu. Menghormati orang tua tidak berarti menoleransi kekerasan yang berlangsung atau menghapus batasan yang sah. Namun bagi banyak dari kita, jarak itu kurang berkaitan dengan bahaya dan lebih berkaitan dengan kesombongan, perasaan terluka, atau sekadar tidak tahu bagaimana mengambil langkah pertama untuk kembali.
+
+Tanyakan kepada Allah hari ini apakah ada satu langkah kecil membawa damai yang bisa kamu ambil — bukan penyelesaian penuh, hanya satu langkah. Para pembawa damai bukanlah mereka yang menyelesaikan segalanya sekaligus; mereka adalah orang-orang yang terus memilih jalan yang lebih sulit dan lebih lembut, selangkah demi selangkah.',
+    'What is one small, honest step of peacemaking, not a full resolution, that you could take with your parent this week?', 'Apa satu langkah kecil dan jujur membawa damai, bukan penyelesaian penuh, yang bisa kamu ambil dengan orang tuamu minggu ini?',
+    'Lord, make me a peacemaker, not just a peace-avoider. Show me one honest step I can take toward my parent, and give me courage to take it. Amen.', 'Tuhan, jadikanlah aku pembawa damai, bukan hanya penghindar konflik. Tunjukkan padaku satu langkah jujur yang bisa kuambil menuju orang tuaku, dan berilah aku keberanian untuk mengambilnya. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 5:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 5:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'As Far as It Depends on You', 'Sedapat-dapatnya, Kalau Hal Itu Bergantung Padamu',
+    'Paul''s counsel to the Romans carries a careful, realistic edge: as far as it depends on you, live at peace with everyone. Notice what this verse does not say. It does not promise that peace will always be achieved, or that reconciliation is entirely within our control. It acknowledges, quietly but clearly, that peace requires two willing parties, and sometimes we can only control our own half of the bridge.
+
+This is freeing for those of us carrying guilt over an unresolved relationship with a parent. If you have reached out, apologized, tried to soften the distance, and it has not been received the way you hoped, Scripture does not ask you to force a resolution that isn''t ready or available. Your responsibility is your own posture — your willingness, your openness, your prayers, your refusal to let bitterness take root — not the guarantee of a particular outcome.
+
+At the same time, this verse is a call to honest self-examination. It''s worth asking whether we have genuinely done our own part, or whether pride, old wounds, or simple avoidance have kept us from taking even the steps within our control. As far as it depends on me — have I truly gone that far, or have I stopped short out of fear?
+
+Whatever the current state of your relationship, bring your own half of the bridge honestly before God today. Do the part that depends on you, and release the rest into His hands, trusting that He sees every effort you have made, even the ones that were never fully received.', 'Nasihat Paulus kepada jemaat Roma membawa nada yang hati-hati dan realistis: sedapat-dapatnya, kalau hal itu bergantung padamu, hiduplah dalam perdamaian dengan semua orang. Perhatikan apa yang tidak dikatakan ayat ini. Ayat ini tidak menjanjikan bahwa perdamaian akan selalu tercapai, atau bahwa pemulihan sepenuhnya ada dalam kendali kita. Ayat ini mengakui, dengan tenang namun jelas, bahwa perdamaian membutuhkan dua pihak yang bersedia, dan kadang kita hanya bisa mengendalikan bagian kita sendiri dari jembatan itu.
+
+Ini membebaskan bagi kita yang membawa rasa bersalah atas hubungan yang belum terselesaikan dengan orang tua. Jika kamu telah mencoba menghubungi, meminta maaf, berusaha melunakkan jarak, dan itu tidak diterima seperti yang kamu harapkan, Firman Tuhan tidak memintamu memaksakan penyelesaian yang belum siap atau belum tersedia. Tanggung jawabmu adalah sikapmu sendiri — kesediaanmu, keterbukaanmu, doa-doamu, penolakanmu membiarkan kepahitan berakar — bukan jaminan hasil tertentu.
+
+Pada saat yang sama, ayat ini adalah panggilan untuk introspeksi yang jujur. Layak untuk bertanya apakah kita sungguh telah melakukan bagian kita sendiri, atau apakah kesombongan, luka lama, atau sekadar penghindaran telah menahan kita dari mengambil bahkan langkah-langkah yang ada dalam kendali kita. Sedapat-dapatnya bagiku — sudahkah aku benar-benar sejauh itu, atau apakah aku berhenti sebelum sampai karena takut?
+
+Apa pun keadaan hubunganmu saat ini, bawalah bagianmu sendiri dari jembatan itu dengan jujur di hadapan Allah hari ini. Lakukan bagian yang bergantung padamu, dan lepaskan sisanya ke dalam tangan-Nya, percaya bahwa Ia melihat setiap usaha yang telah kamu lakukan, bahkan yang tak pernah sepenuhnya diterima.',
+    'Have you genuinely done the part that depends on you in this relationship, or is there a step you have avoided out of fear or pride?', 'Sudahkah kamu sungguh melakukan bagian yang bergantung padamu dalam hubungan ini, atau adakah langkah yang kamu hindari karena takut atau sombong?',
+    'Lord, help me do my honest part toward peace with my parent, and give me peace of mind about what remains outside my control. Amen.', 'Tuhan, tolong aku melakukan bagianku dengan jujur menuju perdamaian dengan orang tuaku, dan berilah aku ketenangan hati atas apa yang berada di luar kendaliku. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:18', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 4,
+    'Bearing With One Another', 'Sabarlah Kamu Seorang Terhadap yang Lain',
+    'Paul''s instruction to the Colossians brings us to a fitting close: bear with each other and forgive one another, forgiving as the Lord forgave you. Bearing with someone implies ongoing patience, not a one-time gesture. It suggests that reconciliation with a difficult parent is rarely a single dramatic moment; it is usually a practice, repeated imperfectly, over time.
+
+Forgiveness does not mean forgetting, and it does not mean pretending the past didn''t happen or that no boundaries are needed going forward. It means releasing our grip on the debt we feel is owed to us, choosing not to let resentment define the relationship, even while wisdom may still shape how close or how often we engage. Forgiveness is a decision of the will, not always a feeling that arrives immediately.
+
+Christ''s forgiveness toward us is the model Paul gives, and it is a high standard — He forgave us fully, at real cost to Himself, while we were still far from Him. We are not asked to generate that kind of forgiveness from our own strength alone; we are invited to receive it first, and let it overflow into our capacity to forgive others, including a parent who may have wounded us deeply.
+
+As this short devotional closes, bring your relationship with your parent, whatever its current state, honestly before God one more time. Ask Him for the grace to keep bearing with them, keep forgiving as He forgives, and keep taking whatever small steps toward the bridge remain within your reach — trusting Him with the distance that remains.', 'Nasihat Paulus kepada jemaat Kolose membawa kita pada penutup yang tepat: sabarlah kamu seorang terhadap yang lain, dan ampunilah seorang akan yang lain, sama seperti Tuhan telah mengampuni kamu. Bersabar terhadap seseorang menyiratkan kesabaran yang berkelanjutan, bukan gerakan sekali jalan. Ini menunjukkan bahwa pemulihan dengan orang tua yang sulit jarang menjadi satu momen dramatis; biasanya itu adalah sebuah praktik, diulang dengan tidak sempurna, seiring waktu.
+
+Pengampunan tidak berarti melupakan, dan tidak berarti berpura-pura masa lalu tidak pernah terjadi atau bahwa tak ada batasan yang dibutuhkan ke depannya. Itu berarti melepaskan cengkeraman kita atas utang yang kita rasa harus dibayar kepada kita, memilih untuk tidak membiarkan kebencian mendefinisikan hubungan itu, sekalipun kebijaksanaan mungkin tetap membentuk seberapa dekat atau seberapa sering kita terlibat. Pengampunan adalah keputusan kehendak, tidak selalu perasaan yang datang seketika.
+
+Pengampunan Kristus kepada kita adalah teladan yang diberikan Paulus, dan itu standar yang tinggi — Ia mengampuni kita sepenuhnya, dengan harga yang nyata bagi diri-Nya sendiri, ketika kita masih jauh dari-Nya. Kita tidak diminta menghasilkan pengampunan semacam itu dari kekuatan kita sendiri saja; kita diundang untuk menerimanya terlebih dahulu, dan membiarkannya melimpah ke dalam kemampuan kita untuk mengampuni orang lain, termasuk orang tua yang mungkin telah melukai kita dalam-dalam.
+
+Saat renungan singkat ini ditutup, bawalah hubunganmu dengan orang tuamu, apa pun keadaannya saat ini, dengan jujur di hadapan Allah sekali lagi. Mintalah kepada-Nya anugerah untuk terus bersabar terhadap mereka, terus mengampuni sebagaimana Ia mengampuni, dan terus mengambil langkah-langkah kecil menuju jembatan itu yang masih dalam jangkauanmu — mempercayakan kepada-Nya jarak yang masih tersisa.',
+    'What would it look like to practice ongoing forgiveness toward your parent, even without a dramatic resolution, one small act at a time?', 'Seperti apa rupanya mempraktikkan pengampunan yang berkelanjutan kepada orang tuamu, bahkan tanpa penyelesaian yang dramatis, satu tindakan kecil pada satu waktu?',
+    'Lord, thank You for forgiving me fully in Christ. Let that forgiveness overflow into how I bear with and forgive my parent, one small step at a time. Amen.', 'Tuhan, terima kasih telah mengampuniku sepenuhnya di dalam Kristus. Biarlah pengampunan itu melimpah ke dalam caraku bersabar dan mengampuni orang tuaku, selangkah demi selangkah. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:13', 'TB', 1);
+
+  -- Plan: Their Legacy Lives On
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'Their Legacy Lives On',
+    'Warisan Mereka Tetap Hidup',
+    'Three days honoring parents who have gone before us',
+    'Tiga hari menghormati orang tua yang telah mendahului kita',
+    3,
+    'A short three-day devotional for those honoring the memory of a parent who has passed away, reflecting on the faith, love, and example they left behind. It offers Scripture-rooted comfort and a gentle invitation to carry their legacy forward with gratitude rather than only grief.',
+    'Renungan singkat tiga hari bagi mereka yang menghormati kenangan orang tua yang telah tiada, merenungkan iman, kasih, dan teladan yang mereka tinggalkan. Renungan ini menawarkan penghiburan yang berakar pada Firman Tuhan dan undangan lembut untuk membawa warisan mereka maju dengan rasa syukur, bukan hanya dukacita.',
+    '/images/devotions/their-legacy-lives-on.jpeg'
+  ) RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'A Faith That Lived in Them First', 'Iman yang Lebih Dahulu Hidup dalam Diri Mereka',
+    'Paul writes to Timothy about a faith passed down through generations — first alive in his grandmother, then his mother, and now living in him. It is a beautiful image of legacy: faith is rarely invented alone; it is usually received, planted by someone who came before us and tended it long enough for it to take root in our own lives. For many of us, a parent who has passed away was exactly this kind of soil.
+
+Grief and gratitude often sit side by side when we remember a parent who has gone ahead of us. We miss their voice, their presence, the ordinary rhythms of a relationship that can no longer continue the way it once did. And yet, alongside that grief, there is often something solid to hold onto: the faith they modeled, the values they instilled, the quiet consistency of a life that pointed us toward God even when they never said so directly.
+
+It can be healing to name specifically what was passed down to us. Perhaps it was a habit of prayer, a love of Scripture, a generosity toward strangers, a steadiness in hardship. These are not small things; they are inheritance, every bit as real as property or money, and often more lasting.
+
+Today, take time to name one specific way your parent''s faith or character lives on in you. Thank God for planting that seed through them, and ask Him to help you tend it well, the way they once did.', 'Paulus menulis kepada Timotius tentang iman yang diwariskan lintas generasi — pertama hidup dalam diri neneknya, lalu ibunya, dan sekarang hidup dalam dirinya. Ini gambaran yang indah tentang warisan: iman jarang ditemukan sendirian; biasanya iman diterima, ditanam oleh seseorang yang datang sebelum kita dan merawatnya cukup lama sehingga bisa berakar dalam hidup kita sendiri. Bagi banyak dari kita, orang tua yang telah tiada adalah persis tanah semacam ini.
+
+Dukacita dan rasa syukur sering duduk berdampingan ketika kita mengenang orang tua yang telah mendahului kita. Kita merindukan suara mereka, kehadiran mereka, irama sehari-hari dari sebuah hubungan yang tak lagi bisa berlanjut seperti dahulu. Namun demikian, di samping dukacita itu, sering ada sesuatu yang kokoh untuk dipegang: iman yang mereka contohkan, nilai-nilai yang mereka tanamkan, konsistensi yang tenang dari sebuah hidup yang mengarahkan kita kepada Allah bahkan ketika mereka tak pernah mengatakannya secara langsung.
+
+Bisa menjadi penyembuhan untuk menyebut secara khusus apa yang telah diwariskan kepada kita. Mungkin itu kebiasaan berdoa, kecintaan pada Firman Tuhan, kemurahan hati kepada orang asing, ketenangan dalam kesulitan. Ini bukan hal-hal kecil; ini warisan, sama nyatanya dengan harta atau uang, dan sering kali lebih bertahan lama.
+
+Hari ini, luangkan waktu untuk menyebut satu cara khusus di mana iman atau karakter orang tuamu tetap hidup dalam dirimu. Bersyukurlah kepada Allah karena telah menanam benih itu melalui mereka, dan mintalah Dia menolongmu merawatnya dengan baik, seperti yang dahulu mereka lakukan.',
+    'What specific piece of faith or character did your parent plant in you that you now carry forward?', 'Bagian iman atau karakter khusus apa yang ditanamkan orang tuamu dalam dirimu yang kini kamu bawa maju?',
+    'Lord, thank You for the faith my parent planted in me. Help me tend it well and pass it on faithfully, just as it was passed to me. Amen.', 'Tuhan, terima kasih atas iman yang ditanamkan orang tuaku dalam diriku. Tolong aku merawatnya dengan baik dan mewariskannya dengan setia, sebagaimana ia diwariskan kepadaku. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timothy 1:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timotius 1:5', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'Still Speaking Through Faith', 'Masih Berbicara Melalui Iman',
+    'The letter to the Hebrews says something remarkable about Abel, who died generations before the letter was written: by faith he still speaks, even though he is dead. Faith, lived out fully, does not end when a life ends. It continues to speak — through memory, through example, through the ripple effects of a life that pointed toward God, echoing forward into the lives of those who come after.
+
+If your parent has passed away, it can be a source of real comfort to realize that their life is still speaking, even now. Every time you choose kindness because you saw it modeled in them, every time you pray because you learned prayer at their side, every time you pass on a value or a story to your own children, their faith is still speaking through you, just as Abel''s did generations later.
+
+This does not erase grief. Missing someone and believing their legacy continues are not contradictory; they can be held together. In fact, allowing their legacy to keep speaking through our lives can become one of the more meaningful ways we honor their memory — not through grand gestures, but through the quiet continuation of the good things they gave us.
+
+Today, consider one way you can let your parent''s faith ''speak'' through your own life this week — a choice, a habit, a word passed on to someone younger than you, carrying their legacy just a little further forward.', 'Surat Ibrani mengatakan sesuatu yang luar biasa tentang Habel, yang wafat beberapa generasi sebelum surat ini ditulis: karena iman ia masih berbicara, sekalipun ia sudah mati. Iman, yang dijalani sepenuhnya, tidak berakhir ketika sebuah hidup berakhir. Ia terus berbicara — melalui kenangan, melalui teladan, melalui riak-riak dari sebuah hidup yang mengarah kepada Allah, bergema maju ke dalam hidup orang-orang yang datang sesudahnya.
+
+Jika orang tuamu telah tiada, bisa menjadi sumber penghiburan yang nyata untuk menyadari bahwa hidup mereka masih berbicara, bahkan sekarang. Setiap kali kamu memilih kebaikan karena kamu melihatnya dicontohkan dalam diri mereka, setiap kali kamu berdoa karena kamu belajar berdoa di samping mereka, setiap kali kamu meneruskan sebuah nilai atau kisah kepada anak-anakmu sendiri, iman mereka masih berbicara melaluimu, sama seperti iman Habel berbicara beberapa generasi kemudian.
+
+Ini tidak menghapus dukacita. Merindukan seseorang dan percaya bahwa warisan mereka berlanjut bukanlah dua hal yang bertentangan; keduanya bisa dipegang bersama-sama. Bahkan, membiarkan warisan mereka terus berbicara melalui hidup kita bisa menjadi salah satu cara yang lebih bermakna untuk menghormati kenangan mereka — bukan melalui gestur yang megah, tetapi melalui kelanjutan yang diam-diam dari hal-hal baik yang mereka berikan kepada kita.
+
+Hari ini, pikirkan satu cara kamu bisa membiarkan iman orang tuamu ''berbicara'' melalui hidupmu sendiri minggu ini — sebuah pilihan, sebuah kebiasaan, sebuah kata yang diteruskan kepada seseorang yang lebih muda darimu, membawa warisan mereka sedikit lebih jauh ke depan.',
+    'How is your parent''s faith still ''speaking'' through choices, habits, or values you carry today?', 'Bagaimana iman orang tuamu masih ''berbicara'' melalui pilihan, kebiasaan, atau nilai-nilai yang kamu bawa hari ini?',
+    'Lord, thank You that faith, once lived fully, continues to speak. Let my parent''s legacy keep echoing through the way I live, love, and pray. Amen.', 'Tuhan, terima kasih bahwa iman, yang pernah dijalani sepenuhnya, terus berbicara. Biarlah warisan orang tuaku terus bergema melalui caraku hidup, mengasihi, dan berdoa. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 11:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 11:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'Training That Was Never Wasted', 'Didikan yang Tak Pernah Sia-sia',
+    'Proverbs offers a promise that outlasts a parent''s own lifetime: train up a child in the way they should go, and when they are old they will not turn from it. This verse was never meant only as advice for parents; it is also a promise for the children who received that training, long after the one who gave it has passed away. The formation your parent poured into you was not lost when they were. It became part of the permanent architecture of who you are.
+
+Grief can sometimes carry a quiet fear: that without our parent physically present to remind us, encourage us, or correct us, we might drift from the path they modeled. But this verse offers real assurance. Training given faithfully over years tends to hold, even without the trainer''s continued presence, because it was never merely instruction delivered from the outside; it became something woven into us.
+
+As we close this short devotional, it is worth remembering that honoring a parent who has passed is not only about looking backward in grief, but about living forward in faithfulness — letting the way they raised you continue to shape the way you now live, parent, love, and believe. Their legacy is not a museum piece to be preserved untouched; it is a living inheritance meant to keep bearing fruit through you.
+
+Today, thank God for the training, whatever form it took, that your parent gave you — and ask for grace to walk faithfully in it, carrying their legacy forward not out of obligation, but out of love.', 'Kitab Amsal menawarkan janji yang bertahan lebih lama dari masa hidup orang tua sendiri: didiklah orang muda menurut jalan yang patut baginya, maka pada masa tuanya pun ia tidak akan menyimpang dari pada jalan itu. Ayat ini tidak pernah dimaksudkan hanya sebagai nasihat bagi orang tua; ini juga janji bagi anak-anak yang menerima didikan itu, lama setelah orang yang memberikannya telah tiada. Pembentukan yang dicurahkan orang tuamu ke dalam dirimu tidak hilang ketika mereka tiada. Itu menjadi bagian dari struktur permanen siapa dirimu.
+
+Dukacita kadang bisa membawa ketakutan yang diam-diam: bahwa tanpa orang tua secara fisik hadir untuk mengingatkan, menyemangati, atau menegur kita, kita mungkin menyimpang dari jalan yang mereka contohkan. Namun ayat ini menawarkan keyakinan yang nyata. Didikan yang diberikan dengan setia selama bertahun-tahun cenderung bertahan, bahkan tanpa kehadiran terus-menerus dari yang mendidik, karena itu tak pernah sekadar instruksi yang disampaikan dari luar; itu menjadi sesuatu yang tertenun dalam diri kita.
+
+Saat kita menutup renungan singkat ini, layak diingat bahwa menghormati orang tua yang telah tiada bukan hanya tentang melihat ke belakang dalam dukacita, tetapi tentang hidup ke depan dalam kesetiaan — membiarkan cara mereka membesarkanmu terus membentuk cara kamu sekarang hidup, mengasuh, mengasihi, dan percaya. Warisan mereka bukanlah barang museum yang harus dilestarikan tanpa disentuh; itu adalah warisan yang hidup yang dimaksudkan untuk terus berbuah melalui dirimu.
+
+Hari ini, bersyukurlah kepada Allah atas didikan, dalam bentuk apa pun itu, yang diberikan orang tuamu kepadamu — dan mintalah anugerah untuk berjalan dengan setia di dalamnya, membawa warisan mereka maju bukan karena kewajiban, melainkan karena kasih.',
+    'What piece of your parent''s training or example do you sense holding you steady today, even in their absence?', 'Bagian didikan atau teladan orang tuamu yang mana yang kamu rasa masih menopangmu tetap teguh hari ini, bahkan dalam ketidakhadiran mereka?',
+    'Lord, thank You that the training my parent gave me was never wasted. Help me walk faithfully in it and carry their legacy forward with love, not just memory. Amen.', 'Tuhan, terima kasih bahwa didikan yang diberikan orang tuaku tidak pernah sia-sia. Tolong aku berjalan dengan setia di dalamnya dan membawa warisan mereka maju dengan kasih, bukan hanya kenangan. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 22:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 22:6', 'TB', 1);
+
+  -- Sub-category: Siblings & Extended Family --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Faith and Doubt' AND parent_id = v_family_id
+    WHERE name = 'Siblings & Extended Family' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Faith and Doubt', 'Iman dan Keraguan', v_family_id)
+      VALUES ('Siblings & Extended Family', 'Saudara dan Keluarga Besar', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
-    UPDATE public.devotion_categories SET name_id = 'Iman dan Keraguan'
+    UPDATE public.devotion_categories SET name_id = 'Saudara dan Keluarga Besar'
       WHERE id = v_cat_id;
   END IF;
 
-  -- Plan: When God Feels Silent
+  -- Plan: From Rivals to Reconciled
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'When God Feels Silent',
-    'Ketika Allah Terasa Diam',
-    'Finding God in the dry seasons of faith',
-    'Menemukan Allah di musim kering iman',
+    'From Rivals to Reconciled',
+    'Dari Rival Menjadi Rekonsiliasi',
+    'A five-day journey through sibling conflict and forgiveness',
+    'Perjalanan lima hari melalui konflik dan pengampunan antar saudara',
     5,
-    'For anyone whose prayers seem to hit the ceiling and whose faith feels flat rather than fiery, this five-day plan sits honestly inside the dry, quiet seasons of belief. Drawing on the psalms of lament and the prophets who also waited in silence, it gently insists that spiritual dryness is not spiritual failure, and that God is often nearest exactly when He feels farthest away.',
-    'Bagi siapa saja yang doanya terasa membentur langit-langit dan imannya terasa datar, bukan menyala-nyala, rencana lima hari ini masuk dengan jujur ke dalam musim-musim kering dan sunyi dalam kepercayaan. Dengan bersandar pada mazmur-mazmur ratapan dan para nabi yang juga menanti dalam diam, rencana ini dengan lembut menegaskan bahwa kekeringan rohani bukanlah kegagalan rohani, dan bahwa Allah sering kali paling dekat justru saat Ia terasa paling jauh.',
-    '/images/devotions/when-god-feels-silent.jpeg'
+    'Brothers and sisters can wound each other more deeply than almost anyone else, because they know exactly where it hurts. Drawing on the stories of Joseph and his brothers and of Jacob and Esau, this five-day plan walks through the slow, honest work of naming old rivalries, choosing to forgive, and letting God rebuild what competition and jealousy once broke.',
+    'Kakak dan adik bisa saling melukai lebih dalam daripada hampir siapa pun, karena mereka tahu persis di mana titik lemah kita. Dengan berpijak pada kisah Yusuf dan saudara-saudaranya serta Yakub dan Esau, rencana lima hari ini menuntun kita melalui proses jujur dan perlahan untuk menyebut rivalitas lama, memilih mengampuni, dan membiarkan Allah membangun kembali apa yang pernah dirusak oleh persaingan dan iri hati.',
+    '/images/devotions/from-rivals-to-reconciled.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -1714,29 +1282,25 @@ Jadi saat kau menyelesaikan perjalanan tujuh hari melalui musim kering dan musim
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'Permission to Say It''s Hard', 'Izin untuk Berkata Ini Berat',
-    'There is a particular kind of tiredness that comes from pretending everything is fine when it isn''t — and many of us have carried that tiredness into our faith without even realizing it. We show up, we sing the songs, we say the right words in prayer, but somewhere underneath, our hearts are asking a much quieter, much harder question: where are You? It can feel almost forbidden to admit that faith has gone flat, that the Bible reads like ordinary paper, that prayer feels like talking into an empty room. But the first honest step in a dry season is simply admitting that it is dry.
+    'Where the Rivalry Begins', 'Di Mana Rivalitas Dimulai',
+    'Long before Joseph ever wore his coat of many colors, something had already gone wrong at home. Scripture is honest about it: Jacob loved Joseph more than his other sons, and his brothers could see it plainly. That kind of favoritism, whether real or only perceived, plants a seed that grows quietly for years before it ever breaks into the open. Many of us know that seed. It might have been a parent''s offhand comparison, a grade, a wedding toast, an inheritance conversation, or simply the sense that one sibling always seemed to get more attention, more praise, or more grace.
 
-Scripture never asks us to fake our way through this. Long before we were born, the psalmists were already crying out with the same raw honesty we''re often afraid to bring to God. ''How long, LORD? Will you forget me forever?'' is not a whisper from someone who has given up on God — it is the cry of someone who is still, against all appearances, addressing Him directly. That distinction matters enormously. A person who has truly walked away from God doesn''t bother complaining to Him anymore. The very act of crying out, even in frustration, is itself a form of faith clinging on.
+What is striking is that the brothers'' resentment did not appear overnight. It built up meal by meal, glance by glance, until Genesis tells us plainly that they hated Joseph and could not speak a kind word to him. Rivalry rarely announces itself with a single dramatic event. More often it accumulates in the small, unspoken moments we never bring into the light, until one day it hardens into distance, sarcasm, or silence at family gatherings.
 
-So today, give yourself permission to name what is actually true for you, without editing it into something more spiritually presentable. Maybe it''s boredom in prayer, maybe it''s resentment over unanswered requests, maybe it''s simply numbness after a long, ordinary stretch of life. None of that disqualifies you from God''s presence. In fact, the honest naming of it is often the very doorway back into relationship, because it stops us from performing faith and starts us actually living it, mess and all.
+Naming this honestly is the first, uncomfortable step toward healing. It is tempting to skip straight to forgiveness without ever admitting what actually hurt, but half-acknowledged wounds tend to resurface at the worst possible moments, like a birthday dinner or a hospital waiting room. God is not afraid of our honesty. He inspired an entire book of the Bible that begins with sibling jealousy so raw it nearly ended in murder, precisely so that we would not have to pretend our own family tensions are too shameful to bring before Him.
 
-Many who have walked this road testify that the turning point wasn''t a dramatic breakthrough but a small, deliberate decision to keep showing up even while feeling nothing — to keep praying honest, unpolished prayers instead of polished, distant ones. That decision doesn''t erase the dryness overnight, but it keeps the door open. And a door held open, even by trembling hands, is enough for God to keep walking through.', 'Ada satu jenis kelelahan yang muncul karena berpura-pura semuanya baik-baik saja padahal tidak — dan banyak dari kita membawa kelelahan itu ke dalam hidup iman tanpa benar-benar menyadarinya. Kita hadir di gereja, kita menyanyikan pujian, kita mengucapkan kata-kata yang tepat dalam doa, tetapi jauh di dalam, hati kita sedang bertanya sesuatu yang jauh lebih pelan dan lebih sulit: di manakah Engkau? Rasanya hampir seperti terlarang untuk mengakui bahwa iman terasa datar, bahwa Alkitab terasa seperti kertas biasa, bahwa doa terasa seperti berbicara ke ruangan kosong. Namun langkah jujur pertama dalam musim kering adalah sekadar mengakui bahwa memang sedang kering.
+Today is simply an invitation to notice, without judgment, where rivalry first took root in your own story. You do not need to solve it yet. You only need to see it clearly, the way God already sees it, and trust that He is patient enough to walk the rest of this journey with you.', 'Jauh sebelum Yusuf mengenakan jubah bercoraknya yang terkenal itu, sesuatu sudah retak di rumah mereka. Alkitab jujur menceritakannya: Yakub mengasihi Yusuf lebih dari anak-anaknya yang lain, dan saudara-saudaranya bisa melihatnya dengan jelas. Sikap pilih kasih semacam itu, baik yang nyata maupun yang hanya terasa demikian, menanam benih yang tumbuh diam-diam selama bertahun-tahun sebelum akhirnya pecah menjadi konflik terbuka. Banyak dari kita mengenal benih itu. Bisa jadi berupa perbandingan sepintas dari orang tua, nilai rapor, sambutan di pesta pernikahan, percakapan soal warisan, atau sekadar perasaan bahwa satu saudara selalu mendapat lebih banyak perhatian, pujian, atau kelonggaran.
 
-Alkitab tidak pernah meminta kita berpura-pura melewati ini. Jauh sebelum kita lahir, pemazmur sudah berseru dengan kejujuran mentah yang sering kita takut bawa kepada Allah. ''Berapa lama lagi, TUHAN? Apakah Engkau melupakan aku untuk selama-lamanya?'' bukanlah bisikan orang yang sudah menyerah pada Allah — itu adalah teriakan orang yang, meski segala sesuatunya tampak sebaliknya, masih berbicara langsung kepada-Nya. Perbedaan ini sangat penting. Orang yang benar-benar meninggalkan Allah tidak lagi repot-repot mengeluh kepada-Nya. Tindakan berseru itu sendiri, bahkan dalam kekecewaan, adalah bentuk iman yang masih berpegang teguh.
+Yang menarik, kebencian saudara-saudara Yusuf tidak muncul dalam semalam. Ia terbangun makan demi makan, tatapan demi tatapan, sampai Kitab Kejadian mengatakan dengan gamblang bahwa mereka membenci Yusuf dan tidak dapat berkata baik kepadanya. Rivalitas jarang muncul lewat satu peristiwa dramatis. Lebih sering ia menumpuk dalam momen-momen kecil yang tak pernah kita ungkapkan, sampai suatu hari mengeras menjadi jarak, sindiran, atau keheningan yang canggung di acara keluarga.
 
-Jadi hari ini, berikan dirimu izin untuk menamai apa yang sesungguhnya kamu rasakan, tanpa menyuntingnya menjadi sesuatu yang terdengar lebih rohani. Mungkin itu kebosanan dalam doa, mungkin kekecewaan atas permohonan yang belum terjawab, mungkin sekadar mati rasa setelah masa yang panjang dan biasa-biasa saja. Tak satu pun dari itu mendiskualifikasi dirimu dari hadirat Allah. Justru, pengakuan jujur itu sering kali menjadi pintu masuk kembali ke dalam relasi, karena hal itu menghentikan kita dari sekadar berpura-pura beriman dan mulai benar-benar menjalaninya, dengan segala kekacauannya.
+Menyebut hal ini dengan jujur adalah langkah pertama yang tidak nyaman menuju pemulihan. Ada godaan untuk langsung melompat ke pengampunan tanpa pernah mengakui apa yang sebenarnya menyakiti, padahal luka yang setengah diakui cenderung muncul kembali di saat yang paling tidak tepat, seperti makan malam ulang tahun atau ruang tunggu rumah sakit. Allah tidak takut akan kejujuran kita. Ia mengilhami seluruh kitab yang dibuka dengan kecemburuan antar saudara yang begitu mentah hingga hampir berakhir dengan pembunuhan, justru supaya kita tidak perlu berpura-pura bahwa ketegangan keluarga kita sendiri terlalu memalukan untuk dibawa kepada-Nya.
 
-Banyak orang yang telah melewati jalan ini bersaksi bahwa titik baliknya bukanlah terobosan dramatis, melainkan keputusan kecil yang disengaja untuk tetap hadir sekalipun tidak merasakan apa-apa — untuk tetap berdoa dengan jujur dan apa adanya, bukan doa yang rapi namun berjarak. Keputusan itu tidak langsung menghapus kekeringan, tetapi membuat pintu tetap terbuka. Dan pintu yang tetap terbuka, sekalipun oleh tangan yang gemetar, sudah cukup bagi Allah untuk terus melangkah masuk.',
-    'Naming your dryness honestly to God is not a lack of faith — it is faith still speaking.', 'Menamai kekeringanmu dengan jujur di hadapan Allah bukanlah kurangnya iman — itu adalah iman yang masih berbicara.',
-    'Lord, I don''t want to pretend with You anymore. You already see the flatness in my heart, so I bring it to You honestly instead of hiding it. Thank You that my honest cry is still a form of trust. Stay near me even in my numbness, and teach me to keep showing up. Amen.', 'Tuhan, aku tidak ingin lagi berpura-pura di hadapan-Mu. Engkau sudah melihat kedatangan hatiku, jadi aku membawanya kepada-Mu dengan jujur, bukan menyembunyikannya. Terima kasih karena seruan jujurku tetap menjadi bentuk kepercayaan. Tetaplah dekat denganku bahkan dalam kebasanku, dan ajar aku untuk terus hadir. Amin.'
+Hari ini hanyalah undangan untuk menyadari, tanpa menghakimi, di mana rivalitas itu pertama kali berakar dalam kisah hidup kita sendiri. Kita belum perlu menyelesaikannya hari ini. Kita hanya perlu melihatnya dengan jernih, sebagaimana Allah sudah melihatnya, dan percaya bahwa Ia cukup sabar untuk menemani sisa perjalanan ini bersama kita.',
+    'Where did the earliest thread of rivalry with a sibling begin in your own family, and can you name it honestly before God today?', 'Di mana benang pertama rivalitas dengan saudara mulai terjalin dalam keluargamu, dan dapatkah engkau menyebutnya dengan jujur di hadapan Allah hari ini?',
+    'Lord, You see every layer of my family''s story, even the parts I have never said out loud. Give me courage to be honest about where hurt began, and give me confidence that You are not shocked by any of it. Meet me gently in this first step. Amen.', 'Tuhan, Engkau melihat setiap lapisan kisah keluargaku, bahkan bagian yang belum pernah kuucapkan. Berilah aku keberanian untuk jujur tentang di mana luka itu bermula, dan berilah aku keyakinan bahwa Engkau tidak terkejut oleh apa pun di dalamnya. Temuilah aku dengan lembut pada langkah pertama ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 13:1-2', 'WEB', 'How long, LORD? Will you forget me forever? How long will you hide your face from me? How long must I wrestle with my thoughts and day after day have sorrow in my heart?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 13:2-3', 'TB', 'Berapa lama lagi, TUHAN, Kaulupakan aku terus-menerus? Berapa lama lagi Engkau menyembunyikan wajah-Mu terhadap aku? Berapa lama lagi aku harus menaruh rancangan dalam jiwaku, kedukaan dalam hatiku sepanjang hari?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 37:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 37:4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1746,29 +1310,25 @@ Banyak orang yang telah melewati jalan ini bersaksi bahwa titik baliknya bukanla
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'The Soul That Talks to Itself', 'Jiwa yang Berbicara kepada Dirinya Sendiri',
-    'One of the most quietly powerful habits modeled in the Psalms is the practice of a person literally speaking to their own soul. ''Why, my soul, are you downcast? Why so disturbed within me?'' is not rhetorical decoration — it''s a spiritual technique. The psalmist notices that his feelings and his faith are not the same thing, and instead of simply obeying whatever his emotions tell him in the moment, he turns and addresses them directly, almost like a shepherd calling a wandering sheep back toward the flock.
+    'Carrying What We Cannot Put Down', 'Memikul Apa yang Tak Bisa Kita Letakkan',
+    'For twenty years, Joseph carried the memory of being thrown into a pit and sold by his own brothers. We are not told every detail of what he felt during his years as a slave and then a prisoner in Egypt, but it is not hard to imagine the nights when betrayal replayed itself in his mind. Meanwhile, his brothers carried their own weight: the guilt of what they had done, the lie they told their father, the years of watching Jacob grieve a son they knew was still alive.
 
-This matters because dry seasons often convince us that our feelings are the final truth about our situation. If I feel distant from God, then I must be distant from God. If prayer feels empty, then God must not be listening. But feelings, however real and worth taking seriously, are not always accurate messengers. They are shaped by exhaustion, by circumstance, by chemistry, by a hundred things that have nothing to do with whether God is actually present and at work. Learning to notice a feeling without immediately believing everything it says is one of the quiet disciplines of a mature faith.
+This is often what sibling rivalry does long after childhood ends. It does not stay contained in the past; it becomes a weight both people carry separately, often without ever discussing it, sometimes for decades. One sibling nurses the memory of being overlooked, while the other quietly carries shame or defensiveness they have never named. Both people can spend years performing normalcy at holidays while an unspoken account is still being kept underneath.
 
-So the psalmist doesn''t deny what he feels — downcast, disturbed, these are real words for real pain. But he refuses to let those feelings have the last word. Instead he preaches truth back to his own heart: ''Put your hope in God, for I will yet praise him, my Savior and my God.'' Notice the tense — not ''I feel like praising him now,'' but ''I will yet praise him.'' That''s hope reaching forward past the current moment into a future he trusts is coming, even though he cannot feel it yet.
+The exhausting part of an uncarried burden is that it colors everything else. Joseph''s brothers could not simply move forward and forget; their guilt resurfaced sharply the moment real pressure arrived, when they stood before the unrecognized Egyptian official years later and immediately assumed disaster was punishment for what they had done to their brother. Old wounds, left unaddressed, do not fade quietly. They wait.
 
-Try this today: when the heaviness rises, don''t just sit passively under it. Speak to your own soul the way the psalmist did. Say out loud, if you can, ''Why are you downcast, my soul? Put your hope in God.'' It will feel strange, even artificial, at first. But over time this small act of talking back to your feelings, rather than simply obeying them, becomes one of the sturdiest habits a dry season can teach you.', 'Salah satu kebiasaan yang paling diam-diam berkuasa dalam Mazmur adalah praktik seseorang benar-benar berbicara kepada jiwanya sendiri. ''Mengapa engkau tertekan, hai jiwaku, dan mengapa engkau gelisah di dalam diriku?'' bukanlah hiasan retoris — itu adalah teknik rohani. Sang pemazmur menyadari bahwa perasaannya dan imannya bukanlah hal yang sama, dan alih-alih sekadar menuruti apa pun yang dikatakan emosinya saat itu, ia berbalik dan berbicara langsung kepadanya, hampir seperti seorang gembala memanggil domba yang tersesat kembali ke kawanan.
+God does not ask us to pretend the weight is not there. He asks us to bring it to Him honestly, the way Joseph eventually wept openly rather than continuing to perform composure. If you are carrying resentment, guilt, or grief connected to a brother or sister, today is a good day to simply admit that the weight is real, and to ask God to begin helping you set it down.', 'Selama dua puluh tahun, Yusuf memikul kenangan dilempar ke dalam sumur dan dijual oleh saudara-saudaranya sendiri. Kita tidak diberi tahu setiap detail perasaannya selama tahun-tahun sebagai budak dan kemudian tahanan di Mesir, tetapi tidak sulit membayangkan malam-malam ketika pengkhianatan itu terus terulang dalam pikirannya. Sementara itu, saudara-saudaranya juga memikul beban mereka sendiri: rasa bersalah atas apa yang telah mereka lakukan, kebohongan yang mereka sampaikan kepada ayah mereka, dan bertahun-tahun menyaksikan Yakub berduka atas anak yang mereka tahu sebenarnya masih hidup.
 
-Ini penting karena musim kering sering meyakinkan kita bahwa perasaan kita adalah kebenaran akhir tentang keadaan kita. Jika aku merasa jauh dari Allah, maka pastilah aku memang jauh dari Allah. Jika doa terasa hampa, maka pastilah Allah tidak mendengarkan. Tetapi perasaan, betapapun nyata dan patut diperhatikan, tidak selalu menjadi pembawa pesan yang akurat. Perasaan dibentuk oleh kelelahan, oleh keadaan, oleh kimia tubuh, oleh seratus hal lain yang tidak ada hubungannya dengan apakah Allah sungguh hadir dan bekerja. Belajar memperhatikan perasaan tanpa langsung memercayai segala sesuatu yang dikatakannya adalah salah satu disiplin diam dari iman yang dewasa.
+Inilah yang sering terjadi pada rivalitas antar saudara jauh setelah masa kanak-kanak berlalu. Ia tidak tetap tinggal di masa lalu; ia menjadi beban yang dipikul kedua belah pihak secara terpisah, sering kali tanpa pernah dibicarakan, kadang selama puluhan tahun. Satu saudara terus mengenang rasa terabaikan, sementara yang lain diam-diam memikul rasa malu atau sikap defensif yang tak pernah disebut namanya. Keduanya bisa menghabiskan bertahun-tahun berpura-pura normal saat acara keluarga, padahal ada catatan yang tak terucap masih tersimpan di bawah permukaan.
 
-Jadi sang pemazmur tidak menyangkal apa yang ia rasakan — tertekan, gelisah, itu adalah kata-kata nyata untuk penderitaan nyata. Tetapi ia menolak membiarkan perasaan itu menjadi kata terakhir. Sebaliknya, ia memberitakan kebenaran kembali kepada hatinya sendiri: ''Berharaplah kepada Allah! Sebab aku akan bersyukur lagi kepada-Nya, penolongku dan Allahku!'' Perhatikan bentuk waktunya — bukan ''aku merasa ingin memuji Dia sekarang,'' melainkan ''aku akan bersyukur lagi.'' Itulah pengharapan yang menjangkau melampaui saat ini ke masa depan yang ia percayai akan datang, sekalipun ia belum bisa merasakannya.
+Bagian yang melelahkan dari beban yang tak pernah diletakkan adalah bahwa ia mewarnai segala sesuatu yang lain. Saudara-saudara Yusuf tidak bisa begitu saja melanjutkan hidup dan melupakannya; rasa bersalah mereka muncul kembali dengan tajam begitu tekanan nyata datang, ketika mereka berdiri di hadapan pejabat Mesir yang tak mereka kenali bertahun-tahun kemudian dan langsung menganggap bencana itu sebagai hukuman atas apa yang telah mereka lakukan kepada saudara mereka. Luka lama yang dibiarkan tak diselesaikan tidak memudar diam-diam. Ia menunggu.
 
-Cobalah ini hari ini: ketika kebebanan itu muncul, jangan hanya duduk pasif di bawahnya. Berbicaralah kepada jiwamu sendiri seperti yang dilakukan pemazmur. Ucapkanlah, jika kamu bisa, ''Mengapa engkau tertekan, hai jiwaku? Berharaplah kepada Allah.'' Rasanya akan aneh, bahkan dibuat-buat, pada awalnya. Tetapi seiring waktu, tindakan kecil membalas perasaanmu ini, alih-alih sekadar menaatinya, menjadi salah satu kebiasaan paling kokoh yang dapat diajarkan oleh musim kering.',
-    'Your feelings are real, but they are not the final word — you are allowed to preach hope back to your own heart.', 'Perasaanmu itu nyata, tetapi bukan kata terakhir — kamu diperbolehkan memberitakan pengharapan kembali kepada hatimu sendiri.',
-    'God, my heart feels heavy today, and I don''t want to pretend otherwise. But like the psalmist, I choose to speak hope to my own soul. Help me trust that I will yet praise You, even before I feel like it. Be my Savior in this dry moment. Amen.', 'Allah, hatiku terasa berat hari ini, dan aku tidak ingin berpura-pura sebaliknya. Tetapi seperti pemazmur, aku memilih untuk berbicara pengharapan kepada jiwaku sendiri. Tolong aku percaya bahwa aku akan bersyukur lagi kepada-Mu, bahkan sebelum aku merasakannya. Jadilah Juruselamatku dalam saat kering ini. Amin.'
+Allah tidak meminta kita berpura-pura bahwa beban itu tidak ada. Ia meminta kita membawanya kepada-Nya dengan jujur, seperti Yusuf akhirnya menangis terbuka daripada terus berpura-pura tenang. Jika engkau memikul kebencian, rasa bersalah, atau duka yang berkaitan dengan seorang kakak atau adik, hari ini adalah waktu yang baik untuk sekadar mengakui bahwa beban itu nyata, dan meminta Allah mulai menolongmu meletakkannya.',
+    'What weight related to a sibling relationship have you been carrying quietly, and what would it look like to finally name it before God?', 'Beban apa yang berkaitan dengan hubungan bersaudara yang selama ini diam-diam engkau pikul, dan seperti apa langkah untuk akhirnya menyebutnya di hadapan Allah?',
+    'Father, I confess I have carried this weight for a long time without setting it down. Help me be as honest as Joseph eventually was, and give me the same grace he received to see Your hand even in painful chapters. Amen.', 'Bapa, aku mengaku telah memikul beban ini cukup lama tanpa pernah meletakkannya. Tolong aku untuk sejujur Yusuf pada akhirnya, dan berilah aku anugerah yang sama seperti yang ia terima untuk melihat tangan-Mu bahkan dalam bab-bab hidup yang menyakitkan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 42:5', 'WEB', 'Why, my soul, are you downcast? Why so disturbed within me? Put your hope in God, for I will yet praise him, my Savior and my God.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 42:6', 'TB', 'Mengapa engkau tertekan, hai jiwaku, dan mengapa engkau gelisah di dalam diriku? Berharaplah kepada Allah! Sebab aku akan bersyukur lagi kepada-Nya, penolongku dan Allahku!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 45:4-5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 45:4-5', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1778,29 +1338,25 @@ Cobalah ini hari ini: ketika kebebanan itu muncul, jangan hanya duduk pasif di b
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'When Even Lament Goes Unanswered', 'Ketika Ratapan pun Tak Terjawab',
-    'Most of the psalms of complaint eventually swing around to praise — the writer cries out, and by the final verses, hope has returned. But not all of them. Psalm 88 is unusual, almost startling, because it ends in darkness. The psalmist has cried day and night, and the very last line of the poem is essentially, ''the darkness is my closest friend.'' No triumphant turn. No resolved chord. Just honest, unresolved grief laid before God and left there.
+    'Running Toward Instead of Away', 'Berlari Menuju, Bukan Menjauh',
+    'Jacob spent years dreading his reunion with Esau. He had good reason to be afraid; he had deceived his brother out of both a birthright and a blessing, and had then fled rather than face the consequences. When word came that Esau was approaching with four hundred men, Jacob assumed the worst and prepared for disaster, sending gifts ahead in waves, hoping to soften a blow he was certain was coming.
 
-It would be easy to skip past a psalm like this, assuming it doesn''t belong in Scripture, or that it represents some kind of spiritual failure on the writer''s part. But its presence in the Bible is itself a quiet, profound statement: God made room in His holy book for a prayer that never gets a happy ending on the page. He didn''t need the psalmist to tie it up neatly before it counted as real prayer. Sometimes lament is the whole prayer, start to finish, and that is enough.
+What actually happened surprised everyone. Esau, the brother with every right to hold a grudge, ran to meet Jacob, embraced him, and wept. Scripture does not explain exactly what changed in Esau''s heart over those years apart, only that when the moment came, he chose to run toward his brother rather than settle old scores. It is one of the most quietly astonishing reunions in the Bible precisely because it defies what we expect from a wronged sibling.
 
-This matters enormously for anyone in a season where their own cries seem to disappear into silence. If your prayers haven''t resolved into praise yet, if the darkness still feels like the nearest thing to you, you are in good company — the company of a psalmist whose unanswered lament made it into sacred Scripture and has comforted honest hearts for three thousand years. Unresolved pain, brought honestly to God, is not a failed prayer. It is still, fully, prayer.
+Many of us assume the sibling we have distanced from would respond the way Jacob feared Esau might. We rehearse the worst-case conversation so often that we never actually attempt the real one. But Esau''s example reminds us that people, and relationships, can change more than we expect, especially when years and grace have had time to work on a heart we assumed was still frozen in an old grievance.
 
-What Psalm 88 quietly teaches is that God is present even in the psalms that don''t resolve, even in the seasons that don''t wrap up on schedule. He was listening on the day this psalm was written, even though the writer couldn''t yet see or feel it. The same is true for you today. Your unresolved lament is heard, even when the answer, or the relief, hasn''t arrived yet.', 'Sebagian besar mazmur ratapan pada akhirnya berbalik kepada pujian — sang penulis berseru, dan pada ayat-ayat terakhir, pengharapan kembali muncul. Tetapi tidak semuanya begitu. Mazmur 88 tidak biasa, bahkan mengejutkan, karena berakhir dalam kegelapan. Sang pemazmur telah berseru siang dan malam, dan baris terakhir puisi itu pada dasarnya berkata, ''kegelapanlah sahabatku yang paling karib.'' Tidak ada perubahan kemenangan. Tidak ada akor yang terselesaikan. Hanya kedukaan jujur yang belum terselesaikan, diletakkan di hadapan Allah dan dibiarkan di sana.
+This does not mean every reconciliation will go smoothly, or that we should force one before we are ready. But it does mean we should not assume the worst without ever testing it. Today, consider whether there is a small, low-stakes step toward a sibling you could take this week, not a grand gesture, simply a text, a call, or a shared meal that begins to run toward rather than away.', 'Yakub menghabiskan bertahun-tahun mencemaskan pertemuannya kembali dengan Esau. Ia punya alasan kuat untuk takut; ia telah menipu saudaranya, merampas hak kesulungan dan berkat, lalu melarikan diri daripada menghadapi akibatnya. Ketika kabar datang bahwa Esau sedang mendekat dengan empat ratus orang, Yakub menduga yang terburuk dan bersiap menghadapi bencana, mengirimkan hadiah bergelombang di depan, berharap dapat melunakkan pukulan yang ia yakini akan datang.
 
-Akan mudah untuk melewati mazmur semacam ini, menganggap ia tidak layak ada dalam Alkitab, atau mewakili semacam kegagalan rohani dari sang penulis. Tetapi kehadirannya dalam Alkitab sendiri adalah pernyataan yang diam-diam mendalam: Allah memberi tempat dalam kitab suci-Nya bagi sebuah doa yang tidak pernah berakhir bahagia di halaman itu. Ia tidak membutuhkan pemazmur untuk merapikannya sebelum itu dianggap sebagai doa yang sungguh. Terkadang ratapan adalah keseluruhan doa itu sendiri, dari awal sampai akhir, dan itu sudah cukup.
+Apa yang sebenarnya terjadi mengejutkan semua orang. Esau, saudara yang punya segala hak untuk menyimpan dendam, justru berlari menyambut Yakub, memeluknya, dan menangis. Alkitab tidak menjelaskan persis apa yang berubah dalam hati Esau selama tahun-tahun perpisahan itu, hanya bahwa ketika saatnya tiba, ia memilih berlari menuju saudaranya alih-alih menuntaskan perhitungan lama. Ini salah satu pertemuan paling mengejutkan dalam Alkitab justru karena bertentangan dengan apa yang kita bayangkan dari saudara yang pernah dizalimi.
 
-Ini sangat penting bagi siapa saja yang berada dalam musim di mana seruan mereka sendiri seolah lenyap ke dalam kesunyian. Jika doamu belum berubah menjadi pujian, jika kegelapan masih terasa sebagai hal yang paling dekat denganmu, kamu berada dalam kebersamaan yang baik — kebersamaan dengan seorang pemazmur yang ratapannya yang tak terjawab masuk ke dalam Kitab Suci yang kudus dan telah menghibur hati-hati jujur selama tiga ribu tahun. Penderitaan yang belum terselesaikan, dibawa dengan jujur kepada Allah, bukanlah doa yang gagal. Itu tetap, sepenuhnya, doa.
+Banyak dari kita menganggap saudara yang telah kita jauhi akan bereaksi seperti yang ditakutkan Yakub dari Esau. Kita begitu sering membayangkan percakapan terburuk sehingga tidak pernah benar-benar mencoba percakapan yang sesungguhnya. Namun teladan Esau mengingatkan kita bahwa orang, dan hubungan, bisa berubah lebih dari yang kita duga, terutama ketika waktu dan anugerah telah bekerja pada hati yang kita kira masih membeku dalam keluhan lama.
 
-Apa yang diam-diam diajarkan Mazmur 88 adalah bahwa Allah hadir bahkan dalam mazmur-mazmur yang tidak terselesaikan, bahkan dalam musim-musim yang tidak berakhir sesuai jadwal. Ia mendengarkan pada hari mazmur ini ditulis, meskipun sang penulis belum bisa melihat atau merasakannya. Hal yang sama berlaku bagimu hari ini. Ratapanmu yang belum terselesaikan itu didengar, bahkan ketika jawabannya, atau kelegaannya, belum tiba.',
-    'An unresolved cry brought honestly to God is still, fully, a prayer that is heard.', 'Seruan yang belum terselesaikan namun dibawa dengan jujur kepada Allah tetaplah, sepenuhnya, doa yang didengar.',
-    'Lord, some of my prayers don''t have a tidy ending, and I''ve felt ashamed of that. Thank You for making room in Your Word for cries that don''t resolve. I bring You my unfinished grief today, trusting that You hear it even without a neat conclusion. Amen.', 'Tuhan, sebagian doaku tidak memiliki akhir yang rapi, dan aku merasa malu karenanya. Terima kasih karena Engkau memberi tempat dalam Firman-Mu bagi seruan yang tak terselesaikan. Aku membawa kepada-Mu kedukaanku yang belum selesai hari ini, percaya bahwa Engkau mendengarnya sekalipun tanpa kesimpulan yang rapi. Amin.'
+Ini bukan berarti setiap rekonsiliasi akan berjalan mulus, atau bahwa kita harus memaksakannya sebelum siap. Tetapi ini berarti kita tidak boleh berasumsi yang terburuk tanpa pernah mengujinya. Hari ini, pertimbangkan apakah ada langkah kecil dan berisiko rendah menuju seorang saudara yang bisa kau ambil minggu ini, bukan gestur besar, cukup sebuah pesan, telepon, atau makan bersama yang mulai berlari mendekat, bukan menjauh.',
+    'Is there a small, low-stakes step you could take this week to run a little closer to a sibling instead of staying at a safe distance?', 'Adakah langkah kecil dan tidak berisiko besar yang bisa kau ambil minggu ini untuk sedikit lebih mendekat kepada seorang saudara, alih-alih tetap berada di jarak aman?',
+    'Lord, soften the fear I carry about how a sibling might respond to me. Give me even a fraction of the grace Esau showed, and give me the courage to take one small step toward reconciliation rather than assuming the worst. Amen.', 'Tuhan, lunakkanlah rasa takut yang kupikul tentang bagaimana seorang saudara mungkin bereaksi kepadaku. Berilah aku bahkan sedikit dari anugerah yang ditunjukkan Esau, dan berilah aku keberanian untuk mengambil satu langkah kecil menuju rekonsiliasi, bukan berasumsi yang terburuk. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 88:1', 'WEB', 'LORD, you are the God who saves me; day and night I cry out to you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 88:2', 'TB', 'Ya TUHAN, Allah yang menyelamatkan aku, siang hari aku berseru-seru, pada waktu malam aku menghadap Engkau.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 33:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 33:4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1810,29 +1366,25 @@ Apa yang diam-diam diajarkan Mazmur 88 adalah bahwa Allah hadir bahkan dalam maz
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'Not in the Wind, Not in the Fire', 'Bukan dalam Angin, Bukan dalam Api',
-    'Elijah''s story right before this moment is one of spectacular spiritual highs — fire falling from heaven, false prophets defeated, a nation watching in awe. And yet almost immediately afterward, we find him exhausted, afraid, and asking God to let him die. It''s a striking reminder that even the most dramatic encounters with God''s power don''t inoculate us against dryness and despair. Elijah had seen fire fall from the sky, and he still ended up alone in a cave, spiritually and physically spent.
+    'Leave Your Gift at the Altar', 'Tinggalkan Persembahanmu di Depan Mezbah',
+    'Jesus taught something that must have startled His first listeners: worship itself should be interrupted for the sake of reconciliation. He did not say, finish your offering and then go make peace when it is convenient. He said, if you remember a brother has something against you, leave your gift right there at the altar and go be reconciled first. In other words, God cares more about restored relationship than about the appearance of religious devotion.
 
-God''s response to Elijah is worth lingering over. He doesn''t scold him for his exhaustion or demand he snap back into confident faith. Instead, He tells him to stand on the mountain, because the LORD is about to pass by. A great and powerful wind tears the mountains apart — but the LORD is not in the wind. Then an earthquake — but the LORD is not in the earthquake. Then a fire — but the LORD is not in the fire. And finally, after all that spectacle, comes a gentle whisper. And it is there, in the whisper, that Elijah finally wraps his face and steps out to meet God.
+This is uncomfortable for many of us, because it is often easier to be devout toward God in the abstract than to be humble toward the specific, flawed sibling sitting three seats down at a family gathering. We can sing worship songs with real sincerity on Sunday and still avoid a phone call to a brother or sister all week. Jesus refuses to let those two things stay separate. Our vertical relationship with God and our horizontal relationships with family are woven together far more tightly than we like to admit.
 
-Many of us, in our dry seasons, are quietly waiting for the wind, the earthquake, or the fire — a dramatic sign, a thunderous confirmation, something unmistakable to break through our numbness and prove God is real again. And when it doesn''t come, we assume He is absent. But Elijah''s story suggests something gentler and, honestly, more realistic: God is often found not in the spectacle we''re straining to hear, but in the quiet whisper we almost miss because we''re listening too loudly.
+There is also mercy hidden in this teaching. Jesus does not say the offering is rejected forever, only that it should wait. He is not shaming us for having unresolved conflict; conflict happens in every family. He is simply reordering our priorities, reminding us that the altar will still be there after the harder conversation, but the relationship might not wait forever.
 
-If your season feels quiet rather than thunderous, that quietness may not be absence at all — it may be exactly where God has chosen to meet you. Today, instead of demanding a dramatic sign, try turning down the noise and listening for the gentle whisper. It rarely announces itself the way we expect, but it is no less real, and no less God.', 'Kisah Elia tepat sebelum momen ini adalah salah satu puncak rohani yang spektakuler — api turun dari langit, nabi-nabi palsu dikalahkan, seluruh bangsa menyaksikan dengan takjub. Namun hampir seketika sesudahnya, kita mendapatinya kelelahan, ketakutan, dan meminta Allah mengizinkannya mati. Ini adalah pengingat yang mencolok bahwa bahkan perjumpaan paling dramatis dengan kuasa Allah pun tidak membuat kita kebal terhadap kekeringan dan keputusasaan. Elia telah menyaksikan api turun dari langit, dan ia tetap berakhir sendirian di dalam gua, letih secara rohani maupun jasmani.
+If there is a sibling relationship that comes to mind every time you sit in worship or pray, that recurring thought may not be a distraction from your prayer. It may be an invitation woven into it. Consider today what it would mean to actually act on that nudge rather than setting it aside again.', 'Yesus mengajarkan sesuatu yang pasti mengejutkan para pendengar pertama-Nya: ibadah itu sendiri harus dihentikan sejenak demi rekonsiliasi. Ia tidak berkata, selesaikan dulu persembahanmu, baru berdamai ketika ada waktu luang. Ia berkata, jika engkau teringat bahwa saudaramu menaruh sesuatu terhadapmu, tinggalkanlah persembahanmu di depan mezbah dan pergilah berdamai dahulu. Dengan kata lain, Allah lebih peduli pada hubungan yang dipulihkan daripada pada tampilan kesalehan agamawi.
 
-Jawaban Allah kepada Elia layak untuk direnungkan lebih lama. Ia tidak menegur kelelahannya atau menuntutnya untuk segera kembali menjadi orang beriman yang penuh percaya diri. Sebaliknya, Ia menyuruhnya berdiri di gunung, sebab TUHAN akan lewat. Angin besar dan kuat mengoyak gunung-gunung — tetapi TUHAN tidak ada dalam angin itu. Kemudian datang gempa — tetapi TUHAN tidak ada dalam gempa itu. Kemudian api — tetapi TUHAN tidak ada dalam api itu. Dan akhirnya, setelah semua tontonan itu, datanglah bunyi angin sepoi-sepoi basah. Dan di sanalah, dalam angin sepoi-sepoi itu, Elia akhirnya menyelubungi wajahnya dan melangkah keluar menemui Allah.
+Ini tidak nyaman bagi banyak dari kita, karena sering kali lebih mudah bersikap saleh kepada Allah secara abstrak daripada rendah hati kepada saudara yang spesifik dan penuh kekurangan yang duduk tiga kursi dari kita di acara keluarga. Kita bisa menyanyikan lagu pujian dengan ketulusan sejati pada hari Minggu tetapi tetap menghindari telepon kepada kakak atau adik sepanjang minggu. Yesus menolak membiarkan dua hal itu terpisah. Hubungan vertikal kita dengan Allah dan hubungan horizontal kita dengan keluarga terjalin jauh lebih erat daripada yang ingin kita akui.
 
-Banyak dari kita, dalam musim kering kita, diam-diam menantikan angin, gempa, atau api — tanda yang dramatis, konfirmasi yang menggelegar, sesuatu yang tak terbantahkan untuk menerobos kebasan kita dan membuktikan bahwa Allah sungguh nyata lagi. Dan ketika itu tidak datang, kita mengira Ia tidak hadir. Tetapi kisah Elia menunjukkan sesuatu yang lebih lembut dan, sejujurnya, lebih realistis: Allah sering ditemukan bukan dalam tontonan yang kita paksakan diri untuk dengar, melainkan dalam bisikan lembut yang hampir kita lewatkan karena kita terlalu keras mendengarkan.
+Ada juga belas kasihan yang tersembunyi dalam pengajaran ini. Yesus tidak berkata persembahan itu ditolak selamanya, hanya bahwa ia harus menunggu. Ia tidak mempermalukan kita karena memiliki konflik yang belum selesai; konflik terjadi di setiap keluarga. Ia hanya menata ulang prioritas kita, mengingatkan bahwa mezbah akan tetap ada setelah percakapan yang lebih sulit itu, tetapi hubungan mungkin tidak akan menunggu selamanya.
 
-Jika musimmu terasa sunyi dan bukan menggelegar, kesunyian itu mungkin sama sekali bukan ketidakhadiran — mungkin justru itulah tempat yang dipilih Allah untuk menjumpaimu. Hari ini, alih-alih menuntut tanda dramatis, cobalah mengecilkan kebisingan dan mendengarkan bisikan lembut itu. Ia jarang mengumumkan dirinya seperti yang kita harapkan, tetapi ia tidak kalah nyata, dan tidak kalah Allah.',
-    'God is not always in the spectacle you''re straining to hear — sometimes He is in the whisper you almost miss.', 'Allah tidak selalu ada dalam tontonan yang kau paksakan diri untuk dengar — kadang Ia ada dalam bisikan yang hampir kau lewatkan.',
-    'Lord, I''ve been listening for thunder when You may have been whispering all along. Quiet the noise in my heart and my expectations. Help me recognize Your gentle presence even when it doesn''t announce itself dramatically. Amen.', 'Tuhan, aku telah menantikan guntur padahal mungkin Engkau sudah berbisik sepanjang waktu. Tenangkan kebisingan dalam hatiku dan harapanku. Tolong aku mengenali kehadiran-Mu yang lembut sekalipun tidak mengumumkan dirinya secara dramatis. Amin.'
+Jika ada hubungan bersaudara yang selalu terlintas setiap kali engkau duduk beribadah atau berdoa, pikiran yang berulang itu mungkin bukan gangguan atas doamu. Itu mungkin sebuah undangan yang terjalin di dalamnya. Renungkan hari ini apa artinya benar-benar bertindak atas dorongan itu, alih-alih menyisihkannya lagi.',
+    'Which sibling relationship keeps resurfacing in your prayers, and what might that recurring thought actually be inviting you to do?', 'Hubungan bersaudara mana yang terus muncul dalam doamu, dan apa sebenarnya yang mungkin diundang oleh pikiran yang berulang itu untuk kau lakukan?',
+    'Jesus, You care more about a restored relationship than a perfect-looking offering. Show me clearly where You want me to leave my gift at the altar and go make peace first, and give me the humility to actually do it. Amen.', 'Yesus, Engkau lebih peduli pada hubungan yang dipulihkan daripada persembahan yang tampak sempurna. Tunjukkan dengan jelas di mana Engkau ingin aku meninggalkan persembahanku di depan mezbah dan berdamai lebih dahulu, dan berilah aku kerendahan hati untuk benar-benar melakukannya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Kings 19:11-12', 'WEB', 'The LORD said, ''Go out and stand on the mountain in the presence of the LORD, for the LORD is about to pass by.'' ... After the earthquake came a fire, but the LORD was not in the fire. And after the fire came a gentle whisper.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Raja-raja 19:11-12', 'TB', 'Firman-Nya: ''Keluarlah dan berdirilah di atas gunung itu di hadapan TUHAN.'' ... Dan sesudah gempa itu datang api, tetapi TUHAN tidak ada dalam api itu. Dan sesudah api itu datang bunyi angin sepoi-sepoi basah.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 5:24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 5:24', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1842,42 +1394,38 @@ Jika musimmu terasa sunyi dan bukan menggelegar, kesunyian itu mungkin sama seka
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 5,
-    'New Every Morning', 'Baru Setiap Pagi',
-    'The book of Lamentations is, true to its name, a book of grief — it was written in the aftermath of catastrophic loss, and it does not rush past the devastation to get to a tidy conclusion. And yet, right in the middle of this book of sorrow, there is a hinge, a small pocket of extraordinary hope: ''Because of the LORD''s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.'' It is not a denial of the grief around it. It is hope spoken from inside the grief, not after it.
+    'How Good and Pleasant', 'Sungguh Alangkah Baik dan Indahnya',
+    'The psalmist did not write about siblings living in rukun, harmony, as a small or minor thing. He compared it to precious oil poured out, to dew that refreshes a whole mountain range, to a blessing so rich that God commands life to flourish wherever it is found. This is a strong claim for something as ordinary as brothers and sisters getting along. But anyone who has lived through years of family tension, and then experienced even a small season of peace, knows exactly why the psalmist reached for such extravagant images.
 
-This is an important pattern for anyone walking through a long, dry season: hope doesn''t require the difficulty to end first. The writer of Lamentations is still surrounded by ruins when he says this. His circumstances haven''t changed. What has shifted is where he has chosen to fix his gaze — from the wreckage around him to the character of God, which does not depend on how the day is going. God''s compassions are ''new every morning,'' which means yesterday''s dryness does not have to define today, and today''s dryness does not have to define tomorrow.
+Reconciliation between siblings rarely arrives all at once, the way Joseph''s tearful reunion did. More often it is built slowly: an honest conversation here, a returned phone call there, a decision to show up at a nephew''s birthday even when it is awkward, a choice to let an old comment go rather than relitigate it for the tenth time. Each of these small acts is its own kind of oil poured out, its own quiet dew settling on ground that has been dry for a long time.
 
-There is something quietly freeing in that phrase ''new every morning.'' It means we are never required to have enough faith, enough hope, or enough spiritual energy to last a lifetime in a single reserve. We are only asked to receive what is given today — a fresh, daily portion of God''s compassion, sufficient for this day''s need, whatever this day happens to hold. That takes enormous pressure off a tired soul. You don''t have to solve your whole dry season today. You only have to receive today''s mercy.
+It also matters that this psalm is communal. It was likely sung by pilgrims traveling together to worship in Jerusalem, families and clans walking the same road toward the same God. Unity among brothers and sisters was never meant to be a private accomplishment; it was meant to be part of how the wider family and community experienced the goodness of God together. When siblings are at peace, that peace tends to ripple outward to spouses, children, and cousins who no longer have to navigate divided loyalties at every gathering.
 
-As this five-day journey through dryness comes to a close, let this be the phrase you carry: new every morning. Whatever this season has held — the honest complaints, the talking to your own soul, the unresolved laments, the quiet whisper you strained to hear — none of it disqualifies you from tomorrow''s fresh mercy. Great is His faithfulness, not because your circumstances have resolved, but because His character never wavers, morning after ordinary morning.', 'Kitab Ratapan, sesuai namanya, adalah kitab kedukaan — ditulis setelah kehancuran yang dahsyat, dan ia tidak buru-buru melewati kehancuran itu untuk sampai pada kesimpulan yang rapi. Namun, tepat di tengah kitab kesedihan ini, ada sebuah engsel, sekantong kecil pengharapan yang luar biasa: ''Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi; besar kesetiaan-Mu!'' Ini bukan penyangkalan atas kedukaan di sekelilingnya. Ini adalah pengharapan yang diucapkan dari dalam kedukaan itu, bukan sesudahnya.
+As this five-day journey closes, take a moment to picture the specific sibling relationship you have been reflecting on this week, not as a problem to permanently solve today, but as ground where God is patiently at work pouring out oil and dew. Ask Him to keep tending it long after this devotion ends.', 'Sang pemazmur tidak menuliskan tentang saudara-saudara yang hidup rukun sebagai hal yang kecil atau remeh. Ia membandingkannya dengan minyak berharga yang dicurahkan, dengan embun yang menyegarkan seluruh pegunungan, dengan berkat yang begitu kaya sehingga Allah memerintahkan kehidupan untuk bertumbuh subur di mana pun ia ditemukan. Ini klaim yang kuat untuk sesuatu yang tampak sesederhana kakak dan adik yang akur. Namun siapa pun yang pernah melewati bertahun-tahun ketegangan keluarga, lalu mengalami bahkan sedikit masa damai, tahu persis mengapa sang pemazmur memilih gambaran seindah itu.
 
-Ini adalah pola penting bagi siapa saja yang melewati musim kering yang panjang: pengharapan tidak menuntut kesulitan berakhir terlebih dahulu. Penulis Ratapan masih dikelilingi reruntuhan ketika ia mengatakan ini. Keadaannya belum berubah. Yang bergeser adalah ke mana ia memilih menatapkan pandangannya — dari puing-puing di sekelilingnya kepada karakter Allah, yang tidak bergantung pada bagaimana harinya berjalan. Rahmat Allah ''selalu baru tiap pagi,'' yang berarti kekeringan kemarin tidak harus menentukan hari ini, dan kekeringan hari ini tidak harus menentukan besok.
+Rekonsiliasi antar saudara jarang datang sekaligus, seperti pertemuan penuh air mata antara Yusuf dan saudara-saudaranya. Lebih sering ia dibangun perlahan: satu percakapan jujur di sini, satu telepon yang akhirnya dijawab di sana, keputusan untuk tetap hadir di ulang tahun keponakan meski canggung, pilihan untuk melepaskan komentar lama alih-alih membahasnya lagi untuk kesepuluh kalinya. Setiap tindakan kecil ini adalah bentuknya sendiri dari minyak yang dicurahkan, embunnya sendiri yang perlahan turun di tanah yang sudah lama kering.
 
-Ada sesuatu yang diam-diam membebaskan dalam frasa ''selalu baru tiap pagi'' itu. Artinya kita tidak pernah dituntut untuk memiliki cukup iman, cukup harapan, atau cukup energi rohani untuk bertahan seumur hidup dalam satu cadangan. Kita hanya diminta menerima apa yang diberikan hari ini — sebuah porsi rahmat Allah yang segar setiap hari, cukup untuk kebutuhan hari ini, apa pun yang dibawa hari ini. Itu mengangkat tekanan yang besar dari jiwa yang lelah. Kamu tidak perlu menyelesaikan seluruh musim keringmu hari ini. Kamu hanya perlu menerima rahmat hari ini.
+Penting juga bahwa mazmur ini bersifat komunal. Kemungkinan besar dinyanyikan oleh para peziarah yang berjalan bersama menuju ibadah di Yerusalem, keluarga dan kaum yang menempuh jalan yang sama menuju Allah yang sama. Persatuan antar saudara tidak pernah dimaksudkan sebagai pencapaian pribadi; ia dimaksudkan menjadi bagian dari bagaimana keluarga besar dan komunitas bersama-sama mengalami kebaikan Allah. Ketika kakak dan adik hidup damai, kedamaian itu cenderung merambat ke luar, kepada pasangan, anak-anak, dan sepupu yang tidak lagi harus mengelola kesetiaan yang terbelah di setiap acara keluarga.
 
-Ketika perjalanan lima hari melewati kekeringan ini mendekati akhirnya, biarlah ini menjadi frasa yang kamu bawa: selalu baru tiap pagi. Apa pun yang telah dibawa musim ini — keluhan-keluhan jujur, berbicara kepada jiwamu sendiri, ratapan-ratapan yang belum terselesaikan, bisikan lembut yang kamu paksakan diri untuk dengar — tidak satu pun darinya mendiskualifikasi dirimu dari rahmat segar esok hari. Besar kesetiaan-Nya, bukan karena keadaanmu telah terselesaikan, melainkan karena karakter-Nya tidak pernah goyah, pagi demi pagi yang biasa.',
-    'You don''t need enough faith to last a lifetime today — only enough to receive this morning''s fresh mercy.', 'Kamu tidak butuh iman yang cukup untuk seumur hidup hari ini — hanya cukup untuk menerima rahmat yang baru pagi ini.',
-    'Faithful God, thank You that Your compassion doesn''t run out, even in my longest dry seasons. I release the pressure to have it all figured out today, and I simply receive Your mercy for this morning. Great is Your faithfulness, whether I feel it or not. Amen.', 'Allah yang setia, terima kasih karena rahmat-Mu tidak pernah habis, bahkan dalam musim keringku yang paling panjang. Aku melepaskan tekanan untuk menyelesaikan semuanya hari ini, dan aku sekadar menerima rahmat-Mu untuk pagi ini. Besar kesetiaan-Mu, baik aku merasakannya maupun tidak. Amin.'
+Saat perjalanan lima hari ini berakhir, luangkan waktu untuk membayangkan hubungan bersaudara spesifik yang telah kau renungkan minggu ini, bukan sebagai masalah yang harus tuntas selesai hari ini, tetapi sebagai tanah tempat Allah sedang bekerja dengan sabar, mencurahkan minyak dan embun-Nya. Mintalah Ia terus merawatnya jauh setelah renungan ini berakhir.',
+    'What is one small, ordinary act of grace toward a sibling that you could offer this month, trusting God to multiply it like oil and dew?', 'Apa satu tindakan kecil dan sederhana penuh anugerah bagi seorang saudara yang bisa kau berikan bulan ini, sambil percaya Allah akan melipatgandakannya seperti minyak dan embun?',
+    'Lord, thank You for how patiently You have walked with me through this week of remembering, hoping, and choosing forgiveness. Keep tending the ground between me and my siblings long after today, and let unity among us become a quiet blessing that overflows to our whole family. Amen.', 'Tuhan, terima kasih atas kesabaran-Mu menemaniku sepanjang minggu ini, dalam mengenang, berharap, dan memilih untuk mengampuni. Teruslah merawat tanah di antara aku dan saudara-saudaraku jauh setelah hari ini, dan biarlah persatuan di antara kami menjadi berkat yang tenang yang melimpah kepada seluruh keluarga besar kami. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 133:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 133:1', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 'Because of the LORD''s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 'Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi; besar kesetiaan-Mu!');
-
-  -- Plan: Honest Questions, Held Faith
+  -- Plan: Becoming One Family
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Honest Questions, Held Faith',
-    'Pertanyaan Jujur, Iman yang Tetap Dipegang',
-    'A 7-day journey through doubt, unanswered questions, and a faith big enough to hold them',
-    'Perjalanan 7 hari melewati keraguan, pertanyaan tak terjawab, dan iman yang cukup besar untuk menampungnya',
-    7,
-    'Some of the most faithful people in Scripture were also the most persistent questioners — Job demanding answers, Habakkuk arguing with God, Thomas refusing to believe secondhand, John the Baptist wondering from prison if he''d gotten it all wrong. This seven-day plan walks through their questions to show that doubt and faith are not opposites; questioning God, done honestly, can be one of the most faithful things we ever do.',
-    'Sebagian dari tokoh Alkitab yang paling beriman justru adalah para penanya yang paling gigih — Ayub yang menuntut jawaban, Habakuk yang berdebat dengan Allah, Tomas yang menolak percaya begitu saja, Yohanes Pembaptis yang dari penjara bertanya-tanya apakah ia telah salah selama ini. Rencana tujuh hari ini menelusuri pertanyaan-pertanyaan mereka untuk menunjukkan bahwa keraguan dan iman bukanlah lawan; mempertanyakan Allah, dilakukan dengan jujur, bisa menjadi salah satu hal paling beriman yang pernah kita lakukan.',
-    '/images/devotions/honest-questions-held-faith.jpeg'
+    'Becoming One Family',
+    'Menjadi Satu Keluarga',
+    'Four days on welcoming in-laws with an open heart',
+    'Empat hari untuk menyambut mertua dan ipar dengan hati terbuka',
+    4,
+    'Marriage does not simply join two people, it joins two entire families, complete with their own habits, holidays, and unspoken rules. Anchored in the loyalty of Ruth toward Naomi, this four-day plan offers a gentle path toward welcoming in-laws not as outsiders to be managed but as family to be genuinely loved.',
+    'Pernikahan tidak hanya menyatukan dua orang, tetapi menyatukan dua keluarga besar lengkap dengan kebiasaan, tradisi, dan aturan tak tertulis masing-masing. Berpijak pada kesetiaan Rut kepada Naomi, rencana empat hari ini menawarkan jalan yang lembut untuk menyambut mertua dan ipar bukan sebagai orang luar yang harus dihadapi, melainkan sebagai keluarga yang sungguh dikasihi.',
+    '/images/devotions/becoming-one-family.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -1888,29 +1436,25 @@ Ketika perjalanan lima hari melewati kekeringan ini mendekati akhirnya, biarlah 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'Unless I See', 'Sebelum Aku Melihat',
-    'Thomas gets an unfair reputation as the disciple who lacked faith, but read his story closely and a different picture emerges: he was a man who refused to settle for someone else''s experience of God when his own heart still had questions. The other disciples told him plainly, ''We have seen the Lord!'' That should have been enough. It wasn''t. Thomas needed to encounter the risen Christ himself, on his own terms, before he could say the words ''my Lord and my God.''
+    'Leaving and Joining', 'Meninggalkan dan Bersatu',
+    'From the very beginning, Scripture describes marriage as a kind of holy rearrangement of family. A man leaves his father and mother and is joined to his wife, and the two become one flesh. This single verse carries an enormous amount of change inside it. It is not only about a couple starting a new household; it quietly acknowledges that two sets of parents, two sets of siblings, and two whole family cultures are now being woven together, sometimes gracefully and sometimes with real friction.
 
-It''s worth noticing what Thomas didn''t do. He didn''t quietly slip away from the group. He didn''t pretend to believe what he didn''t yet believe. He stayed in the room with the other disciples, doubts and all, for eight more days, waiting. There is something important in that: doubt, honestly held, doesn''t have to mean leaving the community of faith. Thomas kept showing up even before his questions were resolved, and it was precisely there, among the believers, that Jesus met him.
+Many newly married people are surprised by how much adjustment in-law relationships require, even in a happy marriage. Suddenly there are new holiday traditions to navigate, a mother-in-law''s advice to receive with grace even when it was not asked for, a brother-in-law''s humor to get used to, or a family communication style that feels completely foreign compared to the home you grew up in. None of this means something is wrong. It means two family systems are genuinely becoming one, and that process takes time.
 
-When Jesus does appear, He doesn''t rebuke Thomas for his skepticism or shame him in front of the others. He simply says, ''Put your finger here; see my hands. Reach out your hand and put it into my side.'' Jesus meets Thomas''s specific doubt with specific, tender evidence. He doesn''t demand blind acceptance; He offers exactly what Thomas said he needed. This tells us something enormous about how God responds to honest questions — not with irritation, but with patient, personal engagement.
+It helps to remember that leaving does not mean abandoning your family of origin, and joining does not mean erasing who you were before the wedding. God''s design was never about loss on either side. It was about creating something new, a household with its own identity, built from the best of both families rather than the total replacement of either one.
 
-If you are carrying your own version of ''unless I see, I will not believe,'' you are in the company of a disciple whose honest doubt is recorded, unedited, in Scripture — and who ended up making one of the most complete declarations of faith in the entire Gospel of John. Doubt didn''t disqualify Thomas from a deep encounter with the risen Christ. It became the very doorway to it.', 'Tomas mendapat reputasi yang tidak adil sebagai murid yang kurang beriman, tetapi jika membaca kisahnya dengan saksama, muncul gambaran yang berbeda: ia adalah orang yang menolak puas dengan pengalaman orang lain tentang Allah selagi hatinya sendiri masih memiliki pertanyaan. Murid-murid lain berkata terus terang kepadanya, ''Kami telah melihat Tuhan!'' Itu seharusnya sudah cukup. Ternyata tidak. Tomas perlu menjumpai Kristus yang bangkit itu sendiri, dengan caranya sendiri, sebelum ia bisa mengucapkan kata-kata ''ya Tuhanku dan Allahku.''
+If you find yourself feeling caught between two families, or unsure how to honor your parents while also fully joining your spouse''s family, today is a good day to bring that tension honestly to God rather than to feel guilty about it. He designed this leaving and joining, and He is not surprised by how complicated it can feel in practice.', 'Sejak awal, Alkitab menggambarkan pernikahan sebagai semacam penataan ulang keluarga yang kudus. Seorang laki-laki meninggalkan ayah dan ibunya dan bersatu dengan istrinya, sehingga keduanya menjadi satu daging. Satu ayat ini membawa perubahan yang sangat besar di dalamnya. Ini bukan hanya tentang pasangan yang memulai rumah tangga baru; ini diam-diam mengakui bahwa dua keluarga orang tua, dua kelompok saudara, dan dua budaya keluarga yang utuh kini sedang dijalin menjadi satu, kadang dengan anggun dan kadang dengan gesekan yang nyata.
 
-Ada hal penting yang perlu diperhatikan: apa yang tidak dilakukan Tomas. Ia tidak diam-diam pergi meninggalkan kelompok itu. Ia tidak berpura-pura percaya apa yang belum ia percayai. Ia tetap tinggal di ruangan bersama murid-murid lain, dengan segala keraguannya, selama delapan hari lagi, menunggu. Ada sesuatu yang penting di situ: keraguan, yang dipegang dengan jujur, tidak harus berarti meninggalkan komunitas iman. Tomas tetap hadir bahkan sebelum pertanyaannya terjawab, dan justru di sanalah, di antara orang-orang percaya, Yesus menjumpainya.
+Banyak pasangan yang baru menikah terkejut betapa banyak penyesuaian yang dibutuhkan dalam hubungan dengan mertua dan ipar, bahkan dalam pernikahan yang bahagia sekalipun. Tiba-tiba ada tradisi hari raya baru yang harus dijalani, nasihat mertua yang harus diterima dengan anggun meski tidak diminta, gaya humor ipar yang harus dibiasakan, atau gaya komunikasi keluarga yang terasa sama sekali asing dibandingkan rumah tempat kita dibesarkan. Semua ini tidak berarti ada yang salah. Ini berarti dua sistem keluarga sungguh-sungguh sedang menjadi satu, dan proses itu membutuhkan waktu.
 
-Ketika Yesus akhirnya muncul, Ia tidak menegur skeptisisme Tomas atau mempermalukannya di depan yang lain. Ia hanya berkata, ''Taruhlah jarimu di sini dan lihatlah tangan-Ku, ulurkanlah tanganmu dan cucukkan ke dalam lambung-Ku.'' Yesus menjawab keraguan spesifik Tomas dengan bukti yang spesifik dan lembut. Ia tidak menuntut penerimaan buta; Ia menawarkan justru apa yang Tomas katakan ia butuhkan. Ini memberi tahu kita sesuatu yang besar tentang bagaimana Allah menanggapi pertanyaan jujur — bukan dengan kejengkelan, melainkan dengan keterlibatan yang sabar dan pribadi.
+Ada baiknya diingat bahwa meninggalkan tidak berarti melupakan keluarga asal kita, dan bersatu tidak berarti menghapus siapa diri kita sebelum menikah. Rancangan Allah tidak pernah tentang kehilangan bagi pihak mana pun. Ini tentang menciptakan sesuatu yang baru, sebuah rumah tangga dengan identitasnya sendiri, dibangun dari yang terbaik dari kedua keluarga, bukan penggantian total salah satunya.
 
-Jika kamu membawa versi ''sebelum aku melihat, aku tidak akan percaya'' milikmu sendiri, kamu berada dalam kebersamaan dengan seorang murid yang keraguan jujurnya dicatat, tanpa disunting, dalam Alkitab — dan yang akhirnya mengucapkan salah satu pengakuan iman paling lengkap dalam seluruh Injil Yohanes. Keraguan tidak mendiskualifikasi Tomas dari perjumpaan mendalam dengan Kristus yang bangkit. Itu justru menjadi pintu masuk menuju perjumpaan itu.',
-    'Honest doubt that keeps showing up in community is exactly the kind of doubt Jesus meets with tender, personal evidence.', 'Keraguan jujur yang tetap hadir di tengah komunitas adalah justru jenis keraguan yang dijumpai Yesus dengan bukti yang lembut dan pribadi.',
-    'Lord, like Thomas, I have things I need to see and feel for myself, not just borrow from someone else''s faith. Thank You for meeting doubt with patience rather than shame. Meet me where I am, and help me keep showing up even before my questions are answered. Amen.', 'Tuhan, seperti Tomas, ada hal-hal yang perlu kulihat dan kurasakan sendiri, bukan sekadar meminjam iman orang lain. Terima kasih karena Engkau menjawab keraguan dengan kesabaran, bukan rasa malu. Jumpailah aku di tempat aku berada, dan tolong aku tetap hadir sekalipun pertanyaanku belum terjawab. Amin.'
+Jika engkau merasa terjepit di antara dua keluarga, atau tidak yakin bagaimana menghormati orang tuamu sambil sepenuhnya bersatu dengan keluarga pasanganmu, hari ini adalah waktu yang baik untuk membawa ketegangan itu dengan jujur kepada Allah, bukan merasa bersalah karenanya. Ia yang merancang proses meninggalkan dan bersatu ini, dan Ia tidak terkejut betapa rumitnya hal ini terasa dalam kenyataan.',
+    'Where do you feel the most tension between honoring your family of origin and fully joining your spouse''s family, and how might you bring that honestly to God?', 'Di bagian mana kau merasakan ketegangan terbesar antara menghormati keluarga asalmu dan sepenuhnya bersatu dengan keluarga pasanganmu, dan bagaimana kau bisa membawanya dengan jujur kepada Allah?',
+    'Lord, thank You for designing marriage as a joining of families, not just individuals. Help me hold my love for my family of origin and my commitment to my spouse''s family together with grace, not guilt. Amen.', 'Tuhan, terima kasih telah merancang pernikahan sebagai penyatuan keluarga, bukan hanya individu. Tolonglah aku memegang kasihku pada keluarga asalku dan komitmenku pada keluarga pasanganku bersama-sama dengan anugerah, bukan rasa bersalah. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'John 20:25', 'WEB', 'So the other disciples told him, ''We have seen the Lord!'' But he said to them, ''Unless I see the nail marks in his hands and put my finger where the nails were, and put my hand into his side, I will not believe.''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yohanes 20:25', 'TB', 'Kata murid-murid yang lain kepadanya: ''Kami telah melihat Tuhan!'' Tetapi Tomas berkata kepada mereka: ''Sebelum aku melihat bekas paku pada tangan-Nya dan mencucukkan jariku pada bekas paku itu dan mencucukkan tanganku ke dalam lambung-Nya, sekali-kali aku tidak akan percaya.''');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 2:24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 2:24', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1920,29 +1464,25 @@ Jika kamu membawa versi ''sebelum aku melihat, aku tidak akan percaya'' milikmu 
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'I Believe; Help My Unbelief', 'Aku Percaya; Tolonglah Aku yang Tidak Percaya',
-    'A desperate father brings his suffering son to Jesus, having already been let down by the disciples, who couldn''t heal the boy. When Jesus tells him that everything is possible for one who believes, the father doesn''t respond with a tidy statement of confident faith. He cries out something far more honest, and far more useful to the rest of us: ''I do believe; help me overcome my unbelief!'' Belief and doubt, tangled together in a single breath, offered to Jesus exactly as they were.
+    'Where You Go, I Will Go', 'Ke Mana Engkau Pergi, Ke Situ Aku Pergi',
+    'Ruth''s declaration to her mother-in-law Naomi is one of the most quoted lines in Scripture, and often it gets read at weddings as if it were only about romantic love. But look closely at the actual story: these are the words of a daughter-in-law to her mother-in-law, spoken after both women had lost their husbands and had every reasonable excuse to go their separate ways. Ruth was not obligated to stay. Naomi even urged her to leave, twice, and return to her own people. Ruth chose loyalty anyway.
 
-This one sentence may be one of the most relatable prayers in all of Scripture, because it refuses the false choice we often impose on ourselves — that we must be either a believer or a doubter, fully convinced or fully skeptical, with no room in between. The father models something truer to real spiritual life: faith and doubt can coexist in the very same heart, at the very same moment, and both can be honestly brought to Jesus at once.
+This kind of chosen loyalty is exactly what in-law relationships are invited into. No one requires you to love a mother-in-law or a sister-in-law the way you love your own blood family; culturally and even legally, the tie is different. But Ruth shows us that some of the deepest family bonds in Scripture were never about obligation at all. They were about a decision to stay, to belong, to say your people will be my people even when it costs something.
 
-Notice, too, that Jesus doesn''t wait for the man''s faith to become pure and unmixed before He acts. He doesn''t say, ''Come back once you''ve sorted out your unbelief.'' He heals the boy right there, in response to a prayer that was still partly doubt. This tells us something freeing: God does not require a flawless, doubt-free faith as the entry fee for His help. A mixed prayer — sincere belief tangled with honest unbelief — is still a prayer He receives and answers.
+It is worth noticing that Ruth''s loyalty was not naive or effortless. She was a foreigner in Naomi''s land, gleaning leftover grain in fields to survive, doing hard and humbling work to provide for both of them. Real love for in-laws is rarely about grand declarations; it is usually built through ordinary faithfulness, showing up for a hospital visit, remembering a birthday, listening patiently to a story you have heard many times before.
 
-If your own faith often feels like this father''s — genuinely wanting to believe, and genuinely struggling to — you are not behind, and you are not disqualified. You are simply praying one of the most honest prayers a person can pray. Try praying it today, in your own words: I believe; help my unbelief. Bring both halves to Jesus and let Him work with what''s actually there, rather than waiting until you feel like you have it all figured out.', 'Seorang ayah yang putus asa membawa anaknya yang menderita kepada Yesus, setelah sebelumnya dikecewakan oleh murid-murid yang tidak bisa menyembuhkan anak itu. Ketika Yesus berkata bahwa segala sesuatu mungkin bagi orang yang percaya, sang ayah tidak menjawab dengan pernyataan iman yang rapi dan penuh percaya diri. Ia berseru sesuatu yang jauh lebih jujur, dan jauh lebih berguna bagi kita semua: ''Aku percaya, tolonglah aku yang tidak percaya ini!'' Kepercayaan dan keraguan, terjalin bersama dalam satu tarikan napas, dipersembahkan kepada Yesus persis apa adanya.
+If your relationship with an in-law still feels new, awkward, or distant, Ruth''s story offers real hope. She began as an outsider and became the great-grandmother of King David, woven permanently into the family line of Jesus Himself. Chosen loyalty, even when it starts small, can grow into something that outlasts every initial awkwardness.', 'Pernyataan Rut kepada Naomi, mertuanya, adalah salah satu ayat yang paling sering dikutip dalam Alkitab, dan sering dibacakan di pernikahan seolah-olah hanya berbicara tentang cinta romantis. Namun perhatikan baik-baik kisah sesungguhnya: ini adalah kata-kata seorang menantu perempuan kepada mertuanya, diucapkan setelah kedua perempuan itu kehilangan suami mereka dan punya segala alasan wajar untuk berpisah jalan. Rut tidak wajib tinggal. Naomi bahkan mendesaknya untuk pergi, dua kali, dan kembali kepada bangsanya sendiri. Rut tetap memilih kesetiaan.
 
-Satu kalimat ini mungkin salah satu doa yang paling relevan dalam seluruh Alkitab, karena ia menolak pilihan palsu yang sering kita paksakan pada diri sendiri — bahwa kita harus menjadi entah orang percaya atau peragu, sepenuhnya yakin atau sepenuhnya skeptis, tanpa ruang di antaranya. Sang ayah mencontohkan sesuatu yang lebih benar tentang kehidupan rohani yang nyata: iman dan keraguan bisa hidup berdampingan dalam hati yang sama, pada saat yang sama, dan keduanya bisa dibawa dengan jujur kepada Yesus sekaligus.
+Kesetiaan yang dipilih semacam inilah yang menjadi undangan bagi hubungan dengan mertua dan ipar. Tidak ada yang mewajibkanmu mengasihi mertua atau ipar perempuan sebagaimana kau mengasihi keluarga kandungmu sendiri; secara budaya bahkan hukum, ikatannya berbeda. Namun Rut menunjukkan bahwa beberapa ikatan keluarga terdalam dalam Alkitab sama sekali bukan soal kewajiban. Itu tentang keputusan untuk tinggal, untuk menjadi bagian, untuk berkata bangsamu akan menjadi bangsaku juga meski itu memerlukan pengorbanan.
 
-Perhatikan juga bahwa Yesus tidak menunggu iman orang itu menjadi murni dan tak bercampur sebelum Ia bertindak. Ia tidak berkata, ''Kembalilah setelah kamu menyelesaikan ketidakpercayaanmu.'' Ia menyembuhkan anak itu saat itu juga, sebagai jawaban atas doa yang masih sebagian keraguan. Ini memberi tahu kita sesuatu yang membebaskan: Allah tidak menuntut iman yang sempurna dan bebas keraguan sebagai syarat masuk untuk pertolongan-Nya. Doa yang bercampur — kepercayaan yang tulus terjalin dengan ketidakpercayaan yang jujur — tetap merupakan doa yang Ia terima dan jawab.
+Perlu dicatat bahwa kesetiaan Rut bukanlah sesuatu yang naif atau tanpa usaha. Ia orang asing di tanah Naomi, memungut sisa gandum di ladang demi bertahan hidup, melakukan pekerjaan berat dan merendahkan diri demi menopang mereka berdua. Kasih sejati bagi mertua dan ipar jarang berupa pernyataan besar; biasanya dibangun lewat kesetiaan yang sederhana, hadir saat kunjungan rumah sakit, mengingat hari ulang tahun, mendengarkan dengan sabar cerita yang sudah berkali-kali kau dengar.
 
-Jika imanmu sendiri sering terasa seperti ayah ini — benar-benar ingin percaya, dan benar-benar bergumul untuk percaya — kamu tidak tertinggal, dan kamu tidak didiskualifikasi. Kamu hanya sedang mendoakan salah satu doa paling jujur yang bisa didoakan seseorang. Cobalah mendoakannya hari ini, dengan katamu sendiri: aku percaya, tolonglah aku yang tidak percaya. Bawalah kedua bagian itu kepada Yesus dan biarkan Ia bekerja dengan apa yang sungguh-sungguh ada, alih-alih menunggu sampai kamu merasa sudah menyelesaikan semuanya.',
-    'You don''t need pure, unmixed faith to bring your need to Jesus — belief and doubt can travel to Him together.', 'Kamu tidak butuh iman yang murni dan tak bercampur untuk membawa kebutuhanmu kepada Yesus — kepercayaan dan keraguan bisa datang kepada-Nya bersama-sama.',
-    'Jesus, I believe, and I also struggle to believe, sometimes in the very same breath. Thank You for receiving prayers like this father''s, unfinished and honest. Help my unbelief today, and meet me in the mixture of my heart rather than waiting for it to be sorted out. Amen.', 'Yesus, aku percaya, dan aku juga bergumul untuk percaya, kadang dalam tarikan napas yang sama. Terima kasih karena Engkau menerima doa seperti doa sang ayah ini, yang belum selesai dan jujur. Tolonglah ketidakpercayaanku hari ini, dan jumpailah aku dalam campuran hatiku, bukan menunggu sampai semuanya rapi. Amin.'
+Jika hubunganmu dengan seorang mertua atau ipar masih terasa baru, canggung, atau berjarak, kisah Rut memberi harapan nyata. Ia memulai sebagai orang asing dan menjadi nenek buyut Raja Daud, terjalin permanen dalam silsilah keluarga Yesus sendiri. Kesetiaan yang dipilih, bahkan yang dimulai dari hal kecil, bisa bertumbuh menjadi sesuatu yang bertahan jauh melampaui kecanggungan awalnya.',
+    'What is one small, ordinary act of faithfulness you could offer an in-law this week, in the spirit of Ruth''s quiet loyalty to Naomi?', 'Apa satu tindakan kesetiaan sederhana dan biasa yang bisa kau berikan kepada seorang mertua atau ipar minggu ini, dalam semangat kesetiaan Rut yang tenang kepada Naomi?',
+    'Lord, give me a heart like Ruth''s toward my husband''s or wife''s family, a heart that chooses loyalty and love even when it is not required of me. Help me build real belonging through small, faithful acts. Amen.', 'Tuhan, berilah aku hati seperti Rut terhadap keluarga suamiku atau istriku, hati yang memilih kesetiaan dan kasih bahkan ketika itu tidak diwajibkan bagiku. Tolong aku membangun rasa memiliki yang sejati lewat tindakan-tindakan kecil yang setia. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mark 9:24', 'WEB', 'Immediately the boy''s father exclaimed, ''I do believe; help me overcome my unbelief!''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Markus 9:24', 'TB', 'Segera ayah anak itu berteriak: ''Aku percaya, tolonglah aku yang tidak percaya ini!''');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ruth 1:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Rut 1:16', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1952,29 +1492,25 @@ Jika imanmu sendiri sering terasa seperti ayah ini — benar-benar ingin percaya
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'How Long, and Why?', 'Berapa Lama Lagi, dan Mengapa?',
-    'Habakkuk opens his short prophetic book not with a proclamation but with a complaint, aimed directly at God: ''How long, LORD, must I call for help, but you do not listen? Or cry out to you, "Violence!" but you do not save?'' This is not the language of a distant observer commenting on injustice from a safe theoretical distance. This is the language of someone who has been praying, watching, waiting — and is frustrated that the waiting has gone on so long without visible answer.
+    'Valuing One Another Above Yourself', 'Menganggap Orang Lain Lebih Utama',
+    'Paul''s instruction to the church in Philippi was never meant only for strangers in a congregation; it applies with particular force at a crowded holiday table where in-laws with different habits, opinions, and love languages are all trying to share space. He calls believers to a rare kind of humility: not thinking less of yourself, but thinking of others as worth considering first, ahead of your own preferences and comfort.
 
-What''s remarkable is what happens next: God actually answers him. Not with a rebuke for asking, but with a real response, even if it''s not the response Habakkuk expected or entirely wanted. The prophet''s honest, pointed question opens up an actual conversation with God — one that continues through the rest of the book, as Habakkuk keeps pressing, keeps listening, and eventually arrives at one of the most beautiful declarations of trust in all of Scripture, even while his circumstances remain hard.
+This is not naturally easy with in-laws, precisely because you did not choose them the way you chose your spouse. Their parenting style, their political opinions at dinner, their way of doing holidays, or simply their personality can feel like a lot to accommodate. It is tempting to quietly keep score of who is adjusting more, who is compromising more, who is being more inconvenienced by whose family traditions.
 
-This is instructive for anyone sitting with their own version of ''how long'' and ''why.'' Habakkuk shows us that bringing sharp, unresolved questions to God is not the opposite of relationship with Him — it can be the very mechanism by which the relationship deepens. God is not fragile. He does not need us to soften our questions before we bring them. He can hold ''why have You let this go on so long'' just as easily as He can hold our praise.
+Paul''s answer cuts straight through that scorekeeping. He does not ask us to pretend differences do not exist. He asks us to actively look out for the interests of others, including in-laws, the same way we naturally look out for our own. That might mean choosing to visit a difficult in-law''s home even when your own family''s traditions feel more comfortable, or biting back a sharp reply when a comment stings, or simply asking a mother-in-law genuine questions about her life instead of waiting for the conversation to end.
 
-Consider writing your own honest question to God today, in Habakkuk''s spirit — not polished, not diplomatic, just true. You may not get an immediate answer, and that''s alright; Habakkuk didn''t get one instantly either. But the asking itself is not a betrayal of faith. It is, quite often, faith in its most active and engaged form — the kind that stays in the conversation rather than walking away from it.', 'Habakuk membuka kitab kenabiannya yang singkat bukan dengan pernyataan, melainkan dengan keluhan, ditujukan langsung kepada Allah: ''Berapa lama lagi, ya TUHAN, aku berteriak minta tolong, tetapi tidak Kaudengar, aku berseru kepada-Mu: Ada kekerasan! tetapi tidak Kautolong?'' Ini bukan bahasa seorang pengamat jauh yang mengomentari ketidakadilan dari jarak teoretis yang aman. Ini adalah bahasa seseorang yang telah berdoa, mengamati, menanti — dan frustrasi karena penantian itu berlangsung begitu lama tanpa jawaban yang tampak.
+Humility toward in-laws is not weakness. It is often the very thing that turns a technically-related stranger into someone who feels like real family. Consider today one specific way you could put an in-law''s comfort or preference ahead of your own this week, not out of obligation, but as an act of Christlike humility.', 'Perintah Paulus kepada jemaat di Filipi tidak pernah dimaksudkan hanya untuk orang asing dalam sebuah jemaat; perintah itu berlaku dengan kekuatan khusus di meja makan hari raya yang ramai, tempat para mertua dan ipar dengan kebiasaan, pendapat, dan bahasa kasih yang berbeda-beda berusaha berbagi ruang. Ia memanggil orang percaya kepada kerendahan hati yang langka: bukan merendahkan diri sendiri, tetapi menganggap orang lain layak dipertimbangkan lebih dulu, mendahului preferensi dan kenyamanan kita sendiri.
 
-Yang luar biasa adalah apa yang terjadi selanjutnya: Allah sungguh menjawabnya. Bukan dengan teguran karena bertanya, melainkan dengan tanggapan yang sungguh nyata, sekalipun bukan tanggapan yang diharapkan atau sepenuhnya diinginkan Habakuk. Pertanyaan sang nabi yang jujur dan tajam membuka sebuah percakapan sungguhan dengan Allah — yang berlanjut sepanjang sisa kitab itu, saat Habakuk terus mendesak, terus mendengarkan, dan akhirnya sampai pada salah satu pernyataan kepercayaan paling indah dalam seluruh Alkitab, sekalipun keadaannya tetap sulit.
+Ini tidak mudah secara alami terhadap mertua dan ipar, justru karena kita tidak memilih mereka sebagaimana kita memilih pasangan kita. Gaya pengasuhan mereka, pendapat politik mereka di meja makan, cara mereka merayakan hari raya, atau sekadar kepribadian mereka bisa terasa banyak untuk diakomodasi. Ada godaan untuk diam-diam menghitung siapa yang lebih banyak menyesuaikan diri, siapa yang lebih banyak berkompromi, siapa yang lebih banyak direpotkan oleh tradisi keluarga siapa.
 
-Ini menjadi pelajaran bagi siapa saja yang sedang duduk dengan versi ''berapa lama lagi'' dan ''mengapa'' miliknya sendiri. Habakuk menunjukkan kepada kita bahwa membawa pertanyaan yang tajam dan belum terselesaikan kepada Allah bukanlah lawan dari relasi dengan-Nya — itu justru bisa menjadi mekanisme di mana relasi itu semakin dalam. Allah tidak rapuh. Ia tidak membutuhkan kita untuk melunakkan pertanyaan kita sebelum kita membawanya. Ia bisa menampung ''mengapa Engkau membiarkan ini berlangsung begitu lama'' sama mudahnya seperti Ia menampung pujian kita.
+Jawaban Paulus langsung memotong penghitungan semacam itu. Ia tidak meminta kita berpura-pura perbedaan itu tidak ada. Ia meminta kita secara aktif memperhatikan kepentingan orang lain, termasuk mertua dan ipar, sama seperti kita secara alami memperhatikan kepentingan kita sendiri. Itu mungkin berarti memilih mengunjungi rumah ipar yang sulit meski tradisi keluargamu sendiri terasa lebih nyaman, menahan balasan tajam ketika sebuah komentar menyakiti, atau sekadar bertanya dengan tulus kepada mertua tentang hidupnya alih-alih menunggu percakapan itu selesai.
 
-Pertimbangkan untuk menuliskan pertanyaan jujurmu sendiri kepada Allah hari ini, dalam semangat Habakuk — tidak dipoles, tidak diplomatis, hanya benar. Kamu mungkin tidak mendapat jawaban segera, dan itu tidak apa-apa; Habakuk pun tidak langsung mendapatkannya. Tetapi tindakan bertanya itu sendiri bukanlah pengkhianatan terhadap iman. Itu, cukup sering, adalah iman dalam bentuknya yang paling aktif dan terlibat — jenis iman yang tetap berada dalam percakapan, bukan berjalan pergi meninggalkannya.',
-    'A sharp, unresolved question honestly brought to God can deepen relationship rather than damage it.', 'Pertanyaan yang tajam dan belum terselesaikan, yang dibawa dengan jujur kepada Allah, dapat memperdalam relasi, bukan merusaknya.',
-    'God, how long? Why does this keep going on? I bring You my sharpest, least polished questions today, trusting that You are not fragile and You are not offended. Stay in this conversation with me even when I don''t understand Your timing. Amen.', 'Allah, berapa lama lagi? Mengapa ini terus berlangsung? Aku membawa kepada-Mu pertanyaan-pertanyaanku yang paling tajam dan paling tidak dipoles hari ini, percaya bahwa Engkau tidak rapuh dan tidak tersinggung. Tetaplah berada dalam percakapan ini bersamaku sekalipun aku tidak mengerti waktu-Mu. Amin.'
+Kerendahan hati terhadap mertua dan ipar bukanlah kelemahan. Seringkali justru itulah yang mengubah orang asing yang secara teknis terhubung menjadi seseorang yang terasa seperti keluarga sungguhan. Renungkan hari ini satu cara spesifik untuk mendahulukan kenyamanan atau preferensi seorang ipar atau mertua di atas dirimu sendiri minggu ini, bukan karena kewajiban, melainkan sebagai tindakan kerendahan hati seperti Kristus.',
+    'In what specific way could you put an in-law''s comfort or preference ahead of your own this week, as an act of humility rather than obligation?', 'Dengan cara spesifik apa kau bisa mendahulukan kenyamanan atau preferensi seorang mertua atau ipar di atas dirimu sendiri minggu ini, sebagai tindakan kerendahan hati, bukan kewajiban?',
+    'Father, teach me the kind of humility Paul describes, one that genuinely values my in-laws'' comfort and interests rather than quietly keeping score. Let my home feel like a place where they are honestly welcomed. Amen.', 'Bapa, ajarilah aku kerendahan hati seperti yang digambarkan Paulus, yang sungguh-sungguh menghargai kenyamanan dan kepentingan mertua serta iparku, bukan diam-diam menghitung jasa. Biarlah rumahku terasa seperti tempat mereka disambut dengan tulus. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Habakkuk 1:2', 'WEB', 'How long, LORD, must I call for help, but you do not listen? Or cry out to you, ''Violence!'' but you do not save?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Habakuk 1:2', 'TB', 'Berapa lama lagi, ya TUHAN, aku berteriak minta tolong, tetapi tidak Kaudengar, aku berseru kepada-Mu: ''Ada kekerasan!'' tetapi tidak Kautolong?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 2:3-4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 2:3-4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1984,29 +1520,151 @@ Pertimbangkan untuk menuliskan pertanyaan jujurmu sendiri kepada Allah hari ini,
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 4,
-    'If Only I Knew Where to Find Him', 'Sekiranya Aku Tahu Bagaimana Menemui Dia',
-    'Job has lost nearly everything — children, wealth, health — and his friends offer explanations that don''t fit his experience, insisting his suffering must be punishment for some hidden sin. Job knows better; he knows his own integrity, and he refuses to accept easy answers that don''t match reality. What he wants instead is not a theory about God but God Himself: ''If only I knew where to find him; if only I could go to his dwelling!'' He wants to state his case directly, to be heard, to understand.
+    'Accept One Another', 'Terimalah Satu Akan yang Lain',
+    'Paul''s letter to the Romans was written to a church wrestling with real division, Jewish and Gentile believers who came from entirely different backgrounds, customs, and convictions, now expected to sit at the same table and call each other family. His instruction is beautifully simple and hard to argue with: accept one another, just as Christ accepted you. Not agree with everything about one another. Not enjoy every one of one another''s habits. Accept.
 
-This longing — to find God, to actually locate Him and speak face to face — is one of the most human impulses in all of Scripture, and Job gives us permission to feel it without shame. He isn''t trying to escape God or argue Him out of existence. He is trying to get closer, even in his confusion and pain, even while accusing God of hiddenness. The seeking itself, urgent and unresolved as it is, is itself an act of faith, because you don''t go looking for someone you''ve stopped believing is real.
+This is the note this whole plan wants to end on. Building closeness with in-laws is rarely about erasing every difference until a mother-in-law thinks exactly like you, or a brother-in-law shares all your interests. It is about the ongoing choice to accept people who came into your life through marriage rather than through blood, the same way Christ accepted you fully, including the parts of you that were still rough and unfinished.
 
-What makes Job''s story so remarkable is what eventually happens: after chapters of unanswered questions, God does show up and speak. The answer Job receives isn''t a tidy explanation of why he suffered — it''s an overwhelming encounter with God''s greatness and presence that reframes everything. Job doesn''t get every question answered. He gets something else: God Himself, present, speaking, no longer hidden. And it''s enough.
+It is worth remembering that acceptance, in Paul''s sense, is not passive. It is active welcome, the kind that shows up, that makes room at the table, that chooses warmth even when warmth is not fully reciprocated. Christ did not wait for us to become easy to love before He welcomed us. He welcomed us first, and the transformation happened over time, inside that welcome.
 
-If you find yourself longing, like Job, to simply locate God — to feel His nearness rather than just believe facts about Him — that longing is not a sign of weak faith. It is faith reaching for the real thing rather than settling for a substitute. Keep seeking. Job''s dwelling place felt impossibly distant right up until it didn''t, and the God he sought eventually spoke directly into his story.', 'Ayub telah kehilangan hampir segalanya — anak-anak, kekayaan, kesehatan — dan teman-temannya menawarkan penjelasan yang tidak cocok dengan pengalamannya, bersikeras bahwa penderitaannya pasti hukuman atas dosa tersembunyi. Ayub tahu lebih baik; ia tahu integritasnya sendiri, dan ia menolak menerima jawaban mudah yang tidak sesuai dengan kenyataan. Yang ia inginkan bukanlah teori tentang Allah, melainkan Allah sendiri: ''Sekiranya aku tahu bagaimana mendapatkan Dia, sekiranya aku boleh sampai ke tempat kediaman-Nya!'' Ia ingin menyampaikan perkaranya secara langsung, didengar, dipahami.
+As you close this four-day plan, ask God to help you extend that same first-move welcome to the in-laws in your life, whether the relationship already feels warm or still feels new and uncertain. Family formed through marriage is still family, worth the patient, ongoing work of genuine acceptance, for the glory of God who accepted us first.', 'Surat Paulus kepada jemaat di Roma ditulis untuk jemaat yang bergumul dengan perpecahan nyata, orang percaya Yahudi dan bukan Yahudi yang datang dari latar belakang, adat, dan keyakinan yang sama sekali berbeda, kini diharapkan duduk di meja yang sama dan saling memanggil keluarga. Perintahnya indah dan sederhana, sulit dibantah: terimalah satu akan yang lain, sama seperti Kristus telah menerima kamu. Bukan menyetujui segala sesuatu tentang satu sama lain. Bukan menikmati setiap kebiasaan satu sama lain. Menerima.
 
-Kerinduan ini — untuk menemukan Allah, benar-benar menemukan lokasi-Nya dan berbicara berhadapan muka — adalah salah satu dorongan paling manusiawi dalam seluruh Alkitab, dan Ayub memberi kita izin untuk merasakannya tanpa malu. Ia tidak sedang berusaha melarikan diri dari Allah atau berargumen bahwa Ia tidak ada. Ia sedang berusaha mendekat, bahkan dalam kebingungan dan penderitaannya, bahkan sambil menuduh Allah bersembunyi. Pencarian itu sendiri, sekalipun mendesak dan belum terselesaikan, adalah tindakan iman itu sendiri, karena kamu tidak pergi mencari seseorang yang sudah kamu berhenti percayai keberadaannya.
+Inilah nada penutup yang ingin dibawa oleh seluruh rencana ini. Membangun kedekatan dengan mertua dan ipar jarang berarti menghapus setiap perbedaan sampai seorang mertua berpikir persis sepertimu, atau seorang ipar berbagi semua minatmu. Ini tentang keputusan yang terus berlanjut untuk menerima orang-orang yang masuk ke hidupmu lewat pernikahan, bukan lewat darah, sama seperti Kristus menerima kita sepenuhnya, termasuk bagian-bagian diri kita yang masih kasar dan belum sempurna.
 
-Yang membuat kisah Ayub begitu luar biasa adalah apa yang akhirnya terjadi: setelah pasal-pasal pertanyaan yang tak terjawab, Allah sungguh datang dan berbicara. Jawaban yang diterima Ayub bukanlah penjelasan rapi tentang mengapa ia menderita — melainkan perjumpaan yang menggetarkan dengan kebesaran dan kehadiran Allah yang membingkai ulang segalanya. Ayub tidak mendapatkan setiap pertanyaannya terjawab. Ia mendapatkan sesuatu yang lain: Allah sendiri, hadir, berbicara, tidak lagi tersembunyi. Dan itu sudah cukup.
+Perlu diingat bahwa penerimaan, dalam pengertian Paulus, bukanlah sikap pasif. Ini penyambutan yang aktif, jenis yang hadir, yang membuat ruang di meja, yang memilih kehangatan bahkan ketika kehangatan itu belum sepenuhnya dibalas. Kristus tidak menunggu kita menjadi mudah dikasihi sebelum Ia menyambut kita. Ia menyambut kita lebih dulu, dan perubahan terjadi seiring waktu, di dalam sambutan itu.
 
-Jika kamu mendapati dirimu merindukan, seperti Ayub, sekadar menemukan lokasi Allah — merasakan kedekatan-Nya, bukan hanya percaya fakta tentang-Nya — kerinduan itu bukanlah tanda iman yang lemah. Itu adalah iman yang menjangkau hal yang sesungguhnya, bukan puas dengan penggantinya. Teruslah mencari. Tempat kediaman Ayub terasa tak mungkin dijangkau sampai akhirnya tidak lagi demikian, dan Allah yang ia cari akhirnya berbicara langsung ke dalam kisahnya.',
-    'Longing to find God, even in confusion and pain, is itself evidence you still believe He is real.', 'Kerinduan untuk menemukan Allah, bahkan dalam kebingungan dan penderitaan, adalah bukti bahwa kamu masih percaya Ia sungguh ada.',
-    'God, some days I just want to find You — not another explanation, but Your actual presence. Thank You that this longing is itself a form of faith. Come near, the way You eventually came near to Job, even before every question is answered. Amen.', 'Allah, ada hari-hari aku hanya ingin menemukan-Mu — bukan penjelasan lain, melainkan kehadiran-Mu yang sesungguhnya. Terima kasih karena kerinduan ini sendiri adalah bentuk iman. Datanglah mendekat, seperti Engkau akhirnya mendekat kepada Ayub, bahkan sebelum setiap pertanyaan terjawab. Amin.'
+Saat kau menutup rencana empat hari ini, mintalah Allah menolongmu memberikan sambutan yang mengambil langkah pertama itu kepada mertua dan ipar dalam hidupmu, baik hubungan itu sudah terasa hangat maupun masih terasa baru dan belum pasti. Keluarga yang terbentuk lewat pernikahan tetaplah keluarga, layak mendapat kerja keras yang sabar dan terus-menerus berupa penerimaan yang tulus, demi kemuliaan Allah yang telah menerima kita lebih dulu.',
+    'What would it look like to be the one who extends acceptance first to an in-law, rather than waiting for the relationship to feel easy?', 'Seperti apa rupanya jika kau menjadi pihak yang lebih dulu memberikan penerimaan kepada seorang mertua atau ipar, alih-alih menunggu hubungan itu terasa mudah?',
+    'Lord Jesus, thank You for accepting me fully before I had anything figured out. Help me offer that same first-move acceptance to my in-laws, and let our extended family become a place where Your welcoming love is genuinely visible. Amen.', 'Tuhan Yesus, terima kasih telah menerimaku sepenuhnya sebelum aku memiliki apa pun yang benar. Tolong aku memberikan penerimaan yang mengambil langkah pertama itu kepada mertua dan iparku, dan biarlah keluarga besar kami menjadi tempat di mana kasih-Mu yang menyambut sungguh-sungguh terlihat nyata. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 15:7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 15:7', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Job 23:3', 'WEB', 'If only I knew where to find him; if only I could go to his dwelling!');
+  -- Plan: Roots That Reach Far
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'Roots That Reach Far',
+    'Akar yang Menjangkau Jauh',
+    'Seven days on staying close to extended family across the miles',
+    'Tujuh hari untuk tetap dekat dengan keluarga besar meski berjauhan',
+    7,
+    'Cousins move cities, aunts and uncles grow older, grandchildren are born in places the rest of the family has never visited. This seven-day plan is for anyone whose extended family is scattered by distance, work, or busy seasons of life, offering a biblical vision of family bonds that were never meant to depend on proximity to stay strong.',
+    'Sepupu pindah kota, paman dan bibi menua, cucu lahir di tempat yang belum pernah dikunjungi anggota keluarga lainnya. Rencana tujuh hari ini untuk siapa pun yang keluarga besarnya tersebar karena jarak, pekerjaan, atau musim hidup yang sibuk, menawarkan pandangan alkitabiah tentang ikatan keluarga yang tidak pernah dimaksudkan bergantung pada kedekatan jarak untuk tetap kuat.',
+    '/images/devotions/roots-that-reach-far.jpeg'
+  ) RETURNING id INTO v_plan_id;
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ayub 23:3', 'TB', 'Sekiranya aku tahu bagaimana mendapatkan Dia, sekiranya aku boleh sampai ke tempat kediaman-Nya!');
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'Two Are Better Than One', 'Berdua Lebih Baik dari Seorang Diri',
+    'The writer of Ecclesiastes spent much of the book wrestling honestly with life''s difficulties, yet in the middle of that searching he pauses to state something simple and sturdy: two are better than one, because when one falls, the other can help them up. This was written long before phone calls, video chats, or long-haul flights, in a world where extended family often lived within walking distance of one another for an entire lifetime. Today, that same wisdom has to survive a very different reality, one where cousins might live on different continents and grandparents might see grandchildren only once a year.
+
+Distance changes the shape of family life, but it does not change this basic truth. We are still better together than apart, even when together now sometimes means a phone screen instead of a shared table. The value of extended family was never really about physical proximity in the first place; it was about having people who will help you up when you fall, who remember your story across decades, who show up in ways a stranger simply cannot.
+
+It is easy to let distance quietly become disconnection, not through any single decision but through the slow accumulation of missed calls, unanswered messages, and years passing between visits. Ecclesiastes does not shame anyone for the miles between family members; it simply reminds us why the effort to stay connected is worth making in the first place.
+
+As you begin this seven-day plan, think of one extended family member who lives far from you, an aunt, a cousin, a grandparent, and consider what it would mean this week to help them up, even from a distance, through a call, a message, or simply remembering to ask how they are really doing.', 'Penulis Kitab Pengkhotbah menghabiskan sebagian besar kitab ini bergumul jujur dengan kesulitan hidup, namun di tengah pencarian itu ia berhenti sejenak untuk menyatakan sesuatu yang sederhana dan kokoh: berdua lebih baik daripada seorang diri, karena jika salah satu jatuh, yang lain dapat menolongnya berdiri. Ini ditulis jauh sebelum ada telepon, panggilan video, atau penerbangan jarak jauh, di dunia tempat keluarga besar sering tinggal dalam jarak berjalan kaki satu sama lain seumur hidup mereka. Hari ini, kebijaksanaan yang sama harus bertahan dalam kenyataan yang sangat berbeda, tempat sepupu mungkin tinggal di benua berbeda dan kakek-nenek mungkin hanya bertemu cucu mereka sekali setahun.
+
+Jarak mengubah bentuk kehidupan keluarga, tetapi tidak mengubah kebenaran dasarnya. Kita tetap lebih baik bersama daripada terpisah, meski kini bersama kadang berarti layar telepon, bukan meja makan bersama. Nilai keluarga besar sebenarnya tidak pernah benar-benar soal kedekatan fisik; itu tentang memiliki orang-orang yang akan menolongmu berdiri saat kau jatuh, yang mengingat kisahmu selama puluhan tahun, yang hadir dengan cara yang tidak bisa dilakukan orang asing.
+
+Sangat mudah membiarkan jarak diam-diam berubah menjadi keterputusan hubungan, bukan lewat satu keputusan tunggal tetapi lewat penumpukan perlahan panggilan yang terlewat, pesan yang tak dibalas, dan tahun-tahun yang berlalu di antara kunjungan. Pengkhotbah tidak mempermalukan siapa pun karena jarak antar anggota keluarga; kitab ini hanya mengingatkan kita mengapa usaha untuk tetap terhubung layak diperjuangkan sejak awal.
+
+Saat kau memulai rencana tujuh hari ini, pikirkan satu anggota keluarga besar yang tinggal jauh darimu, seorang bibi, sepupu, atau kakek-nenek, dan pertimbangkan apa artinya minggu ini menolongnya berdiri, bahkan dari jarak jauh, lewat telepon, pesan, atau sekadar mengingat untuk bertanya bagaimana keadaannya yang sebenarnya.',
+    'Which extended family member living far from you comes to mind right now, and what is one small way you could help them up this week?', 'Anggota keluarga besar mana yang tinggal jauh darimu terlintas dalam pikiranmu sekarang, dan apa satu cara kecil untuk menolongnya berdiri minggu ini?',
+    'Lord, thank You that family was never meant to depend on distance to matter. Bring to mind the relatives I have let drift, and give me the initiative to reach across the miles this week. Amen.', 'Tuhan, terima kasih bahwa keluarga tidak pernah dimaksudkan bergantung pada jarak untuk tetap berarti. Ingatkanlah aku pada kerabat yang telah kubiarkan menjauh, dan berilah aku inisiatif untuk menjangkau melintasi jarak minggu ini. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 4:9-10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 4:9-10', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'Do Not Forget Hospitality', 'Jangan Lupa Memberi Tumpangan',
+    'The writer of Hebrews links two ideas that might seem separate at first glance: keeping on loving each other as family, and not neglecting hospitality to others, including strangers. But for extended family living across distances, these two commands often become the very same act. Hosting an aunt who is passing through town, opening your home to cousins visiting from another country, or simply making the effort to welcome relatives you rarely see is exactly the kind of ordinary hospitality this passage has in mind.
+
+There is something quietly countercultural about prioritizing hospitality toward extended family in a season of life that often prizes convenience and low-maintenance relationships. It can feel easier to let a visiting relative stay at a hotel, to keep gatherings short, to treat far-off family almost like distant acquaintances rather than people worth the inconvenience of genuine welcome. Hebrews pushes back gently against that instinct.
+
+It also matters that this verse mentions entertaining angels without knowing it. Whatever that means practically, it suggests hospitality carries more spiritual weight than we usually credit it with. Opening a door, setting an extra place at the table, offering a guest room to a cousin between flights, these small acts of welcome can carry blessing far beyond what we notice in the moment.
+
+Consider today whether there is a piece of practical hospitality you could plan for an extended family member this year: an invitation to visit, an offer to host during a holiday, or simply making clear that your door is genuinely open to them whenever distance allows a visit.', 'Penulis Kitab Ibrani menghubungkan dua gagasan yang mungkin terlihat terpisah pada pandangan pertama: terus mengasihi sesama sebagai saudara, dan tidak melupakan untuk memberi tumpangan kepada orang lain, termasuk orang asing. Namun bagi keluarga besar yang tinggal berjauhan, kedua perintah ini sering menjadi tindakan yang sama persis. Menjamu seorang bibi yang sedang singgah di kota, membuka rumah bagi sepupu yang berkunjung dari negara lain, atau sekadar berusaha menyambut kerabat yang jarang kau temui, adalah persis jenis keramahan sederhana yang dimaksud oleh bagian ini.
+
+Ada sesuatu yang diam-diam melawan arus zaman dalam mengutamakan keramahan terhadap keluarga besar di masa yang sering mengutamakan kenyamanan dan hubungan yang minim beban. Bisa terasa lebih mudah membiarkan kerabat yang berkunjung menginap di hotel, membuat pertemuan singkat, memperlakukan keluarga yang jauh hampir seperti kenalan biasa alih-alih orang yang layak mendapat ketidaknyamanan dari sambutan yang tulus. Ibrani dengan lembut melawan naluri itu.
+
+Penting juga bahwa ayat ini menyebut menjamu malaikat tanpa mengetahuinya. Apa pun makna praktisnya, ini menunjukkan bahwa keramahan membawa bobot rohani lebih besar daripada yang biasa kita sadari. Membuka pintu, menyediakan tempat duduk tambahan di meja makan, menawarkan kamar tamu bagi sepupu yang transit antar penerbangan, tindakan-tindakan kecil penyambutan ini bisa membawa berkat jauh melampaui apa yang kita sadari saat itu.
+
+Renungkan hari ini apakah ada bentuk keramahan praktis yang bisa kau rencanakan untuk anggota keluarga besar tahun ini: undangan untuk berkunjung, tawaran menjadi tuan rumah saat hari raya, atau sekadar membuat jelas bahwa pintumu sungguh terbuka bagi mereka kapan pun jarak memungkinkan kunjungan.',
+    'What is one concrete act of hospitality you could plan for a far-off relative this year, rather than leaving connection to chance?', 'Apa satu tindakan keramahan yang konkret yang bisa kau rencanakan untuk kerabat yang jauh tahun ini, alih-alih membiarkan hubungan itu terjadi begitu saja?',
+    'Lord, remind me not to let convenience quietly replace hospitality toward my extended family. Give me a generous, welcoming heart, and open real opportunities to host and be hosted by the relatives distance has separated me from. Amen.', 'Tuhan, ingatkanlah aku agar tidak membiarkan kenyamanan diam-diam menggantikan keramahan terhadap keluarga besarku. Berilah aku hati yang murah dan menyambut, dan bukakanlah kesempatan nyata untuk menjamu dan dijamu oleh kerabat yang telah dipisahkan jarak dariku. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 13:1-2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 13:1-2', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'One Heart, Many Homes', 'Satu Hati, Banyak Rumah',
+    'The earliest believers in Jerusalem devoted themselves to gathering together, breaking bread in one another''s homes, sharing meals with glad and sincere hearts, even though they came from very different households and backgrounds. Their unity did not depend on everyone living under the same roof; it depended on a shared devotion that kept pulling them back toward each other despite their different homes and daily lives.
+
+Extended family scattered across cities or countries can take real encouragement from this pattern. Unity was never meant to require constant physical closeness, only consistent, intentional togetherness, whatever form that takes. For the early church it was daily gatherings in homes. For a modern extended family it might be a weekly family group chat, a rotating video call, a shared prayer request thread, or a tradition of visiting one household each year on a specific holiday.
+
+What stands out most in this passage is the gladness. These were not obligatory gatherings people dreaded attending. They ate together with glad and sincere hearts. That kind of joy is worth aiming for in extended family life too, not gatherings held together by guilt or duty alone, but ones people genuinely look forward to because real warmth and welcome are present there.
+
+Think today about the rhythms your own extended family currently has for staying connected, whether a group chat, an annual reunion, or semi-regular calls, and ask God whether any small adjustment could bring more of that early church gladness into your family''s version of staying together.', 'Orang-orang percaya paling awal di Yerusalem membaktikan diri untuk berkumpul bersama, memecahkan roti di rumah masing-masing, makan bersama dengan hati yang gembira dan tulus, meski mereka berasal dari rumah tangga dan latar belakang yang sangat berbeda. Persatuan mereka tidak bergantung pada semua orang tinggal di bawah atap yang sama; itu bergantung pada pengabdian bersama yang terus menarik mereka kembali satu sama lain meski rumah dan kehidupan sehari-hari mereka berbeda.
+
+Keluarga besar yang tersebar di berbagai kota atau negara bisa mengambil dorongan nyata dari pola ini. Persatuan tidak pernah dimaksudkan mengharuskan kedekatan fisik yang terus-menerus, hanya kebersamaan yang konsisten dan disengaja, dalam bentuk apa pun itu. Bagi jemaat mula-mula itu berarti perkumpulan harian di rumah-rumah. Bagi keluarga besar masa kini itu bisa berarti grup obrolan keluarga mingguan, panggilan video bergiliran, utas doa bersama, atau tradisi mengunjungi satu rumah tangga setiap tahun pada hari raya tertentu.
+
+Yang paling menonjol dari bagian ini adalah kegembiraannya. Ini bukan pertemuan wajib yang orang enggan hadiri. Mereka makan bersama dengan hati yang gembira dan tulus. Jenis sukacita itu layak dituju juga dalam kehidupan keluarga besar, bukan pertemuan yang disatukan hanya oleh rasa bersalah atau kewajiban semata, melainkan pertemuan yang benar-benar dinantikan orang karena kehangatan dan sambutan yang tulus hadir di sana.
+
+Renungkan hari ini ritme apa yang saat ini dimiliki keluarga besarmu untuk tetap terhubung, baik itu grup obrolan, reuni tahunan, atau panggilan yang cukup rutin, dan tanyakan kepada Allah apakah ada penyesuaian kecil yang bisa membawa lebih banyak kegembiraan jemaat mula-mula itu ke dalam versi kebersamaan keluargamu sendiri.',
+    'What rhythm of staying connected does your extended family currently have, and what small adjustment might bring more genuine gladness into it?', 'Ritme kebersamaan apa yang saat ini dimiliki keluarga besarmu, dan penyesuaian kecil apa yang mungkin membawa lebih banyak kegembiraan tulus ke dalamnya?',
+    'Lord, help my extended family build rhythms of connection that feel like gladness rather than obligation. Even across different homes and cities, knit our hearts together the way You knit the early church together. Amen.', 'Tuhan, tolonglah keluarga besarku membangun ritme kebersamaan yang terasa seperti kegembiraan, bukan kewajiban. Meski di rumah dan kota yang berbeda, jalinlah hati kami bersama seperti Engkau menjalin jemaat mula-mula. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Acts 2:46', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kisah Para Rasul 2:46', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 4,
+    'Love That Binds Together', 'Kasih yang Mempersatukan',
+    'Paul lists many virtues believers should put on, compassion, kindness, humility, gentleness, patience, but then names love as something above all of these, the bond that ties everything else together in perfect unity. For a large extended family, this image of love as a binding cord is especially fitting. A big family is naturally full of very different people: different generations, different personalities, different life stages, different opinions about nearly everything from politics to how to cook the holiday meal.
+
+Without love actively holding those differences together, an extended family can slowly fragment into smaller, more comfortable subgroups, the cousins who get along easily staying close while others quietly drift to the edges. Distance only accelerates this natural pull toward fragmentation, since it removes the regular contact that used to paper over disagreements simply through sheer familiarity.
+
+Love, in Paul''s sense here, is not primarily a feeling that happens to strong family bonds. It is closer to a deliberate practice, a choice to keep including the relative whose views differ from yours, to keep inviting the cousin who rarely comes, to keep speaking well of family members even when it would be easier to write them off as too different or too difficult.
+
+Today, consider whether there is a family member on the edges of your extended family, someone whose relationship with the wider family has grown thin, and ask God how you might be part of the cord of love that keeps drawing them back toward the center rather than letting the distance quietly win.', 'Paulus mendaftar banyak kebajikan yang harus dikenakan orang percaya, belas kasihan, kebaikan, kerendahan hati, kelembutan, kesabaran, tetapi kemudian menyebut kasih sebagai sesuatu di atas semuanya, pengikat yang menyatukan segala sesuatu dalam kesempurnaan. Bagi keluarga besar, gambaran kasih sebagai tali pengikat ini sangat sesuai. Keluarga besar secara alami penuh dengan orang-orang yang sangat berbeda: generasi berbeda, kepribadian berbeda, tahap hidup berbeda, pendapat berbeda tentang hampir segala hal, mulai dari politik sampai cara memasak hidangan hari raya.
+
+Tanpa kasih yang secara aktif menyatukan perbedaan-perbedaan itu, keluarga besar bisa perlahan pecah menjadi kelompok-kelompok kecil yang lebih nyaman, sepupu yang mudah akur tetap dekat sementara yang lain diam-diam bergeser ke pinggiran. Jarak hanya mempercepat tarikan alami menuju perpecahan ini, karena ia menghilangkan kontak rutin yang dulu menutupi ketidaksepakatan hanya lewat keakraban semata.
+
+Kasih, dalam pengertian Paulus di sini, bukan terutama perasaan yang kebetulan terjadi pada ikatan keluarga yang kuat. Ini lebih dekat dengan praktik yang disengaja, sebuah pilihan untuk terus melibatkan kerabat yang pandangannya berbeda darimu, terus mengundang sepupu yang jarang datang, terus berbicara baik tentang anggota keluarga bahkan ketika lebih mudah untuk menganggap mereka terlalu berbeda atau terlalu sulit.
+
+Hari ini, pertimbangkan apakah ada anggota keluarga di pinggiran keluarga besarmu, seseorang yang hubungannya dengan keluarga besar telah menipis, dan tanyakan kepada Allah bagaimana kau bisa menjadi bagian dari tali kasih yang terus menariknya kembali ke pusat, alih-alih membiarkan jarak diam-diam menang.',
+    'Is there a relative who has quietly drifted to the edges of your extended family, and how might you become part of the cord that draws them back?', 'Adakah kerabat yang diam-diam bergeser ke pinggiran keluarga besarmu, dan bagaimana kau bisa menjadi bagian dari tali yang menariknya kembali?',
+    'Lord, clothe our extended family in love that actively binds us together, not just a feeling but a daily practice. Show me who has drifted to the edges, and give me a small way to help draw them back toward the center. Amen.', 'Tuhan, kenakanlah pada keluarga besar kami kasih yang secara aktif mengikat kami bersama, bukan sekadar perasaan tetapi praktik harian. Tunjukkanlah kepadaku siapa yang telah bergeser ke pinggiran, dan berilah aku cara kecil untuk membantu menariknya kembali ke pusat. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:14', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2016,29 +1674,25 @@ Jika kamu mendapati dirimu merindukan, seperti Ayub, sekadar menemukan lokasi Al
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 5,
-    'Has God Forgotten to Be Gracious?', 'Sudah Lupakah Allah Menaruh Kasihan?',
-    'The writer of Psalm 77 begins in genuine distress, unable to sleep, too troubled even to speak. And then he does something many of us do in hard seasons: he starts questioning God''s very character based on his current experience. ''Will the Lord reject forever? Will he never show his favor again? Has his unfailing love vanished forever? Has God forgotten to be merciful?'' These aren''t abstract theological questions — they''re personal, wounded, and completely understandable given what he''s going through.
+    'Love Covers a Multitude', 'Kasih Menutupi Banyak Dosa',
+    'Peter tells his readers to love each other deeply, because love covers over a multitude of sins. In a large extended family, that multitude is real. Over the years there are misunderstandings at reunions, comments made carelessly at a wedding, old grudges about who helped care for aging parents and who did not, decisions about inheritance or attention that left someone feeling slighted. No extended family reaches adulthood without a fairly long list of small offenses accumulated along the way.
 
-It would be easy to read these questions as a crisis of faith, and in a sense they are. But look at what the psalmist does with them: he doesn''t stop at the questions. He goes on to say, ''Then I thought, To this I will appeal: the years when the Most High stretched out his right hand. I will remember the deeds of the LORD; yes, I will remember your miracles of long ago.'' When his present feelings couldn''t give him a reliable answer, he deliberately turned to memory — to what God had actually done before — as a more trustworthy witness than his current emotional state.
+Peter does not tell us to pretend those offenses never happened, and he certainly does not tell us to let genuinely serious harm go unaddressed. But he does point to something powerful: deep, deliberate love has the capacity to cover minor offenses rather than let them fester into permanent grudges. This is especially important for extended family, where the sheer number of relationships multiplies the opportunities for small hurts to accumulate over decades.
 
-This is a genuinely useful pattern for anyone whose current circumstances are shouting louder than their memory of God''s past faithfulness. Feelings in the moment are real, but they are not the only evidence available to us. We also have a history — our own, and the wider story of Scripture — full of times God showed up, provided, rescued, and stayed faithful even when it looked doubtful. Remembering deliberately, on purpose, is not denial. It''s evidence-gathering for a case our current emotions can''t make alone.
+Distance can make this harder in one sense, since a misunderstanding over a text message or a missed call can sit unresolved for months without the natural repair that a face-to-face conversation might have provided. But distance can also make it easier, since love that covers does not always require a dramatic confrontation. Sometimes it simply means choosing not to bring up an old slight again, deciding instead to keep showing love as though the matter never happened.
 
-Today, try the psalmist''s move: when the question ''has God forgotten me?'' rises up, don''t just sit with the question — go looking for the answer in memory. Recall a specific time, in your own life or in Scripture, when God''s faithfulness was undeniable. Let that memory stand alongside your current doubt, not to erase it, but to keep it good company.', 'Penulis Mazmur 77 memulai dalam kesusahan yang nyata, tidak dapat tidur, terlalu gelisah bahkan untuk berbicara. Dan kemudian ia melakukan sesuatu yang banyak dari kita lakukan dalam musim-musim sulit: ia mulai mempertanyakan karakter Allah sendiri berdasarkan pengalamannya saat itu. ''Akan menolakkah Tuhan untuk selama-lamanya, dan tidak berkenankah Ia lagi? Sudah lenyapkah untuk seterusnya kasih setia-Nya, sudah berakhirkah janji-Nya sepanjang masa? Sudah lupakah Allah menaruh kasihan?'' Ini bukan pertanyaan teologis yang abstrak — ini pribadi, terluka, dan sepenuhnya bisa dimengerti mengingat apa yang sedang ia alami.
+Think today about whether you are holding onto a minor offense from an extended family member, something that was hurtful but not severe, and consider whether love covering it, quietly and without demanding an apology first, might be the freeing choice God is inviting you to make.', 'Petrus memberi tahu para pembacanya untuk saling mengasihi dengan sungguh-sungguh, sebab kasih menutupi banyak sekali dosa. Dalam keluarga besar, jumlah itu nyata adanya. Selama bertahun-tahun ada kesalahpahaman di reuni, komentar yang diucapkan sembarangan di pesta pernikahan, dendam lama soal siapa yang membantu merawat orang tua yang menua dan siapa yang tidak, keputusan soal warisan atau perhatian yang membuat seseorang merasa disepelekan. Tidak ada keluarga besar yang mencapai usia dewasa tanpa daftar cukup panjang berisi pelanggaran kecil yang terkumpul sepanjang jalan.
 
-Akan mudah membaca pertanyaan-pertanyaan ini sebagai krisis iman, dan dalam artian tertentu memang begitu. Tetapi lihat apa yang dilakukan pemazmur dengan pertanyaan itu: ia tidak berhenti pada pertanyaan-pertanyaan itu. Ia melanjutkan dengan berkata, ''Lalu aku berkata: Inilah yang menyedihkan hatiku, bahwa tangan kanan Yang Mahatinggi berubah. Aku hendak mengingat perbuatan-perbuatan TUHAN, ya, aku hendak mengingat keajaiban-keajaiban-Mu dari zaman purbakala.'' Ketika perasaannya saat itu tidak dapat memberinya jawaban yang bisa dipercaya, ia dengan sengaja beralih kepada ingatan — kepada apa yang benar-benar telah Allah lakukan sebelumnya — sebagai saksi yang lebih dapat dipercaya daripada keadaan emosinya saat itu.
+Petrus tidak menyuruh kita berpura-pura pelanggaran itu tidak pernah terjadi, dan ia pasti tidak menyuruh kita membiarkan kerugian yang benar-benar serius tidak diselesaikan. Namun ia menunjuk pada sesuatu yang berkuasa: kasih yang dalam dan disengaja memiliki kemampuan untuk menutupi pelanggaran-pelanggaran kecil daripada membiarkannya membusuk menjadi dendam permanen. Ini terutama penting bagi keluarga besar, tempat banyaknya jumlah hubungan melipatgandakan kesempatan bagi luka-luka kecil untuk menumpuk selama puluhan tahun.
 
-Ini adalah pola yang sungguh berguna bagi siapa saja yang keadaannya saat ini berteriak lebih keras daripada ingatannya akan kesetiaan Allah di masa lalu. Perasaan saat ini itu nyata, tetapi bukan satu-satunya bukti yang tersedia bagi kita. Kita juga memiliki sejarah — sejarah kita sendiri, dan kisah Alkitab yang lebih luas — penuh dengan saat-saat Allah hadir, menyediakan, menyelamatkan, dan tetap setia bahkan ketika keadaannya tampak meragukan. Mengingat dengan sengaja, dengan sadar, bukanlah penyangkalan. Itu adalah pengumpulan bukti untuk perkara yang tidak bisa dibuktikan sendiri oleh emosi kita saat ini.
+Jarak bisa membuat ini lebih sulit dalam satu sisi, karena kesalahpahaman lewat pesan teks atau panggilan yang terlewat bisa mengendap tanpa penyelesaian selama berbulan-bulan tanpa perbaikan alami yang mungkin diberikan oleh percakapan tatap muka. Namun jarak juga bisa membuatnya lebih mudah, karena kasih yang menutupi tidak selalu memerlukan konfrontasi dramatis. Kadang itu hanya berarti memilih untuk tidak mengungkit lagi luka lama, memilih tetap menunjukkan kasih seolah-olah hal itu tidak pernah terjadi.
 
-Hari ini, cobalah langkah pemazmur: ketika pertanyaan ''apakah Allah telah melupakan aku?'' muncul, jangan hanya duduk dengan pertanyaan itu — pergilah mencari jawabannya dalam ingatan. Ingatlah satu waktu tertentu, dalam hidupmu sendiri atau dalam Alkitab, ketika kesetiaan Allah tidak dapat disangkal. Biarkan ingatan itu berdiri berdampingan dengan keraguanmu saat ini, bukan untuk menghapusnya, melainkan untuk menemaninya dengan baik.',
-    'When feelings can''t give a reliable answer, deliberately remembering God''s past faithfulness is trustworthy evidence.', 'Ketika perasaan tidak bisa memberi jawaban yang dapat dipercaya, mengingat dengan sengaja kesetiaan Allah di masa lalu adalah bukti yang dapat diandalkan.',
-    'Lord, in this moment my feelings tell me You''ve forgotten me, but I choose to remember what You''ve actually done before. Bring to mind Your faithfulness in my own story, and let that memory stand beside my doubt today. Amen.', 'Tuhan, saat ini perasaanku mengatakan Engkau telah melupakan aku, tetapi aku memilih untuk mengingat apa yang sesungguhnya telah Engkau lakukan sebelumnya. Ingatkan aku akan kesetiaan-Mu dalam kisah hidupku sendiri, dan biarkan ingatan itu berdiri di samping keraguanku hari ini. Amin.'
+Renungkan hari ini apakah kau memikul pelanggaran kecil dari seorang anggota keluarga besar, sesuatu yang menyakitkan tetapi tidak berat, dan pertimbangkan apakah kasih yang menutupinya, dengan tenang dan tanpa menuntut permintaan maaf lebih dulu, mungkin adalah pilihan yang membebaskan yang sedang Allah undang kau ambil.',
+    'Is there a small, old offense from an extended family member you have been holding onto that love could simply cover rather than keep replaying?', 'Adakah pelanggaran kecil dan lama dari seorang anggota keluarga besar yang selama ini kau pegang erat, yang bisa saja ditutupi oleh kasih, alih-alih terus diputar ulang?',
+    'Lord, give me a love deep enough to cover the small offenses that have quietly built up in my extended family over the years. Free me from replaying old slights, and let love have the last word instead. Amen.', 'Tuhan, berilah aku kasih yang cukup dalam untuk menutupi pelanggaran-pelanggaran kecil yang diam-diam menumpuk dalam keluarga besarku selama bertahun-tahun. Bebaskanlah aku dari memutar ulang luka lama, dan biarlah kasih yang mengucapkan kata terakhir. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 77:9', 'WEB', 'Has God forgotten to be merciful? Has he in anger withheld his compassion?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 77:10', 'TB', 'Sudah lupakah Allah menaruh kasihan, atau ditutup-Nyakah rahmat-Nya karena murka?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 4:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 4:8', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2048,29 +1702,25 @@ Hari ini, cobalah langkah pemazmur: ketika pertanyaan ''apakah Allah telah melup
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 6,
-    'Even the Prophet Wondered', 'Bahkan Sang Nabi pun Bertanya-tanya',
-    'John the Baptist is one of the most unshakeable figures in the New Testament — the one who leapt in the womb at Mary''s greeting, who baptized Jesus, who boldly called out sin without flinching. And yet, sitting in prison, awaiting execution, even he sends messengers to ask Jesus a startling question: ''Are you the one who is to come, or should we expect someone else?'' The man who once pointed at Jesus and declared ''Behold the Lamb of God'' is now, from a dark cell, quietly wondering if he got it wrong.
+    'Carry Each Other''s Burdens', 'Bertolong-tolonglah Menanggung Beban',
+    'Paul''s instruction to the Galatians to carry each other''s burdens was written to a community, not merely a household, which makes it especially relevant for extended family scattered across many households. Burdens in a large family show up constantly: a cousin going through a divorce, an uncle facing a health crisis, a grandmother who has recently become a widow and now lives alone, a niece struggling in her first year away at university. Distance does not remove these burdens; it only makes carrying them together more logistically complicated.
 
-This detail is easy to skip past, but it shouldn''t be, because it tells us that doubt in hard circumstances isn''t reserved for the spiritually weak or the newly converted. It can visit even a prophet whose calling was confirmed before birth, whose certainty once seemed unshakeable. Suffering and confinement have a way of shaking loose questions we thought were long settled. That doesn''t mean John''s earlier conviction was fake. It means faith, even strong faith, can wobble under enough pressure — and that this is simply part of being human.
+Yet burden-bearing across distance is entirely possible, and modern life has actually made it easier than at almost any point in history. A prayer chain can move across continents in seconds. A meal train can be coordinated for a relative recovering from surgery even when family members live in different cities, through calls to local friends or delivery services. Money, cards, video calls, and simple consistent check-ins can all become real, tangible ways of carrying a burden that once required physical presence to bear.
 
-Notice how Jesus responds. He doesn''t scold John for asking, and He doesn''t demand John simply take His word for it. Instead, He points to the evidence: the blind receive sight, the lame walk, the deaf hear, the good news is preached to the poor. He answers the doubt with visible, tangible proof of who He is, gently inviting John to reason his way back to trust rather than shaming him for wondering in the first place.
+What burden-carrying requires most is not proximity but attentiveness, actually knowing what is happening in the lives of extended family members closely enough to notice when someone is struggling. This is harder across distance, since we do not see tired faces or notice absence from a regular gathering the way we might up close. It takes intentional effort to ask real questions and to actually listen to the answers.
 
-If prison, illness, disappointment, or simply prolonged hardship has shaken loose questions in you that you thought were long settled, you''re in the company of John the Baptist — a man Jesus Himself called the greatest ''among those born of women.'' Doubt visiting a strong faith doesn''t erase what came before it. And like Jesus with John, God is often willing to answer our honest ''are You really the one?'' with fresh evidence, gently offered.', 'Yohanes Pembaptis adalah salah satu tokoh paling tak tergoyahkan dalam Perjanjian Baru — orang yang melonjak dalam rahim saat mendengar salam Maria, yang membaptis Yesus, yang dengan berani menyerukan dosa tanpa gentar. Namun, saat duduk di penjara, menantikan hukuman mati, bahkan ia mengirim utusan untuk bertanya kepada Yesus sebuah pertanyaan yang mengejutkan: ''Engkaukah yang akan datang itu, atau haruskah kami menantikan orang lain?'' Orang yang dahulu menunjuk kepada Yesus dan menyatakan ''Lihatlah Anak Domba Allah,'' kini, dari sel yang gelap, diam-diam bertanya-tanya apakah ia telah salah.
+Consider today whether there is an extended family member currently carrying a burden you were unaware of, or aware of but had not yet acted on, and ask God to show you one concrete way to help carry it this week, even from far away.', 'Perintah Paulus kepada jemaat di Galatia untuk saling menanggung beban ditulis kepada sebuah komunitas, bukan sekadar satu rumah tangga, yang membuatnya sangat relevan bagi keluarga besar yang tersebar di banyak rumah tangga. Beban dalam keluarga besar terus muncul: sepupu yang sedang menjalani perceraian, paman yang menghadapi krisis kesehatan, nenek yang baru menjadi janda dan kini tinggal sendirian, keponakan yang bergumul di tahun pertamanya kuliah di kota lain. Jarak tidak menghilangkan beban-beban ini; ia hanya membuat menanggungnya bersama secara logistik lebih rumit.
 
-Detail ini mudah dilewatkan, tetapi seharusnya tidak, karena hal ini memberi tahu kita bahwa keraguan dalam keadaan sulit bukan hanya milik orang yang lemah rohani atau yang baru bertobat. Ia dapat mengunjungi bahkan seorang nabi yang panggilannya sudah dikonfirmasi sebelum lahir, yang kepastiannya dahulu tampak tak tergoyahkan. Penderitaan dan pengurungan memiliki cara untuk mengguncang lepas pertanyaan-pertanyaan yang kita kira sudah lama terselesaikan. Itu tidak berarti keyakinan awal Yohanes itu palsu. Itu berarti iman, bahkan iman yang kuat, dapat goyah di bawah tekanan yang cukup besar — dan itu sekadar bagian dari menjadi manusia.
+Namun menanggung beban lintas jarak sepenuhnya mungkin dilakukan, dan kehidupan modern justru telah membuatnya lebih mudah daripada hampir sepanjang sejarah manusia. Rantai doa bisa bergerak melintasi benua dalam hitungan detik. Bantuan makanan bisa dikoordinasikan bagi kerabat yang pulih dari operasi bahkan ketika anggota keluarga tinggal di kota berbeda, lewat panggilan kepada teman setempat atau layanan pengiriman. Uang, kartu ucapan, panggilan video, dan kabar rutin yang sederhana semuanya bisa menjadi cara nyata dan konkret untuk menanggung beban yang dulu memerlukan kehadiran fisik.
 
-Perhatikan bagaimana Yesus menanggapinya. Ia tidak menegur Yohanes karena bertanya, dan Ia tidak menuntut Yohanes sekadar percaya begitu saja pada kata-kata-Nya. Sebaliknya, Ia menunjuk pada bukti: orang buta melihat, orang lumpuh berjalan, orang tuli mendengar, kabar baik diberitakan kepada orang miskin. Ia menjawab keraguan itu dengan bukti yang nyata dan dapat dilihat tentang siapa diri-Nya, dengan lembut mengundang Yohanes untuk berpikir kembali menuju kepercayaan, bukan mempermalukannya karena bertanya-tanya sejak awal.
+Yang paling dibutuhkan untuk menanggung beban bukanlah kedekatan jarak, melainkan kepekaan, benar-benar mengetahui apa yang terjadi dalam hidup anggota keluarga besar cukup dekat untuk menyadari ketika seseorang sedang bergumul. Ini lebih sulit lintas jarak, karena kita tidak melihat wajah yang lelah atau menyadari ketidakhadiran dari pertemuan rutin sebagaimana kita bisa lakukan dari dekat. Dibutuhkan usaha yang disengaja untuk bertanya dengan sungguh-sungguh dan benar-benar mendengarkan jawabannya.
 
-Jika penjara, sakit, kekecewaan, atau sekadar kesulitan yang berkepanjangan telah mengguncang lepas pertanyaan-pertanyaan dalam dirimu yang kau kira sudah lama terselesaikan, kamu berada dalam kebersamaan dengan Yohanes Pembaptis — orang yang oleh Yesus sendiri disebut yang terbesar ''di antara mereka yang dilahirkan dari perempuan.'' Keraguan yang mengunjungi iman yang kuat tidak menghapus apa yang datang sebelumnya. Dan seperti Yesus kepada Yohanes, Allah sering kali bersedia menjawab ''apakah Engkau benar-benar Dia yang dinantikan?'' yang jujur dengan bukti segar, ditawarkan dengan lembut.',
-    'Doubt can visit even the strongest, most established faith under enough pressure — and it doesn''t erase what came before it.', 'Keraguan dapat mengunjungi bahkan iman yang paling kuat dan mapan di bawah tekanan yang cukup besar — dan itu tidak menghapus apa yang datang sebelumnya.',
-    'Jesus, like John, some of my old certainties feel shaken by present hardship. I ask my honest question today: are You really who I''ve believed You to be? Answer me gently, with evidence, the way You answered John. Amen.', 'Yesus, seperti Yohanes, sebagian kepastianku yang lama terasa goyah oleh kesulitan yang kualami sekarang. Aku mengajukan pertanyaan jujurku hari ini: apakah Engkau sungguh Dia yang selama ini kupercayai? Jawablah aku dengan lembut, dengan bukti, seperti Engkau menjawab Yohanes. Amin.'
+Renungkan hari ini apakah ada anggota keluarga besar yang saat ini menanggung beban yang belum kau ketahui, atau kau ketahui tetapi belum bertindak, dan mintalah Allah menunjukkan satu cara konkret untuk membantu menanggungnya minggu ini, bahkan dari jauh.',
+    'Which extended family member might be carrying a burden right now that you could help lighten this week, even from a distance?', 'Anggota keluarga besar mana yang mungkin sedang menanggung beban saat ini yang bisa kau bantu ringankan minggu ini, bahkan dari jarak jauh?',
+    'Lord, sharpen my attentiveness to what my extended family is really carrying, even when distance makes it easy to miss. Show me practical ways to help bear their burdens, and give me the initiative to actually reach out. Amen.', 'Tuhan, tajamkanlah kepekaanku terhadap apa yang sesungguhnya sedang ditanggung keluarga besarku, bahkan ketika jarak membuatnya mudah terlewat. Tunjukkanlah cara-cara praktis untuk membantu menanggung beban mereka, dan berilah aku inisiatif untuk benar-benar menjangkau mereka. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 11:2-3', 'WEB', 'When John, who was in prison, heard about the deeds of the Messiah, he sent his disciples to ask him, ''Are you the one who is to come, or should we expect someone else?''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 11:2-3', 'TB', 'Di dalam penjara Yohanes mendengar tentang pekerjaan Kristus, lalu ia menyuruh murid-muridnya bertanya kepada-Nya: ''Engkaukah yang akan datang itu, atau haruskah kami menantikan orang lain?''');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:2', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2080,42 +1730,38 @@ Jika penjara, sakit, kekecewaan, atau sekadar kesulitan yang berkepanjangan tela
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 7,
-    'Blessed Are Those Who Have Not Seen', 'Berbahagialah Mereka yang Tidak Melihat',
-    'We return, on this final day, to Thomas — but now to the moment after his doubt was met. Having touched the risen Christ''s wounds, Thomas makes his declaration: ''My Lord and my God!'' And Jesus responds with a blessing that reaches far beyond that room, straight through history to every person who would ever come to faith without the benefit of physically seeing the risen Jesus: ''Blessed are those who have not seen and yet have believed.''
+    'God Sets the Lonely in Families', 'Allah Memberi Tempat kepada yang Kesepian',
+    'The psalmist describes God as one who sets the lonely in families, a beautiful and deliberate image of a God who cares about belonging, not as a nice extra in life but as something He actively arranges. Extended family, at its best, is one of the clearest pictures we have of this on earth: people connected not because they chose each other the way friends do, but because God wove them into the same family tree, generation after generation, whether they live next door or across an ocean.
 
-This is worth sitting with as we close this journey through honest questions. Jesus doesn''t say this to shame Thomas retroactively, as though seeing was somehow a lesser, more childish form of faith. He speaks it forward, as a blessing over everyone who would come after — everyone who has never touched the nail marks, never heard the voice audibly, and yet believes anyway. That includes every single one of us. We are the blessed ones this verse was spoken over.
+As this seven-day plan closes, it is worth remembering that geography was never the true measure of family closeness in Scripture. Abraham''s family scattered across territories, Joseph lived a continent away from his father and brothers for decades, the early church spread believers across the known world, and yet in each case God kept weaving connection through memory, letters, visits, and shared faith rather than proximity alone.
 
-It''s tempting to think a life without dramatic proof, without wind or fire or an audible voice, is a lesser kind of faith than what the first disciples experienced. But Jesus reframes it as blessed — not despite the absence of seeing, but almost because of it. Believing without seeing requires a different, and in some ways deeper, kind of trust: trusting the testimony of others, trusting the record of Scripture, trusting the quiet inner conviction that grows over time rather than the dramatic encounter that resolves everything in an instant.
+If your extended family already feels close despite the distance, let this be a day of simple gratitude, thanking God for the relatives who have kept showing up in your life in whatever form distance allows. If your extended family feels scattered, distant, or quietly fraying at the edges, let this be a day of hope rather than discouragement. The God who sets the lonely in families is not finished weaving your family together, no matter how many miles currently sit between you.
 
-As you close this week of honest questions — Thomas''s, the father''s, Habakkuk''s, Job''s, the psalmist''s, John''s — carry this blessing with you. You have not seen the nail marks with your physical eyes, and yet here you are, still asking, still seeking, still bringing your honest questions to God rather than walking away. That persistence, that refusal to fake it and refusal to quit, is itself the blessed faith Jesus spoke of. Not because your questions are gone, but because you keep bringing them to Him.', 'Kita kembali, pada hari terakhir ini, kepada Tomas — tetapi kini pada momen setelah keraguannya dijawab. Setelah menyentuh luka-luka Kristus yang bangkit, Tomas mengucapkan pernyataannya: ''Ya Tuhanku dan Allahku!'' Dan Yesus menjawab dengan sebuah berkat yang menjangkau jauh melampaui ruangan itu, langsung menembus sejarah kepada setiap orang yang kelak akan datang kepada iman tanpa keuntungan melihat secara fisik Yesus yang bangkit: ''Berbahagialah mereka yang tidak melihat, namun percaya.''
+Close this plan by naming, specifically, one or two extended family members you want to invest in more intentionally going forward, and commit that intention to God in prayer, trusting Him to keep doing what He has always done: setting people who belong to each other back into the same family, again and again, across every kind of distance.', 'Sang pemazmur menggambarkan Allah sebagai pribadi yang memberi tempat tinggal kepada orang yang kesepian, sebuah gambaran indah dan disengaja tentang Allah yang peduli pada rasa memiliki, bukan sebagai pelengkap yang menyenangkan dalam hidup, melainkan sesuatu yang secara aktif Ia atur. Keluarga besar, pada intinya yang terbaik, adalah salah satu gambaran paling jelas yang kita miliki di bumi tentang hal ini: orang-orang yang terhubung bukan karena mereka memilih satu sama lain seperti sahabat memilih, melainkan karena Allah menjalin mereka ke dalam pohon keluarga yang sama, generasi demi generasi, entah mereka tinggal bertetangga atau terpisah samudra.
 
-Ini layak untuk direnungkan saat kita menutup perjalanan ini melewati pertanyaan-pertanyaan jujur. Yesus tidak mengatakan ini untuk mempermalukan Tomas secara retroaktif, seolah-olah melihat adalah bentuk iman yang lebih rendah dan kekanak-kanakan. Ia mengucapkannya ke depan, sebagai berkat atas semua orang yang akan datang sesudahnya — semua orang yang tidak pernah menyentuh bekas paku, tidak pernah mendengar suara-Nya secara terdengar, namun tetap percaya. Itu termasuk kita semua. Kitalah orang-orang yang diberkati yang dimaksud dalam ayat ini.
+Saat rencana tujuh hari ini berakhir, patut diingat bahwa jarak geografis tidak pernah menjadi ukuran sejati kedekatan keluarga dalam Alkitab. Keluarga Abraham tersebar di berbagai wilayah, Yusuf hidup satu benua jauhnya dari ayah dan saudara-saudaranya selama puluhan tahun, jemaat mula-mula menyebarkan orang percaya ke seluruh dunia yang dikenal saat itu, namun dalam setiap kasus Allah terus menjalin hubungan lewat kenangan, surat, kunjungan, dan iman bersama, bukan sekadar kedekatan jarak.
 
-Menggoda untuk berpikir bahwa hidup tanpa bukti dramatis, tanpa angin atau api atau suara yang terdengar, adalah jenis iman yang lebih rendah dibandingkan yang dialami murid-murid pertama. Tetapi Yesus membingkai ulang itu sebagai berbahagia — bukan meskipun tanpa melihat, melainkan hampir karena tanpa melihat itu. Percaya tanpa melihat membutuhkan jenis kepercayaan yang berbeda, dan dalam beberapa hal lebih dalam: memercayai kesaksian orang lain, memercayai catatan Alkitab, memercayai keyakinan batin yang tenang yang bertumbuh seiring waktu, bukan perjumpaan dramatis yang menyelesaikan segalanya dalam sekejap.
+Jika keluarga besarmu sudah terasa dekat meski berjauhan, biarlah hari ini menjadi hari syukur sederhana, berterima kasih kepada Allah untuk kerabat yang terus hadir dalam hidupmu dalam bentuk apa pun yang dimungkinkan oleh jarak. Jika keluarga besarmu terasa tersebar, berjarak, atau diam-diam mulai renggang di pinggirannya, biarlah hari ini menjadi hari harapan, bukan kekecewaan. Allah yang memberi tempat kepada yang kesepian dalam keluarga belum selesai menjalin keluargamu bersama, tidak peduli berapa banyak kilometer yang saat ini memisahkan kalian.
 
-Saat kamu menutup minggu pertanyaan-pertanyaan jujur ini — milik Tomas, sang ayah, Habakuk, Ayub, sang pemazmur, Yohanes — bawalah berkat ini bersamamu. Kamu belum melihat bekas paku dengan mata jasmanimu, namun di sinilah kamu, masih bertanya, masih mencari, masih membawa pertanyaan jujurmu kepada Allah alih-alih berjalan pergi. Ketekunan itu, penolakan untuk berpura-pura dan penolakan untuk menyerah, itulah sesungguhnya iman yang diberkati yang Yesus maksudkan. Bukan karena pertanyaanmu telah hilang, melainkan karena kamu terus membawanya kepada-Nya.',
-    'Still bringing your honest questions to God, rather than walking away, is itself the blessed faith Jesus spoke of.', 'Tetap membawa pertanyaan jujurmu kepada Allah, alih-alih berjalan pergi, adalah sesungguhnya iman yang diberkati yang dimaksud Yesus.',
-    'Jesus, I have not seen the way Thomas saw, yet here I am, still seeking, still asking. Thank You for calling this blessed rather than lesser. Keep growing in me a trust that doesn''t need every question answered to keep believing. Amen.', 'Yesus, aku belum melihat seperti Tomas melihat, namun di sinilah aku, masih mencari, masih bertanya. Terima kasih karena Engkau menyebut ini berbahagia, bukan lebih rendah. Terus tumbuhkanlah dalam diriku kepercayaan yang tidak membutuhkan setiap pertanyaan terjawab untuk terus percaya. Amin.'
+Tutuplah rencana ini dengan menyebut secara spesifik satu atau dua anggota keluarga besar yang ingin kau perhatikan lebih sungguh-sungguh ke depannya, dan serahkan niat itu kepada Allah dalam doa, percaya bahwa Ia akan terus melakukan apa yang selalu Ia lakukan: menempatkan orang-orang yang saling memiliki kembali ke dalam keluarga yang sama, berulang kali, melintasi jarak dalam bentuk apa pun.',
+    'Which one or two extended family members do you want to invest in more intentionally from here, regardless of how many miles separate you?', 'Satu atau dua anggota keluarga besar mana yang ingin kau perhatikan lebih sungguh-sungguh mulai sekarang, tidak peduli berapa jauh jarak yang memisahkan kalian?',
+    'Lord, thank You for setting me into a family, one that stretches across distances You have always been able to bridge. Keep weaving us together, and give me the faithfulness to keep reaching toward the relatives You have placed in my life. Amen.', 'Tuhan, terima kasih telah menempatkan aku dalam sebuah keluarga, yang membentang melintasi jarak yang selalu bisa Kau jembatani. Teruslah menjalin kami bersama, dan berilah aku kesetiaan untuk terus menjangkau kerabat yang telah Kau tempatkan dalam hidupku. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 68:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 68:7', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'John 20:29', 'WEB', 'Then Jesus told him, ''Because you have seen me, you have believed; blessed are those who have not seen and yet have believed.''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yohanes 20:29', 'TB', 'Kata Yesus kepadanya: ''Karena engkau telah melihat Aku, maka engkau percaya. Berbahagialah mereka yang tidak melihat, namun percaya.''');
-
-  -- Plan: Finding My Way Back
+  -- Plan: A Brother Born for Adversity
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
   VALUES (
     v_cat_id,
-    'Finding My Way Back',
-    'Menemukan Jalan Kembali',
-    'A short 3-day path for coming home to God after a season of doubt',
-    'Jalan singkat 3 hari untuk kembali pulang kepada Allah setelah musim keraguan',
+    'A Brother Born for Adversity',
+    'Saudara yang Lahir untuk Masa Kesukaran',
+    'Three days of gratitude for the brothers and sisters God gave you',
+    'Tiga hari bersyukur untuk kakak dan adik yang Allah berikan',
     3,
-    'For those who have walked through doubt and are ready, even tentatively, to find their footing again, this short three-day plan offers a gentle path homeward. Through the psalmist''s near-stumble in Psalm 73, the promise of a future still held by God in Jeremiah, and the overflowing hope of Romans, it welcomes you back without demanding you pretend the doubt never happened.',
-    'Bagi mereka yang telah melewati keraguan dan kini siap, sekalipun dengan ragu-ragu, untuk menemukan pijakan mereka kembali, rencana singkat tiga hari ini menawarkan jalan pulang yang lembut. Melalui hampir tergelincirnya pemazmur dalam Mazmur 73, janji tentang masa depan yang masih dipegang Allah dalam Yeremia, dan pengharapan yang melimpah dalam surat Roma, rencana ini menyambutmu kembali tanpa menuntutmu berpura-pura keraguan itu tidak pernah terjadi.',
-    '/images/devotions/finding-my-way-back.jpeg'
+    'It is easy to take siblings for granted precisely because they have always been there, woven into the earliest memories we have. This short three-day plan pauses the busyness of ordinary life to genuinely give thanks for brothers and sisters, celebrating the specific, steady, everyday gift of having someone who has known you the longest.',
+    'Sangat mudah menganggap kakak dan adik sebagai hal yang biasa saja, justru karena mereka selalu ada, terjalin dalam ingatan paling awal yang kita miliki. Rencana singkat tiga hari ini menghentikan kesibukan hidup sehari-hari untuk sungguh-sungguh bersyukur atas kakak dan adik, merayakan pemberian yang khusus, tetap, dan sehari-hari berupa memiliki seseorang yang telah mengenal kita paling lama.',
+    '/images/devotions/a-brother-born-for-adversity.jpeg'
   ) RETURNING id INTO v_plan_id;
 
   INSERT INTO public.devotion_plan_days (
@@ -2126,29 +1772,25 @@ Saat kamu menutup minggu pertanyaan-pertanyaan jujur ini — milik Tomas, sang a
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 1,
-    'The Near-Stumble', 'Hampir Tergelincir',
-    'The psalmist behind Psalm 73 opens with a confident statement — ''Surely God is good to Israel, to those who are pure in heart'' — and then immediately admits that he almost didn''t believe it. ''But as for me, my feet had almost slipped; I had nearly lost my foothold.'' What shook him wasn''t a single crisis but an accumulated frustration: watching the arrogant and the wicked prosper while he, trying to live faithfully, seemed to gain nothing but trouble. It nearly toppled his whole understanding of God.
+    'A Friend Who Loves at All Times', 'Sahabat yang Mengasihi Setiap Waktu',
+    'The book of Proverbs offers a small but striking observation: a friend loves at all times, and a brother is born for a time of adversity. This is not a sentimental line meant only for greeting cards. It is a piece of ancient wisdom noticing something true across cultures and centuries, that siblings occupy a category of relationship almost no one else does. Friends are chosen. Siblings simply exist in your life from a point earlier than memory itself often reaches.
 
-There is something quietly reassuring in a psalm that begins by admitting the writer''s faith nearly failed. This isn''t a testimony that skips past the hard middle to get quickly to the happy ending. It sits, for many verses, in genuine near-collapse, describing exactly how close he came to giving up on trusting God altogether. If you are returning to faith after your own season of doubt, you don''t have to pretend your feet never slipped. This psalm gives you permission to say plainly: I almost lost my footing too.
+Because siblings arrive without our choosing them, it is easy to take that relationship for granted in a way we rarely take a close friendship for granted. We can go weeks without checking in on a sibling, assuming the bond will simply hold because it always has. Most of the time it does, precisely because siblings tend to show up in adversity in ways few other relationships do, arriving at a hospital, helping move a household, sitting quietly through a hard season without needing much explanation.
 
-What turns the psalmist around isn''t a sudden argument that wins the debate in his head. It''s an encounter: ''till I entered the sanctuary of God; then I understood their final destiny.'' Something about stepping back into the presence of God — worship, community, the practices of faith — reoriented his perspective in a way that private reasoning alone hadn''t been able to do. Sometimes finding your way back isn''t about resolving every intellectual doubt first. It''s about re-entering the sanctuary, and letting perspective shift there.
+Gratitude for a sibling does not require a dramatic story of rescue or crisis to be genuine. It can simply be an honest recognition of steadiness: someone who remembers your childhood home, who laughs at the same old family jokes, who has quietly been present through more of your life than almost anyone else alive. That steadiness is itself a gift worth naming out loud rather than assuming.
 
-If you are at the beginning of this short journey back, know that a near-slip doesn''t disqualify you from where this psalm eventually lands: ''Whom have I in heaven but you? And earth has nothing I desire besides you... God is the strength of my heart and my portion forever.'' That destination is still ahead of you too, even after a season of nearly losing your footing. The way back often begins simply by showing up again.', 'Pemazmur di balik Mazmur 73 memulai dengan pernyataan yang penuh keyakinan — ''Sesungguhnya Allah itu baik bagi Israel, bagi orang-orang yang bersih hatinya'' — dan kemudian segera mengakui bahwa ia hampir saja tidak memercayainya. ''Tetapi aku, sedikit lagi maka kakiku terpeleset, hampir aku tergelincir.'' Yang mengguncangnya bukanlah satu krisis tunggal melainkan frustrasi yang terkumpul: menyaksikan orang-orang congkak dan fasik makmur sementara ia, yang berusaha hidup dengan setia, seolah-olah tidak mendapat apa-apa selain kesulitan. Ini hampir merobohkan seluruh pemahamannya tentang Allah.
+Today, take a few minutes to actually think through, and perhaps write down, specific reasons you are grateful for a brother or sister, not vague sentiment but real, particular memories or qualities. Consider whether you could tell them directly this week, rather than only thinking it quietly to yourself.', 'Kitab Amsal memberikan sebuah pengamatan kecil namun mengena: seorang sahabat menaruh kasih setiap waktu, dan menjadi seorang saudara dalam kesukaran. Ini bukan kalimat sentimental yang hanya cocok untuk kartu ucapan. Ini adalah kebijaksanaan kuno yang menyadari sesuatu yang benar lintas budaya dan zaman, bahwa saudara menempati kategori hubungan yang hampir tidak dimiliki siapa pun yang lain. Sahabat dipilih. Saudara begitu saja hadir dalam hidupmu sejak titik yang lebih awal dari yang bisa dijangkau ingatan sekalipun.
 
-Ada sesuatu yang diam-diam menenangkan dalam sebuah mazmur yang dibuka dengan mengakui bahwa iman penulisnya hampir gagal. Ini bukan kesaksian yang melompati bagian tengah yang sulit untuk cepat sampai pada akhir yang bahagia. Ia berdiam, selama banyak ayat, dalam keruntuhan yang hampir nyata, menggambarkan persis seberapa dekat ia berada dengan menyerah sepenuhnya untuk memercayai Allah. Jika kamu sedang kembali kepada iman setelah musim keraguanmu sendiri, kamu tidak perlu berpura-pura kakimu tidak pernah terpeleset. Mazmur ini memberimu izin untuk berkata terus terang: aku juga hampir kehilangan pijakan.
+Karena saudara hadir tanpa kita pilih, sangat mudah menganggap hubungan itu sebagai hal biasa dengan cara yang jarang kita lakukan pada persahabatan dekat. Kita bisa melewati berminggu-minggu tanpa mengabari seorang saudara, berasumsi ikatan itu akan tetap bertahan karena selalu begitu. Sebagian besar waktu memang demikian, justru karena saudara cenderung hadir dalam masa kesukaran dengan cara yang jarang dilakukan hubungan lain, datang ke rumah sakit, membantu pindahan rumah, duduk diam menemani masa sulit tanpa perlu banyak penjelasan.
 
-Yang membalikkan sang pemazmur bukanlah argumen tiba-tiba yang memenangkan perdebatan dalam kepalanya. Itu adalah sebuah perjumpaan: ''sampai aku masuk ke tempat kudus Allah, dan memperhatikan kesudahan mereka.'' Sesuatu tentang melangkah kembali ke hadirat Allah — ibadah, komunitas, praktik-praktik iman — mengarahkan ulang perspektifnya dengan cara yang tidak dapat dicapai oleh penalaran pribadi saja. Terkadang menemukan jalan kembali bukanlah tentang menyelesaikan setiap keraguan intelektual terlebih dahulu. Itu tentang memasuki kembali tempat kudus, dan membiarkan perspektif berubah di sana.
+Rasa syukur atas seorang saudara tidak memerlukan kisah dramatis penyelamatan atau krisis untuk menjadi tulus. Ia bisa sekadar pengakuan jujur atas kesetiaan yang tetap: seseorang yang mengingat rumah masa kecilmu, yang tertawa pada lelucon keluarga lama yang sama, yang diam-diam hadir sepanjang lebih banyak bagian hidupmu daripada hampir siapa pun yang masih hidup. Kesetiaan yang tetap itu sendiri adalah pemberian yang layak disebutkan dengan lantang, bukan sekadar dianggap sebagai hal wajar.
 
-Jika kamu berada di awal perjalanan pulang yang singkat ini, ketahuilah bahwa hampir tergelincir tidak mendiskualifikasi dirimu dari tempat mazmur ini akhirnya berlabuh: ''Siapa gerangan ada padaku di sorga selain Engkau? Selain Engkau tidak ada yang kuingini di bumi... Allah adalah kekuatan hatiku dan bagianku untuk selama-lamanya.'' Tujuan itu masih ada di depanmu juga, bahkan setelah musim hampir kehilangan pijakan. Jalan kembali sering dimulai sesederhana dengan hadir kembali.',
-    'Admitting your feet nearly slipped is not a disqualification from faith — it''s exactly where this psalm, and often our own story, begins to turn.', 'Mengakui bahwa kakimu hampir terpeleset bukanlah diskualifikasi dari iman — justru di situlah mazmur ini, dan sering kali kisah kita sendiri, mulai berbalik.',
-    'God, I nearly lost my footing, and I''m not going to pretend otherwise. Thank You for making room for that honesty in Your Word. As I take these first steps back toward You, meet me the way You met the psalmist — and reorient my heart in Your presence. Amen.', 'Allah, aku hampir kehilangan pijakanku, dan aku tidak akan berpura-pura sebaliknya. Terima kasih karena Engkau memberi tempat bagi kejujuran itu dalam Firman-Mu. Saat aku mengambil langkah-langkah pertama kembali kepada-Mu, jumpailah aku seperti Engkau menjumpai pemazmur — dan arahkan ulang hatiku dalam hadirat-Mu. Amin.'
+Hari ini, luangkan beberapa menit untuk benar-benar memikirkan, dan mungkin menuliskan, alasan-alasan spesifik mengapa kau bersyukur atas seorang kakak atau adik, bukan perasaan yang samar tetapi kenangan atau kualitas yang nyata dan khusus. Pertimbangkan apakah kau bisa mengatakannya langsung kepada mereka minggu ini, alih-alih hanya memikirkannya diam-diam dalam hati.',
+    'What is one specific, particular reason you are grateful for a brother or sister, and could you tell them so directly this week?', 'Apa satu alasan spesifik dan khusus mengapa kau bersyukur atas seorang kakak atau adik, dan bisakah kau mengatakannya langsung kepada mereka minggu ini?',
+    'Lord, thank You for the specific brothers and sisters You placed in my life. Forgive me for the times I have taken their steady presence for granted, and give me the words to tell them plainly how grateful I am. Amen.', 'Tuhan, terima kasih untuk kakak dan adik yang khusus Kau tempatkan dalam hidupku. Ampunilah aku untuk saat-saat aku menganggap kehadiran mereka yang setia sebagai hal biasa saja, dan berilah aku kata-kata untuk mengatakan dengan jelas betapa bersyukurnya aku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 73:2-3', 'WEB', 'But as for me, my feet had almost slipped; I had nearly lost my foothold. For I envied the arrogant when I saw the prosperity of the wicked.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 73:2-3', 'TB', 'Tetapi aku, sedikit lagi maka kakiku terpeleset, hampir aku tergelincir. Sebab aku cemburu kepada pembual-pembual, kalau aku melihat kemujuran orang-orang fasik.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 17:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 17:17', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2158,29 +1800,25 @@ Jika kamu berada di awal perjalanan pulang yang singkat ini, ketahuilah bahwa ha
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 2,
-    'A Future Still Held', 'Masa Depan yang Masih Dipegang',
-    'This well-known promise from Jeremiah was written into a genuinely hard situation — not a greeting card, but a letter to people living in exile, far from home, wondering if God had abandoned His plans for them entirely. Into that uncertainty, God speaks plainly: ''For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, plans to give you hope and a future.'' It is a promise given precisely to people who had reason to doubt it.
+    'Sharper Together', 'Menjadi Lebih Tajam Bersama',
+    'Proverbs also tells us that as iron sharpens iron, one person sharpens another, and few relationships fit this picture as naturally as siblings do. Growing up alongside a brother or sister often means being challenged, corrected, teased, and stretched in ways a more polite acquaintance would never risk. Siblings tend to tell you the truth about yourself, sometimes bluntly, precisely because the relationship is secure enough to survive honesty.
 
-Coming back to faith after a season of doubt can feel like standing in your own kind of exile — distant from where you once were, unsure whether the ground you''re standing on will hold. This verse doesn''t ask you to deny that distance or rush past it. It simply insists that even from exile, even amid real uncertainty, God''s plans for you have not evaporated. He is still holding a future for you, even during the very seasons when you couldn''t feel it or see it.
+This sharpening is not always comfortable in the moment. A sibling might point out a blind spot you would rather not see, or push back on a decision in a way that stings before it helps. Yet looking back over years of growing up alongside a brother or sister, many people can trace real character growth to those exact friction points, moments where a sibling''s honesty, competitiveness, or simple presence forced a kind of maturing that would not have happened alone.
 
-It''s worth noticing what this promise doesn''t say. It doesn''t say the road home will be immediate or easy — in fact, the exile Jeremiah wrote to would last decades before the return God promised. Finding your way back to trust is rarely instantaneous either; it can take real time to feel steady again. But the promise stands regardless of pace: the plans were never contingent on how quickly you found your way back, or how certain your faith feels on any given day.
+There is also a quieter, gentler form of sharpening: simply being shaped by watching a sibling live their life. A brother''s steady faith through a hard season, a sister''s generosity, a sibling''s work ethic or humor or patience, these qualities rub off on us over years of proximity in ways we rarely consciously notice until we try to describe our own character and realize how much of it was formed alongside them.
 
-As you continue this short journey homeward, let this verse anchor you: whatever your doubt cost you, however long the distance felt, God''s plans for your hope and your future were never actually withdrawn. They were waiting for you, the way they waited for a whole exiled people, for exactly as long as it took you to come looking for them again.', 'Janji yang terkenal dari Yeremia ini ditulis ke dalam situasi yang sungguh sulit — bukan kartu ucapan, melainkan surat kepada orang-orang yang hidup dalam pembuangan, jauh dari rumah, bertanya-tanya apakah Allah telah sepenuhnya meninggalkan rencana-Nya bagi mereka. Ke dalam ketidakpastian itu, Allah berbicara dengan jelas: ''Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, demikianlah firman TUHAN, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.'' Ini adalah janji yang diberikan tepat kepada orang-orang yang punya alasan untuk meragukannya.
+Take time today to consider one specific way a sibling has sharpened you, whether through honest correction, quiet example, or the simple friction of growing up together, and thank God for using that particular person to shape who you have become.', 'Amsal juga memberi tahu kita bahwa besi menajamkan besi, dan orang menajamkan sesamanya, dan tak banyak hubungan yang cocok dengan gambaran ini sealami hubungan bersaudara. Tumbuh besar bersama seorang kakak atau adik sering berarti ditantang, dikoreksi, diejek dengan sayang, dan diregangkan dengan cara yang tak akan pernah diambil risikonya oleh kenalan yang lebih sopan. Saudara cenderung mengatakan kebenaran tentang dirimu, kadang dengan blak-blakan, justru karena hubungan itu cukup aman untuk bertahan dari kejujuran.
 
-Kembali kepada iman setelah musim keraguan bisa terasa seperti berdiri dalam pembuangan versimu sendiri — jauh dari tempat kamu dahulu berada, tidak yakin apakah tanah yang kau injak akan menopangmu. Ayat ini tidak memintamu menyangkal jarak itu atau buru-buru melewatinya. Ia hanya menegaskan bahwa bahkan dari pembuangan, bahkan di tengah ketidakpastian nyata, rencana Allah bagimu belum menguap. Ia masih memegang masa depan bagimu, bahkan selama musim-musim ketika kamu tidak dapat merasakan atau melihatnya.
+Penajaman ini tidak selalu terasa nyaman pada saat itu terjadi. Seorang saudara mungkin menunjuk titik buta yang sebenarnya tak ingin kau lihat, atau menentang sebuah keputusan dengan cara yang menyakitkan sebelum akhirnya menolong. Namun menengok kembali bertahun-tahun tumbuh bersama seorang kakak atau adik, banyak orang bisa menelusuri pertumbuhan karakter sejati mereka pada titik-titik gesekan itu tepatnya, saat kejujuran, sifat kompetitif, atau sekadar kehadiran seorang saudara memaksa semacam kedewasaan yang tak akan terjadi jika sendirian.
 
-Perlu diperhatikan apa yang tidak dikatakan janji ini. Ia tidak mengatakan jalan pulang akan segera atau mudah — bahkan, pembuangan yang menjadi tujuan surat Yeremia ini akan berlangsung puluhan tahun sebelum pemulangan yang Allah janjikan. Menemukan jalan kembali kepada kepercayaan juga jarang terjadi seketika; bisa memakan waktu yang sungguh nyata untuk kembali merasa mantap. Tetapi janji itu tetap berlaku terlepas dari kecepatannya: rencana itu tidak pernah bergantung pada seberapa cepat kamu menemukan jalan kembali, atau seberapa yakin imanmu terasa pada hari tertentu.
+Ada juga bentuk penajaman yang lebih tenang dan lembut: sekadar terbentuk oleh menyaksikan seorang saudara menjalani hidupnya. Iman yang teguh dari seorang kakak laki-laki melewati masa sulit, kemurahan hati seorang kakak perempuan, etos kerja atau humor atau kesabaran seorang saudara, kualitas-kualitas ini menular kepada kita selama bertahun-tahun kedekatan dengan cara yang jarang kita sadari secara sadar sampai kita mencoba menggambarkan karakter kita sendiri dan menyadari betapa banyak bagiannya terbentuk bersama mereka.
 
-Saat kamu melanjutkan perjalanan pulang yang singkat ini, biarlah ayat ini menjadi jangkarmu: apa pun yang telah direnggut oleh keraguanmu, betapapun jauh jarak itu terasa, rencana Allah bagi pengharapan dan masa depanmu tidak pernah benar-benar ditarik kembali. Rencana itu menantimu, sebagaimana ia menanti seluruh bangsa yang dibuang itu, selama apa pun yang dibutuhkan sampai kamu kembali mencarinya.',
-    'God''s plans for your hope and future were never withdrawn during your season of doubt — they were simply waiting for you to come looking again.', 'Rencana Allah bagi pengharapan dan masa depanmu tidak pernah ditarik selama musim keraguanmu — rencana itu hanya menantimu untuk kembali mencarinya.',
-    'Lord, thank You that my season of doubt did not cancel Your plans for me. I don''t need the whole road home mapped out today — I just need to trust that You are still holding a future for me. Walk with me as I find my way back, one step at a time. Amen.', 'Tuhan, terima kasih karena musim keraguanku tidak membatalkan rencana-Mu bagiku. Aku tidak perlu memetakan seluruh jalan pulang hari ini — aku hanya perlu percaya bahwa Engkau masih memegang masa depan bagiku. Berjalanlah bersamaku saat aku menemukan jalan kembali, selangkah demi selangkah. Amin.'
+Luangkan waktu hari ini untuk memikirkan satu cara spesifik seorang saudara telah menajamkanmu, baik lewat koreksi jujur, teladan yang tenang, atau sekadar gesekan tumbuh besar bersama, dan bersyukurlah kepada Allah karena telah memakai orang tertentu itu untuk membentuk siapa dirimu sekarang.',
+    'Can you name one specific way a sibling''s honesty, example, or presence has shaped or sharpened your character over the years?', 'Bisakah kau menyebut satu cara spesifik kejujuran, teladan, atau kehadiran seorang saudara telah membentuk atau menajamkan karaktermu selama bertahun-tahun?',
+    'Lord, thank You for using my siblings, sometimes gently and sometimes through friction, to sharpen and shape my character. Help me receive their honesty with humility and grow in the ways You intend through this relationship. Amen.', 'Tuhan, terima kasih telah memakai saudara-saudaraku, kadang dengan lembut dan kadang lewat gesekan, untuk menajamkan dan membentuk karakterku. Tolonglah aku menerima kejujuran mereka dengan rendah hati dan bertumbuh sebagaimana Kau kehendaki lewat hubungan ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Jeremiah 29:11', 'WEB', 'For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, plans to give you hope and a future.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yeremia 29:11', 'TB', 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, demikianlah firman TUHAN, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 27:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 27:17', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2190,28 +1828,626 @@ Saat kamu melanjutkan perjalanan pulang yang singkat ini, biarlah ayat ini menja
     prayer, prayer_id
   ) VALUES (
     v_plan_id, 3,
-    'Overflowing With Hope Again', 'Melimpah dengan Pengharapan Kembali',
-    'Paul''s benediction to the Romans is short, but it is dense with everything a heart returning from doubt actually needs: ''May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit.'' Notice that hope isn''t described here as something you have to manufacture out of sheer willpower. It''s something God fills you with — a gift given, not a mood forced.
+    'Patient, Kind, and Keeps No Record', 'Sabar, Murah Hati, Tak Menyimpan Kesalahan',
+    'Paul''s famous description of love in his letter to the Corinthians is often read at weddings, yet it was originally written to a quarreling church, and it maps just as naturally onto sibling relationships as onto marriage. Love is patient. Love is kind. It does not envy. It keeps no record of wrongs. Anyone who grew up alongside a brother or sister has watched these qualities get tested repeatedly, at the dinner table, in shared bedrooms, over borrowed belongings, through years of ordinary and sometimes irritating closeness.
 
-There''s a beautiful order to this verse worth slowing down over. Joy and peace come first, described as flowing from trust — even a small, tentative, still-rebuilding trust. And it''s from that joy and peace, not before it, that overflowing hope eventually follows. You don''t have to arrive at your final destination of confident, overflowing hope before you''re allowed to start trusting again. The trust comes first, small as it may be, and the overflow follows in its own time, by the Spirit''s power rather than your own effort.
+What makes this passage a fitting close to a devotion on gratitude for siblings is its final claims: love bears all things, believes all things, hopes all things, endures all things. This is essentially a description of what a good sibling relationship becomes over decades, a bond that survives disagreements, distance, different life paths, and the ordinary friction of being deeply known by someone who watched you at your most unfinished and unpolished, and stayed anyway.
 
-This is a fitting place to land after a journey through honest doubt and a gentle path back. You are not required to feel entirely certain, entirely joyful, or entirely at peace today in order for this promise to apply to you. You are only asked to keep trusting, even in the tentative, rebuilding way that faith after doubt so often looks like. The God of hope Himself does the filling; your part is simply to keep leaning toward Him.
+Gratitude for a sibling, at its fullest, is gratitude for this kind of durable love, imperfect and human, but genuinely patient and enduring in a way that mirrors something of God''s own steadfast love for us. Every sibling relationship falls short of this description at times; none of us loves as perfectly as this passage describes. But the fact that most siblings keep choosing to stay, to forgive, to show up again after disagreements, reflects a real, if imperfect, echo of the love Paul is describing.
 
-As you close this short return journey, let this be your sending word: whatever brought you here — dryness, unanswered questions, a near-slip like the psalmist''s — you are not asked to arrive fully restored today. You are only asked to keep trusting, one day at a time, and to let the God of hope do what only He can do: fill you, in His timing, until hope overflows again.', 'Berkat Paulus kepada jemaat Roma ini singkat, tetapi padat dengan segala sesuatu yang sungguh dibutuhkan hati yang sedang kembali dari keraguan: ''Semoga Allah, sumber pengharapan, memenuhi kamu dengan segala sukacita dan damai sejahtera dalam iman kamu, supaya oleh kekuatan Roh Kudus kamu berlimpah-limpah dalam pengharapan.'' Perhatikan bahwa pengharapan di sini tidak digambarkan sebagai sesuatu yang harus kamu ciptakan sendiri dengan kemauan keras. Itu adalah sesuatu yang Allah penuhkan dalam dirimu — sebuah pemberian, bukan suasana hati yang dipaksakan.
+As this short plan closes, spend a moment thanking God specifically for the ways your siblings have loved you patiently over the years, imperfectly but genuinely, and ask Him to help you love them the same way, bearing, believing, hoping, and enduring, for as long as He gives you each other.', 'Uraian terkenal Paulus tentang kasih dalam suratnya kepada jemaat Korintus sering dibacakan di pernikahan, namun aslinya ditulis untuk jemaat yang sedang bertikai, dan uraian itu sama alaminya berlaku bagi hubungan bersaudara seperti halnya bagi pernikahan. Kasih itu sabar. Kasih itu murah hati. Ia tidak cemburu. Ia tidak menyimpan kesalahan orang lain. Siapa pun yang tumbuh besar bersama seorang kakak atau adik pernah menyaksikan kualitas-kualitas ini diuji berulang kali, di meja makan, di kamar tidur bersama, soal barang yang dipinjam, sepanjang tahun-tahun kedekatan yang biasa dan kadang menjengkelkan.
 
-Ada urutan yang indah dalam ayat ini yang layak direnungkan pelan-pelan. Sukacita dan damai sejahtera datang lebih dahulu, digambarkan mengalir dari kepercayaan — bahkan kepercayaan yang kecil, ragu-ragu, masih dalam proses dibangun kembali. Dan dari sukacita dan damai sejahtera itulah, bukan sebelumnya, pengharapan yang melimpah akhirnya mengikuti. Kamu tidak perlu sampai lebih dahulu di tujuan akhir berupa pengharapan yang penuh keyakinan dan melimpah sebelum diizinkan mulai percaya lagi. Kepercayaan itu datang lebih dulu, sekecil apa pun, dan luapannya mengikuti pada waktunya sendiri, oleh kuasa Roh Kudus, bukan oleh usahamu sendiri.
+Yang membuat bagian ini menjadi penutup yang tepat bagi renungan tentang syukur atas saudara adalah pernyataan penutupnya: kasih menutupi segala sesuatu, percaya segala sesuatu, mengharapkan segala sesuatu, sabar menanggung segala sesuatu. Ini pada dasarnya adalah gambaran tentang apa yang menjadi hubungan bersaudara yang baik selama puluhan tahun, ikatan yang bertahan melewati ketidaksepakatan, jarak, jalan hidup yang berbeda, dan gesekan biasa karena dikenal secara dalam oleh seseorang yang menyaksikanmu pada masa paling belum matang dan belum sempurna, dan tetap tinggal.
 
-Ini adalah tempat yang tepat untuk berlabuh setelah perjalanan melewati keraguan yang jujur dan jalan pulang yang lembut. Kamu tidak dituntut untuk merasa sepenuhnya yakin, sepenuhnya bersukacita, atau sepenuhnya damai hari ini agar janji ini berlaku bagimu. Kamu hanya diminta untuk terus percaya, bahkan dengan cara yang ragu-ragu dan masih dibangun kembali, sebagaimana iman setelah keraguan sering kali terlihat. Allah sumber pengharapan sendirilah yang melakukan pemenuhan itu; bagianmu hanyalah terus condong kepada-Nya.
+Rasa syukur atas seorang saudara, dalam bentuknya yang paling penuh, adalah syukur atas kasih yang bertahan lama semacam ini, tidak sempurna dan sangat manusiawi, tetapi sungguh-sungguh sabar dan tahan lama dengan cara yang mencerminkan sedikit dari kasih setia Allah sendiri kepada kita. Setiap hubungan bersaudara kadang jatuh dari gambaran ini; tak satu pun dari kita mengasihi sesempurna yang digambarkan bagian ini. Namun fakta bahwa kebanyakan saudara terus memilih untuk tinggal, untuk mengampuni, untuk kembali hadir setelah ketidaksepakatan, mencerminkan gema nyata, meski tak sempurna, dari kasih yang digambarkan Paulus.
 
-Saat kamu menutup perjalanan kembali yang singkat ini, biarlah ini menjadi kata pengutusanmu: apa pun yang membawamu ke sini — kekeringan, pertanyaan tak terjawab, hampir tergelincir seperti pemazmur — kamu tidak diminta untuk tiba dalam keadaan sepenuhnya pulih hari ini. Kamu hanya diminta untuk terus percaya, sehari demi sehari, dan membiarkan Allah sumber pengharapan melakukan apa yang hanya Dia bisa lakukan: memenuhimu, pada waktu-Nya, sampai pengharapan melimpah kembali.',
-    'You don''t need to feel fully restored today — only keep trusting, and let God do the filling in His own time.', 'Kamu tidak perlu merasa sepenuhnya pulih hari ini — cukup teruslah percaya, dan biarkan Allah melakukan pemenuhan itu pada waktu-Nya sendiri.',
-    'God of hope, I don''t arrive today with everything resolved, but I arrive still trusting You, even in a small way. Fill me with joy and peace as I do, and let hope overflow in Your timing, by Your Spirit''s power, not my own effort. Thank You for walking me home. Amen.', 'Allah sumber pengharapan, aku datang hari ini bukan dengan segalanya sudah terselesaikan, tetapi aku datang dengan tetap percaya kepada-Mu, sekalipun dengan cara yang kecil. Penuhilah aku dengan sukacita dan damai sejahtera seiring aku melakukannya, dan biarkan pengharapan melimpah pada waktu-Mu, oleh kuasa Roh-Mu, bukan oleh usahaku sendiri. Terima kasih telah menuntunku pulang. Amin.'
+Saat renungan singkat ini berakhir, luangkan waktu bersyukur kepada Allah secara khusus atas cara-cara saudara-saudaramu telah mengasihimu dengan sabar selama bertahun-tahun, tidak sempurna tetapi tulus, dan mintalah Ia menolongmu mengasihi mereka dengan cara yang sama, menanggung, percaya, mengharap, dan sabar bertahan, selama Ia masih memberikan kalian satu sama lain.',
+    'How have your siblings shown you a patient, enduring love over the years, even imperfectly, and how could you reflect that same love back to them?', 'Bagaimana saudara-saudaramu telah menunjukkan kasih yang sabar dan tahan lama kepadamu selama bertahun-tahun, meski tak sempurna, dan bagaimana kau bisa memantulkan kasih yang sama kepada mereka?',
+    'Father, thank You for the patient, imperfect, enduring love my siblings have shown me over the years. Teach me to love them the same way, bearing with them, believing the best, and staying close for as long as You give us together. Amen.', 'Bapa, terima kasih atas kasih yang sabar, tak sempurna, dan tahan lama yang telah ditunjukkan saudara-saudaraku kepadaku selama bertahun-tahun. Ajarilah aku mengasihi mereka dengan cara yang sama, menanggung mereka, percaya yang terbaik, dan tetap dekat selama Kau memberikan kami kebersamaan. Amin.'
   ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 13:4-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 13:4-7', 'TB', 1);
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 15:13', 'WEB', 'May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit.');
+  -- Sub-category: Family Traditions & Legacy --------------------------------------------------------
+  SELECT id INTO v_cat_id FROM public.devotion_categories
+    WHERE name = 'Family Traditions & Legacy' AND parent_id = v_category_id
+    ORDER BY created_at ASC
+    LIMIT 1;
+  IF v_cat_id IS NULL THEN
+    INSERT INTO public.devotion_categories (name, name_id, parent_id)
+      VALUES ('Family Traditions & Legacy', 'Tradisi dan Warisan Keluarga', v_category_id)
+      RETURNING id INTO v_cat_id;
+  ELSE
+    UPDATE public.devotion_categories SET name_id = 'Tradisi dan Warisan Keluarga'
+      WHERE id = v_cat_id;
+  END IF;
 
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 15:13', 'TB', 'Semoga Allah, sumber pengharapan, memenuhi kamu dengan segala sukacita dan damai sejahtera dalam iman kamu, supaya oleh kekuatan Roh Kudus kamu berlimpah-limpah dalam pengharapan.');
+  -- Plan: Building an Altar in Your Home
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'Building an Altar in Your Home',
+    'Membangun Altar di Rumah Kita',
+    'Five days toward a simple family prayer rhythm',
+    'Lima hari menuju ritme doa keluarga yang sederhana',
+    5,
+    'Many families long to pray together but never quite know where to start. This five-day plan walks through the small, repeatable habits — a shared grace, a nightly blessing, a quiet corner with a candle and a crucifix — that turn a house into a place where faith is practiced out loud, together, day after ordinary day.',
+    'Banyak keluarga rindu berdoa bersama namun bingung harus mulai dari mana. Rencana lima hari ini menelusuri kebiasaan-kebiasaan kecil yang dapat diulang — doa makan bersama, berkat malam, sudut hening dengan lilin dan salib — yang mengubah rumah menjadi tempat di mana iman dihidupi secara nyata, hari demi hari yang biasa.',
+    '/images/devotions/building-an-altar-in-your-home.jpeg'
+  ) RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'Every House Can Have an Altar', 'Setiap Rumah Bisa Memiliki Altar',
+    'When people hear the word ''altar,'' they often picture something reserved for a church sanctuary — marble, gold, incense curling toward a high ceiling. But long before there were church buildings, faith was practiced at kitchen tables and around campfires, in tents and courtyards, wherever a family gathered to remember God together. The altar was never really about the furniture. It was about the family choosing, again and again, to turn toward God in the middle of ordinary life.
+
+Joshua stood before the tribes of Israel late in his life and made a declaration that has echoed through generations of households since: as for me and my house, we will serve the Lord. Notice that he did not say ''as for me and my congregation'' or ''as for me and my nation.'' He narrowed it down to the smallest, most immediate unit of faith — his own house. That is where the real work of discipleship begins, and it is where it often gets neglected, simply because home feels too familiar, too unceremonious, to feel like a place of worship.
+
+Many families who eventually build a rich prayer life did not start with elaborate rituals. They started with one small, repeated act — a grace before dinner, a blessing traced on a child''s forehead before bed, a Bible left open on the counter. Over months and years, these small acts accumulate into something sturdy: a household rhythm that children absorb almost without noticing, the way they absorb a language spoken around them from birth.
+
+This week is an invitation to think of your home not as a building you retreat to after church, but as a small sanctuary in its own right — a place where an altar, however humble, can be built. It does not need to be beautiful yet. It only needs to be there, and to be used.', 'Ketika orang mendengar kata ''altar,'' yang sering terbayang adalah sesuatu yang khusus ada di dalam gereja — marmer, emas, dupa yang mengepul ke langit-langit tinggi. Namun jauh sebelum ada gedung gereja, iman dihidupi di meja makan dan sekitar api unggun, di dalam tenda dan halaman rumah, di mana pun sebuah keluarga berkumpul untuk mengingat Allah bersama. Altar sebenarnya bukan soal perabotan. Altar adalah soal keluarga yang memilih, berulang kali, untuk berpaling kepada Allah di tengah kehidupan yang biasa.
+
+Yosua berdiri di hadapan suku-suku Israel pada masa tuanya dan membuat sebuah pernyataan yang terus bergema melalui generasi rumah tangga sejak saat itu: aku dan seisi rumahku, kami akan beribadah kepada TUHAN. Perhatikan bahwa ia tidak berkata ''aku dan jemaatku'' atau ''aku dan bangsaku.'' Ia mempersempitnya menjadi unit iman yang paling kecil dan paling dekat — rumahnya sendiri. Di situlah kerja pemuridan yang sesungguhnya dimulai, dan di situ pula sering kali terabaikan, justru karena rumah terasa terlalu akrab, terlalu tanpa upacara, untuk terasa seperti tempat ibadah.
+
+Banyak keluarga yang akhirnya memiliki kehidupan doa yang kaya tidak memulainya dengan ritual yang rumit. Mereka memulai dengan satu tindakan kecil yang diulang — doa sebelum makan malam, berkat yang digurat di dahi anak sebelum tidur, Alkitab yang dibiarkan terbuka di meja dapur. Selama berbulan-bulan dan bertahun-tahun, tindakan-tindakan kecil ini terkumpul menjadi sesuatu yang kokoh: ritme rumah tangga yang diserap anak-anak hampir tanpa disadari, seperti mereka menyerap bahasa yang diucapkan di sekeliling mereka sejak lahir.
+
+Minggu ini adalah undangan untuk memandang rumah kita bukan sebagai bangunan tempat kita beristirahat setelah gereja, melainkan sebagai tempat kudus kecil tersendiri — tempat di mana sebuah altar, sesederhana apa pun, dapat dibangun. Altar itu belum perlu indah. Ia hanya perlu ada, dan digunakan.',
+    'What is one small, repeatable act of faith your household could begin this week?', 'Apa satu tindakan iman kecil yang bisa diulang, yang dapat dimulai rumah tanggamu minggu ini?',
+    'Lord, make our home a place where you are welcome at every table and in every room. Give us the courage to begin, even with something small, and the patience to keep at it until it becomes who we are. Amen.', 'Tuhan, jadikanlah rumah kami tempat Engkau disambut di setiap meja dan di setiap ruangan. Berikanlah kami keberanian untuk memulai, sekecil apa pun itu, dan kesabaran untuk terus melakukannya hingga menjadi jati diri kami. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Joshua 24:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yosua 24:15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'Talk of Him When You Sit and When You Walk', 'Bicarakan Dia Saat Duduk dan Saat Berjalan',
+    'Moses gave Israel one of the most practical instructions for household faith found anywhere in Scripture: impress these commandments on your children, talk about them at home and away, when you lie down and when you get up. What strikes many readers is how ordinary the settings are. Not just in the temple courts, not only on holy days, but at the dinner table, in the car, on the walk to school, at bedtime. Faith was never meant to be confined to special occasions.
+
+This is good news for families who feel they lack the vocabulary or training to lead formal devotions. God is not asking for a seminary lecture at breakfast. He is asking for conversation — the same kind of ordinary talk a family already has about the weather, homework, or what''s for dinner, except now including him. A parent who says ''I''m grateful God got us through that today'' while doing the dishes is teaching theology just as surely as a catechism class does, perhaps more durably, because it is woven into real life rather than set apart from it.
+
+Children notice what their parents mention unprompted. If God only comes up in church on Sunday, children quietly learn that God belongs to Sunday. But if God''s name surfaces naturally on a Tuesday afternoon — thanking him for a safe drive, asking his help before a hard conversation, wondering aloud what he might be teaching through a disappointment — children learn that God belongs everywhere, because their parents clearly believe it.
+
+You do not need a script for this. You need only a habit of noticing God''s presence out loud, in the ordinary hours, so that your children grow up assuming — correctly — that faith is not a compartment of life but the air the whole household breathes.', 'Musa memberikan salah satu instruksi paling praktis tentang iman rumah tangga yang ada dalam Alkitab: ajarkanlah perintah-perintah ini kepada anak-anakmu, bicarakanlah tentangnya di rumah dan dalam perjalanan, saat berbaring dan saat bangun. Yang mencolok bagi banyak pembaca adalah betapa biasanya suasana yang disebutkan. Bukan hanya di pelataran bait Allah, bukan hanya pada hari-hari kudus, tetapi di meja makan, di dalam mobil, dalam perjalanan ke sekolah, saat menjelang tidur. Iman tidak pernah dimaksudkan untuk dibatasi pada momen-momen khusus saja.
+
+Ini adalah kabar baik bagi keluarga yang merasa tidak memiliki kosakata atau pelatihan untuk memimpin devosi formal. Allah tidak meminta ceramah seminari saat sarapan. Ia meminta percakapan — jenis obrolan biasa yang sudah dimiliki sebuah keluarga tentang cuaca, pekerjaan rumah, atau menu makan malam, hanya saja kini menyertakan Dia. Orang tua yang berkata, ''Aku bersyukur Tuhan menolong kita melewati hari ini,'' sambil mencuci piring, sedang mengajarkan teologi sama nyatanya seperti kelas katekismus, bahkan mungkin lebih bertahan lama, karena tertenun dalam kehidupan nyata, bukan dipisahkan darinya.
+
+Anak-anak memperhatikan apa yang disebut orang tua mereka tanpa diminta. Jika Allah hanya muncul di gereja pada hari Minggu, anak-anak diam-diam belajar bahwa Allah hanya milik hari Minggu. Namun jika nama Allah muncul secara alami pada suatu siang hari Selasa — bersyukur atas perjalanan yang aman, meminta pertolongan-Nya sebelum percakapan yang sulit, bertanya-tanya apa yang mungkin sedang Ia ajarkan melalui sebuah kekecewaan — anak-anak belajar bahwa Allah ada di mana-mana, karena orang tua mereka jelas mempercayainya.
+
+Kita tidak memerlukan naskah untuk ini. Kita hanya memerlukan kebiasaan menyadari kehadiran Allah secara terucap, dalam jam-jam biasa, sehingga anak-anak kita bertumbuh dengan asumsi yang benar bahwa iman bukanlah satu ruang kehidupan, melainkan udara yang dihirup oleh seluruh rumah tangga.',
+    'When was the last time God''s name came up naturally in your home outside of formal prayer?', 'Kapan terakhir kali nama Allah muncul secara alami di rumahmu di luar doa formal?',
+    'Father, loosen our tongues to speak of you naturally, at the table, on the road, and at bedtime, so our children learn that you belong to every hour of the day. Amen.', 'Bapa, lepaskanlah lidah kami untuk berbicara tentang-Mu secara alami, di meja makan, dalam perjalanan, dan menjelang tidur, agar anak-anak kami belajar bahwa Engkau ada di setiap jam kehidupan. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 6:6-7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 6:6-7', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'A Blessing Before Bed', 'Berkat Sebelum Tidur',
+    'There is a particular kind of stillness at the end of a day, once the noise of homework and dinner and arguments over screen time has quieted, when a family is most open to a small sacred moment. This is why so many households, across cultures and centuries, have treated bedtime as a natural hinge for prayer. A blessing spoken over a child before sleep — the sign of the cross traced on a forehead, a whispered ''the Lord watch over you tonight'' — plants something in a child that outlasts the memory of the words themselves.
+
+Psalm 128 paints a picture of a household that fears the Lord: it describes children like olive shoots around the table, a home marked by blessing that extends from one generation into the next. That image of shoots is worth sitting with. Olive shoots do not appear overnight; they grow slowly around an established tree, drawing from the same root system, becoming part of the same grove. A nightly blessing works the same way — it does not transform a child in a single night, but it draws them, night after night, closer to the root of faith that sustains the whole household.
+
+Some families worry they will get the words wrong, that they are not ''qualified'' to bless their own children the way a priest blesses a congregation. But parents were the first blessers in the story of salvation — Isaac blessed Jacob, Jacob blessed each of his twelve sons before he died. Blessing a child is not a clerical function reserved for ordained hands alone; it is a parental one, rooted in the authority God gives every mother and father over the spiritual life of their household.
+
+Tonight, consider trying it if you have not already: a hand on a child''s head, a short prayer or even a single sentence of blessing, spoken with sincerity. It costs almost nothing in time. It may be one of the most lasting gifts you ever give.', 'Ada sebuah kesunyian tertentu di penghujung hari, setelah kebisingan pekerjaan rumah, makan malam, dan perdebatan soal layar gawai mereda, saat sebuah keluarga paling terbuka terhadap momen kudus yang kecil. Inilah sebabnya begitu banyak rumah tangga, lintas budaya dan zaman, memperlakukan waktu tidur sebagai engsel alami untuk berdoa. Sebuah berkat yang diucapkan atas seorang anak sebelum tidur — tanda salib yang digurat di dahi, bisikan ''semoga Tuhan menjagamu malam ini'' — menanamkan sesuatu dalam diri anak yang bertahan melampaui ingatan akan kata-katanya sendiri.
+
+Mazmur 128 melukiskan gambaran sebuah rumah tangga yang takut akan TUHAN: menggambarkan anak-anak seperti tunas pohon zaitun di sekeliling meja, sebuah rumah yang ditandai oleh berkat yang menjangkau dari satu generasi ke generasi berikutnya. Gambaran tunas itu layak direnungkan. Tunas zaitun tidak muncul dalam semalam; ia tumbuh perlahan di sekeliling pohon yang sudah mapan, menyerap dari sistem akar yang sama, menjadi bagian dari kebun zaitun yang sama. Berkat yang diucapkan setiap malam bekerja dengan cara serupa — ia tidak mengubah seorang anak dalam satu malam, tetapi ia menarik mereka, malam demi malam, semakin dekat ke akar iman yang menopang seluruh rumah tangga.
+
+Sebagian keluarga khawatir mereka akan salah mengucapkan kata-kata, bahwa mereka tidak ''berwenang'' memberkati anak mereka sendiri sebagaimana seorang imam memberkati jemaat. Namun orang tua adalah pemberi berkat pertama dalam kisah keselamatan — Ishak memberkati Yakub, Yakub memberkati masing-masing dari dua belas anaknya sebelum ia wafat. Memberkati seorang anak bukanlah fungsi klerikal yang hanya disediakan bagi tangan yang ditahbiskan; itu adalah fungsi orang tua, berakar pada otoritas yang Allah berikan kepada setiap ibu dan ayah atas kehidupan rohani rumah tangganya.
+
+Malam ini, pertimbangkanlah untuk mencobanya jika belum: sebuah tangan di kepala anak, doa singkat atau bahkan satu kalimat berkat, diucapkan dengan sungguh-sungguh. Itu hampir tidak membutuhkan waktu. Namun itu bisa menjadi salah satu hadiah paling abadi yang pernah kau berikan.',
+    'Could you offer a spoken blessing over your children or another loved one tonight?', 'Bisakah engkau mengucapkan berkat atas anak-anakmu atau orang terkasih lainnya malam ini?',
+    'Lord, teach me to bless the people you have placed in my care. Let my words at the end of the day be words that plant faith rather than merely end the noise. Amen.', 'Tuhan, ajarilah aku memberkati orang-orang yang Engkau percayakan dalam pemeliharaanku. Biarlah kata-kataku di penghujung hari menjadi kata-kata yang menanam iman, bukan sekadar mengakhiri kebisingan. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 128:1,3', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 128:1,3', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 4,
+    'Wherever Two or Three Gather', 'Di Mana Dua atau Tiga Berkumpul',
+    'Jesus''s promise that where two or three gather in his name, he is there among them, is often quoted about church committees and prayer groups. But read it plainly and it applies just as much — arguably more — to a family of four sitting around a kitchen table with bowed heads before a meal. Two or three is not a large crowd. It is a small gathering, the size of most families on an ordinary weeknight. Christ did not set a minimum threshold that excludes the home; he set a minimum that practically guarantees his presence there.
+
+This should reframe how families think about the ''smallness'' of their prayer life. A rushed grace before dinner, said by tired parents and distracted children, is not a lesser form of worship compared to a grand liturgy. It is, according to Christ''s own words, a gathering in his name that draws his real presence. The size of the altar does not diminish the size of the guest who comes to it.
+
+Many parents feel discouraged because their family prayer feels imperfect — children fidgeting, someone forgetting the words, the whole thing lasting less than a minute. But perfection was never the entry requirement Jesus named. He asked only for gathering in his name. A messy, brief, sincere grace before dinner qualifies completely.
+
+Consider your evening meal this week not as a break from spiritual life but as one of its central altars. However informal it looks, however short the prayer, Christ has committed himself to being present in it.', 'Janji Yesus bahwa di mana dua atau tiga orang berkumpul dalam nama-Nya, Ia ada di tengah-tengah mereka, sering dikutip untuk komite gereja atau kelompok doa. Namun jika dibaca apa adanya, ayat ini berlaku sama, bahkan mungkin lebih, bagi keluarga beranggotakan empat orang yang duduk mengelilingi meja dapur dengan kepala tertunduk sebelum makan. Dua atau tiga bukanlah kerumunan besar. Itu adalah kumpulan kecil, seukuran kebanyakan keluarga pada malam biasa dalam seminggu. Kristus tidak menetapkan ambang minimum yang mengecualikan rumah; Ia menetapkan ambang minimum yang justru hampir menjamin kehadiran-Nya di sana.
+
+Ini seharusnya mengubah cara keluarga memandang ''kekecilan'' kehidupan doa mereka. Doa makan yang terburu-buru, diucapkan oleh orang tua yang lelah dan anak-anak yang teralihkan perhatiannya, bukanlah bentuk ibadah yang lebih rendah dibandingkan liturgi yang megah. Menurut perkataan Kristus sendiri, itu adalah perkumpulan dalam nama-Nya yang menarik kehadiran-Nya yang nyata. Kecilnya altar tidak mengurangi besarnya Tamu yang datang kepadanya.
+
+Banyak orang tua merasa patah semangat karena doa keluarga mereka terasa tidak sempurna — anak-anak gelisah, seseorang lupa kata-katanya, semuanya berlangsung kurang dari semenit. Namun kesempurnaan bukanlah syarat yang disebutkan Yesus. Ia hanya meminta perkumpulan dalam nama-Nya. Doa makan yang berantakan, singkat, namun tulus, sepenuhnya memenuhi syarat itu.
+
+Pertimbangkanlah makan malam keluargamu minggu ini bukan sebagai jeda dari kehidupan rohani, melainkan sebagai salah satu altarnya yang utama. Sekasual apa pun tampilannya, sesingkat apa pun doanya, Kristus telah berkomitmen untuk hadir di dalamnya.',
+    'What would change if you truly believed Christ was present at your family table tonight?', 'Apa yang akan berubah jika engkau benar-benar percaya Kristus hadir di meja keluargamu malam ini?',
+    'Jesus, thank you for promising to be present even in our smallest, most imperfect gatherings. Meet us at our table tonight, and every night we choose to gather in your name. Amen.', 'Yesus, terima kasih karena Engkau berjanji untuk hadir bahkan dalam perkumpulan kami yang paling kecil dan tidak sempurna. Jumpailah kami di meja kami malam ini, dan setiap malam kami memilih berkumpul dalam nama-Mu. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 18:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 18:20', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 5,
+    'Train Up a Child, and Keep Training', 'Didiklah Anak, dan Teruslah Mendidik',
+    'The book of Proverbs offers a compact but weighty promise: train up a child in the way they should go, and when they are old they will not depart from it. This verse is sometimes misread as a guarantee that faithful parenting produces automatically faithful adults, as if raising children well is a formula with a fixed output. Life, and Scripture elsewhere, is more honest than that — children retain free will, and some who are raised faithfully wander for seasons, sometimes for a lifetime. But the proverb still holds a deep and comforting truth: formation matters, and it lasts, even when its fruit is delayed.
+
+''Train'' in the original language carries the sense of dedicating or initiating — the same word used for dedicating a house or a newly built structure. It suggests something deliberate and repeated, not a single conversation but an ongoing formation, much like the daily habits this week has explored: grace at the table, a blessing before bed, God''s name spoken naturally throughout the day. None of these are one-time events. They are training, in the sense of shaping a way of life through repetition until it becomes second nature.
+
+Parents who feel they have started this training late, or imperfectly, can take heart. The proverb does not require flawless execution, only faithful direction over time. A household does not need to have had beautiful prayer rituals since infancy for those rituals to matter now. Every family altar that is built today — however late, however small — becomes part of the training a child carries into adulthood.
+
+As this five-day plan closes, consider which single habit you want to carry forward: the family grace, the bedtime blessing, the natural mention of God''s presence, the gathering around the table in his name. Pick one. Commit to it not for a week, but for a season. That is how an altar in a home is truly built — not all at once, but by return visits, over years, until the family simply cannot imagine living any other way.', 'Kitab Amsal menawarkan sebuah janji yang ringkas namun penuh bobot: didiklah orang muda menurut jalan yang patut baginya, maka pada masa tuanya pun ia tidak akan menyimpang dari pada jalan itu. Ayat ini kadang salah dibaca seolah menjanjikan bahwa pengasuhan yang setia otomatis menghasilkan orang dewasa yang setia, seakan membesarkan anak dengan baik adalah rumus dengan hasil yang pasti. Kehidupan, dan bagian lain Alkitab, lebih jujur dari itu — anak-anak tetap memiliki kehendak bebas, dan sebagian yang dibesarkan dengan setia pun mengembara untuk suatu musim, kadang seumur hidup. Namun amsal ini tetap menyimpan kebenaran yang dalam dan menghibur: pembentukan itu penting, dan bertahan lama, bahkan ketika buahnya tertunda.
+
+Kata ''didiklah'' dalam bahasa aslinya membawa makna mendedikasikan atau memulakan — kata yang sama digunakan untuk mendedikasikan sebuah rumah atau bangunan yang baru selesai dibangun. Ini menyiratkan sesuatu yang disengaja dan berulang, bukan satu percakapan tunggal melainkan pembentukan yang berkelanjutan, seperti kebiasaan harian yang dieksplorasi minggu ini: doa di meja makan, berkat sebelum tidur, nama Allah yang diucapkan secara alami sepanjang hari. Tidak satu pun dari ini adalah peristiwa sekali jadi. Semuanya adalah pendidikan, dalam arti membentuk cara hidup melalui pengulangan hingga menjadi kebiasaan yang mengakar.
+
+Orang tua yang merasa memulai pendidikan ini terlambat, atau tidak sempurna, dapat bertabahan hati. Amsal ini tidak menuntut pelaksanaan tanpa cela, hanya arah yang setia sepanjang waktu. Sebuah rumah tangga tidak perlu telah memiliki ritual doa yang indah sejak bayi agar ritual itu berarti sekarang. Setiap altar keluarga yang dibangun hari ini — seterlambat apa pun, sekecil apa pun — menjadi bagian dari pendidikan yang dibawa seorang anak hingga dewasa.
+
+Saat rencana lima hari ini ditutup, pertimbangkanlah kebiasaan mana yang ingin engkau bawa terus: doa keluarga, berkat sebelum tidur, penyebutan kehadiran Allah secara alami, perkumpulan di meja dalam nama-Nya. Pilihlah satu. Berkomitmenlah bukan untuk seminggu, melainkan untuk satu musim. Begitulah altar di rumah sungguh dibangun — bukan sekaligus, melainkan melalui kunjungan yang berulang, bertahun-tahun lamanya, hingga keluarga itu tidak lagi bisa membayangkan hidup dengan cara lain.',
+    'Which single household habit from this week will you commit to carrying forward for a whole season?', 'Kebiasaan rumah tangga mana dari minggu ini yang akan engkau komitmenkan untuk dilanjutkan sepanjang satu musim?',
+    'Lord, give our family the patience to keep building this altar day by day, trusting that even our smallest, imperfect efforts are shaping hearts that will belong to you for life. Amen.', 'Tuhan, berikanlah keluarga kami kesabaran untuk terus membangun altar ini hari demi hari, percaya bahwa bahkan usaha kami yang kecil dan tidak sempurna sedang membentuk hati yang akan menjadi milik-Mu seumur hidup. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 22:6', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 22:6', 'TB', 1);
+
+  -- Plan: Passing the Flame to the Next Generation
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'Passing the Flame to the Next Generation',
+    'Menyalurkan Nyala Api kepada Generasi Berikutnya',
+    'Seven days on handing down faith to your children and grandchildren',
+    'Tujuh hari tentang mewariskan iman kepada anak dan cucu',
+    7,
+    'Faith that is not shared tends to end with the person who holds it. This seven-day plan draws on the story of Timothy — raised in faith by his mother and grandmother — to explore how grandparents, parents, and mentors can intentionally, patiently, and hopefully pass the flame of faith to the generation coming up behind them.',
+    'Iman yang tidak dibagikan cenderung berakhir bersama orang yang memilikinya. Rencana tujuh hari ini mengambil kisah Timotius — yang dibesarkan dalam iman oleh ibu dan neneknya — untuk mendalami bagaimana kakek-nenek, orang tua, dan pembimbing rohani dapat dengan sengaja, sabar, dan penuh pengharapan menyalurkan nyala api iman kepada generasi yang datang setelah mereka.',
+    '/images/devotions/passing-the-flame-to-the-next-generation.jpeg'
+  ) RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'A Faith That Lived First in Grandmother', 'Iman yang Pertama Kali Hidup dalam Diri Sang Nenek',
+    'Paul''s second letter to Timothy contains a small, tender detail easy to overlook amid its larger themes: I am reminded of your sincere faith, which first lived in your grandmother Lois and in your mother Eunice, and I am persuaded now lives in you also. In just one sentence, Paul traces faith across three generations — grandmother, mother, and young disciple — as though it were a single flame carried carefully from one set of hands to another, never extinguished, only transferred.
+
+We know very little about Lois beyond this verse. Scripture does not record a sermon she preached or a miracle she performed. What it records is quieter and, in some ways, more remarkable: that her faith was sincere enough, and lived out consistently enough, that decades later the apostle Paul could point to her as the origin point of a faith that was now equipping a young pastor for ministry across the Roman world. Lois never knew, in her lifetime, how far her quiet faithfulness would travel.
+
+This is worth sitting with if you are a grandparent, or becoming one, wondering whether your influence still matters in a world that moves so fast around you. You may never see the full harvest of what you plant in a grandchild. Lois likely never did. But faith planted sincerely in a small life has a way of outliving the planter, surfacing years later in a grown grandchild''s own convictions, sometimes in ways the grandparent never lived to witness.
+
+Today, simply notice: whose faith first lived in you? And whose faith might first live in someone watching you now? The chain Paul describes did not require fame or eloquence. It required only sincerity, lived consistently, in view of a child who was paying more attention than anyone realized.', 'Surat kedua Paulus kepada Timotius memuat sebuah detail kecil yang lembut, mudah terlewat di tengah tema-tema besarnya: aku teringat akan imanmu yang tulus ikhlas, iman yang pertama-tama hidup di dalam nenekmu Lois dan ibumu Eunike, dan aku yakin hidup juga di dalam dirimu. Dalam satu kalimat saja, Paulus menelusuri iman melintasi tiga generasi — nenek, ibu, dan murid muda — seolah itu adalah satu nyala api yang dibawa dengan hati-hati dari satu tangan ke tangan berikutnya, tidak pernah padam, hanya berpindah.
+
+Kita hanya mengetahui sedikit tentang Lois di luar ayat ini. Alkitab tidak mencatat khotbah yang ia sampaikan atau mukjizat yang ia lakukan. Yang tercatat lebih tenang, dan dalam beberapa hal, lebih luar biasa: bahwa imannya cukup tulus, dan dihidupi dengan cukup konsisten, sehingga puluhan tahun kemudian rasul Paulus dapat menunjuknya sebagai titik asal iman yang kini sedang membekali seorang gembala muda untuk pelayanan di seluruh dunia Romawi. Lois tidak pernah tahu, semasa hidupnya, seberapa jauh kesetiaannya yang tenang itu akan menjangkau.
+
+Hal ini layak direnungkan jika engkau seorang kakek atau nenek, atau akan menjadi kakek-nenek, yang bertanya-tanya apakah pengaruhmu masih berarti di dunia yang bergerak begitu cepat di sekelilingmu. Engkau mungkin tidak akan pernah melihat penuaian penuh dari apa yang kau tanam dalam diri seorang cucu. Lois kemungkinan besar tidak pernah melihatnya. Namun iman yang ditanam dengan tulus dalam kehidupan kecil memiliki cara untuk bertahan lebih lama dari sang penanam, muncul kembali bertahun-tahun kemudian dalam keyakinan seorang cucu yang telah dewasa, kadang dengan cara yang tidak pernah disaksikan sang kakek atau nenek.
+
+Hari ini, sadarilah saja: iman siapakah yang pertama kali hidup dalam dirimu? Dan iman siapakah yang mungkin pertama kali hidup dalam diri seseorang yang sedang memperhatikanmu sekarang? Rantai yang digambarkan Paulus tidak membutuhkan ketenaran atau kefasihan bicara. Ia hanya membutuhkan ketulusan, yang dihidupi secara konsisten, di hadapan seorang anak yang memperhatikan lebih banyak dari yang disadari siapa pun.',
+    'Whose sincere faith first lived in you, and did they ever know its full impact?', 'Iman tulus siapakah yang pertama kali hidup dalam dirimu, dan apakah mereka pernah tahu betapa besar dampaknya?',
+    'Lord, thank you for the Lois in my own story — the quiet, faithful people whose lives first showed me yours. Let my own sincerity now become a starting point for someone else. Amen.', 'Tuhan, terima kasih untuk sosok Lois dalam kisah hidupku sendiri — orang-orang yang tenang dan setia yang hidupnya pertama kali menunjukkan Engkau kepadaku. Biarlah ketulusanku kini menjadi titik awal bagi orang lain. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timothy 1:5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timotius 1:5', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'Scriptures You Have Known from Infancy', 'Kitab Suci yang Kaukenal Sejak Masa Kanak-Kanak',
+    'Paul reminds Timothy that from infancy he has known the Holy Scriptures, which are able to make him wise for salvation through faith in Christ Jesus. The word ''infancy'' is worth pausing on. Timothy was not introduced to Scripture as a teenager making a personal decision, nor as an adult convert weighing evidence. He was introduced to it in the cradle, before he could form memories, absorbing it the way infants absorb everything: through repetition, presence, and the voices of people who loved him.
+
+This is one of the most encouraging truths for parents and grandparents raising very young children, who sometimes wonder whether reading Bible stories to a toddler who cannot yet follow the plot is worth the effort. Timothy''s story suggests it is worth far more than it appears. A child does not need to understand every word of a psalm or a parable for that psalm or parable to be taking root. What they absorb first is not doctrine but atmosphere — the sense that Scripture is a normal, beloved, frequently-visited part of their world, read by voices they trust.
+
+Later, as understanding grows, that early exposure becomes scaffolding. The stories heard in infancy resurface in adolescence and adulthood with new depth, because the words were never foreign to begin with. Many adults who return to faith after a wandering season describe this exact phenomenon — a sense that the Scriptures felt like coming home rather than starting from scratch, precisely because someone had planted them early, long before the child could have chosen it for themselves.
+
+If you are raising or grandparenting young children, today is an invitation to treat Scripture-sharing as less about comprehension and more about presence. Read the story even if they cannot yet explain it back to you. You are not wasting the words. You are laying scaffolding for a wisdom Paul says can lead all the way to salvation.', 'Paulus mengingatkan Timotius bahwa sejak masa kanak-kanak ia telah mengenal Kitab Suci yang dapat memberinya hikmat dan menuntunnya kepada keselamatan oleh iman kepada Kristus Yesus. Kata ''sejak masa kanak-kanak'' layak direnungkan sejenak. Timotius tidak diperkenalkan kepada Kitab Suci sebagai remaja yang membuat keputusan pribadi, atau sebagai orang dewasa yang baru bertobat dan sedang menimbang bukti. Ia diperkenalkan kepadanya sejak dalam buaian, sebelum ia mampu membentuk ingatan, menyerapnya sebagaimana bayi menyerap segala sesuatu: melalui pengulangan, kehadiran, dan suara-suara orang yang mengasihinya.
+
+Ini adalah salah satu kebenaran paling menguatkan bagi orang tua dan kakek-nenek yang membesarkan anak-anak sangat kecil, yang kadang bertanya-tanya apakah membacakan kisah Alkitab kepada balita yang belum bisa mengikuti alur cerita itu sepadan dengan usahanya. Kisah Timotius menunjukkan bahwa itu jauh lebih berharga dari yang tampak. Seorang anak tidak perlu memahami setiap kata dari sebuah mazmur atau perumpamaan agar mazmur atau perumpamaan itu mulai berakar. Yang pertama kali mereka serap bukanlah doktrin, melainkan suasana — kesan bahwa Kitab Suci adalah bagian normal, dicintai, dan sering dikunjungi dalam dunia mereka, dibacakan oleh suara-suara yang mereka percayai.
+
+Kemudian, seiring bertumbuhnya pemahaman, paparan awal itu menjadi rangka penopang. Kisah-kisah yang didengar sejak kanak-kanak muncul kembali pada masa remaja dan dewasa dengan kedalaman baru, karena kata-kata itu tidak pernah terasa asing sejak awal. Banyak orang dewasa yang kembali kepada iman setelah suatu masa mengembara menggambarkan fenomena ini persis — kesan bahwa Kitab Suci terasa seperti pulang ke rumah, bukan memulai dari nol, justru karena seseorang telah menanamkannya sejak dini, jauh sebelum sang anak sendiri bisa memilihnya.
+
+Jika engkau sedang membesarkan atau menjadi kakek-nenek bagi anak-anak kecil, hari ini adalah undangan untuk memperlakukan berbagi Kitab Suci sebagai soal kehadiran, bukan hanya pemahaman. Bacakan kisahnya meski mereka belum bisa menjelaskannya kembali kepadamu. Engkau tidak sedang menyia-nyiakan kata-kata itu. Engkau sedang membangun rangka penopang bagi hikmat yang, menurut Paulus, dapat menuntun hingga kepada keselamatan.',
+    'How can you make Scripture a normal, loved presence in a young child''s world this week, even before they fully understand it?', 'Bagaimana engkau dapat menjadikan Kitab Suci sebagai kehadiran yang normal dan dicintai dalam dunia seorang anak kecil minggu ini, bahkan sebelum mereka sepenuhnya memahaminya?',
+    'Lord, help me plant your word early and often in the children I love, trusting that even what they cannot yet understand is taking root for a lifetime. Amen.', 'Tuhan, tolonglah aku menanam firman-Mu sejak dini dan berulang kali dalam diri anak-anak yang kukasihi, percaya bahwa bahkan apa yang belum bisa mereka pahami sedang berakar untuk seumur hidup. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timothy 3:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Timotius 3:15', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'Tell It to Your Children, and Their Children', 'Ceritakanlah kepada Anak-Anakmu, dan kepada Anak-Anak Mereka',
+    'The psalmist writes of things heard and known, things our ancestors have told us, that we will not hide from our children, but tell to the next generation the praiseworthy deeds of the Lord. This psalm is essentially a mission statement for spiritual legacy: the point of remembering God''s faithfulness is never to keep it privately for yourself, but to relay it forward, generation after generation, like a message passed down a long line of runners.
+
+Every family carries stories of God''s faithfulness, even if members rarely think of them that way. The unexpected provision during a hard season. The illness that turned around against the odds. The moment a wayward relative returned. The quiet sense of peace during a funeral that felt too big to survive. These stories, told and retold at holidays and gatherings, are not merely family lore — they are, in the psalmist''s terms, the praiseworthy deeds of the Lord, and children who hear them repeatedly absorb a theology of a God who acts in real history, in their own family''s history, not just in ancient Israel''s.
+
+Grandparents in particular carry a unique storehouse of these stories, often spanning decades a grandchild has no other access to. A grandchild cannot personally witness the years before their own birth, but they can hear about them, and hearing repeatedly builds a kind of inherited memory — a sense of belonging to a family whose God has proven faithful long before they arrived.
+
+Consider, this week, telling one story of God''s faithfulness to a younger family member — not as a lecture, but simply as a story, the way you might tell any other memory. You may be doing exactly what the psalmist describes: refusing to hide it, and instead handing the next generation one more reason to trust the God who has already proven himself in your family''s history.', 'Pemazmur menulis tentang hal-hal yang telah didengar dan diketahui, yang telah diceritakan oleh nenek moyang kita, yang tidak akan disembunyikan dari anak-anak kita, melainkan diceritakan kepada angkatan yang kemudian tentang puji-pujian TUHAN. Mazmur ini pada dasarnya adalah pernyataan misi untuk warisan rohani: tujuan mengingat kesetiaan Allah bukanlah untuk menyimpannya sendiri secara pribadi, melainkan untuk meneruskannya, generasi demi generasi, seperti pesan yang diteruskan sepanjang barisan pelari yang panjang.
+
+Setiap keluarga membawa kisah-kisah kesetiaan Allah, meski anggota keluarganya jarang memikirkannya seperti itu. Pertolongan tak terduga di masa sulit. Penyakit yang berbalik pulih di luar dugaan. Momen seorang kerabat yang tersesat akhirnya kembali. Kedamaian yang tenang saat pemakaman yang tampak terlalu berat untuk dilalui. Kisah-kisah ini, yang diceritakan dan diceritakan kembali saat hari raya dan pertemuan keluarga, bukan sekadar cerita rakyat keluarga — mereka adalah, dalam istilah pemazmur, puji-pujian TUHAN, dan anak-anak yang mendengarnya berulang kali menyerap sebuah teologi tentang Allah yang bertindak dalam sejarah nyata, dalam sejarah keluarga mereka sendiri, bukan hanya dalam Israel kuno.
+
+Kakek-nenek khususnya membawa gudang kisah yang unik, sering kali mencakup puluhan tahun yang tidak dapat diakses cucu mereka dengan cara lain. Seorang cucu tidak dapat menyaksikan sendiri tahun-tahun sebelum ia lahir, tetapi mereka dapat mendengarnya, dan mendengar berulang kali membangun semacam ingatan yang diwariskan — rasa memiliki keluarga yang Allahnya telah terbukti setia jauh sebelum mereka tiba.
+
+Pertimbangkanlah, minggu ini, untuk menceritakan satu kisah kesetiaan Allah kepada anggota keluarga yang lebih muda — bukan sebagai ceramah, melainkan sekadar cerita, seperti engkau menceritakan kenangan lainnya. Engkau mungkin sedang melakukan tepat seperti yang digambarkan pemazmur: menolak untuk menyembunyikannya, dan sebaliknya memberi generasi berikutnya satu alasan lagi untuk mempercayai Allah yang telah membuktikan diri-Nya dalam sejarah keluargamu.',
+    'What is one story of God''s faithfulness in your family that a younger relative may never have heard?', 'Apa satu kisah kesetiaan Allah dalam keluargamu yang mungkin belum pernah didengar oleh kerabat yang lebih muda?',
+    'Lord, remind me of the ways you have been faithful to my family, and give me the courage to tell those stories to the ones coming after me. Amen.', 'Tuhan, ingatkanlah aku akan cara-cara Engkau setia kepada keluargaku, dan berikanlah aku keberanian untuk menceritakan kisah-kisah itu kepada mereka yang datang setelahku. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 78:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 78:4', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 4,
+    'So That You and Your Children May Fear the Lord', 'Supaya Engkau dan Anak-Anakmu Takut akan TUHAN',
+    'Moses instructs Israel to be careful, watching themselves closely, so that they do not forget the things their eyes have seen, nor let them slip from their hearts as long as they live — and to teach them to their children and their children after them. What is notable here is the two-part instruction: first, watch yourself, guard your own memory and faith; second, teach it forward. Legacy always begins with personal fidelity before it can become inheritance for someone else.
+
+It is tempting to focus entirely on the second half — the teaching, the passing down — while neglecting the first. But a grandparent or parent cannot hand down a faith they themselves have let slip. The instruction to watch yourself closely is not selfish caution; it is the necessary foundation of any legacy worth leaving. You cannot pour from an empty vessel, and you cannot pass on a fire that has gone out in your own life.
+
+This is a gentle but important word for anyone who has felt their own faith cooling while trying to nurture faith in children or grandchildren. The most honest gift you can give the next generation is not a perfect performance of piety, but a real, tended relationship with God in your own life — one you protect, refresh, and return to, so that what you pass on is living rather than merely remembered.
+
+Today, consider both halves of Moses''s instruction. Where does your own faith need tending, so it does not slip from your heart? And once tended, who is watching, ready to receive what you protect?', 'Musa menginstruksikan Israel untuk berhati-hati, mengawasi diri mereka sendiri dengan cermat, supaya tidak melupakan hal-hal yang telah dilihat mata mereka, dan supaya hal-hal itu tidak lenyap dari hati mereka seumur hidup mereka — dan untuk mengajarkannya kepada anak-anak dan cucu-cucu mereka. Yang menonjol di sini adalah instruksi dua bagian: pertama, jagalah dirimu, jagalah ingatan dan imanmu sendiri; kedua, ajarkanlah itu ke depan. Warisan selalu dimulai dengan kesetiaan pribadi sebelum dapat menjadi milik pusaka bagi orang lain.
+
+Sungguh menggoda untuk berfokus sepenuhnya pada bagian kedua — pengajaran, penurunan warisan — sambil mengabaikan bagian pertama. Namun seorang kakek-nenek atau orang tua tidak dapat mewariskan iman yang telah mereka biarkan lenyap dari diri mereka sendiri. Instruksi untuk mengawasi diri dengan cermat bukanlah kehati-hatian yang egois; itu adalah fondasi yang diperlukan bagi warisan apa pun yang layak ditinggalkan. Engkau tidak dapat menuang dari wadah yang kosong, dan engkau tidak dapat mewariskan api yang telah padam dalam hidupmu sendiri.
+
+Ini adalah kata yang lembut namun penting bagi siapa pun yang merasa imannya sendiri mendingin sambil berusaha memelihara iman dalam diri anak atau cucu. Hadiah paling jujur yang dapat kau berikan kepada generasi berikutnya bukanlah kesalehan yang tampil sempurna, melainkan hubungan yang nyata dan terawat dengan Allah dalam hidupmu sendiri — yang kau jaga, kau segarkan, dan kau kembali kepadanya, sehingga apa yang kau wariskan hidup, bukan sekadar dikenang.
+
+Hari ini, pertimbangkanlah kedua bagian instruksi Musa. Di manakah imanmu sendiri perlu dirawat, agar tidak lenyap dari hatimu? Dan setelah dirawat, siapakah yang sedang memperhatikan, siap menerima apa yang kau jaga?',
+    'Where does your own faith need tending today, before it can be faithfully passed on?', 'Di manakah imanmu sendiri perlu dirawat hari ini, sebelum dapat diwariskan dengan setia?',
+    'Lord, keep my own heart from growing cold. Refresh what has faded in me, so that what I pass on to my children and grandchildren is alive, not merely remembered. Amen.', 'Tuhan, jagalah hatiku agar tidak menjadi dingin. Segarkanlah apa yang telah pudar dalam diriku, sehingga apa yang kuwariskan kepada anak dan cucuku hidup, bukan sekadar dikenang. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Deuteronomy 4:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ulangan 4:9', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 5,
+    'A Good Inheritance Leaves Something Behind', 'Warisan yang Baik Meninggalkan Sesuatu',
+    'Proverbs observes that a good person leaves an inheritance for their children''s children. Read in context, the surrounding proverbs concern more than money — they concern the kind of character, wisdom, and reputation that outlasts a single lifetime and becomes something the next generation can draw on. Material inheritance fades quickly; wise families have long understood that the more durable inheritance is spiritual and moral, not financial.
+
+It is worth asking plainly: what inheritance are you actually building? Financial planning receives enormous attention in most families — wills, savings, insurance — while spiritual planning receives almost none. Few families sit down to intentionally discuss what values, what prayers, what convictions about God they hope will still be alive in their grandchildren''s grandchildren. Yet this is precisely the kind of inheritance Proverbs elevates as evidence of a good and righteous life.
+
+Building this kind of inheritance does not require dramatic gestures. It happens through the ordinary means this week has already explored — stories told, Scriptures read early, blessings spoken, faith kept tended in your own heart. But it helps to name the goal explicitly: you are not merely raising children for the next twenty years. You are, in a real sense, investing in descendants you may never personally meet, whose faith may trace back, however distantly, to choices you make today.
+
+Take a moment today to think in those terms — not just about this year, or even your children''s adulthood, but about your children''s children''s children. What spiritual inheritance do you want still standing that far down the line, and what small step can you take today to build it?', 'Amsal mengamati bahwa orang baik mewariskan harta pusaka kepada anak cucunya. Jika dibaca dalam konteksnya, amsal-amsal di sekitarnya membicarakan lebih dari sekadar uang — mereka membicarakan jenis karakter, hikmat, dan reputasi yang bertahan melampaui satu masa hidup dan menjadi sesuatu yang dapat diandalkan generasi berikutnya. Warisan materi cepat pudar; keluarga yang bijaksana sejak lama memahami bahwa warisan yang lebih tahan lama adalah warisan rohani dan moral, bukan warisan finansial.
+
+Layak ditanyakan secara terus terang: warisan apa yang sebenarnya sedang kau bangun? Perencanaan finansial menerima perhatian besar di kebanyakan keluarga — wasiat, tabungan, asuransi — sementara perencanaan rohani hampir tidak menerima perhatian sama sekali. Jarang ada keluarga yang duduk bersama untuk secara sengaja membicarakan nilai-nilai, doa-doa, keyakinan tentang Allah apa yang mereka harapkan masih hidup dalam diri cucu dari cucu mereka. Namun justru inilah jenis warisan yang diangkat Amsal sebagai bukti kehidupan yang baik dan benar.
+
+Membangun warisan semacam ini tidak membutuhkan tindakan dramatis. Ia terjadi melalui sarana-sarana biasa yang telah dieksplorasi minggu ini — kisah yang diceritakan, Kitab Suci yang dibaca sejak dini, berkat yang diucapkan, iman yang dirawat dalam hatimu sendiri. Namun ada baiknya menyebutkan tujuan itu secara eksplisit: engkau tidak hanya sedang membesarkan anak-anak untuk dua puluh tahun ke depan. Engkau, dalam arti yang nyata, sedang berinvestasi pada keturunan yang mungkin tidak pernah kau temui secara pribadi, yang imannya mungkin dapat ditelusuri, sejauh apa pun jaraknya, kembali pada pilihan-pilihan yang kau buat hari ini.
+
+Luangkan waktu sejenak hari ini untuk berpikir dalam kerangka itu — bukan hanya tentang tahun ini, atau bahkan masa dewasa anakmu, melainkan tentang cucu dari cucumu. Warisan rohani apa yang kau ingin masih berdiri sejauh itu, dan langkah kecil apa yang dapat kau ambil hari ini untuk membangunnya?',
+    'What spiritual inheritance, beyond finances, do you most want to leave behind?', 'Warisan rohani apa, di luar keuangan, yang paling ingin kau tinggalkan?',
+    'Lord, help me build an inheritance of faith, not only of finances, so that generations I may never meet will still trace their trust in you back to choices I made today. Amen.', 'Tuhan, tolonglah aku membangun warisan iman, bukan hanya warisan keuangan, sehingga generasi yang mungkin tidak pernah kutemui tetap dapat menelusuri kepercayaan mereka kepada-Mu hingga ke pilihan-pilihan yang kubuat hari ini. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 13:22', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 13:22', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 6,
+    'Great Will Be the Peace of Your Children', 'Besarlah Kesejahteraan Anak-Anakmu',
+    'The prophet Isaiah, writing to a people who had endured exile and loss, offers a promise wrapped in tenderness: all your children will be taught by the Lord, and great will be their peace. This was spoken to a generation that had every reason to worry about what would become of their descendants — a scattered, uncertain future, a people trying to rebuild identity after catastrophe. Into that uncertainty, God promises not just survival for the next generation, but instruction and peace.
+
+There is something freeing in remembering that the ultimate teacher of your children and grandchildren is not you alone. You plant, you read Scripture aloud, you tell the family stories, you bless them at bedtime — and all of that matters — but Isaiah reminds us that behind every human effort at spiritual formation, God himself is teaching. Parents and grandparents are not asked to be their children''s only source of truth; they are asked to be faithful conduits, while trusting that the Lord himself continues the work in ways no human hand fully controls.
+
+This should ease some of the anxiety that can creep into legacy-building — the fear that if you say the wrong thing, skip a devotional, or fail to model faith perfectly on any given day, the whole project might collapse. Isaiah''s promise suggests otherwise. God''s teaching of your children does not depend solely on your flawless execution. It depends on his faithfulness, which is considerably more reliable than yours or mine.
+
+Rest today in this promise. Keep doing the small, faithful things — but release the pressure of thinking the entire spiritual future of your children rests on your shoulders alone. It rests, finally, on the Lord who has promised to teach them himself, and to give them great peace.', 'Nabi Yesaya, menulis kepada umat yang telah mengalami pembuangan dan kehilangan, menawarkan sebuah janji yang dibalut kelembutan: semua anakmu akan menjadi murid TUHAN, dan besarlah kesejahteraan mereka. Ini diucapkan kepada satu generasi yang memiliki segala alasan untuk khawatir tentang apa yang akan terjadi pada keturunan mereka — masa depan yang tercerai-berai dan tidak pasti, umat yang berusaha membangun kembali jati diri setelah bencana. Ke dalam ketidakpastian itu, Allah menjanjikan bukan sekadar kelangsungan hidup bagi generasi berikutnya, tetapi pengajaran dan kesejahteraan.
+
+Ada sesuatu yang melegakan dalam mengingat bahwa guru utama bagi anak dan cucumu bukanlah engkau seorang diri. Engkau menanam, engkau membacakan Kitab Suci, engkau menceritakan kisah keluarga, engkau memberkati mereka menjelang tidur — dan semua itu penting — tetapi Yesaya mengingatkan kita bahwa di balik setiap usaha manusia dalam pembentukan rohani, Allah sendiri sedang mengajar. Orang tua dan kakek-nenek tidak diminta menjadi satu-satunya sumber kebenaran bagi anak-anak mereka; mereka diminta menjadi saluran yang setia, sambil percaya bahwa TUHAN sendiri terus melanjutkan karya itu dengan cara-cara yang tidak sepenuhnya dikendalikan tangan manusia mana pun.
+
+Ini seharusnya meringankan sebagian kecemasan yang bisa menyusup ke dalam upaya membangun warisan — ketakutan bahwa jika engkau salah bicara, melewatkan renungan, atau gagal menghidupi iman dengan sempurna pada suatu hari, seluruh usaha itu bisa runtuh. Janji Yesaya menunjukkan sebaliknya. Pengajaran Allah atas anak-anakmu tidak bergantung semata-mata pada pelaksanaanmu yang tanpa cela. Ia bergantung pada kesetiaan-Nya, yang jauh lebih dapat diandalkan daripada kesetiaanku atau kesetiaanmu.
+
+Beristirahatlah hari ini dalam janji ini. Teruslah melakukan hal-hal kecil yang setia — tetapi lepaskanlah tekanan berpikir bahwa seluruh masa depan rohani anak-anakmu bertumpu pada pundakmu sendiri. Pada akhirnya, itu bertumpu pada TUHAN yang telah berjanji untuk mengajar mereka sendiri, dan memberi mereka kesejahteraan yang besar.',
+    'What would change in your parenting or grandparenting if you truly trusted that God, not you alone, is teaching your children?', 'Apa yang akan berubah dalam pengasuhanmu jika engkau benar-benar percaya bahwa Allah, bukan hanya engkau, sedang mengajar anak-anakmu?',
+    'Lord, thank you for teaching my children and grandchildren even when I fall short. Take my small, imperfect efforts and use them for a peace only you can give. Amen.', 'Tuhan, terima kasih karena Engkau mengajar anak dan cucuku bahkan ketika aku gagal. Pakailah usahaku yang kecil dan tidak sempurna untuk kesejahteraan yang hanya Engkau dapat berikan. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 54:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 54:13', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 7,
+    'No Greater Joy', 'Tidak Ada Sukacita yang Lebih Besar',
+    'The apostle John, near the end of his short third letter, writes a line that sums up much of what this week has explored: I have no greater joy than to hear that my children are walking in the truth. John was likely writing about his spiritual children — converts and disciples he had shepherded — but the sentiment translates naturally to biological family as well. There is a particular, almost unmatched joy that comes from watching someone you love choose to walk with God, especially when that choosing was not forced but freely embraced.
+
+This joy is worth naming as the true goal of everything explored this week — not flawless family devotions, not a perfectly executed bedtime ritual, not an unbroken record of Scripture reading. The goal, all along, has been this: children and grandchildren who walk in the truth, who love God not because they were required to but because they came to know him as real through the patient witness of the people who raised them.
+
+It is also worth naming honestly that this joy is not guaranteed on any particular timeline. Some children walk in the truth from childhood onward. Others wander for years before returning, if they return within a parent''s or grandparent''s lifetime at all. John''s words are not a formula but an aspiration — a joy to hope for, to pray toward, and to keep working toward even when the outcome is not yet visible.
+
+As this seven-day plan on passing the flame comes to a close, hold onto both halves of what has been explored: the patient, ordinary work of formation — stories told, Scripture read early, blessings spoken, your own faith tended — and the hope that one day, however long it takes, you might know the particular joy John describes, hearing that the ones you loved are walking, freely and truly, in the light you first showed them.', 'Rasul Yohanes, mendekati akhir surat ketiganya yang singkat, menulis sebuah kalimat yang merangkum banyak hal yang telah dieksplorasi minggu ini: bagiku tidak ada sukacita yang lebih besar daripada mendengar bahwa anak-anakku hidup dalam kebenaran. Yohanes kemungkinan besar sedang menulis tentang anak-anak rohaninya — orang-orang yang bertobat dan murid-murid yang telah ia gembalakan — tetapi perasaan ini secara alami juga berlaku bagi keluarga biologis. Ada sukacita tertentu, yang hampir tak tertandingi, yang muncul dari menyaksikan orang yang kau kasihi memilih berjalan bersama Allah, terlebih ketika pilihan itu bukan dipaksakan melainkan dipeluk dengan bebas.
+
+Sukacita ini layak disebut sebagai tujuan sejati dari segala hal yang dieksplorasi minggu ini — bukan devosi keluarga yang sempurna tanpa cela, bukan ritual sebelum tidur yang dilaksanakan dengan sempurna, bukan catatan pembacaan Kitab Suci yang tak pernah terputus. Tujuannya, sejak awal, adalah ini: anak dan cucu yang hidup dalam kebenaran, yang mengasihi Allah bukan karena diwajibkan, melainkan karena mereka datang mengenal-Nya sebagai nyata melalui kesaksian sabar dari orang-orang yang membesarkan mereka.
+
+Layak pula disebutkan secara jujur bahwa sukacita ini tidak dijamin dalam jangka waktu tertentu. Sebagian anak berjalan dalam kebenaran sejak masa kanak-kanak. Sebagian lain mengembara selama bertahun-tahun sebelum kembali, jika pun mereka kembali dalam masa hidup orang tua atau kakek-neneknya. Kata-kata Yohanes bukanlah rumus, melainkan sebuah harapan — sukacita yang dinantikan, didoakan, dan terus diperjuangkan bahkan ketika hasilnya belum tampak.
+
+Saat rencana tujuh hari tentang menyalurkan nyala api ini berakhir, peganglah kedua bagian dari apa yang telah dieksplorasi: kerja pembentukan yang sabar dan biasa — kisah yang diceritakan, Kitab Suci yang dibaca sejak dini, berkat yang diucapkan, imanmu sendiri yang dirawat — dan harapan bahwa suatu hari, sepanjang apa pun waktu yang dibutuhkan, engkau mungkin merasakan sukacita khusus yang digambarkan Yohanes, mendengar bahwa orang-orang yang kau kasihi sedang berjalan, dengan bebas dan sungguh-sungguh, dalam terang yang pertama kali kau tunjukkan kepada mereka.',
+    'What would it mean to hold this joy as your hope, even before you see its fullness?', 'Apa artinya memegang sukacita ini sebagai harapanmu, bahkan sebelum engkau melihat kepenuhannya?',
+    'Lord, I entrust the ones I love to your patient teaching. Let me faithfully pass on what I have received, and one day let me know the joy of seeing them walk freely in your truth. Amen.', 'Tuhan, kupercayakan orang-orang yang kukasihi kepada pengajaran-Mu yang sabar. Biarlah aku dengan setia mewariskan apa yang telah kuterima, dan suatu hari biarlah aku merasakan sukacita melihat mereka berjalan dengan bebas dalam kebenaran-Mu. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 John 1:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '3 Yohanes 1:4', 'TB', 1);
+
+  -- Plan: A Family Year of Grace
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'A Family Year of Grace',
+    'Setahun Rahmat Bersama Keluarga',
+    'Four days on celebrating the Church calendar together as a household',
+    'Empat hari tentang merayakan kalender Gereja bersama keluarga',
+    4,
+    'The liturgical year gives every family a built-in rhythm of feast and fast, waiting and celebrating, that can shape a household''s sense of time around the story of salvation rather than the calendar of school terms and sales seasons alone. This four-day plan looks at how families can mark the seasons of the Church year together — through Sunday Mass, shared meals, and small traditions that make the liturgical calendar come alive at home.',
+    'Tahun liturgi memberikan setiap keluarga sebuah ritme bawaan berupa perayaan dan puasa, penantian dan sukacita, yang dapat membentuk rasa waktu sebuah rumah tangga di seputar kisah keselamatan, bukan hanya seputar kalender sekolah dan musim diskon belanja. Rencana empat hari ini menelaah bagaimana keluarga dapat menandai musim-musim tahun liturgi Gereja bersama — melalui Misa Minggu, makan bersama, dan tradisi-tradisi kecil yang menghidupkan kalender liturgi di rumah.',
+    '/images/devotions/a-family-year-of-grace.jpeg'
+  ) RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'A Time for Everything, Together', 'Ada Waktu untuk Segala Sesuatu, Bersama',
+    'Ecclesiastes opens one of its most famous passages with a simple observation: there is a time for everything, and a season for every activity under the heavens. The Church, in her wisdom, built an entire calendar around this rhythm — seasons of waiting and seasons of feasting, seasons of penance and seasons of unrestrained joy, each following the other in a pattern that repeats year after year, forming believers not through a single event but through the steady turning of time itself.
+
+Families often default to marking time by the school calendar, the fiscal year, or the retail calendar of holiday sales — rhythms shaped entirely around commerce and academics, with faith squeezed in wherever it fits. The liturgical year offers an alternative: a rhythm shaped around the story of salvation, where Advent''s quiet waiting gives way to Christmas joy, where Lent''s penance gives way to Easter''s overflowing celebration, and where a family''s sense of time itself becomes a slow, repeated catechesis.
+
+Adopting this rhythm as a family does not require abandoning the secular calendar; it means layering the Church''s calendar on top of it, letting purple and rose and white and green vestments, feast days, and fasting seasons become as familiar to your children as the school year''s own milestones. Over years, a child raised this way develops an intuitive sense that time itself belongs to God, that waiting has purpose, and that celebration is not random but tied to something eternal.
+
+This four-day plan will look at specific ways to bring that rhythm home — through Mass, through meals, through small markers that turn an abstract calendar into a lived, felt experience for every member of the household, from toddlers to grandparents.', 'Kitab Pengkhotbah membuka salah satu bagiannya yang paling terkenal dengan sebuah pengamatan sederhana: untuk segala sesuatu ada waktunya, untuk apa pun di bawah langit ada masanya. Gereja, dalam kebijaksanaannya, membangun seluruh kalender di seputar ritme ini — musim penantian dan musim perayaan, musim tobat dan musim sukacita yang meluap, masing-masing mengikuti yang lain dalam pola yang berulang tahun demi tahun, membentuk umat beriman bukan melalui satu peristiwa tunggal, melainkan melalui perputaran waktu itu sendiri secara tetap.
+
+Keluarga sering kali secara default menandai waktu berdasarkan kalender sekolah, tahun fiskal, atau kalender diskon ritel hari raya — ritme yang seluruhnya dibentuk oleh perdagangan dan akademik, dengan iman diselipkan di mana pun ada tempat yang tersisa. Tahun liturgi menawarkan alternatif: sebuah ritme yang dibentuk di seputar kisah keselamatan, di mana penantian tenang Adven berubah menjadi sukacita Natal, di mana tobat masa Prapaskah berubah menjadi perayaan Paskah yang meluap, dan di mana rasa waktu sebuah keluarga sendiri menjadi katekese yang lambat dan berulang.
+
+Mengadopsi ritme ini sebagai keluarga tidak mengharuskan meninggalkan kalender sekuler; artinya melapiskan kalender Gereja di atasnya, membiarkan warna ungu, merah muda, putih, dan hijau jubah liturgi, hari-hari raya, dan musim puasa menjadi seakrab tonggak-tonggak tahun sekolah bagi anak-anakmu. Selama bertahun-tahun, seorang anak yang dibesarkan dengan cara ini mengembangkan rasa intuitif bahwa waktu itu sendiri milik Allah, bahwa penantian memiliki tujuan, dan bahwa perayaan bukanlah hal acak melainkan terkait dengan sesuatu yang kekal.
+
+Rencana empat hari ini akan menelaah cara-cara khusus untuk membawa ritme itu ke rumah — melalui Misa, melalui makan bersama, melalui penanda-penanda kecil yang mengubah kalender yang abstrak menjadi pengalaman yang hidup dan terasa bagi setiap anggota rumah tangga, dari balita hingga kakek-nenek.',
+    'How does your family currently mark the passage of time, and where might the Church calendar find a place in that rhythm?', 'Bagaimana keluargamu saat ini menandai berlalunya waktu, dan di mana kalender Gereja dapat menemukan tempatnya dalam ritme itu?',
+    'Lord of all seasons, teach our family to shape our year around your story of salvation, so that waiting, feasting, fasting, and celebrating all become ways we know you better together. Amen.', 'Tuhan atas segala musim, ajarilah keluarga kami membentuk tahun kami di seputar kisah keselamatan-Mu, sehingga penantian, perayaan, puasa, dan sukacita semuanya menjadi cara kami mengenal-Mu lebih baik bersama-sama. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ecclesiastes 3:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Pengkhotbah 3:1', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'The Family That Went Up to the Feast', 'Keluarga yang Pergi ke Perayaan',
+    'The Gospel of Luke offers a small but revealing detail about the Holy Family: every year Jesus''s parents went to Jerusalem for the Festival of the Passover, and when he was twelve, they went up as usual. It would have been easy for Mary and Joseph to skip a year, especially with the difficulty and expense of travel in the ancient world. Instead, Luke tells us this was their custom — ''as usual'' — a habit so consistent that a twelve-year-old Jesus simply assumed it, the way children assume any deeply ingrained family rhythm.
+
+This is a quiet but powerful witness to the value of consistency in family worship, particularly around the major feasts of the faith. The Holy Family did not treat the Passover pilgrimage as optional or dependent on convenience. It was, in Luke''s words, what they always did. Consistency of this kind teaches a child something no single spectacular celebration can: that faith is not a special occasion reserved for when it is easy, but a rhythm the family keeps regardless of circumstance.
+
+For Catholic families today, Sunday Mass functions as this same anchor point — not an occasional nicety but the ''as usual'' rhythm around which the rest of the week is arranged. Families who protect this weekly gathering, even when travel, sports schedules, or exhaustion make it inconvenient, are handing their children exactly what Mary and Joseph handed Jesus: the assumption that gathering for worship is simply what our family does, not an option weighed against other options each week.
+
+Consider this week whether your family''s rhythm of worship has the quality of ''as usual'' that Luke describes, or whether it has quietly become negotiable. Small, unglamorous consistency — showing up, year after year, feast after feast — may be one of the most formative habits a family can practice.', 'Injil Lukas menawarkan sebuah detail kecil namun mengungkapkan banyak hal tentang Keluarga Kudus: setiap tahun orang tua Yesus pergi ke Yerusalem untuk merayakan Paskah Yahudi, dan ketika Ia berumur dua belas tahun, mereka pergi ke sana seperti biasa. Akan mudah saja bagi Maria dan Yusuf untuk melewatkan satu tahun, terlebih dengan kesulitan dan biaya perjalanan di dunia kuno. Namun Lukas memberi tahu kita bahwa ini adalah kebiasaan mereka — ''seperti biasa'' — sebuah kebiasaan yang begitu konsisten sehingga Yesus yang berusia dua belas tahun begitu saja menganggapnya wajar, sebagaimana anak-anak menganggap wajar ritme keluarga apa pun yang tertanam dalam.
+
+Ini adalah kesaksian yang tenang namun kuat tentang nilai konsistensi dalam ibadah keluarga, khususnya di seputar hari-hari raya besar iman. Keluarga Kudus tidak memperlakukan ziarah Paskah sebagai sesuatu yang opsional atau bergantung pada kenyamanan. Itu adalah, dalam kata-kata Lukas, apa yang selalu mereka lakukan. Konsistensi semacam ini mengajarkan kepada seorang anak sesuatu yang tidak bisa diajarkan oleh perayaan megah tunggal mana pun: bahwa iman bukanlah kesempatan khusus yang disediakan hanya ketika mudah, melainkan ritme yang dijaga keluarga terlepas dari keadaan.
+
+Bagi keluarga Katolik saat ini, Misa Minggu berfungsi sebagai titik jangkar yang sama — bukan sekadar kebiasaan baik yang sesekali dilakukan, melainkan ritme ''seperti biasa'' yang menjadi poros bagi sisa minggu itu. Keluarga yang menjaga perkumpulan mingguan ini, bahkan ketika perjalanan, jadwal olahraga, atau kelelahan membuatnya tidak nyaman, sedang mewariskan kepada anak-anak mereka persis apa yang diwariskan Maria dan Yusuf kepada Yesus: anggapan bahwa berkumpul untuk beribadah hanyalah apa yang dilakukan keluarga kita, bukan pilihan yang ditimbang melawan pilihan lain setiap minggu.
+
+Pertimbangkanlah minggu ini apakah ritme ibadah keluargamu memiliki kualitas ''seperti biasa'' yang digambarkan Lukas, atau apakah diam-diam telah menjadi sesuatu yang bisa dinegosiasikan. Konsistensi yang kecil dan tidak mencolok — hadir, tahun demi tahun, perayaan demi perayaan — mungkin adalah salah satu kebiasaan paling membentuk yang dapat dipraktikkan sebuah keluarga.',
+    'Has your family''s rhythm of Sunday worship become ''as usual,'' or does it feel more negotiable than it once did?', 'Apakah ritme ibadah Minggu keluargamu telah menjadi ''seperti biasa,'' atau terasa lebih bisa dinegosiasikan dari sebelumnya?',
+    'Lord, like Mary and Joseph, help our family keep faithful rhythms of worship, not as an occasional effort but as simply what we do, year after year, feast after feast. Amen.', 'Tuhan, seperti Maria dan Yusuf, tolonglah keluarga kami menjaga ritme ibadah yang setia, bukan sebagai usaha sesekali, melainkan sebagai apa yang memang kami lakukan, tahun demi tahun, perayaan demi perayaan. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 2:41-42', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 2:41-42', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'Tell Your Children What This Means', 'Ceritakanlah kepada Anak-Anakmu Apa Artinya Ini',
+    'Before the exodus from Egypt, God gave Israel an unusual instruction alongside the Passover meal itself: when your children ask you, ''What does this ceremony mean to you?'' then tell them. God did not simply institute a ritual; he anticipated the questions it would provoke in the next generation and commanded that those questions be met with explanation, not dismissal. The ritual and the storytelling were designed to work together from the very beginning.
+
+This offers a helpful pattern for families building their own liturgical-year traditions. A wreath with candles at Advent, palm branches tucked behind a crucifix, an empty tomb display at Easter, a special meal on a saint''s feast day — these small rituals will inevitably prompt a child''s question: why do we do this? Families who welcome that question, rather than treating it as an interruption, are following the exact model God gave Israel: let the ritual provoke curiosity, and let the curiosity become the doorway to teaching.
+
+It is worth noting that God did not ask Israel to explain the Passover perfectly or exhaustively. The instruction is simple: when they ask, tell them. A parent does not need seminary training to answer a child''s question about why the candle is purple this week, or why the family fasts before Easter. A brief, honest answer — ''this candle reminds us we are waiting for Jesus, the way Israel waited for a savior'' — is enough to plant the seed. The ritual does the initial work of provoking wonder; the parent''s simple explanation does the work of directing that wonder toward God.
+
+As you build or continue your family''s liturgical-year traditions, expect and welcome the questions they raise. Each ''why do we do this?'' is not a distraction from the tradition — it is the tradition working exactly as it was designed to.', 'Sebelum keluaran dari Mesir, Allah memberikan Israel sebuah instruksi yang tidak biasa bersamaan dengan perjamuan Paskah itu sendiri: apabila anak-anakmu bertanya kepadamu, ''Apakah artinya ibadah ini bagimu?'' maka ceritakanlah kepada mereka. Allah tidak sekadar menetapkan sebuah ritual; Ia mengantisipasi pertanyaan-pertanyaan yang akan ditimbulkannya pada generasi berikutnya dan memerintahkan agar pertanyaan-pertanyaan itu dijawab dengan penjelasan, bukan diabaikan. Ritual dan penceritaan kisah dirancang untuk bekerja bersama sejak semula.
+
+Ini menawarkan pola yang membantu bagi keluarga yang membangun tradisi tahun liturgi mereka sendiri. Karangan bunga Adven dengan lilin, ranting palem yang diselipkan di belakang salib, tampilan makam kosong saat Paskah, makanan khusus pada hari raya seorang santo — ritual-ritual kecil ini pasti akan memancing pertanyaan seorang anak: mengapa kita melakukan ini? Keluarga yang menyambut pertanyaan itu, alih-alih memperlakukannya sebagai gangguan, sedang mengikuti persis model yang Allah berikan kepada Israel: biarkan ritual memancing rasa ingin tahu, dan biarkan rasa ingin tahu itu menjadi pintu masuk untuk mengajar.
+
+Layak dicatat bahwa Allah tidak meminta Israel menjelaskan Paskah dengan sempurna atau secara mendalam. Instruksinya sederhana: ketika mereka bertanya, ceritakanlah kepada mereka. Orang tua tidak memerlukan pendidikan seminari untuk menjawab pertanyaan anak tentang mengapa lilin itu berwarna ungu minggu ini, atau mengapa keluarga berpuasa sebelum Paskah. Jawaban singkat dan jujur — ''lilin ini mengingatkan kita bahwa kita sedang menantikan Yesus, seperti Israel menantikan seorang juru selamat'' — sudah cukup untuk menanam benih. Ritual melakukan pekerjaan awal memancing keheranan; penjelasan sederhana dari orang tua melakukan pekerjaan mengarahkan keheranan itu kepada Allah.
+
+Saat engkau membangun atau melanjutkan tradisi tahun liturgi keluargamu, nantikanlah dan sambutlah pertanyaan-pertanyaan yang ditimbulkannya. Setiap ''mengapa kita melakukan ini?'' bukanlah gangguan dari tradisi itu — itu adalah tradisi yang bekerja persis seperti yang dirancang.',
+    'What small liturgical-year tradition could your family adopt this season that will naturally invite a child''s question ''why do we do this?''', 'Tradisi tahun liturgi kecil apa yang dapat diadopsi keluargamu musim ini, yang secara alami akan mengundang pertanyaan anak ''mengapa kita melakukan ini?''',
+    'Lord, give us both the rituals worth asking about and the words to answer simply and honestly when our children ask what they mean. Amen.', 'Tuhan, berikanlah kami ritual-ritual yang layak ditanyakan dan kata-kata untuk menjawab dengan sederhana dan jujur ketika anak-anak kami bertanya apa artinya. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Exodus 12:26-27', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Keluaran 12:26-27', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 4,
+    'This Is the Day the Lord Has Made', 'Inilah Hari yang Dijadikan TUHAN',
+    'The psalmist declares: this is the day the Lord has made; let us rejoice and be glad in it. Though written for a specific day of thanksgiving, this verse has become closely associated across Church history with Easter Sunday and, more broadly, with every Sunday, the ''little Easter'' that anchors the whole liturgical week. Each Sunday, whatever season of the Church year it falls within, carries this same command: rejoice, because this particular day belongs to God in a special way.
+
+This is a fitting note on which to close a plan about celebrating the liturgical year as a family, because it reminds us that the point of the whole calendar is not solemnity for its own sake, but rejoicing — rejoicing that takes different shapes across different seasons, quieter in Advent and Lent, exuberant in Christmas and Easter, but rejoicing nonetheless, because every season of the Church year ultimately points toward the same God who has made every day, and who is worth celebrating in each one.
+
+Families sometimes worry that building elaborate liturgical traditions will feel burdensome, one more set of obligations layered onto an already busy calendar. But the psalmist''s framing offers a corrective: this is not obligation, it is invitation to gladness. A family that lights an Advent candle, walks to Mass together, shares a special meal on a feast day, or simply pauses to name what season of the Church year it is, is not adding burden. It is practicing joy, together, on purpose, in a way that shapes children''s hearts to expect gladness as a normal part of faith.
+
+As you close this four-day plan, consider choosing just one or two small traditions to begin this year — not the whole calendar at once, but a starting point. Let your family''s year be marked by seasons of waiting and seasons of feasting, and let every one of those days, ordinary or extraordinary, be received the way the psalmist received his: as a day the Lord has made, worth rejoicing in, together.', 'Pemazmur menyatakan: inilah hari yang dijadikan TUHAN, marilah kita bersorak-sorak dan bersukacita di dalamnya. Meski ditulis untuk hari syukur tertentu, ayat ini telah menjadi terkait erat sepanjang sejarah Gereja dengan hari Minggu Paskah, dan secara lebih luas, dengan setiap hari Minggu, ''Paskah kecil'' yang menjadi poros seluruh minggu liturgi. Setiap hari Minggu, dalam musim tahun liturgi apa pun ia jatuh, membawa perintah yang sama ini: bersukacitalah, karena hari khusus ini secara istimewa adalah milik Allah.
+
+Ini adalah catatan penutup yang pas untuk sebuah rencana tentang merayakan tahun liturgi bersama keluarga, karena ia mengingatkan kita bahwa inti dari seluruh kalender bukanlah kekhidmatan demi kekhidmatan itu sendiri, melainkan sukacita — sukacita yang mengambil bentuk berbeda di berbagai musim, lebih tenang saat Adven dan Prapaskah, meluap saat Natal dan Paskah, namun tetap sukacita, karena setiap musim tahun liturgi pada akhirnya menunjuk kepada Allah yang sama, yang telah menjadikan setiap hari, dan yang layak dirayakan di dalam masing-masingnya.
+
+Keluarga kadang khawatir bahwa membangun tradisi liturgi yang rumit akan terasa membebani, satu lagi rangkaian kewajiban yang ditambahkan ke kalender yang sudah sibuk. Namun kerangka pemazmur menawarkan koreksi: ini bukan kewajiban, ini undangan menuju sukacita. Keluarga yang menyalakan lilin Adven, berjalan bersama ke Misa, berbagi santapan khusus pada hari raya, atau sekadar berhenti sejenak untuk menyebutkan musim tahun liturgi apa yang sedang berlangsung, tidak sedang menambah beban. Mereka sedang mempraktikkan sukacita, bersama-sama, dengan sengaja, dengan cara yang membentuk hati anak-anak untuk mengharapkan kegembiraan sebagai bagian normal dari iman.
+
+Saat engkau menutup rencana empat hari ini, pertimbangkanlah untuk memilih hanya satu atau dua tradisi kecil untuk dimulai tahun ini — bukan seluruh kalender sekaligus, melainkan sebuah titik awal. Biarlah tahun keluargamu ditandai oleh musim penantian dan musim perayaan, dan biarlah setiap hari itu, biasa maupun istimewa, diterima sebagaimana pemazmur menerimanya: sebagai hari yang dijadikan TUHAN, layak disambut dengan sukacita, bersama-sama.',
+    'What one liturgical-year tradition will your family begin this season, in a spirit of joy rather than obligation?', 'Tradisi tahun liturgi apa yang akan dimulai keluargamu musim ini, dalam semangat sukacita, bukan kewajiban?',
+    'Lord, thank you for the rhythm of the Church year, for every season of waiting and every season of feast. Teach our family to rejoice in each day you have made, together, for years to come. Amen.', 'Tuhan, terima kasih atas ritme tahun Gereja, atas setiap musim penantian dan setiap musim perayaan. Ajarilah keluarga kami bersukacita dalam setiap hari yang Engkau jadikan, bersama-sama, untuk tahun-tahun mendatang. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 118:24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 118:24', 'TB', 1);
+
+  -- Plan: The Faith Our Grandparents Kept
+  INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
+  VALUES (
+    v_cat_id,
+    'The Faith Our Grandparents Kept',
+    'Iman yang Dipelihara oleh Kakek Nenek Kita',
+    'Three days honoring the spiritual legacy handed down before us',
+    'Tiga hari menghormati warisan rohani yang diwariskan sebelum kita',
+    3,
+    'Behind almost every believer stands someone whose quiet, persistent faith made theirs possible — a grandparent, an ancestor, a family elder whose prayers were said in a language or a decade we may never fully know. This three-day plan honors that unseen legacy, drawing on the witness of the great cloud of faithful ones who came before, and asks what it means to receive their inheritance well and to become that same kind of ancestor for those still to come.',
+    'Di balik hampir setiap orang percaya berdiri seseorang yang iman tenang dan teguhnya membuat iman kita mungkin ada — seorang kakek atau nenek, seorang leluhur, seorang tetua keluarga yang doa-doanya diucapkan dalam bahasa atau zaman yang mungkin tidak pernah sepenuhnya kita ketahui. Rencana tiga hari ini menghormati warisan yang tak terlihat itu, mengambil kesaksian dari awan besar saksi-saksi iman yang mendahului kita, dan bertanya apa artinya menerima warisan mereka dengan baik dan menjadi leluhur semacam itu bagi mereka yang akan datang.',
+    '/images/devotions/the-faith-our-grandparents-kept.jpeg'
+  ) RETURNING id INTO v_plan_id;
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 1,
+    'Faith Is the Assurance of What Was Handed Down', 'Iman adalah Dasar dari Apa yang Diwariskan',
+    'The letter to the Hebrews famously defines faith as confidence in what we hope for and assurance about what we do not see. That definition is often applied to belief in unseen spiritual realities like heaven or grace, but it applies just as fittingly to family legacy. Many of us hold a faith we did not personally build from nothing — we hold assurance about a grandparent''s or ancestor''s devotion that we did not witness firsthand, based only on what was told to us, or what we sensed in the quiet dignity of how they lived.
+
+Think of the elders in your own family line: perhaps a grandmother who prayed a rosary every evening in a chair by the window, a grandfather who never missed Mass despite a hard, laboring life, a great-grandparent whose name is barely remembered but whose faith, somehow, made its way down to you anyway. Much of what we know about their devotion arrives secondhand — a story told at a funeral, a worn prayer book found in a drawer, a habit a parent picked up and passed along without ever explaining where it came from. And yet that unseen faith is no less real for being unseen by us. It is, in the language of Hebrews, part of the assurance we now carry.
+
+This ought to inspire a certain humility. Whatever faith you practice today did not spring up in a vacuum. It arrived through a chain of people, some remembered fondly, some barely remembered at all, whose faithfulness — often unglamorous, often unrecorded — made a path for yours. Faith, understood this way, is never a purely individual achievement. It is inherited ground, cultivated by hands we may never have shaken.
+
+Today, take a few quiet moments to consider the ancestors of your faith, whether by blood or by spiritual adoption in the Church. What do you know, or sense, about their devotion? However fragmentary the record, let it become part of the assurance Hebrews describes — evidence of grace at work long before you arrived.', 'Surat kepada orang Ibrani secara terkenal mendefinisikan iman sebagai dasar dari segala sesuatu yang kita harapkan dan bukti dari segala sesuatu yang tidak kita lihat. Definisi itu sering diterapkan pada kepercayaan akan realitas rohani yang tak terlihat seperti surga atau rahmat, tetapi berlaku sama tepatnya bagi warisan keluarga. Banyak dari kita memegang iman yang tidak kita bangun sendiri dari nol — kita memegang keyakinan tentang kesalehan seorang kakek-nenek atau leluhur yang tidak kita saksikan secara langsung, hanya berdasarkan apa yang diceritakan kepada kita, atau apa yang kita rasakan dalam martabat tenang cara mereka hidup.
+
+Pikirkanlah para tetua dalam garis keluargamu sendiri: mungkin seorang nenek yang mendaraskan rosario setiap malam di kursi dekat jendela, seorang kakek yang tidak pernah melewatkan Misa meski hidup keras dan penuh kerja berat, seorang buyut yang namanya nyaris tidak diingat tetapi imannya, entah bagaimana, tetap sampai kepadamu juga. Sebagian besar dari apa yang kita ketahui tentang kesalehan mereka tiba secara tidak langsung — kisah yang diceritakan di pemakaman, buku doa usang yang ditemukan di laci, kebiasaan yang diambil seorang orang tua dan diwariskan tanpa pernah menjelaskan asal-usulnya. Namun iman yang tak terlihat itu tidak kalah nyatanya karena tak terlihat oleh kita. Ia adalah, dalam bahasa surat Ibrani, bagian dari dasar keyakinan yang kini kita bawa.
+
+Ini seharusnya menginspirasi kerendahan hati tertentu. Iman apa pun yang kau praktikkan hari ini tidak muncul begitu saja dari kekosongan. Ia tiba melalui rantai orang-orang, sebagian dikenang dengan hangat, sebagian nyaris tidak dikenang sama sekali, yang kesetiaannya — sering kali tidak mencolok, sering kali tidak tercatat — membuka jalan bagi imanmu. Iman, jika dipahami dengan cara ini, tidak pernah menjadi pencapaian yang murni individual. Ia adalah tanah warisan, diolah oleh tangan-tangan yang mungkin tidak pernah kita jabat.
+
+Hari ini, luangkanlah beberapa saat hening untuk merenungkan para leluhur imanmu, baik melalui darah maupun melalui pengangkatan rohani dalam Gereja. Apa yang kau ketahui, atau rasakan, tentang kesalehan mereka? Sefragmentaris apa pun catatannya, biarlah itu menjadi bagian dari dasar keyakinan yang digambarkan surat Ibrani — bukti rahmat yang bekerja jauh sebelum engkau tiba.',
+    'Who in your family''s past carried a faith you never witnessed directly, but that you still somehow carry today?', 'Siapa dalam masa lalu keluargamu yang membawa iman yang tidak pernah kau saksikan langsung, namun entah bagaimana masih kau bawa hari ini?',
+    'Lord, thank you for the unseen faith of those who came before me. Let their hidden faithfulness become visible fruit in how I live today. Amen.', 'Tuhan, terima kasih untuk iman yang tak terlihat dari mereka yang datang sebelumku. Biarlah kesetiaan mereka yang tersembunyi menjadi buah yang tampak dalam cara aku hidup hari ini. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 11:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 11:1', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 2,
+    'Declaring His Power to Every Generation to Come', 'Memberitakan Kuasa-Nya kepada Generasi yang Akan Datang',
+    'The psalmist prays: even when I am old and gray, do not forsake me, my God, till I declare your power to the next generation, your mighty acts to all who are to come. This is a prayer for longevity with a specific purpose — not simply to live long, but to live long enough to finish the work of testimony, to make sure the generation coming behind has heard what God has done. It is a prayer many grandparents and elders, whether they use these exact words or not, pray in their own way as they age.
+
+There is something moving about imagining your own grandparents or ancestors praying some version of this prayer, even if they never said it aloud. An aging believer who keeps attending Mass despite failing health, who keeps a rosary within reach despite arthritic hands, who keeps mentioning God''s faithfulness at family gatherings even when younger relatives seem distracted — this person may be living out exactly what the psalmist asked for: not forsaken, still declaring, even in old age, so that the next generation hears.
+
+It is worth considering how this prayer might apply to your own life, regardless of your current age. Declaring God''s power to the next generation is not a task reserved for the very old; it begins whenever there is a younger person watching. But there is a particular poignancy to elders who continue this declaration even as their bodies weaken, as though the mission itself outlasts their strength — a final act of generosity toward descendants some of them will never meet.
+
+Take today to honor, in memory or in person, an elder in your family whose faith continued to declare itself even in later years. If they are still living, consider telling them what their witness has meant. If they have passed, consider how their declaration still echoes in choices you make today.', 'Pemazmur berdoa: bahkan pada masa tuaku, ketika rambutku telah putih, ya Allah, janganlah meninggalkan aku, sampai aku memberitakan kuasa-Mu kepada angkatan ini, keperkasaan-Mu kepada semua orang yang akan datang. Ini adalah doa untuk umur panjang dengan tujuan khusus — bukan sekadar hidup lama, melainkan hidup cukup lama untuk menyelesaikan tugas kesaksian, untuk memastikan generasi yang datang setelahnya telah mendengar apa yang telah Allah lakukan. Ini adalah doa yang dipanjatkan banyak kakek-nenek dan tetua, entah dengan kata-kata yang persis sama atau tidak, dengan cara mereka sendiri seiring bertambahnya usia.
+
+Ada sesuatu yang menyentuh dalam membayangkan kakek-nenek atau leluhurmu sendiri mendoakan semacam doa ini, bahkan jika mereka tidak pernah mengucapkannya dengan lantang. Seorang beriman lanjut usia yang terus menghadiri Misa meski kesehatannya memburuk, yang terus menyimpan rosario dalam jangkauan meski tangannya kaku karena radang sendi, yang terus menyebutkan kesetiaan Allah dalam pertemuan keluarga bahkan ketika kerabat yang lebih muda tampak teralihkan — orang ini mungkin sedang menghidupi persis apa yang diminta pemazmur: tidak ditinggalkan, terus memberitakan, bahkan di usia tua, agar generasi berikutnya mendengar.
+
+Layak dipertimbangkan bagaimana doa ini dapat berlaku bagi hidupmu sendiri, terlepas dari usiamu saat ini. Memberitakan kuasa Allah kepada generasi berikutnya bukanlah tugas yang disediakan hanya bagi yang sangat tua; itu dimulai kapan pun ada orang yang lebih muda sedang memperhatikan. Namun ada kepedihan tersendiri pada para tetua yang terus melanjutkan pemberitaan ini bahkan saat tubuh mereka melemah, seolah misi itu sendiri bertahan lebih lama dari kekuatan mereka — sebuah tindakan kemurahan hati terakhir bagi keturunan yang sebagian dari mereka tidak akan pernah temui.
+
+Luangkan hari ini untuk menghormati, dalam kenangan atau secara langsung, seorang tetua dalam keluargamu yang imannya terus memberitakan diri bahkan di tahun-tahun berikutnya. Jika mereka masih hidup, pertimbangkanlah untuk memberi tahu mereka apa arti kesaksian mereka. Jika mereka telah wafat, pertimbangkanlah bagaimana pemberitaan mereka masih bergema dalam pilihan-pilihan yang kau buat hari ini.',
+    'Which elder in your life continued declaring God''s faithfulness even as their strength faded, and what did that teach you?', 'Tetua mana dalam hidupmu yang terus memberitakan kesetiaan Allah bahkan saat kekuatannya memudar, dan apa yang diajarkannya kepadamu?',
+    'Lord, do not let me be silent as I grow older. Give me the strength, whatever my age, to keep declaring your goodness to the ones who come after me. Amen.', 'Tuhan, jangan biarkan aku berdiam diri seiring bertambahnya usiaku. Berikanlah aku kekuatan, berapa pun usiaku, untuk terus memberitakan kebaikan-Mu kepada mereka yang datang setelahku. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 71:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 71:18', 'TB', 1);
+
+  INSERT INTO public.devotion_plan_days (
+    plan_id, day_number, 
+    devotional_title, devotional_title_id,
+    devotional_content, devotional_content_id,
+    reflection, reflection_id,
+    prayer, prayer_id
+  ) VALUES (
+    v_plan_id, 3,
+    'Where You Go, I Will Go', 'Ke Mana Engkau Pergi, Di Situ Juga Aku Pergi',
+    'Few passages in Scripture capture the choice to receive an inherited faith as movingly as Ruth''s words to her mother-in-law Naomi: where you go I will go, and where you stay I will stay. Your people will be my people and your God my God. Ruth was not born into the faith of Israel; she encountered it entirely through the witness of her husband''s family, and most of all through Naomi, an older woman whose own faith remained steady even through the loss of her husband and both her sons. When Ruth had every reason and every permission to return to her own people and gods, she chose instead to bind herself to Naomi''s God.
+
+This is worth remembering because it reframes what receiving a spiritual legacy actually requires: choice. A legacy of faith is not passed on automatically, like eye color or a surname. It is offered by one generation and it must be received, actively and freely, by the next. Naomi could not force her faith onto Ruth. She could only live it faithfully enough, even in grief, that Ruth found it worth choosing for herself.
+
+Every one of us who has inherited faith from grandparents or ancestors stands, in some sense, in Ruth''s position. We were shown a God through the witness of someone who came before us, and at some point — whether in a dramatic moment or through a slow accumulation of ordinary days — we had to decide whether their God would become our God too, or whether we would return, so to speak, to our own people and our own path. Receiving an inheritance well means recognizing it was a gift and not a birthright automatically owed, and then choosing it deliberately, the way Ruth chose Naomi''s God on the road to Bethlehem.
+
+As this three-day plan closes, consider both directions of Ruth''s story. First, whose God has become your God because of a faithful witness who came before you — and have you ever thanked them, in prayer or in person? Second, who is watching your own faith right now, wondering whether it is real enough, steady enough, to be worth choosing for themselves? The legacy of faith travels only as far as the next person''s willing ''yes.'' May yours, received with gratitude, be given onward with the same open hands it was given to you.', 'Sedikit sekali bagian Kitab Suci yang menangkap pilihan untuk menerima iman yang diwariskan dengan begitu menyentuh seperti kata-kata Rut kepada mertuanya, Naomi: ke mana engkau pergi, ke situ jugalah aku pergi, dan di mana engkau bermalam, di situ jugalah aku bermalam. Bangsamulah bangsaku dan Allahmulah Allahku. Rut tidak terlahir dalam iman Israel; ia menjumpainya sepenuhnya melalui kesaksian keluarga suaminya, dan terutama melalui Naomi, seorang wanita yang lebih tua yang imannya sendiri tetap teguh bahkan melalui kehilangan suaminya dan kedua putranya. Ketika Rut memiliki segala alasan dan izin untuk kembali kepada bangsa dan allah-allahnya sendiri, ia justru memilih untuk mengikatkan dirinya kepada Allah Naomi.
+
+Ini layak diingat karena membingkai ulang apa yang sebenarnya dibutuhkan untuk menerima warisan rohani: pilihan. Warisan iman tidak diwariskan secara otomatis, seperti warna mata atau nama keluarga. Ia ditawarkan oleh satu generasi dan harus diterima, secara aktif dan bebas, oleh generasi berikutnya. Naomi tidak dapat memaksakan imannya kepada Rut. Ia hanya dapat menghidupinya dengan cukup setia, bahkan dalam dukacita, sehingga Rut menemukan bahwa itu layak dipilihnya sendiri.
+
+Setiap dari kita yang telah mewarisi iman dari kakek-nenek atau leluhur berdiri, dalam arti tertentu, di posisi Rut. Kita ditunjukkan seorang Allah melalui kesaksian seseorang yang datang sebelum kita, dan pada suatu titik — entah dalam momen dramatis atau melalui akumulasi lambat hari-hari yang biasa — kita harus memutuskan apakah Allah mereka akan menjadi Allah kita juga, atau apakah kita akan kembali, bisa dikatakan, kepada bangsa dan jalan kita sendiri. Menerima warisan dengan baik berarti menyadari bahwa itu adalah hadiah, bukan hak lahir yang otomatis terutang, dan kemudian memilihnya dengan sengaja, sebagaimana Rut memilih Allah Naomi di jalan menuju Betlehem.
+
+Saat rencana tiga hari ini ditutup, pertimbangkanlah kedua arah kisah Rut. Pertama, Allah siapakah yang telah menjadi Allahmu karena kesaksian setia seseorang yang datang sebelummu — dan apakah engkau pernah berterima kasih kepada mereka, dalam doa atau secara langsung? Kedua, siapakah yang sedang memperhatikan imanmu sendiri sekarang, bertanya-tanya apakah itu cukup nyata, cukup teguh, untuk layak dipilih bagi diri mereka sendiri? Warisan iman hanya berjalan sejauh ''ya'' yang bersedia dari orang berikutnya. Semoga imanmu, yang diterima dengan syukur, diberikan kembali ke depan dengan tangan terbuka yang sama seperti saat diberikan kepadamu.',
+    'Whose faith did you have to choose to make your own, and who might be watching to see whether they should choose yours?', 'Iman siapakah yang harus kau pilih untuk menjadi imanmu sendiri, dan siapa yang mungkin sedang memperhatikan untuk melihat apakah mereka harus memilih imanmu?',
+    'Lord, thank you for the faithful witnesses who showed me your face before I could see it for myself. Let my own life be that kind of witness to someone still watching. Amen.', 'Tuhan, terima kasih untuk saksi-saksi setia yang menunjukkan wajah-Mu kepadaku sebelum aku dapat melihatnya sendiri. Biarlah hidupku sendiri menjadi kesaksian semacam itu bagi seseorang yang masih memperhatikan. Amin.'
+  ) RETURNING id INTO v_day_id;
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ruth 1:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Rut 1:16', 'TB', 1);
 
 END $$;

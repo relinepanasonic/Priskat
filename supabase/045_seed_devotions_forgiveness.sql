@@ -5,23 +5,23 @@
 
 DO $$
 DECLARE
-  v_forgiveness_id UUID;
+  v_category_id UUID;
   v_cat_id UUID;
   v_plan_id UUID;
   v_day_id UUID;
 BEGIN
   -- Top-level category ------------------------------------------------------
-  SELECT id INTO v_forgiveness_id FROM public.devotion_categories
+  SELECT id INTO v_category_id FROM public.devotion_categories
     WHERE name = 'Forgiveness' AND parent_id IS NULL
     ORDER BY created_at ASC
     LIMIT 1;
-  IF v_forgiveness_id IS NULL THEN
+  IF v_category_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
       VALUES ('Forgiveness', 'Pengampunan', NULL)
-      RETURNING id INTO v_forgiveness_id;
+      RETURNING id INTO v_category_id;
   ELSE
     UPDATE public.devotion_categories SET name_id = 'Pengampunan'
-      WHERE id = v_forgiveness_id;
+      WHERE id = v_category_id;
   END IF;
 
   DELETE FROM public.devotion_plans WHERE title = 'Letting Go of the Grudge';
@@ -40,12 +40,12 @@ BEGIN
 
   -- Sub-category: Forgiving Others --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Forgiving Others' AND parent_id = v_forgiveness_id
+    WHERE name = 'Forgiving Others' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Forgiving Others', 'Mengampuni Orang Lain', v_forgiveness_id)
+      VALUES ('Forgiving Others', 'Mengampuni Orang Lain', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
     UPDATE public.devotion_categories SET name_id = 'Mengampuni Orang Lain'
@@ -91,12 +91,8 @@ Jika hari ini engkau sedang memikul sesuatu, biarlah ini menjadi izin untuk meny
     'Naming a hurt honestly is not the opposite of forgiveness — it is often the first step toward it.', 'Menyebut luka dengan jujur bukanlah lawan dari pengampunan — seringkali itu justru langkah pertama menuju ke sana.',
     'Lord, You see the weight I have been carrying. I bring it to You honestly today, without pretending it doesn''t hurt. Begin in me what You began in Joseph — a heart willing, in time, to let the wound stop writing the story. Amen.', 'Tuhan, Engkau melihat beban yang selama ini kupikul. Hari ini aku membawanya kepada-Mu dengan jujur, tanpa berpura-pura bahwa itu tidak menyakitkan. Mulailah dalam diriku apa yang Engkau mulai dalam Yusuf — hati yang mau, pada waktunya, membiarkan luka itu berhenti menulis kisahku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Genesis 50:20', 'WEB', 'You intended to harm me, but God intended it for good to accomplish what is now being done, the saving of many lives.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Kejadian 50:20', 'TB', 'Memang kamu telah mereka-rekakan yang jahat terhadap aku, tetapi Allah telah mereka-rekakannya untuk kebaikan, dengan maksud melakukan seperti yang terjadi sekarang ini, yaitu memelihara hidup suatu bangsa yang besar.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 50:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 50:20', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -123,12 +119,8 @@ Pikirkanlah orang yang pengkhianatannya masih membebani engkau sekarang. Engkau 
     'Forgiveness is rarely one decision — it is many small ones, repeated for as long as the memory resurfaces.', 'Pengampunan jarang berupa satu keputusan — melainkan banyak keputusan kecil, diulang selama ingatan itu masih muncul kembali.',
     'Jesus, teach me that forgiving again is not failure but faithfulness. When the old hurt resurfaces, meet me there and give me strength to choose release one more time. Amen.', 'Yesus, ajarilah aku bahwa mengampuni lagi bukanlah kegagalan melainkan kesetiaan. Ketika luka lama muncul kembali, temuilah aku di sana dan berilah aku kekuatan untuk sekali lagi memilih melepaskan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 18:21-22', 'WEB', 'Then Peter came to Jesus and asked, "Lord, how many times shall I forgive my brother or sister who sins against me? Up to seven times?" Jesus answered, "I tell you, not seven times, but seventy-seven times."');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 18:21-22', 'TB', 'Maka datanglah Petrus dan berkata kepada Yesus: "Tuhan, sampai berapa kali aku harus mengampuni saudaraku jika ia berbuat dosa terhadap aku? Sampai tujuh kali?" Yesus berkata kepadanya: "Bukan! Aku berkata kepadamu: Bukan sampai tujuh kali, melainkan sampai tujuh puluh kali tujuh kali."');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 18:21-22', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 18:21-22', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -155,12 +147,8 @@ Saat tiga hari ini berakhir, anggaplah ini sebagai permulaan, bukan garis akhir.
     'Forgiving as the Lord forgave you does not mean pretending nothing happened — it means releasing the debt without waiting to be repaid.', 'Mengampuni sebagaimana Tuhan telah mengampuni bukan berarti berpura-pura tak ada yang terjadi — melainkan melepaskan utang tanpa menunggu dibayar kembali.',
     'Father, thank You for forgiving me long before I deserved it. Help me extend that same undeserved grace to the one who hurt me, not because they''ve earned it, but because You first gave it to me. Set my hands open, Lord. Amen.', 'Bapa, terima kasih karena telah mengampuniku jauh sebelum aku layak menerimanya. Tolonglah aku memberikan anugerah yang sama, yang tidak layak diterima, kepada orang yang menyakitiku, bukan karena ia pantas mendapatkannya, tetapi karena Engkau lebih dulu memberikannya kepadaku. Bukalah tanganku, Tuhan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Colossians 3:13', 'WEB', 'Bear with each other and forgive one another if any of you has a grievance against someone. Forgive as the Lord forgave you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Kolose 3:13', 'TB', 'Sabarlah kamu seorang terhadap yang lain, dan ampunilah seorang akan yang lain apabila yang seorang menaruh dendam terhadap yang lain, sama seperti Tuhan telah mengampuni kamu, kamu perlu juga saling mengampuni.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:13', 'TB', 1);
 
   -- Plan: Forgiveness as a Daily Choice
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -201,12 +189,8 @@ Minggu ini, alih-alih bertanya "apakah aku sudah mengampuninya?" cobalah bertany
     'Ask not whether you''ve fully forgiven, but whether you''re willing to choose forgiveness again today.', 'Jangan bertanya apakah engkau sudah sepenuhnya mengampuni, melainkan apakah engkau bersedia memilih pengampunan lagi hari ini.',
     'Father, give me my daily bread and my daily willingness to forgive. I don''t need to resolve everything today — just help me open my hands one more time. Amen.', 'Bapa, berikanlah aku roti harianku dan kesediaan harianku untuk mengampuni. Aku tidak perlu menyelesaikan semuanya hari ini — tolong bantu aku membuka tanganku sekali lagi. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 6:14-15', 'WEB', 'For if you forgive other people when they sin against you, your heavenly Father will also forgive you. But if you do not forgive others their sins, your Father will not forgive your sins.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 6:14-15', 'TB', 'Karena jikalau kamu mengampuni kesalahan orang, Bapamu yang di sorga akan mengampuni kamu juga. Tetapi jikalau kamu tidak mengampuni orang, Bapamu juga tidak akan mengampuni kesalahanmu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 6:14-15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 6:14-15', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -233,12 +217,8 @@ Hari ini, jika ada utang yang relatif kecil yang dimiliki seseorang kepadamu —
     'Before demanding what''s owed to you, remember what was already forgiven in you.', 'Sebelum menuntut apa yang menjadi hakmu, ingatlah apa yang telah diampunkan dalam dirimu.',
     'Lord, You have canceled debts in me I could never have repaid. Keep that mercy fresh in my memory today, so it softens the way I treat the smaller debts owed to me. Amen.', 'Tuhan, Engkau telah menghapuskan utang-utang dalam diriku yang tidak akan pernah bisa kulunasi. Jagalah belas kasihan itu tetap segar dalam ingatanku hari ini, agar itu melembutkan caraku memperlakukan utang-utang kecil yang dimiliki orang lain kepadaku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 18:32-33', 'WEB', 'Then the master called the servant in. "You wicked servant," he said, "I canceled all that debt of yours because you begged me to. Shouldn''t you have had mercy on your fellow servant just as I had on you?"');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 18:32-33', 'TB', 'Lalu raja itu memanggil orang itu menghadap dan berkata kepadanya: Hai hamba yang jahat, seluruh utangmu telah kuhapuskan karena engkau memohonkannya kepadaku. Bukankah engkaupun harus mengasihani kawanmu seperti aku telah mengasihani engkau?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 18:32-33', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 18:32-33', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -265,12 +245,8 @@ Hari ini, jika amarah kembali muncul tentang luka lama, jangan buru-buru menghak
     'Withholding repayment isn''t pretending no wrong was done — it is choosing mercy the way God chooses it toward you.', 'Menahan pembalasan bukan berarti berpura-pura tak ada yang salah — itu adalah memilih belas kasihan sebagaimana Allah memilihnya bagi kita.',
     'Compassionate God, teach me Your slowness. When anger rises in me, let it not rush to repay, but soften, over time, into the same mercy You have shown me. Amen.', 'Allah yang penyayang, ajarilah aku kesabaran-Mu. Ketika amarah bangkit dalam diriku, biarlah itu tidak buru-buru membalas, melainkan melembut, seiring waktu, menjadi belas kasihan yang sama seperti yang telah Engkau tunjukkan kepadaku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 103:8-10', 'WEB', 'The Lord is compassionate and gracious, slow to anger, abounding in love. He does not treat us as our sins deserve or repay us according to our iniquities.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 103:8-10', 'TB', 'TUHAN adalah penyayang dan pengasih, panjang sabar dan berlimpah kasih setia. Tidak selalu Ia menuntut, dan tidak untuk selama-lamanya Ia mendendam. Tidak dilakukan-Nya kepada kita setimpal dengan dosa kita, dan tidak dibalas-Nya kepada kita setimpal dengan kesalahan kita.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 103:8-10', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 103:8-10', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -297,12 +273,8 @@ Hari ini, perhatikanlah pelanggaran-pelanggaran kecil yang datang kepadamu — d
     'Not every offense needs to become a story you carry — some are meant to be released before they even fully land.', 'Tidak setiap pelanggaran perlu menjadi kisah yang kau bawa terus — sebagian memang dimaksudkan untuk dilepaskan bahkan sebelum benar-benar mendarat.',
     'Lord, give me the wisdom to overlook the small offenses of daily life, so that patience becomes my habit rather than my exception. Amen.', 'Tuhan, berikanlah aku kebijaksanaan untuk melupakan pelanggaran-pelanggaran kecil dalam hidup sehari-hari, agar kesabaran menjadi kebiasaanku, bukan pengecualianku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Proverbs 19:11', 'WEB', 'A person''s wisdom yields patience; it is to one''s glory to overlook an offense.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Amsal 19:11', 'TB', 'Akal budi membuat seseorang panjang sabar, dan orang itu dipuji karena melupakan pelanggaran.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 19:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 19:11', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -329,12 +301,8 @@ Jika hari ini engkau lelah karena mengampuni luka yang sama berulang kali, engka
     'The weariness of forgiving again and again is not failure — it is the exact place Paul promises a harvest is still coming.', 'Kelelahan karena mengampuni berulang kali bukanlah kegagalan — itu justru tepat di tempat Paulus menjanjikan panen yang masih akan datang.',
     'Lord, I am tired of forgiving the same hurt again and again. Renew my strength today and remind me that the harvest is still coming, even when I cannot see it. Amen.', 'Tuhan, aku lelah mengampuni luka yang sama berulang kali. Perbaruilah kekuatanku hari ini dan ingatkanlah aku bahwa panen itu masih akan datang, meski aku belum bisa melihatnya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Galatians 6:9', 'WEB', 'Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Galatia 6:9', 'TB', 'Janganlah kita jemu-jemu berbuat baik, karena apabila kita tidak menjadi lemah, kita akan menuai pada waktunya.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatians 6:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Galatia 6:9', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -361,12 +329,8 @@ Hari ini, pertimbangkanlah apakah ada buku besar yang selama ini kau simpan tent
     'Wisdom remembers a pattern for safety''s sake; a grudge replays it to justify resentment. Know the difference, and close the ledger.', 'Kebijaksanaan mengingat sebuah pola demi keselamatan; dendam memutarnya ulang untuk membenarkan kebencian. Kenalilah bedanya, dan tutuplah buku besarnya.',
     'Lord, show me the ledgers I''ve been keeping without realizing it. Give me a love that keeps no record of wrongs, the way Your love keeps none of mine. Amen.', 'Tuhan, tunjukkanlah kepadaku buku besar yang selama ini kusimpan tanpa kusadari. Berikanlah aku kasih yang tidak menyimpan kesalahan, sebagaimana kasih-Mu tidak menyimpan kesalahanku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Corinthians 13:4-5', 'WEB', 'Love is patient, love is kind. It does not envy, it does not boast, it is not proud. It does not dishonor others, it is not self-seeking, it is not easily angered, it keeps no record of wrongs.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Korintus 13:4-5', 'TB', 'Kasih itu sabar; kasih itu murah hati; ia tidak cemburu. Ia tidak memegahkan diri dan tidak sombong. Ia tidak melakukan yang tidak sopan dan tidak mencari keuntungan diri sendiri. Ia tidak pemarah dan tidak menyimpan kesalahan orang lain.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Corinthians 13:4-5', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Korintus 13:4-5', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -393,12 +357,8 @@ Saat minggu ini berakhir, jangan ukur keberhasilanmu dari apakah luka itu telah 
     'Success in forgiveness isn''t the wound''s disappearance — it''s still facing forward, choosing today, once again, to press on.', 'Keberhasilan dalam mengampuni bukanlah lenyapnya luka — melainkan tetap menghadap ke depan, memilih hari ini, sekali lagi, untuk terus maju.',
     'Lord, like Paul, I have not arrived. Keep me straining toward what''s ahead, choosing forgiveness daily, facing forward until the day this practice becomes freedom fully realized. Amen.', 'Tuhan, seperti Paulus, aku belum sampai. Jagalah aku tetap mengarahkan diri kepada apa yang di hadapan, memilih pengampunan setiap hari, menghadap ke depan hingga hari ketika praktik ini menjadi kebebasan yang sepenuhnya terwujud. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 3:13-14', 'WEB', 'Brothers and sisters, I do not consider myself yet to have taken hold of it. But one thing I do: Forgetting what is behind and straining toward what is ahead, I press on toward the goal to win the prize for which God has called me heavenward in Christ Jesus.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 3:13-14', 'TB', 'Saudara-saudara, aku sendiri tidak menganggap, bahwa aku telah menangkapnya, tetapi ini yang kubuat: aku melupakan apa yang telah di belakangku dan mengarahkan diri kepada apa yang di hadapanku, dan berlari-lari kepada tujuan untuk memperoleh hadiah dari panggilan sorgawi Allah dalam Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 3:13-14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 3:13-14', 'TB', 1);
 
   -- Plan: When They Never Say Sorry
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -439,12 +399,8 @@ Ini tidak berarti kesalahan itu bukan kesalahan, atau bahwa apa yang terjadi kep
     'Forgiveness was never contingent on the other person''s apology — it was always something you could offer alone.', 'Pengampunan tidak pernah bergantung pada permintaan maaf orang lain — itu selalu menjadi sesuatu yang bisa kau tawarkan sendirian.',
     'Lord Jesus, You forgave from the cross without waiting for remorse. Teach me that same freedom — that I do not need an apology I may never receive to begin letting go. Amen.', 'Tuhan Yesus, Engkau mengampuni dari kayu salib tanpa menunggu penyesalan. Ajarilah aku kebebasan yang sama — bahwa aku tidak membutuhkan permintaan maaf yang mungkin tidak akan pernah kuterima untuk mulai melepaskan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Luke 23:34', 'WEB', 'Jesus said, "Father, forgive them, for they do not know what they are doing." And they divided up his clothes by casting lots.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lukas 23:34', 'TB', 'Yesus berkata: "Ya Bapa, ampunilah mereka, sebab mereka tidak tahu apa yang mereka perbuat." Dan mereka membuang undi untuk membagi pakaian-Nya.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 23:34', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 23:34', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -471,12 +427,8 @@ Hari ini, pertimbangkanlah apa artinya menyerahkan sepenuhnya perkara orang ini 
     'Releasing someone isn''t declaring their actions acceptable — it''s admitting you were never the right judge, and handing the verdict to the One who is.', 'Melepaskan seseorang bukan berarti menyatakan tindakannya bisa diterima — itu adalah mengakui bahwa engkau bukan hakim yang tepat, dan menyerahkan putusannya kepada Dia yang layak.',
     'Father, I hand over what I cannot fairly judge. Take this account off my shoulders and give me the freedom that comes from trusting Your justice instead of my own. Amen.', 'Bapa, aku menyerahkan apa yang tidak bisa kuhakimi dengan adil. Ambillah perkara ini dari pundakku dan berikan aku kebebasan yang datang dari mempercayai keadilan-Mu, bukan keadilanku sendiri. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 12:19', 'WEB', 'Do not take revenge, my dear friends, but leave room for God''s wrath, for it is written: "It is mine to avenge; I will repay," says the Lord.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 12:19', 'TB', 'Saudara-saudaraku yang kekasih, janganlah kamu sendiri menuntut pembalasan, tetapi berilah tempat kepada murka Allah, sebab ada tertulis: Pembalasan itu adalah hak-Ku. Akulah yang akan menuntut pembalasan, firman Tuhan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:19', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -503,12 +455,8 @@ Hari ini, tanyakan dengan jujur apakah kepahitan terhadap orang ini telah mulai 
     'Left unaddressed, bitterness rarely stays contained to the person who caused it — it slowly colors everything else.', 'Jika dibiarkan, kepahitan jarang tetap terbatas pada orang yang menyebabkannya — perlahan ia mewarnai segala sesuatu yang lain.',
     'Lord, show me where bitterness has quietly settled in me. Help me get rid of it, not because the wrong didn''t matter, but because I was never meant to carry it forever. Amen.', 'Tuhan, tunjukkanlah kepadaku di mana kepahitan telah diam-diam menetap dalam diriku. Tolonglah aku membuangnya, bukan karena kesalahan itu tidak penting, tetapi karena aku tidak pernah dimaksudkan untuk memikulnya selamanya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ephesians 4:31-32', 'WEB', 'Get rid of all bitterness, rage and anger, brawling and slander, along with every form of malice. Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Efesus 4:31-32', 'TB', 'Segala kepahitan, kegeraman, kemarahan, pertikaian dan fitnah hendaklah dibuang dari antara kamu, demikian pula segala kejahatan. Tetapi hendaklah kamu ramah seorang terhadap yang lain, penuh kasih mesra dan saling mengampuni, sebagaimana Allah di dalam Kristus telah mengampuni kamu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:31-32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:31-32', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -535,12 +483,8 @@ Hari ini, cobalah ini secara harfiah. Lain kali engkau berdoa, sebelum meminta h
     'Forgiveness can happen entirely in prayer, entirely in your own heart before God — no apology, and no other party, required.', 'Pengampunan bisa terjadi sepenuhnya dalam doa, sepenuhnya di dalam hatimu sendiri di hadapan Allah — tanpa perlu permintaan maaf, dan tanpa perlu pihak lain.',
     'Father, I stand before You now with what I''ve been holding against this person. I name it honestly, and I release my grip on it. Receive what I set down, and forgive me as I forgive. Amen.', 'Bapa, aku berdiri di hadapan-Mu sekarang dengan apa yang selama ini kupegang terhadap orang ini. Aku menyebutnya dengan jujur, dan aku melepaskan genggamanku padanya. Terimalah apa yang kuletakkan ini, dan ampunilah aku sebagaimana aku mengampuni. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mark 11:25', 'WEB', 'And when you stand praying, if you hold anything against anyone, forgive them, so that your Father in heaven may forgive you your sins.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Markus 11:25', 'TB', 'Dan jika kamu berdiri untuk berdoa, ampunilah dahulu sekiranya ada barang sesuatu dalam hatimu terhadap seseorang, supaya juga Bapamu yang di sorga mengampuni kesalahanmu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 11:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 11:25', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -567,21 +511,17 @@ Saat perjalanan lima hari ini berakhir, pertimbangkanlah seperti apa, secara pra
     'Blessing someone isn''t trust or reconciliation — it''s refusing to let their wrong be the last word in your heart.', 'Memberkati seseorang bukanlah kepercayaan atau rekonsiliasi — itu adalah penolakan untuk membiarkan kesalahan mereka menjadi kata terakhir dalam hatimu.',
     'Lord, I cannot always control whether they say sorry, but I can choose to bless rather than repay. Give me a heart that wishes them genuine good, and in that, set me fully free. Amen.', 'Tuhan, aku tidak selalu bisa mengendalikan apakah mereka akan meminta maaf, tetapi aku bisa memilih untuk memberkati alih-alih membalas. Berilah aku hati yang mengharapkan kebaikan sejati bagi mereka, dan dalam hal itu, bebaskanlah aku sepenuhnya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Peter 3:9', 'WEB', 'Do not repay evil with evil or insult with insult. On the contrary, repay evil with blessing, because to this you were called so that you may inherit a blessing.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Petrus 3:9', 'TB', 'Dan janganlah kamu membalas kejahatan dengan kejahatan, atau caci maki dengan caci maki, tetapi sebaliknya, hendaklah kamu memberkati, karena untuk itulah kamu dipanggil, yaitu untuk memperoleh berkat.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 3:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 3:9', 'TB', 1);
 
   -- Sub-category: Receiving God's Mercy --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Receiving God''s Mercy' AND parent_id = v_forgiveness_id
+    WHERE name = 'Receiving God''s Mercy' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Receiving God''s Mercy', 'Menerima Belas Kasihan Allah', v_forgiveness_id)
+      VALUES ('Receiving God''s Mercy', 'Menerima Belas Kasihan Allah', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
     UPDATE public.devotion_categories SET name_id = 'Menerima Belas Kasihan Allah'
@@ -627,12 +567,8 @@ Jadi hari ini, cobalah latihan kecil namun jujur: sebutkan dengan jelas apa yang
     'Name today what actually happened — plainly, without exaggeration or excuse — and bring only that to God.', 'Sebutkan dengan jelas apa yang sesungguhnya terjadi hari ini — tanpa berlebihan atau mencari alasan — dan bawalah hanya itu kepada Allah.',
     'Lord, I bring you what is actually true instead of the vague heaviness I''ve been carrying. Wash me, don''t just soothe me. Give me a clean heart, not just a quieter conscience. Amen.', 'Tuhan, aku membawa kepada-Mu apa yang sesungguhnya benar, bukan sekadar beban samar yang selama ini kupikul. Basuhlah aku, jangan hanya menenangkanku sesaat. Berikanlah hati yang tahir, bukan sekadar hati nurani yang lebih tenang. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 51:1-2', 'WEB', 'Have mercy on me, O God, according to your unfailing love; according to your great compassion blot out my transgressions. Wash away all my iniquity and cleanse me from my sin.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 51:3-4', 'TB', 'Kasihanilah aku, ya Allah, menurut kasih setia-Mu, hapuskanlah pelanggaranku menurut rahmat-Mu yang besar! Bersihkanlah aku seluruhnya dari kesalahanku, dan tahirkanlah aku dari dosaku!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 51:1-2', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 51:3-4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -659,12 +595,8 @@ Jika selama ini engkau membayangkan Allah berdiri jauh, tangan bersedekap, menun
     'Picture God running toward you today, rather than waiting with arms crossed at a distance.', 'Bayangkan Allah berlari menyongsongmu hari ini, bukan menunggu jauh di sana dengan tangan bersedekap.',
     'Father, thank you that you move first. Forgive me for the small, bargained love I''ve been rehearsing to ask for instead of receiving what you''re actually offering. Amen.', 'Bapa, terima kasih karena Engkau yang bergerak lebih dahulu. Ampuni aku karena selama ini hanya berani meminta kasih yang kecil dan bersyarat, alih-alih menerima apa yang sesungguhnya Kautawarkan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Luke 15:20', 'WEB', 'So he got up and went to his father. But while he was still a long way off, his father saw him and was filled with compassion for him; he ran to his son, threw his arms around him and kissed him.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lukas 15:20', 'TB', 'Maka bangkitlah ia dan pergi kepada bapanya. Ketika ia masih jauh, ayahnya telah melihatnya, lalu tergeraklah hatinya oleh belas kasihan, ia berlari mendapatkan anaknya lalu merangkul dan menciumnya.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 15:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 15:20', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -691,12 +623,8 @@ Jika hari ini rasa malu muncul kembali membuka perkara lama melawanmu, engkau ti
     'When the old case is reopened in your mind today, answer with a fact instead of an argument: it is already closed.', 'Ketika perkara lama itu dibuka kembali di pikiranmu hari ini, jawablah dengan fakta, bukan dengan perdebatan: perkara itu sudah ditutup.',
     'Jesus, I don''t want to keep reopening a case you already closed. Teach me to answer shame with your verdict instead of my feelings. Amen.', 'Yesus, aku tidak mau terus membuka kembali perkara yang sudah Kautup. Ajarku menjawab rasa malu dengan putusan-Mu, bukan dengan perasaanku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 8:1', 'WEB', 'Therefore, there is now no condemnation for those who are in Christ Jesus.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 8:1', 'TB', 'Demikianlah sekarang tidak ada penghukuman bagi mereka yang ada di dalam Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:1', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -723,12 +651,8 @@ Mungkin engkau tidak akan pernah berhenti bisa mengingat apa yang terjadi — in
     'When memory resurfaces today, let it stay a memory — not a fresh accusation.', 'Ketika ingatan itu muncul lagi hari ini, biarkan ia tetap menjadi sekadar ingatan — bukan tuduhan baru.',
     'Lord, my memory can''t measure distance the way you do. Help me trust your removal of my sin even when I can still recall it clearly. Amen.', 'Tuhan, ingatanku tidak bisa mengukur jarak seperti yang Kaulakukan. Tolong aku memercayai penyingkiran dosaku oleh-Mu, bahkan ketika aku masih bisa mengingatnya dengan jelas. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 103:12', 'WEB', 'as far as the east is from the west, so far has he removed our transgressions from us.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 103:12', 'TB', 'sejauh timur dari barat, demikian dijauhkan-Nya dari kita pelanggaran kita.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 103:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 103:12', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -755,12 +679,8 @@ Jadi hari ini, jangan hanya mengucapkan kebenaran bahwa engkau telah diampuni �
     'Do one ordinary thing today without the shadow tax of shame attached — let receiving become practice, not just belief.', 'Lakukan satu hal biasa hari ini tanpa bayang-bayang pajak rasa malu — biarkan menerima menjadi praktik nyata, bukan sekadar keyakinan.',
     'Father, I believe I''m forgiven, but help me actually receive it — to walk lighter, pray freer, and let your grace change how I live today, not just what I know. Amen.', 'Bapa, aku percaya bahwa aku telah diampuni, tetapi tolong aku sungguh-sungguh menerimanya — untuk melangkah lebih ringan, berdoa lebih bebas, dan membiarkan anugerah-Mu mengubah caraku hidup hari ini, bukan hanya apa yang kuketahui. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 43:25', 'WEB', 'I, even I, am he who blots out your transgressions, for my own sake, and remembers your sins no more.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 43:25', 'TB', 'Akulah, Akulah yang menghapus dosa pemberontakanmu oleh karena Aku sendiri, dan Aku tidak mengingat-ingat dosamu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 43:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 43:25', 'TB', 1);
 
   -- Plan: The Open Door
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -801,12 +721,8 @@ Minggu ini bukan tentang membuat siapa pun merasa bersalah agar mengantre di rua
     'Notice today where you''ve been hiding instead of being found, and ask what it would take to step out.', 'Perhatikan hari ini di mana engkau selama ini bersembunyi, bukan membiarkan diri ditemukan, dan tanyakan apa yang dibutuhkan untuk melangkah keluar.',
     'Lord, I''ve been hiding among the trees. Call my name today, and give me courage to step toward the door instead of further into the shadows. Amen.', 'Tuhan, aku telah bersembunyi di antara pepohonan. Panggillah namaku hari ini, dan berilah aku keberanian untuk melangkah menuju pintu, bukan semakin jauh ke dalam bayang-bayang. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 John 1:9', 'WEB', 'If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Yohanes 1:9', 'TB', 'Jika kita mengaku dosa kita, maka Ia adalah setia dan adil, sehingga Ia akan mengampuni segala dosa kita dan menyucikan kita dari segala kejahatan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 John 1:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Yohanes 1:9', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -833,12 +749,8 @@ Inilah sikap yang hendak ditawarkan oleh ruang pengakuan. Seorang imam yang dudu
     'Remember today that mercy comes first and makes the change possible — it isn''t a reward for change already proven.', 'Ingatlah hari ini bahwa belas kasihan datang lebih dulu dan justru membuat perubahan itu mungkin — bukan sebagai hadiah atas perubahan yang sudah dibuktikan.',
     'Jesus, thank you for refusing to condemn me even when I''ve gathered my own stones against myself. Let your mercy go first, and let it be the ground I walk on. Amen.', 'Yesus, terima kasih karena Engkau menolak menghukumku bahkan ketika aku sendiri sudah mengumpulkan batu untuk diriku sendiri. Biarlah belas kasihan-Mu berjalan lebih dulu, dan menjadi pijakan yang kutapaki. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'John 8:11', 'WEB', '"No one, sir," she said. "Then neither do I condemn you," Jesus declared. "Go now and leave your life of sin."');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yohanes 8:11', 'TB', 'Jawab perempuan itu: ''Tidak ada, Tuhan.'' Lalu kata Yesus: ''Aku pun tidak menghukum engkau. Pergilah, dan jangan berbuat dosa lagi mulai dari sekarang.''');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 8:11', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 8:11', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -865,12 +777,8 @@ Jadi ketika engkau keluar dari ruang pengakuan, engkau tidak keluar dengan dosa-
     'Let your confessed sins stay in the depths today — resist the pull to dig them back up as evidence against yourself.', 'Biarkan dosa-dosa yang telah kauakui tetap berada di dasar laut hari ini — tolak dorongan untuk menggalinya kembali sebagai bukti melawan dirimu sendiri.',
     'Lord, I confess I sometimes go looking for what you''ve already hurled into the sea. Help me trust the depth of your mercy more than the reach of my memory. Amen.', 'Tuhan, aku mengaku kadang aku mencari-cari apa yang sudah Kaulemparkan ke lautan. Tolong aku memercayai kedalaman belas kasihan-Mu lebih daripada jangkauan ingatanku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Micah 7:19', 'WEB', 'You will again have compassion on us; you will tread our sins underfoot and hurl all our iniquities into the depths of the sea.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mikha 7:19', 'TB', 'Ia akan kembali menyayangi kita, akan menginjak-injak segala kesalahan kita ke dalam laut.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Micah 7:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mikha 7:19', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -897,12 +805,8 @@ Jika selama ini engkau memperlakukan ruang pengakuan sebagai meja hakim tempat v
     'Practice approaching God today the way Hebrews describes — with confidence, expecting mercy and help, not sentencing.', 'Latihlah hari ini menghampiri Allah sebagaimana digambarkan surat Ibrani — dengan keberanian, menantikan rahmat dan pertolongan, bukan vonis.',
     'Lord, teach me to approach your throne the way a child approaches a parent who loves them, not a defendant approaching a bench. Amen.', 'Tuhan, ajarlah aku menghampiri takhta-Mu seperti seorang anak menghampiri orang tua yang mengasihinya, bukan seperti terdakwa menghampiri meja hakim. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Hebrews 4:16', 'WEB', 'Let us then approach God''s throne of grace with confidence, so that we may receive mercy and find grace to help us in our time of need.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ibrani 4:16', 'TB', 'Sebab itu marilah kita dengan penuh keberanian menghampiri takhta kasih karunia, supaya kita menerima rahmat dan menemukan kasih karunia untuk mendapat pertolongan kita pada waktunya.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 4:16', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 4:16', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -929,12 +833,8 @@ Pengakuan dosa yang dijalani dengan baik tidak dimaksudkan membuat kita netral, 
     'Let yourself actually feel the size of what''s been forgiven today, instead of managing it at arm''s length.', 'Biarkan dirimu benar-benar merasakan besarnya apa yang telah diampuni hari ini, bukan sekadar mengelolanya dari jarak aman.',
     'Jesus, don''t let me love little because I''ve managed my forgiveness at a safe distance. Let me feel the size of your mercy enough to respond extravagantly. Amen.', 'Yesus, jangan biarkan aku mengasihi sedikit karena selama ini mengelola pengampunan-Mu dari jarak yang aman. Biarkan aku merasakan besarnya belas kasihan-Mu cukup untuk meresponnya dengan berlebihan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Luke 7:47-48', 'WEB', 'Therefore, I tell you, her many sins have been forgiven—as her great love has shown. But whoever has been forgiven little loves little. Then Jesus said to her, "Your sins are forgiven."');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lukas 7:47-48', 'TB', 'Sebab itu Aku berkata kepadamu: Dosanya yang banyak itu telah diampuni, sebab ia telah banyak berbuat kasih. Tetapi orang yang sedikit diampuni, sedikit juga ia berbuat kasih. Lalu Ia berkata kepada perempuan itu: ''Dosamu telah diampuni.''');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 7:47-48', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 7:47-48', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -961,12 +861,8 @@ Jadi bawalah kembali pergumulan yang sama jika engkau perlu. Bawalah sebanyak ya
     'If there''s a repeated struggle you feel discouraged bringing back to Confession, bring it anyway — the invitation never expires.', 'Jika ada pergumulan berulang yang membuatmu enggan membawanya kembali ke Pengakuan Dosa, bawalah tetap — undangan itu tidak pernah kedaluwarsa.',
     'Lord, my stubborn stains don''t discourage you the way they discourage me. Give me the courage to keep bringing what''s crimson and let you make it white. Amen.', 'Tuhan, noda-noda membandelku tidak mengecilkan hati-Mu seperti mengecilkan hatiku. Berilah aku keberanian untuk terus membawa apa yang merah kirmizi dan membiarkan-Mu menjadikannya putih. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 1:18', 'WEB', '"Come now, let us settle the matter," says the LORD. "Though your sins are like scarlet, they shall be as white as snow; though they are red as crimson, they shall be like wool."');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 1:18', 'TB', 'Sekalipun dosamu merah seperti kirmizi, akan menjadi putih seperti salju; sekalipun berwarna merah seperti kain kesumba, akan menjadi putih seperti bulu domba.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 1:18', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 1:18', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -993,12 +889,8 @@ Jadi keluarlah dari ruang pengakuan itu bukan dengan membawa anugerah yang rapuh
     'Rest today in mercy as a daily rhythm, not a fragile deposit you have to ration until your next Confession.', 'Beristirahatlah hari ini dalam belas kasihan sebagai irama harian, bukan simpanan rapuh yang harus kaujatah hingga Pengakuan Dosa berikutnya.',
     'Faithful God, thank you that your mercy doesn''t run out by evening. Meet me again tomorrow morning, and the morning after that, for as long as I need it. Amen.', 'Allah yang setia, terima kasih karena belas kasihan-Mu tidak habis menjelang malam. Jumpai aku lagi esok pagi, dan pagi berikutnya, selama aku membutuhkannya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 'Because of the LORD''s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 'Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi; besar kesetiaan-Mu!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
 
   -- Plan: Truly Forgiven
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -1039,12 +931,8 @@ Jadi hari ini, cobalah membacanya seolah-olah ditulis khusus untukmu, sebab mema
     'Read Psalm 32:1 today as though it were written specifically about you, because it was.', 'Bacalah Mazmur 32:1 hari ini seolah-olah ditulis khusus tentang dirimu, sebab memang demikian.',
     'Lord, I want to stop treating forgiveness as a technicality that applies to everyone but me. Let me actually feel the blessedness David describes. Amen.', 'Tuhan, aku ingin berhenti memperlakukan pengampunan sebagai hal teknis yang berlaku bagi semua orang kecuali aku. Biarkan aku sungguh-sungguh merasakan kebahagiaan yang digambarkan Daud. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 32:1', 'WEB', 'Blessed is the one whose transgressions are forgiven, whose sins are covered.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 32:1', 'TB', 'Berbahagialah orang yang diampuni pelanggarannya, yang dosanya ditutupi.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 32:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 32:1', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1071,12 +959,8 @@ Jadi jika engkau meragukan apakah engkau sungguh diampuni karena merasa kurang m
     'If you''re doubting whether you''re forgiven because you don''t feel sorry enough, remember the timing: the love came first.', 'Jika engkau ragu apakah dirimu diampuni karena merasa kurang menyesal, ingatlah waktunya: kasih itu datang lebih dulu.',
     'God, thank you that your love was demonstrated before I had anything to offer for it. Let that settle my doubt more than my own feelings ever could. Amen.', 'Allah, terima kasih karena kasih-Mu telah ditunjukkan sebelum aku punya apa pun untuk ditawarkan. Biarlah itu menenangkan keraguanku lebih daripada perasaanku sendiri. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 5:8', 'WEB', 'But God demonstrates his own love for us in this: While we were still sinners, Christ died for us.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 5:8', 'TB', 'Akan tetapi Allah menunjukkan kasih-Nya kepada kita, oleh karena Kristus telah mati untuk kita, ketika kita masih berdosa.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 5:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 5:8', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1103,21 +987,17 @@ Jadi pada hari terakhir ini, jangan hanya bertanya, ''apakah aku percaya bahwa a
     'Ask the fuller question today: not just ''am I forgiven,'' but ''do I believe I am already new?''', 'Tanyakan pertanyaan yang lebih utuh hari ini: bukan hanya ''apakah aku diampuni,'' tetapi ''apakah aku percaya bahwa aku sudah baru?''',
     'Lord, let me live as the new creation you say I already am, not as someone still on probation trying to earn the title. Amen.', 'Tuhan, biarkan aku hidup sebagai ciptaan baru yang Kaukatakan sudah menjadi diriku, bukan sebagai seseorang yang masih dalam masa percobaan berusaha mendapatkan gelar itu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Corinthians 5:17', 'WEB', 'Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Korintus 5:17', 'TB', 'Jadi siapa yang ada di dalam Kristus, ia adalah ciptaan baru: yang lama sudah berlalu, sesungguhnya yang baru sudah datang.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 5:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 5:17', 'TB', 1);
 
   -- Sub-category: Forgiving Yourself --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Forgiving Yourself' AND parent_id = v_forgiveness_id
+    WHERE name = 'Forgiving Yourself' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Forgiving Yourself', 'Mengampuni Diri Sendiri', v_forgiveness_id)
+      VALUES ('Forgiving Yourself', 'Mengampuni Diri Sendiri', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
     UPDATE public.devotion_categories SET name_id = 'Mengampuni Diri Sendiri'
@@ -1163,12 +1043,8 @@ Selama lima hari ke depan, kita tidak akan berpura-pura masa lalu tidak pernah t
     'Name, honestly, the one thing you''ve been carrying the longest — and consider whether carrying it has actually changed anything, or only worn you down.', 'Sebutkan dengan jujur satu hal yang paling lama kau pikul — lalu renungkan apakah memikulnya benar-benar mengubah sesuatu, atau hanya membuatmu semakin lelah.',
     'Lord, I''ve been carrying something I was never meant to carry alone. Thank You for not waiting until I was clean to come near me. Teach me the difference between conviction that leads to You and regret that only leads back to myself. I bring this weight to You today. Amen.', 'Tuhan, aku telah memikul sesuatu yang sebenarnya tidak pernah dirancang untuk kupikul sendirian. Terima kasih karena Engkau tidak menunggu aku bersih dulu sebelum mendekat kepadaku. Ajari aku membedakan antara keyakinan akan dosa yang membawaku kepada-Mu, dan penyesalan yang hanya membawaku kembali kepada diriku sendiri. Hari ini aku membawa beban ini kepada-Mu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 11:28', 'WEB', 'Come to me, all you who are weary and burdened, and I will give you rest.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 11:28', 'TB', 'Marilah kepada-Ku, semua yang letih lesu dan berbeban berat, Aku akan memberi kelegaan kepadamu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 11:28', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 11:28', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1195,12 +1071,8 @@ Jadi hari ini, jadilah spesifik. Jangan berdoa dengan istilah samar tentang ''ke
     'What is the ''exception'' you''ve quietly carved out — the sin you believe is too specific or too personal for this promise to fully cover?', 'Apa ''pengecualian'' yang diam-diam kau buat — dosa yang kau anggap terlalu spesifik atau terlalu pribadi untuk sepenuhnya dijangkau oleh janji ini?',
     'Father, I confess I have believed Your forgiveness reaches everyone but stops short of me, in this one place. Today I bring the specific thing I''ve been hiding, and I ask You to help me believe it has truly been carried as far as the east is from the west. Amen.', 'Bapa, aku mengaku bahwa aku percaya pengampunan-Mu menjangkau setiap orang tetapi berhenti sebelum mencapai aku, di satu tempat ini. Hari ini aku membawa hal spesifik yang selama ini kusembunyikan, dan aku memohon Engkau menolongku percaya bahwa itu sungguh telah dibawa sejauh timur dari barat. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 103:12', 'WEB', 'As far as the east is from the west, so far has he removed our transgressions from us.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 103:12', 'TB', 'Sejauh timur dari barat, demikian dijauhkan-Nya dari kita pelanggaran kita.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 103:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 103:12', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1227,12 +1099,8 @@ Ini bukan berarti masa lalu tidak penting atau pelajaran tidak perlu dipetik. In
     'What ''new thing'' might God already be doing in your life that you''re too fixed on the past to notice?', 'Kemungkinan apa yang sedang Allah kerjakan sekarang dalam hidupmu, yang belum kau sadari karena matamu masih terpaku pada masa lalu?',
     'Lord, I''ve spent so much energy replaying the old story that I may have missed the new one You''re writing. Open my eyes to what You''re doing now. Help me hold the lessons of the past without living inside its wreckage. Amen.', 'Tuhan, aku sudah menghabiskan begitu banyak tenaga memutar ulang kisah lama, sampai mungkin aku melewatkan kisah baru yang sedang Kau tulis. Bukakan mataku pada apa yang sedang Kau kerjakan sekarang. Tolong aku memegang pelajaran dari masa lalu tanpa terus tinggal di reruntuhannya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 43:18-19', 'WEB', 'Forget the former things; do not dwell on the past. See, I am doing a new thing! Now it springs up; do you not perceive it?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 43:18-19', 'TB', 'Janganlah mengingat-ingat hal-hal yang dahulu, dan janganlah memperhatikan hal-hal yang zaman purbakala! Lihat, Aku hendak membuat sesuatu yang baru, yang sekarang sudah tumbuh, belumkah kamu mengetahuinya?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 43:18-19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 43:18-19', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1259,12 +1127,8 @@ Kau tidak perlu memiliki rekam jejak kegagalan seperti Paulus untuk belajar sika
     'What would ''straining forward'' look like for you this week, practically, instead of staying lodged in the old story?', 'Seperti apa ''mengarahkan diri ke depan'' itu secara praktis bagimu minggu ini, dibandingkan tetap terjebak dalam kisah lama?',
     'Jesus, like Paul, I want my past to become testimony instead of a cell I keep returning to. Give me the strength to strain forward today, not because the past doesn''t matter, but because You have called me toward something ahead. Amen.', 'Yesus, seperti Paulus, aku ingin masa laluku menjadi kesaksian, bukan penjara yang terus kukunjungi kembali. Berikan aku kekuatan untuk mengarahkan diri ke depan hari ini, bukan karena masa lalu tidak penting, tetapi karena Engkau telah memanggilku kepada sesuatu di hadapanku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 3:13-14', 'WEB', 'But one thing I do: Forgetting what is behind and straining toward what is ahead, I press on toward the goal to win the prize for which God has called me heavenward in Christ Jesus.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 3:13-14', 'TB', 'Tetapi ini yang kulakukan: aku melupakan apa yang telah di belakangku dan mengarahkan diri kepada apa yang di hadapanku, dan berlari-lari kepada tujuan untuk memperoleh hadiah, yaitu panggilan sorgawi Allah dalam Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 3:13-14', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 3:13-14', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1291,12 +1155,8 @@ Inilah langkah terakhir minggu ini: percaya bukan hanya bahwa kau diampuni, teta
     'What season or years do you feel you ''lost'' — and can you begin to believe God might repay, not just forgive, what that season cost you?', 'Musim atau tahun-tahun mana yang kau rasa ''hilang'' — dan dapatkah kau mulai percaya bahwa Allah mungkin membayar ganti, bukan hanya mengampuni, apa yang direnggut musim itu darimu?',
     'God who repays, I bring You not just my guilt but my grief over lost time. I believe You forgive me. Help me also believe You can restore what those years cost — in Your timing, in Your way. Thank You that my story isn''t over. Amen.', 'Allah yang membayar ganti, aku membawa kepada-Mu bukan hanya rasa bersalahku tetapi juga dukaku atas waktu yang hilang. Aku percaya Engkau mengampuniku. Tolong aku juga percaya bahwa Engkau dapat memulihkan apa yang direnggut tahun-tahun itu — pada waktu-Mu, dengan cara-Mu. Terima kasih karena kisahku belum berakhir. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Joel 2:25', 'WEB', 'I will repay you for the years the locusts have eaten.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yoel 2:25', 'TB', 'Aku akan membayar kepadamu ganti tahun-tahun yang telah dimakan habis oleh belalang.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Joel 2:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yoel 2:25', 'TB', 1);
 
   -- Plan: Enough, Not Perfect
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -1337,12 +1197,8 @@ Hari ini, sadarilah ketika penilai batin itu muncul. Kau tidak perlu membantahny
     'Where does your inner scorekeeper show up most — work, parenting, faith, appearance? Name it plainly today.', 'Di mana penilai batinmu paling sering muncul — pekerjaan, mengasuh anak, iman, penampilan? Sebutkan dengan jelas hari ini.',
     'Lord, I''m tired of a tally that never lands on enough. Remind me today that my worth was settled by You, not by my performance. Help me work from rest instead of for approval. Amen.', 'Tuhan, aku lelah dengan hitungan yang tidak pernah sampai pada cukup. Ingatkan aku hari ini bahwa nilaiku sudah ditetapkan oleh-Mu, bukan oleh hasil kerjaku. Tolong aku bekerja dari tempat perhentian, bukan demi mendapatkan pengakuan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 3:9', 'WEB', '...not having a righteousness of my own that comes from the law, but that which is through faith in Christ—the righteousness that comes from God on the basis of faith.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 3:9', 'TB', '...bukan lagi dengan kebenaranku sendiri karena mentaati hukum Taurat, melainkan dengan kebenaran karena kepercayaan kepada Kristus, yaitu kebenaran yang Allah anugerahkan berdasarkan kepercayaan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 3:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 3:9', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1369,12 +1225,8 @@ Perfeksionisme menuntut kesempurnaan sebelum memberi damai. Anugerah menawarkan 
     'Where have you demanded completion from yourself before you''d allow yourself any peace? What would it look like to accept peace now, mid-process?', 'Di bagian mana kau menuntut dirimu sendiri harus selesai dulu sebelum mengizinkan dirimu merasa damai? Seperti apa jadinya jika kau menerima damai itu sekarang, di tengah proses?',
     'Jesus, thank You that You took hold of me before I had anything finished. Help me stop demanding completion from myself as the price of peace. I press on today, not to earn Your grip on me, but because You already have it. Amen.', 'Yesus, terima kasih karena Engkau sudah menangkapku sebelum aku menyelesaikan apa pun. Tolong aku berhenti menuntut kesempurnaan dari diriku sendiri sebagai harga damai. Hari ini aku terus melangkah, bukan untuk mendapatkan genggaman-Mu atasku, tetapi karena aku sudah memilikinya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 3:12', 'WEB', 'Not that I have already obtained all this, or have already arrived at my goal, but I press on to take hold of that for which Christ Jesus took hold of me.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 3:12', 'TB', 'Bukan seolah-olah aku telah memperolehnya, atau telah sempurna, melainkan aku mengejarnya, kalau-kalau aku dapat juga menangkapnya, karena aku pun telah ditangkap oleh Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 3:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 3:12', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1401,12 +1253,8 @@ Saat kau menutup tiga hari ini, pertimbangkan untuk menukar tujuan kesempurnaan 
     'What is the ''thorn'' you keep asking God to remove — and could it be, instead, a place where His grace is meant to be visible?', 'Apa ''duri'' yang terus-menerus kau minta Allah singkirkan — dan bisakah itu justru menjadi tempat di mana anugerah-Nya dimaksudkan untuk terlihat?',
     'Father, I''ve been chasing flawlessness when You offered sufficiency. Teach me to see my weaknesses not as disqualifications but as the very places Your power is made perfect. Your grace is enough for me today. Amen.', 'Bapa, aku telah mengejar kesempurnaan padahal Engkau menawarkan kecukupan. Ajari aku melihat kelemahanku bukan sebagai diskualifikasi, melainkan sebagai tempat kuasa-Mu justru menjadi sempurna. Anugerah-Mu cukup bagiku hari ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Corinthians 12:9', 'WEB', 'But he said to me, ''My grace is sufficient for you, for my power is made perfect in weakness.'' Therefore I will boast all the more gladly about my weaknesses, so that Christ''s power may rest on me.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '2 Korintus 12:9', 'TB', 'Tetapi jawab Tuhan kepadaku: ''Cukuplah kasih karunia-Ku bagimu, sebab justru dalam kelemahanlah kuasa-Ku menjadi sempurna.'' Sebab itu terlebih suka aku bermegah atas kelemahanku, supaya kuasa Kristus turun menaungi aku.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Corinthians 12:9', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '2 Korintus 12:9', 'TB', 1);
 
   -- Plan: No Condemnation
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -1447,12 +1295,8 @@ Selama tujuh hari ke depan, kita akan membangun sebuah perkara — bukan untuk m
     'Ask honestly today: is the voice accusing you leading you toward God in confession, or away from Him in hiding?', 'Tanyakan dengan jujur hari ini: apakah suara yang menuduhmu membawamu mendekat kepada Allah dalam pengakuan, atau menjauh dari-Nya dalam persembunyian?',
     'Lord, my heart condemns me more often than You do. Thank You that You are greater than my heart and already know everything my conscience presents. Teach me this week to trust Your verdict over my own. Amen.', 'Tuhan, hatiku lebih sering menuduhku daripada Engkau. Terima kasih karena Engkau lebih besar dari hatiku dan sudah tahu segala sesuatu yang disajikan hati nuraniku. Ajari aku minggu ini untuk mempercayai putusan-Mu melebihi putusanku sendiri. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 John 3:20', 'WEB', 'If our hearts condemn us, we know that God is greater than our hearts, and he knows everything.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Yohanes 3:20', 'TB', 'Sebab jika hati kita menuduh kita, Allah adalah lebih besar dari pada hati kita serta mengetahui segala sesuatu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 John 3:20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Yohanes 3:20', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1479,12 +1323,8 @@ Hari ini, ketika tuduhan lama itu muncul — dan itu akan muncul, sebab memang b
     'When the old accusation rises today, practice answering it with the fact of the verdict, not an argument of your own.', 'Ketika tuduhan lama itu muncul hari ini, latihlah menjawabnya dengan fakta putusan itu, bukan dengan perdebatanmu sendiri.',
     'Jesus, I keep treating Your verdict as provisional. Help me receive it as settled: no condemnation, now, for me, because I am in You. Close the courtroom in my mind today. Amen.', 'Yesus, aku terus memperlakukan putusan-Mu seolah masih bersifat sementara. Tolong aku menerimanya sebagai sesuatu yang sudah tetap: tidak ada penghukuman, sekarang, bagiku, karena aku ada di dalam-Mu. Tutuplah ruang sidang dalam pikiranku hari ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 8:1', 'WEB', 'Therefore, there is now no condemnation for those who are in Christ Jesus.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 8:1', 'TB', 'Demikianlah sekarang tidak ada penghukuman bagi mereka yang ada di dalam Kristus Yesus.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 8:1', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 8:1', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1511,12 +1351,8 @@ Hari ini, pertimbangkan apakah kau telah mengacaukan roh yang remuk dengan roh y
     'Have you confused a crushed spirit with a broken one? What would it look like to ask God for joy back, as David did?', 'Apakah kau telah mengacaukan roh yang remuk dengan roh yang dihancurkan? Seperti apa jadinya jika kau meminta sukacita itu kembali kepada Allah, seperti yang dilakukan Daud?',
     'God, like David, I bring You more than my guilt — I bring You my longing for joy again. Give me a broken and contrite heart, not a permanently crushed one. Restore to me the gladness of knowing I''m Yours. Amen.', 'Allah, seperti Daud, aku membawa kepada-Mu lebih dari sekadar rasa bersalahku — aku membawa kerinduanku akan sukacita lagi. Berikan aku hati yang patah dan remuk, bukan hati yang hancur selamanya. Kembalikanlah kepadaku kegirangan karena aku milik-Mu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 51:12', 'WEB', 'Restore to me the joy of your salvation and grant me a willing spirit, to sustain me.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 51:14', 'TB', 'Kembalikanlah kepadaku kegirangan karena selamat yang dari pada-Mu, dan lengkapilah aku dengan roh yang rela!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 51:12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 51:14', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1543,12 +1379,8 @@ Jika kau pernah percaya bahwa momen terburukmu mendiskualifikasimu dari panggila
     'What is your ''charcoal fire'' — the memory Jesus might want to walk back into with you, not to shame you, but to recommission you?', 'Apa ''api bara''-mu — kenangan yang mungkin ingin Yesus masuki kembali bersamamu, bukan untuk mempermalukanmu, melainkan untuk menugaskanmu kembali?',
     'Jesus, thank You for meeting Peter at the very place of his failure and trusting him again. Meet me at my own charcoal fire today. I don''t just want to be pardoned from a distance — I want to be restored, and trusted, and sent again. Amen.', 'Yesus, terima kasih karena Engkau menjumpai Petrus tepat di tempat kegagalannya dan mempercayainya kembali. Jumpailah aku di api baraku sendiri hari ini. Aku tidak hanya ingin diampuni dari kejauhan — aku ingin dipulihkan, dipercaya, dan diutus lagi. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'John 21:17', 'WEB', 'The third time he said to him, ''Simon son of John, do you love me?'' ... Jesus said, ''Feed my sheep.''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yohanes 21:17', 'TB', 'Untuk ketiga kalinya Yesus berkata kepadanya, ''Simon, anak Yohanes, apakah engkau mengasihi Aku?'' ... Kata Yesus kepadanya, ''Gembalakanlah domba-domba-Ku.''');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'John 21:17', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yohanes 21:17', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1575,12 +1407,8 @@ Jika hati nuranimu terus memancing dosa-dosa itu kembali dari tubir laut, menyaj
     'What sin does your conscience keep ''fishing back up'' as if it were never truly hurled away? Let Micah''s astonishment become yours today.', 'Dosa apa yang terus dipancing kembali oleh hati nuranimu seolah tak pernah benar-benar dilemparkan pergi? Biarkan keheranan Mikha menjadi keherananmu hari ini.',
     'Who is a God like You, who delights to show mercy? Thank You for hurling my sin into the depths, not just setting it aside. Help me stop fishing back up what You''ve already thrown away for good. Amen.', 'Siapakah Allah seperti Engkau, yang berkenan menunjukkan belas kasihan? Terima kasih karena Engkau melemparkan dosaku ke tubir laut, bukan hanya menyingkirkannya sementara. Tolong aku berhenti memancing kembali apa yang sudah Kaubuang selamanya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Micah 7:19', 'WEB', 'You will again have compassion on us; you will tread our sins underfoot and hurl all our iniquities into the depths of the sea.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mikha 7:19', 'TB', 'Ia akan menyayangi kami pula, dan menginjak-injak kesalahan-kesalahan kami; segala dosa kami akan Kaulemparkan ke dalam tubir laut.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Micah 7:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mikha 7:19', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1607,12 +1435,8 @@ Jika hari ini kau bangun sambil sudah memutar ulang kegagalan lama, atau bersiap
     'What recurring pattern makes you feel like a clean slate isn''t possible anymore? Receive today''s mercy as full, regardless of how many mornings came before it.', 'Pola berulang apa yang membuatmu merasa lembaran bersih sudah tidak mungkin lagi? Terimalah rahmat hari ini sebagai sesuatu yang penuh, terlepas dari berapa banyak pagi yang sudah berlalu sebelumnya.',
     'Lord, Your compassions are new this morning, untouched by yesterday''s record. I receive today''s mercy as full, not rationed by my past. Great is Your faithfulness, even to someone who needs it again and again. Amen.', 'Tuhan, rahmat-Mu baru pagi ini, tak tersentuh oleh catatan hari kemarin. Aku menerima rahmat hari ini sebagai sesuatu yang penuh, tidak dijatah oleh masa laluku. Besar kesetiaan-Mu, bahkan kepada orang yang membutuhkannya lagi dan lagi. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 'Because of the Lord''s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 'Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi; besar kesetiaan-Mu!');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lamentations 3:22-23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ratapan 3:22-23', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1639,21 +1463,17 @@ Saat kau menutup perjalanan tujuh hari ini, lihatlah apa yang sudah benar-benar 
     'What have you confessed but not yet cast — the leftover anxiety, not the sin itself? Name it, and hand it over today.', 'Apa yang sudah kau akui tetapi belum kau serahkan — sisa kecemasan, bukan dosanya sendiri? Sebutkan itu, dan serahkanlah hari ini.',
     'Father, I''ve confessed the sin but kept the anxiety. Today I cast that too — my fear of failing again, my quiet self-doubt — into Your care. Thank You that I am not on probation, but truly, freely Yours. Amen.', 'Bapa, aku sudah mengaku dosanya tetapi masih menyimpan kecemasannya. Hari ini aku menyerahkan itu juga — ketakutanku akan gagal lagi, keraguan diriku yang diam-diam — ke dalam pemeliharaan-Mu. Terima kasih karena aku tidak sedang menjalani masa percobaan, tetapi benar-benar, dengan bebas, menjadi milik-Mu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Peter 5:7', 'WEB', 'Cast all your anxiety on him because he cares for you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, '1 Petrus 5:7', 'TB', 'Serahkanlah segala kekhawatiranmu kepada-Nya, sebab Ia yang memelihara kamu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Peter 5:7', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, '1 Petrus 5:7', 'TB', 1);
 
   -- Sub-category: Letting Go of Bitterness --------------------------------------------------------
   SELECT id INTO v_cat_id FROM public.devotion_categories
-    WHERE name = 'Letting Go of Bitterness' AND parent_id = v_forgiveness_id
+    WHERE name = 'Letting Go of Bitterness' AND parent_id = v_category_id
     ORDER BY created_at ASC
     LIMIT 1;
   IF v_cat_id IS NULL THEN
     INSERT INTO public.devotion_categories (name, name_id, parent_id)
-      VALUES ('Letting Go of Bitterness', 'Melepaskan Kepahitan', v_forgiveness_id)
+      VALUES ('Letting Go of Bitterness', 'Melepaskan Kepahitan', v_category_id)
       RETURNING id INTO v_cat_id;
   ELSE
     UPDATE public.devotion_categories SET name_id = 'Melepaskan Kepahitan'
@@ -1699,12 +1519,8 @@ Ajakan hari ini sederhana: menyadari. Bukan untuk memperbaiki segalanya sekaligu
     'A root left unnamed does not disappear; it only grows in the dark. Today, simply notice where yours might be.', 'Akar yang tak dinamai tidak akan hilang; ia hanya tumbuh dalam gelap. Hari ini, sekadar sadari di mana akarmu mungkin sedang tumbuh.',
     'Lord, You see what I have hidden even from myself. Give me the courage to look honestly at what has taken root in my heart, without shame and without rushing past it. I trust that Your grace reaches even the places I have kept in the dark. Amen.', 'Tuhan, Engkau melihat apa yang bahkan tersembunyi dariku sendiri. Berikan aku keberanian untuk melihat dengan jujur apa yang telah berakar di hatiku, tanpa rasa malu dan tanpa terburu-buru melewatinya. Aku percaya kasih karunia-Mu menjangkau bahkan tempat-tempat yang kusimpan dalam gelap. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Hebrews 12:15', 'WEB', 'See to it that no one falls short of the grace of God and that no bitter root grows up to cause trouble and defile many.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ibrani 12:15', 'TB', 'Jagalah supaya jangan ada seorang yang tidak menerima kasih karunia Allah, agar jangan tumbuh akar yang pahit, yang menimbulkan kerusuhan dan yang mentahirkan banyak orang.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Hebrews 12:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ibrani 12:15', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1731,12 +1547,8 @@ Apa yang sedang engkau sirami hari ini — luka itu, atau kesembuhan? Ini pertan
     'What we water with our attention grows. Choose today to notice what you keep returning to in your quiet moments.', 'Apa yang kita sirami dengan perhatian akan tumbuh. Hari ini, sadarilah apa yang terus kau pikirkan saat sedang sendiri dan sunyi.',
     'Father, teach me to guard my heart not by shutting it, but by tending it. Show me what I have been watering without realizing it, and help me choose, again today, to water what leads to life. Amen.', 'Bapa, ajarlah aku menjaga hatiku bukan dengan menutupnya, tetapi dengan merawatnya. Tunjukkan apa yang selama ini kusirami tanpa kusadari, dan tolong aku memilih, sekali lagi hari ini, untuk menyirami apa yang membawa kepada kehidupan. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Proverbs 4:23', 'WEB', 'Above all else, guard your heart, for everything you do flows from it.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Amsal 4:23', 'TB', 'Jagalah hatimu dengan segala kewaspadaan, karena dari situlah terpancar kehidupan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Proverbs 4:23', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Amsal 4:23', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1763,12 +1575,8 @@ Jika engkau masih marah setelah sekian lama, itu bukanlah bukti kegagalan iman. 
     'Bring your anger honestly before God today instead of letting it sit in silence. Ask Him what it is really protecting.', 'Bawalah kemarahanmu dengan jujur ke hadapan Tuhan hari ini, jangan biarkan ia mengendap dalam diam. Tanyakan pada-Nya, sebenarnya apa yang sedang dilindunginya.',
     'Lord, I bring You my anger, even the parts of it I''m ashamed of. Teach me to listen before I speak, and to let You examine what I am still protecting. Slow me down enough to let You work. Amen.', 'Tuhan, aku membawa kemarahanku kepada-Mu, bahkan bagian-bagian yang membuatku malu. Ajarlah aku mendengar sebelum berkata-kata, dan biarkan Engkau memeriksa apa yang masih kulindungi. Perlambatlah aku secukupnya agar Engkau dapat bekerja. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'James 1:19-20', 'WEB', 'My dear brothers and sisters, take note of this: Everyone should be quick to listen, slow to speak and slow to become angry, because human anger does not produce the righteousness that God desires.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yakobus 1:19-20', 'TB', 'Hai saudara-saudara yang kukasihi, ingatlah hal ini: setiap orang hendaklah cepat untuk mendengar, tetapi lambat untuk berkata-kata, dan juga lambat untuk marah; sebab amarah manusia tidak mengerjakan kebenaran di hadapan Allah.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'James 1:19-20', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yakobus 1:19-20', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1795,12 +1603,8 @@ Rasa syukur juga punya kekuatan aneh di sini. Sulit bagi kebencian dan syukur un
     'Notice today what has quietly been given the authority to run your reactions. Consider handing that authority back to Christ''s peace.', 'Sadari hari ini apa yang diam-diam telah diberi wewenang untuk mengatur reaksimu. Pertimbangkan untuk mengembalikan wewenang itu kepada damai sejahtera Kristus.',
     'Christ, let Your peace rule in me today. I hand You the authority I have quietly given to my old grievances. Thank You for being patient with me as I learn, again and again, to let You have the final say. Amen.', 'Kristus, biarlah damai sejahtera-Mu memerintah dalam diriku hari ini. Aku menyerahkan kepada-Mu wewenang yang diam-diam telah kuberikan kepada keluh kesah lamaku. Terima kasih telah bersabar denganku saat aku belajar, lagi dan lagi, membiarkan Engkau yang memiliki keputusan akhir. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Colossians 3:15', 'WEB', 'Let the peace of Christ rule in your hearts, since as members of one body you were called to peace. And be thankful.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Kolose 3:15', 'TB', 'Hendaklah damai sejahtera Kristus memerintah dalam hatimu, karena untuk itulah kamu telah dipanggil menjadi satu tubuh. Dan bersyukurlah.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:15', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:15', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1827,12 +1631,8 @@ Ini bukan akhir dari perjalanan melepaskan kepahitan — pelepasan yang sesunggu
     'Ask God to search you completely today, trusting that His search is aimed at healing, not condemnation.', 'Mintalah Allah menyelidikimu sepenuhnya hari ini, dengan percaya bahwa penyelidikan-Nya bertujuan menyembuhkan, bukan menghukum.',
     'Search me, Lord, and know my heart. Show me every offensive way, even the ones I have dressed up as something more respectable, and lead me, patiently, in the way everlasting. Amen.', 'Selidikilah aku, ya Tuhan, dan kenallah hatiku. Tunjukkan setiap jalan yang serong, bahkan yang telah kubungkus menjadi sesuatu yang tampak lebih terhormat, dan tuntunlah aku, dengan sabar, di jalan yang kekal. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 139:23-24', 'WEB', 'Search me, God, and know my heart; test me and know my anxious thoughts. See if there is any offensive way in me, and lead me in the way everlasting.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 139:23-24', 'TB', 'Selidikilah aku, ya Allah, dan kenallah hatiku, ujilah aku dan kenallah pikiran-pikiranku; lihatlah, apakah jalanku serong, dan tuntunlah aku di jalan yang kekal.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 139:23-24', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 139:23-24', 'TB', 1);
 
   -- Plan: Letting the Anger Go
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -1873,12 +1673,8 @@ Kita tidak tahu persis apa yang berubah dalam diri Esau. Tapi kita tahu ini: mun
     'Notice, without judgment, exactly who and what you are still rehearsing a confrontation with.', 'Sadari, tanpa menghakimi diri, siapa dan apa yang masih kau latih untuk dihadapi dalam bayanganmu.',
     'Lord, You know who I am still carrying in my chest. I don''t know yet how Esau''s heart changed, but I believe You can do in me what You did in him. Begin that slow work today. Amen.', 'Tuhan, Engkau tahu siapa yang masih kupikul di dadaku. Aku belum tahu bagaimana hati Esau bisa berubah, tetapi aku percaya Engkau dapat mengerjakan hal yang sama dalam diriku. Mulailah kerja yang perlahan itu hari ini. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Genesis 33:4', 'WEB', 'But Esau ran to meet Jacob and embraced him; he threw his arms around his neck and kissed him. And they wept.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Kejadian 33:4', 'TB', 'Tetapi Esau berlari mendapatkan dia, didekapnya dia, dipeluknya lehernya, lalu diciumnya dia; dan keduanya pun menangis.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Genesis 33:4', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kejadian 33:4', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1905,12 +1701,8 @@ Hari ini, pikirkan satu tindakan kecil dan nyata dari keramahan atau kasih mesra
     'Choose one small act of kindness today to fill the space where bitterness used to live.', 'Pilih satu tindakan kecil berupa keramahan hari ini untuk mengisi ruang yang dulu ditempati kepahitan.',
     'Father, I don''t just want to stop feeling angry — I want kindness to actually fill that space. Show me one small way to be kind today, even toward the person who hurt me. Amen.', 'Bapa, aku tidak hanya ingin berhenti merasa marah — aku ingin keramahan yang sesungguhnya mengisi ruang itu. Tunjukkan padaku satu cara kecil untuk bersikap ramah hari ini, bahkan terhadap orang yang telah melukaiku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Ephesians 4:31-32', 'WEB', 'Get rid of all bitterness, rage and anger, brawling and slander, along with every form of malice. Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Efesus 4:31-32', 'TB', 'Segala kepahitan, kegeraman, kemarahan, pertikaian dan fitnah hendaklah dibuang dari antara kamu, demikian pula segala kejahatan. Tetapi hendaklah kamu ramah seorang terhadap yang lain, penuh kasih mesra dan saling mengampuni, sebagaimana Allah di dalam Kristus telah mengampuni kamu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Ephesians 4:31-32', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Efesus 4:31-32', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1937,12 +1729,8 @@ Hari ini, cobalah menyebut dengan jujur: apa yang kutakutkan akan terjadi jika a
     'Name what you fear would happen if you stopped keeping score, and hand that fear to God.', 'Sebutkan apa yang kau takutkan akan terjadi jika kau berhenti menghitung skor, dan serahkan ketakutan itu kepada Allah.',
     'Lord, I have been trying to hold the scales myself, and it has exhausted me. I trust You with justice. Take the ledger I''ve been keeping, and let me finally set it down. Amen.', 'Tuhan, aku telah mencoba memegang sendiri timbangan itu, dan itu melelahkanku. Aku memercayakan keadilan kepada-Mu. Ambillah buku catatan yang telah kupegang, dan biarkan aku akhirnya meletakkannya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Romans 12:19', 'WEB', 'Do not take revenge, my dear friends, but leave room for God''s wrath, for it is written: ''It is mine to avenge; I will repay,'' says the Lord.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Roma 12:19', 'TB', 'Saudara-saudaraku yang kekasih, janganlah kamu sendiri menuntut pembalasan, tetapi berilah tempat kepada murka Allah, sebab ada tertulis: Pembalasan itu adalah hak-Ku. Akulah yang akan menuntut pembalasan, firman Tuhan.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Romans 12:19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Roma 12:19', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -1969,12 +1757,8 @@ Jika selama ini engkau menghitung — sadar atau tidak — persis berapa kali se
     'Notice if you''ve been keeping a private tally of someone''s offenses, and consider setting the ledger down today.', 'Sadari jika selama ini engkau diam-diam menyimpan catatan pelanggaran seseorang, dan pertimbangkan untuk meletakkan buku catatan itu hari ini.',
     'Jesus, I have been keeping count, deciding when someone finally runs out of my forgiveness. Teach me a forgiveness that isn''t rationed. Help me set down the ledger for good. Amen.', 'Yesus, aku telah menghitung, menentukan kapan seseorang akhirnya kehabisan pengampunanku. Ajarku pengampunan yang tidak dijatah. Tolong aku meletakkan buku catatan itu untuk selamanya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matthew 18:21-22', 'WEB', 'Then Peter came to Jesus and asked, ''Lord, how many times shall I forgive my brother or sister who sins against me? Up to seven times?'' Jesus answered, ''I tell you, not seven times, but seventy-seven times.''');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Matius 18:21-22', 'TB', 'Kemudian datanglah Petrus dan berkata kepada Yesus, "Tuhan, sampai berapa kali aku harus mengampuni saudaraku jika ia berbuat dosa terhadap aku? Sampai tujuh kali?" Yesus berkata kepadanya, "Bukan sampai tujuh kali, melainkan sampai tujuh puluh kali tujuh kali."');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matthew 18:21-22', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Matius 18:21-22', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2001,12 +1785,8 @@ Sebelum engkau berdoa hari ini — sungguh-sungguh sebelum, bukan sebagai tambah
     'Before you pray today, notice what your hands are still holding against someone, and ask God to loosen your grip.', 'Sebelum engkau berdoa hari ini, sadari apa yang masih dipegang tanganmu terhadap seseorang, dan mintalah Allah melonggarkan genggamanmu.',
     'Father, I want to come to You with open hands, but I notice how tightly I''ve been holding onto this. Loosen my grip, even a little, so I can truly receive what You want to give me. Amen.', 'Bapa, aku ingin datang kepada-Mu dengan tangan terbuka, tetapi aku sadar betapa erat aku memegang ini. Longgarkan genggamanku, meski sedikit, agar aku sungguh-sungguh dapat menerima apa yang ingin Kauberikan kepadaku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mark 11:25', 'WEB', 'And when you stand praying, if you hold anything against anyone, forgive them, so that your Father in heaven may forgive you your sins.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Markus 11:25', 'TB', 'Dan jikalau kamu berdiri untuk berdoa, ampunilah dahulu barangsiapa yang bersalah kepadamu, supaya juga Bapamu yang di sorga mengampuni kesalahanmu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mark 11:25', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Markus 11:25', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2033,12 +1813,8 @@ Renungkan hari ini: ukuran apa yang telah kaupakai terhadap orang yang masih mem
     'Consider what measure you''ve been using toward the person you''re angry with, and whether it''s one you''d want used on you.', 'Renungkan ukuran apa yang telah kaupakai terhadap orang yang membuatmu marah, dan apakah itu ukuran yang juga kau inginkan dipakai terhadapmu.',
     'Lord, show me the measure I''ve been using, and help me loosen it. I want to extend the same room for grace and change that I hope You extend to me. Amen.', 'Tuhan, tunjukkan padaku ukuran yang selama ini kupakai, dan tolong aku melonggarkannya. Aku ingin memberi ruang yang sama bagi anugerah dan perubahan, sebagaimana aku berharap Engkau memberikannya kepadaku. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Luke 6:37', 'WEB', 'Do not judge, and you will not be judged. Do not condemn, and you will not be condemned. Forgive, and you will be forgiven.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Lukas 6:37', 'TB', 'Janganlah kamu menghakimi, maka kamu pun tidak akan dihakimi. Dan janganlah kamu menghukum, maka kamu pun tidak akan dihukum; ampunilah, dan kamu akan diampuni.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Luke 6:37', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Lukas 6:37', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2065,12 +1841,8 @@ Saat engkau menutup minggu ini, renungkan: Bapa yang sama, yang panjang sabar da
     'Measure your progress this week not by whether the anger is gone, but by whether you''re facing the right direction.', 'Ukur kemajuanmu minggu ini bukan dari apakah kemarahan sudah hilang, melainkan dari apakah engkau menghadap ke arah yang benar.',
     'Father, You are slow to anger and abounding in love toward me. Shape me, slowly, into someone who can extend that same patient mercy to the one who hurt me. I release the timeline to You. Amen.', 'Bapa, Engkau panjang sabar dan berlimpah kasih setia terhadapku. Bentuklah aku, perlahan-lahan, menjadi seseorang yang dapat memberikan belas kasihan yang sama sabarnya kepada orang yang telah melukaiku. Aku menyerahkan waktunya kepada-Mu. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Psalm 103:8, 11-12', 'WEB', 'The Lord is compassionate and gracious, slow to anger, abounding in love. For as high as the heavens are above the earth, so great is his love for those who fear him; as far as the east is from the west, so far has he removed our transgressions from us.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Mazmur 103:8, 11-12', 'TB', 'Tuhan adalah pengasih dan penyayang, panjang sabar dan berlimpah kasih setia. Setinggi langit di atas bumi, demikian besarnya kasih setia-Nya atas orang-orang yang takut akan Dia; sejauh timur dari barat, demikian dijauhkan-Nya dari kita pelanggaran kita.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Psalm 103:8, 11-12', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Mazmur 103:8, 11-12', 'TB', 1);
 
   -- Plan: Choosing Peace Over the Replay
   INSERT INTO public.devotion_plans (category_id, title, title_id, subtitle, subtitle_id, duration_days, description, description_id, cover_image_url)
@@ -2111,12 +1883,8 @@ Rencana singkat ini tidak akan menghapus luka lama dalam tiga hari — tak ada r
     'Simply notice today how often your mind reaches for the old replay, without judging yourself for it.', 'Sekadar sadari hari ini seberapa sering pikiranmu meraih putaran ulang lama itu, tanpa menghakimi dirimu sendiri karenanya.',
     'Lord, I didn''t choose to keep replaying this, but I notice how tired it makes me. Help me simply notice the pattern today, and trust that You can help me redirect it. Amen.', 'Tuhan, aku tidak memilih untuk terus memutar ulang ini, tapi aku sadar betapa itu melelahkanku. Tolong aku sekadar menyadari polanya hari ini, dan percaya Engkau dapat menolongku mengalihkannya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Philippians 4:8', 'WEB', 'Finally, brothers and sisters, whatever is true, whatever is noble, whatever is right, whatever is pure, whatever is lovely, whatever is admirable—if anything is excellent or praiseworthy—think about such things.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Filipi 4:8', 'TB', 'Jadi akhirnya, saudara-saudara, semua yang benar, semua yang mulia, semua yang adil, semua yang suci, semua yang manis, semua yang sedap didengar, semua yang disebut kebajikan dan patut dipuji, pikirkanlah semuanya itu.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Philippians 4:8', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Filipi 4:8', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2143,12 +1911,8 @@ Hari ini, cobalah menyebut satu ''hal baru'' yang mungkin sesungguhnya sedang Al
     'Name one new thing God may be doing in your life today that the old wound has been crowding out of view.', 'Sebutkan satu hal baru yang mungkin sedang Allah kerjakan dalam hidupmu hari ini, yang selama ini terdesak dari pandangan oleh luka lama.',
     'Lord, I have been living in a place I was only ever meant to pass through. Help me perceive the new thing You are doing, even in small ways, and make my home there instead. Amen.', 'Tuhan, aku telah tinggal di tempat yang seharusnya hanya kulewati. Tolong aku menyadari hal baru yang sedang Kaukerjakan, bahkan dalam cara-cara kecil, dan menjadikan itu rumahku sebagai gantinya. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Isaiah 43:18-19', 'WEB', 'Forget the former things; do not dwell on the past. See, I am doing a new thing! Now it springs up; do you not perceive it?');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Yesaya 43:18-19', 'TB', 'Janganlah mengingat-ingat hal-hal yang dahulu, dan janganlah memperhatikan hal-hal yang sudah silam! Lihat, Aku hendak membuat sesuatu yang baru, yang sekarang sudah tumbuh, belum jugakah kamu mengetahuinya?');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Isaiah 43:18-19', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Yesaya 43:18-19', 'TB', 1);
 
   INSERT INTO public.devotion_plan_days (
     plan_id, day_number, 
@@ -2175,11 +1939,7 @@ Saat engkau menutup tiga hari ini, pikirkan satu cara kecil dan nyata untuk memi
     'Choose one small, concrete way today to set the old grievance beside how much you''ve already been forgiven.', 'Pilih satu cara kecil dan nyata hari ini untuk meletakkan keluhan lama itu di samping betapa besarnya kau telah diampuni.',
     'Lord, as You have forgiven me completely and at great cost, help me forgive as You did — not because the hurt was small, but because Your grace is larger. Give me peace today, and again tomorrow. Amen.', 'Tuhan, sebagaimana Engkau telah mengampuniku sepenuhnya dan dengan harga yang besar, tolong aku mengampuni sebagaimana Engkau lakukan — bukan karena luka itu kecil, melainkan karena anugerah-Mu lebih besar. Berikan aku damai hari ini, dan lagi esok hari. Amin.'
   ) RETURNING id INTO v_day_id;
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Colossians 3:13', 'WEB', 'Bear with each other and forgive one another if any of you has a grievance against someone. Forgive as the Lord forgave you.');
-
-  INSERT INTO public.devotion_plan_day_verses (day_id, verse_reference, translation, verse_content)
-  VALUES (v_day_id, 'Kolose 3:13', 'TB', 'Sabarlah kamu seorang terhadap yang lain, dan ampunilah seorang akan yang lain apabila yang seorang menaruh dendam terhadap yang lain, sama seperti Tuhan telah mengampuni kamu, kamu perlu saling mengampuni.');
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Colossians 3:13', 'WEB', 0);
+  INSERT INTO public.devotion_day_verses (day_id, verse_reference, translation, order_index) VALUES (v_day_id, 'Kolose 3:13', 'TB', 1);
 
 END $$;
