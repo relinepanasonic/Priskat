@@ -2,11 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import PlansClient from "./PlansClient";
 import { getLanguage } from "@/lib/lang";
 
-export const metadata = {
-  title: "Devotion Plans",
-};
-
-export const dynamic = "force-dynamic";
+export const metadata = { title: "Devotion Plans" };
+// Revalidate every 5 minutes — still fast but picks up new plans
+export const revalidate = 300;
 
 export default async function DevotionPlansPage() {
   const supabase = await createClient();

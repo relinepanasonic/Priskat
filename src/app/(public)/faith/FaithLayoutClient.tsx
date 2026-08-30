@@ -34,6 +34,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
               <Link
                 key={tab.name}
                 href={tab.href}
+                prefetch={true}
                 className={`
                   flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all
                   ${isActive 

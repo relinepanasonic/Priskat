@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-
-
 import PrayerList from "@/components/prayers/PrayerList";
 import { getLanguage } from "@/lib/lang";
 import type { Prayer } from "@/lib/types/database.types";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Doa | Prayers" };
+// Prayers don't change often — revalidate every 10 minutes
+export const revalidate = 600;
 
 export default async function PrayerPage() {
   const lang = await getLanguage();
