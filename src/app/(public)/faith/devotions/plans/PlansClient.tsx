@@ -171,12 +171,18 @@ export default function PlansClient({
         {readingPlans.length > 0 && renderBookShelf(language === "id" ? "Sedang Dibaca" : "Currently Reading", readingPlans, false, true)}
         {finishedPlans.length > 0 && renderBookShelf(language === "id" ? "Selesai" : "Finished", finishedPlans, true, false)}
 
-        {/* Categories - 2 per row, exact same size */}
+        {/* Categories */}
         <div className="mb-6">
           <h2 className="text-lg font-bold text-white/90 mb-3">
             {language === "id" ? "Jelajahi Kategori" : "Browse Categories"}
           </h2>
-          <div className="grid grid-cols-2 gap-3">
+
+          {/* Mobile: 2 columns, shorter pills, title right-aligned */}
+          {/* Desktop: 1 row horizontal, 1:4 aspect ratio */}
+          <div className="
+            grid grid-cols-2 gap-2.5
+            sm:flex sm:flex-row sm:gap-3 sm:overflow-x-auto sm:pb-1 sm:scrollbar-hide
+          ">
             {topCategories.map(cat => {
               const catName = language === "id" && cat.name_id ? cat.name_id : cat.name;
               const isSelected = selectedCatId === cat.id;
@@ -186,14 +192,16 @@ export default function PlansClient({
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCatId(isSelected ? "all" : cat.id)}
-                  // Fixed height, full width, same for all
-                  className={`relative flex items-center justify-center overflow-hidden rounded-full h-12 w-full transition-all duration-300 border-2 ${
-                    isSelected 
+                  className={`
+                    relative flex items-center overflow-hidden rounded-full transition-all duration-300 border-2
+                    h-8 w-full justify-end pr-3
+                    sm:h-10 sm:flex-shrink-0 sm:w-auto sm:aspect-[4/1] sm:justify-end sm:pr-4
+                    ${isSelected 
                       ? "border-brand-gold shadow-[0_0_18px_rgba(212,175,55,0.5)]" 
-                      : "border-transparent grayscale"
-                  }`}
+                      : "border-transparent grayscale hover:grayscale-0"
+                    }
+                  `}
                 >
-                  {/* Background image */}
                   <Image
                     src={imageUrl}
                     alt={catName}
@@ -201,10 +209,8 @@ export default function PlansClient({
                     className="object-cover"
                     onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                   />
-                  {/* Dark overlay — lighter when selected */}
-                  <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? "bg-black/25" : "bg-black/55"}`} />
-                  
-                  <span className={`relative z-10 text-sm font-bold tracking-wide ${isSelected ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" : "text-gray-300"}`}>
+                  <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? "bg-black/20" : "bg-black/55"}`} />
+                  <span className={`relative z-10 text-xs sm:text-sm font-bold tracking-wide ${isSelected ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" : "text-gray-300"}`}>
                     {catName}
                   </span>
                 </button>
