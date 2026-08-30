@@ -166,7 +166,7 @@ export default function PlansClient({
         {/* Categories Pills */}
         <div className="mb-10">
           <h2 className="text-xl font-bold text-white/90 mb-4">{language === "id" ? "Jelajahi Kategori" : "Browse Categories"}</h2>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {topCategories.map(cat => {
               const catName = language === "id" && cat.name_id ? cat.name_id : cat.name;
               const isSelected = selectedCatId === cat.id;
@@ -176,7 +176,7 @@ export default function PlansClient({
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCatId(isSelected ? "all" : cat.id)}
-                  className={`relative flex items-center justify-center overflow-hidden rounded-full h-12 sm:h-14 px-6 sm:px-8 transition-all duration-300 border ${
+                  className={`relative flex items-center justify-center overflow-hidden rounded-full h-[46px] w-full px-4 transition-all duration-300 border ${
                     isSelected 
                       ? "border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-105 z-10" 
                       : "border-[#333] hover:border-[#555] grayscale hover:grayscale-0 hover:scale-105"
