@@ -11,28 +11,32 @@ import {
 import Image from "next/image";
 import {
   ArrowLeft,
+  Check,
+  DoorOpen,
   Hash,
+  Loader2,
   Plus,
   Send,
   UsersRound,
   X,
-  Check,
-  Loader2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 /* ------------------------------------------------------------------ types --- */
 
 type Profile = { id: string; full_name: string | null; avatar_url: string | null };
+type Room = { id: string; name: string; description: string | null; created_at: string };
 type Group = {
   id: string;
+  room_id: string;
   name: string;
   description: string | null;
   avatar_url: string | null;
   member_count: number;
   is_private: boolean;
   owner_id: string;
-  myRole: "owner" | "admin" | "member";
+  joined: boolean;
+  myRole: "owner" | "admin" | "member" | null;
 };
 type Channel = {
   id: string;
@@ -56,48 +60,67 @@ type Message = {
 
 const DICT = {
   en: {
-    title: "Group",
-    noGroups: "You're not in any group yet",
+    rooms: "Rooms",
+    noRooms: "No rooms yet",
+    noRoomsAdmin: "Create the first room to organise your groups.",
+    noRoomsUser: "A founder needs to create a room first.",
+    newRoom: "New room",
+    roomName: "Room name",
+    description: "Description (optional)",
+    groupsCount: (n: number) => `${n} group${n === 1 ? "" : "s"}`,
+    noGroupsInRoom: "No groups in this room yet",
     newGroup: "New group",
-    newChannel: "New channel",
     groupName: "Group name",
     firstChannel: "First channel",
+    join: "Join",
+    joining: "Joining…",
+    newChannel: "New channel",
     channelName: "Channel name",
-    create: "Create",
-    cancel: "Cancel",
     noChannels: "No channels yet",
     addChannelCta: "Add the first channel",
+    create: "Create",
+    cancel: "Cancel",
     pickChat: "Select a channel to start chatting",
     message: "Message",
     members: (n: number) => `${n} member${n === 1 ? "" : "s"}`,
     today: "Today",
     yesterday: "Yesterday",
-    sending: "Sending…",
     failed: "Not sent — tap to retry",
     emptyChannel: "No messages yet. Say hi 👋",
+    you: "You",
   },
   id: {
-    title: "Grup",
-    noGroups: "Kamu belum tergabung di grup mana pun",
+    rooms: "Ruang",
+    noRooms: "Belum ada ruang",
+    noRoomsAdmin: "Buat ruang pertama untuk menata grup-grupmu.",
+    noRoomsUser: "Seorang founder perlu membuat ruang terlebih dahulu.",
+    newRoom: "Ruang baru",
+    roomName: "Nama ruang",
+    description: "Deskripsi (opsional)",
+    groupsCount: (n: number) => `${n} grup`,
+    noGroupsInRoom: "Belum ada grup di ruang ini",
     newGroup: "Grup baru",
-    newChannel: "Saluran baru",
     groupName: "Nama grup",
     firstChannel: "Saluran pertama",
+    join: "Gabung",
+    joining: "Bergabung…",
+    newChannel: "Saluran baru",
     channelName: "Nama saluran",
-    create: "Buat",
-    cancel: "Batal",
     noChannels: "Belum ada saluran",
     addChannelCta: "Tambahkan saluran pertama",
+    create: "Buat",
+    cancel: "Batal",
     pickChat: "Pilih saluran untuk mulai mengobrol",
     message: "Pesan",
     members: (n: number) => `${n} anggota`,
     today: "Hari ini",
     yesterday: "Kemarin",
-    sending: "Mengirim…",
     failed: "Gagal terkirim — ketuk untuk coba lagi",
     emptyChannel: "Belum ada pesan. Sapa dulu 👋",
+    you: "Kamu",
   },
 };
+type T = (typeof DICT)["en"];
 
 /* ------------------------------------------------------------------ utils --- */
 
@@ -115,16 +138,11 @@ function colorFor(id: string) {
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   return NAME_COLORS[h % NAME_COLORS.length];
 }
-function initials(name?: string | null) {
-  return (name || "?").trim().charAt(0).toUpperCase();
-}
-function timeLabel(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-function dayKey(iso: string) {
-  return new Date(iso).toDateString();
-}
-function dayLabel(iso: string, t: (typeof DICT)["en"]) {
+const initials = (name?: string | null) => (name || "?").trim().charAt(0).toUpperCase();
+const timeLabel = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const dayKey = (iso: string) => new Date(iso).toDateString();
+function dayLabel(iso: string, t: T) {
   const d = new Date(iso);
   const now = new Date();
   const diff =
@@ -138,9 +156,8 @@ function dayLabel(iso: string, t: (typeof DICT)["en"]) {
     year: d.getFullYear() === now.getFullYear() ? undefined : "numeric",
   });
 }
-function tempId() {
-  return "temp-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+const tempId = () =>
+  "temp-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 /* ----------------------------------------------------------------- avatar --- */
 
@@ -148,12 +165,10 @@ function Avatar({
   url,
   name,
   size = 38,
-  ring,
 }: {
   url?: string | null;
   name?: string | null;
   size?: number;
-  ring?: string;
 }) {
   const style = { width: size, height: size } as const;
   if (url)
@@ -169,12 +184,8 @@ function Avatar({
     );
   return (
     <div
-      className="rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 select-none"
-      style={{
-        ...style,
-        fontSize: size * 0.42,
-        background: ring || colorFor(name || "?"),
-      }}
+      className="flex flex-shrink-0 select-none items-center justify-center rounded-full font-bold text-white"
+      style={{ ...style, fontSize: size * 0.42, background: colorFor(name || "?") }}
     >
       {initials(name)}
     </div>
@@ -186,41 +197,67 @@ function Avatar({
 export default function GroupClient({
   lang = "id",
   me,
+  canCreateRoom,
+  rooms: initialRooms,
   groups: initialGroups,
   channels: initialChannels,
 }: {
   lang?: "id" | "en";
   me: Profile;
+  canCreateRoom: boolean;
+  rooms: Room[];
   groups: Group[];
   channels: Channel[];
 }) {
   const t = DICT[lang];
   const supabase = useMemo(() => createClient(), []);
 
+  const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [groups, setGroups] = useState<Group[]>(initialGroups);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
-  const [activeId, setActiveId] = useState<string | null>(
-    initialChannels[0]?.id ?? null
+
+  const [view, setView] = useState<"rooms" | "room">(
+    initialRooms.length === 1 ? "room" : "rooms"
   );
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(
+    initialRooms.length === 1 ? initialRooms[0].id : null
+  );
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileChat, setMobileChat] = useState(false);
 
   const [byChannel, setByChannel] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(false);
-
   const profileCache = useRef<Record<string, Profile>>({ [me.id]: me });
   const seen = useRef<Set<string>>(new Set());
-
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [modal, setModal] = useState<null | { type: "group" } | { type: "channel"; groupId: string }>(
-    null
-  );
 
+  const [modal, setModal] = useState<
+    | null
+    | { type: "room" }
+    | { type: "group" }
+    | { type: "channel"; groupId: string }
+  >(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  const closeModal = () => {
+    setModal(null);
+    setActionError(null);
+  };
+
+  const groupsByRoom = useMemo(() => {
+    const map: Record<string, Group[]> = {};
+    for (const g of groups) (map[g.room_id] ??= []).push(g);
+    return map;
+  }, [groups]);
   const channelsByGroup = useMemo(() => {
     const map: Record<string, Channel[]> = {};
     for (const c of channels) (map[c.group_id] ??= []).push(c);
     return map;
   }, [channels]);
 
+  const activeRoom = rooms.find((r) => r.id === activeRoomId) || null;
   const activeChannel = channels.find((c) => c.id === activeId) || null;
   const activeGroup = activeChannel
     ? groups.find((g) => g.id === activeChannel.group_id) || null
@@ -230,11 +267,12 @@ export default function GroupClient({
   const scrollToBottom = useCallback((smooth = false) => {
     requestAnimationFrame(() => {
       const el = scrollRef.current;
-      if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+      if (el)
+        el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
     });
   }, []);
 
-  /* ---- load a channel's messages -------------------------------------- */
+  /* ---- load a channel's messages ------------------------------------ */
   const loadChannel = useCallback(
     async (channelId: string) => {
       if (byChannel[channelId]) {
@@ -266,7 +304,7 @@ export default function GroupClient({
     if (activeId) loadChannel(activeId);
   }, [activeId, loadChannel]);
 
-  /* ---- realtime for the active channel ------------------------------- */
+  /* ---- realtime for the active channel ---------------------------- */
   useEffect(() => {
     if (!activeId) return;
     const ch = supabase
@@ -283,7 +321,6 @@ export default function GroupClient({
           const row = payload.new as Message;
           if (seen.current.has(row.id)) return;
           seen.current.add(row.id);
-
           let author = profileCache.current[row.author_id];
           if (!author) {
             const { data } = await supabase
@@ -310,10 +347,9 @@ export default function GroupClient({
     };
   }, [activeId, supabase, scrollToBottom]);
 
-  /* ---- send --------------------------------------------------------- */
+  /* ---- send ------------------------------------------------------- */
   const [text, setText] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
-
   const autosize = () => {
     const el = taRef.current;
     if (!el) return;
@@ -352,6 +388,7 @@ export default function GroupClient({
       setByChannel((prev) => {
         const list = prev[activeId] || [];
         if (error || !data) {
+          console.error("[group] send failed", error);
           return {
             ...prev,
             [activeId]: list.map((m) =>
@@ -363,9 +400,7 @@ export default function GroupClient({
         return {
           ...prev,
           [activeId]: list.map((m) =>
-            m.id === tid
-              ? { ...(data as Message), author: me, pending: false }
-              : m
+            m.id === tid ? { ...(data as Message), author: me, pending: false } : m
           ),
         };
       });
@@ -381,29 +416,47 @@ export default function GroupClient({
     doSend(body);
   };
 
-  /* ---- create group / channel ------------------------------------- */
-  const [pending, startTransition] = useTransition();
-  const [actionError, setActionError] = useState<string | null>(null);
+  /* ---- create room / group / channel + join ---------------------- */
+  const createRoom = (name: string, description: string) =>
+    startTransition(async () => {
+      setActionError(null);
+      const { data, error } = await supabase
+        .from("rooms")
+        .insert({ name, description: description || null, created_by: me.id })
+        .select("id, name, description, created_at")
+        .single();
+      if (error || !data) {
+        console.error("[group] create room failed", error);
+        setActionError(error?.message || "Could not create the room.");
+        return;
+      }
+      setRooms((prev) => [...prev, data as Room]);
+      setActiveRoomId((data as Room).id);
+      setView("room");
+      closeModal();
+    });
 
-  const closeModal = () => {
-    setModal(null);
-    setActionError(null);
-  };
-
-  const createGroup = (groupName: string, channelName: string) =>
+  const createGroup = (roomId: string, groupName: string, channelName: string) =>
     startTransition(async () => {
       setActionError(null);
       const { data: g, error: gErr } = await supabase
         .from("groups")
-        .insert({ name: groupName, owner_id: me.id, is_private: true, member_count: 1 })
-        .select("id, name, description, avatar_url, member_count, is_private, owner_id")
+        .insert({
+          name: groupName,
+          room_id: roomId,
+          owner_id: me.id,
+          is_private: false,
+          member_count: 1,
+        })
+        .select(
+          "id, room_id, name, description, avatar_url, member_count, is_private, owner_id"
+        )
         .single();
       if (gErr || !g) {
         console.error("[group] create group failed", gErr);
         setActionError(gErr?.message || "Could not create the group.");
         return;
       }
-
       const { error: mErr } = await supabase
         .from("group_members")
         .insert({ group_id: g.id, user_id: me.id, role: "owner", status: "accepted" });
@@ -412,7 +465,6 @@ export default function GroupClient({
         setActionError(mErr.message);
         return;
       }
-
       const { data: sub, error: sErr } = await supabase
         .from("group_subgroups")
         .insert({ group_id: g.id, name: channelName || "General" })
@@ -420,7 +472,10 @@ export default function GroupClient({
         .single();
       if (sErr) console.error("[group] create first channel failed", sErr);
 
-      setGroups((prev) => [...prev, { ...(g as any), myRole: "owner" }]);
+      setGroups((prev) => [
+        ...prev,
+        { ...(g as any), joined: true, myRole: "owner" },
+      ]);
       if (sub) {
         setChannels((prev) => [...prev, sub as Channel]);
         setActiveId((sub as Channel).id);
@@ -448,162 +503,273 @@ export default function GroupClient({
       closeModal();
     });
 
-  /* ---- render ----------------------------------------------------- */
+  const joinGroup = (groupId: string) => {
+    setJoiningId(groupId);
+    startTransition(async () => {
+      const { error } = await supabase.from("group_members").insert({
+        group_id: groupId,
+        user_id: me.id,
+        role: "member",
+        status: "accepted",
+      });
+      if (error) {
+        console.error("[group] join failed", error);
+        setJoiningId(null);
+        return;
+      }
+      const { data: subs } = await supabase
+        .from("group_subgroups")
+        .select("id, group_id, name, description, created_at")
+        .eq("group_id", groupId)
+        .order("created_at", { ascending: true });
+      setChannels((prev) => [
+        ...prev.filter((c) => c.group_id !== groupId),
+        ...((subs as Channel[]) || []),
+      ]);
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? { ...g, joined: true, myRole: "member", member_count: g.member_count + 1 }
+            : g
+        )
+      );
+      const first = (subs || [])[0] as Channel | undefined;
+      if (first) {
+        setActiveId(first.id);
+        setMobileChat(true);
+      }
+      setJoiningId(null);
+    });
+  };
 
+  /* ---- render --------------------------------------------------- */
   const shell =
     "flex h-[calc(100dvh-170px)] md:h-[calc(100vh-56px)] overflow-hidden bg-brand-dark text-white";
-
-  if (groups.length === 0) {
-    return (
-      <div className={shell}>
-        <EmptyState
-          icon={<UsersRound className="h-9 w-9 text-brand-gold" />}
-          title={t.noGroups}
-          action={
-            <button
-              onClick={() => setModal({ type: "group" })}
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand-gold px-5 py-2.5 text-sm font-bold text-brand-dark hover:bg-yellow-400 transition-colors"
-            >
-              <Plus className="h-4 w-4" /> {t.newGroup}
-            </button>
-          }
-        />
-        {modal?.type === "group" && (
-          <NewGroupModal
-            t={t}
-            pending={pending}
-            error={actionError}
-            onClose={closeModal}
-            onCreate={createGroup}
-          />
-        )}
-      </div>
-    );
-  }
+  const roomGroups = activeRoomId ? groupsByRoom[activeRoomId] || [] : [];
 
   return (
     <div className={shell}>
-      {/* ---------------------------------------------------- chat list --- */}
+      {/* -------------------------------------------------- left pane --- */}
       <aside
         className={`${
           mobileChat ? "hidden" : "flex"
         } md:flex w-full md:w-80 lg:w-96 flex-col border-r border-[#2a2d35] bg-[#16181d]`}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2d35]">
-          <h1 className="text-[15px] font-bold tracking-wide">{t.title}</h1>
-          <button
-            onClick={() => setModal({ type: "group" })}
-            className="rounded-full p-1.5 text-brand-muted hover:text-brand-gold hover:bg-white/5 transition-colors"
-            aria-label={t.newGroup}
-          >
-            <Plus className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {groups.map((g) => {
-            const list = channelsByGroup[g.id] || [];
-            const canAdd = g.myRole === "owner" || g.myRole === "admin";
-            return (
-              <div key={g.id} className="pb-1">
-                <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
-                  <Avatar url={g.avatar_url} name={g.name} size={22} />
-                  <span className="flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-brand-muted">
-                    {g.name}
-                  </span>
-                  {canAdd && (
-                    <button
-                      onClick={() => setModal({ type: "channel", groupId: g.id })}
-                      className="text-brand-muted hover:text-brand-gold transition-colors"
-                      aria-label={t.newChannel}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-
-                {list.length === 0 ? (
-                  <button
-                    onClick={() =>
-                      canAdd && setModal({ type: "channel", groupId: g.id })
-                    }
-                    className="mx-3 my-1 block w-[calc(100%-1.5rem)] rounded-lg border border-dashed border-[#333] px-3 py-2 text-left text-[12px] text-brand-muted hover:border-brand-gold/50"
-                  >
-                    {canAdd ? t.addChannelCta : t.noChannels}
-                  </button>
-                ) : (
-                  list.map((c) => {
-                    const active = c.id === activeId;
-                    const preview = (byChannel[c.id] || []).slice(-1)[0];
-                    return (
+        {view === "rooms" ? (
+          <>
+            <div className="flex items-center justify-between border-b border-[#2a2d35] px-4 py-3">
+              <h1 className="text-[15px] font-bold tracking-wide">{t.rooms}</h1>
+              {canCreateRoom && (
+                <button
+                  onClick={() => setModal({ type: "room" })}
+                  className="rounded-full p-1.5 text-brand-muted transition-colors hover:bg-white/5 hover:text-brand-gold"
+                  aria-label={t.newRoom}
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {rooms.length === 0 ? (
+                <EmptyState
+                  icon={<DoorOpen className="h-9 w-9 text-brand-gold" />}
+                  title={t.noRooms}
+                  sub={canCreateRoom ? t.noRoomsAdmin : t.noRoomsUser}
+                  action={
+                    canCreateRoom ? (
                       <button
-                        key={c.id}
-                        onClick={() => {
-                          setActiveId(c.id);
-                          setMobileChat(true);
-                        }}
-                        className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors ${
-                          active ? "bg-brand-gold/10" : "hover:bg-white/[0.04]"
-                        }`}
+                        onClick={() => setModal({ type: "room" })}
+                        className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand-gold px-5 py-2.5 text-sm font-bold text-brand-dark hover:bg-yellow-400"
                       >
-                        <span
-                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                            active
-                              ? "bg-brand-gold text-brand-dark"
-                              : "bg-[#2a2d35] text-brand-muted"
-                          }`}
-                        >
-                          <Hash className="h-5 w-5" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[14px] font-semibold text-white">
-                            {c.name}
-                          </span>
-                          <span className="block truncate text-[12px] text-brand-muted">
-                            {preview
-                              ? `${
-                                  preview.author_id === me.id
-                                    ? lang === "en"
-                                      ? "You"
-                                      : "Kamu"
-                                    : preview.author?.full_name?.split(" ")[0] || ""
-                                }: ${preview.content}`
-                              : c.description || t.emptyChannel}
-                          </span>
-                        </span>
-                        {preview && (
-                          <span className="flex-shrink-0 self-start pt-0.5 text-[10px] text-brand-muted">
-                            {timeLabel(preview.created_at)}
-                          </span>
-                        )}
+                        <Plus className="h-4 w-4" /> {t.newRoom}
                       </button>
-                    );
-                  })
-                )}
-              </div>
-            );
-          })}
-        </div>
+                    ) : undefined
+                  }
+                />
+              ) : (
+                rooms.map((r) => {
+                  const n = (groupsByRoom[r.id] || []).length;
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        setActiveRoomId(r.id);
+                        setView("room");
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
+                    >
+                      <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-gold/15 text-brand-gold">
+                        <DoorOpen className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] font-semibold text-white">
+                          {r.name}
+                        </span>
+                        <span className="block truncate text-[12px] text-brand-muted">
+                          {r.description || t.groupsCount(n)}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 border-b border-[#2a2d35] px-3 py-3">
+              <button
+                onClick={() => setView("rooms")}
+                className="-ml-1 rounded-full p-1.5 text-brand-muted hover:text-white"
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <h1 className="flex-1 truncate text-[15px] font-bold">
+                {activeRoom?.name}
+              </h1>
+              <button
+                onClick={() => setModal({ type: "group" })}
+                className="rounded-full p-1.5 text-brand-muted transition-colors hover:bg-white/5 hover:text-brand-gold"
+                aria-label={t.newGroup}
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {roomGroups.length === 0 ? (
+                <EmptyState
+                  icon={<UsersRound className="h-9 w-9 text-brand-gold" />}
+                  title={t.noGroupsInRoom}
+                  action={
+                    <button
+                      onClick={() => setModal({ type: "group" })}
+                      className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand-gold px-5 py-2.5 text-sm font-bold text-brand-dark hover:bg-yellow-400"
+                    >
+                      <Plus className="h-4 w-4" /> {t.newGroup}
+                    </button>
+                  }
+                />
+              ) : (
+                roomGroups.map((g) => {
+                  const list = channelsByGroup[g.id] || [];
+                  const canAdd = g.myRole === "owner" || g.myRole === "admin";
+                  return (
+                    <div key={g.id} className="pb-1">
+                      <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
+                        <Avatar url={g.avatar_url} name={g.name} size={22} />
+                        <span className="flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-brand-muted">
+                          {g.name}
+                        </span>
+                        <span className="text-[10px] text-brand-muted">
+                          {t.members(g.member_count)}
+                        </span>
+                        {g.joined && canAdd && (
+                          <button
+                            onClick={() =>
+                              setModal({ type: "channel", groupId: g.id })
+                            }
+                            className="text-brand-muted transition-colors hover:text-brand-gold"
+                            aria-label={t.newChannel}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {!g.joined ? (
+                        <div className="px-3 py-1.5">
+                          <button
+                            onClick={() => joinGroup(g.id)}
+                            disabled={joiningId === g.id}
+                            className="inline-flex items-center gap-2 rounded-full border border-brand-gold/40 px-4 py-1.5 text-[13px] font-semibold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50"
+                          >
+                            {joiningId === g.id && (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            )}
+                            {joiningId === g.id ? t.joining : t.join}
+                          </button>
+                        </div>
+                      ) : list.length === 0 ? (
+                        <button
+                          onClick={() =>
+                            canAdd && setModal({ type: "channel", groupId: g.id })
+                          }
+                          className="mx-3 my-1 block w-[calc(100%-1.5rem)] rounded-lg border border-dashed border-[#333] px-3 py-2 text-left text-[12px] text-brand-muted hover:border-brand-gold/50"
+                        >
+                          {canAdd ? t.addChannelCta : t.noChannels}
+                        </button>
+                      ) : (
+                        list.map((c) => {
+                          const active = c.id === activeId;
+                          const preview = (byChannel[c.id] || []).slice(-1)[0];
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() => {
+                                setActiveId(c.id);
+                                setMobileChat(true);
+                              }}
+                              className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+                                active ? "bg-brand-gold/10" : "hover:bg-white/[0.04]"
+                              }`}
+                            >
+                              <span
+                                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                                  active
+                                    ? "bg-brand-gold text-brand-dark"
+                                    : "bg-[#2a2d35] text-brand-muted"
+                                }`}
+                              >
+                                <Hash className="h-5 w-5" />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[14px] font-semibold text-white">
+                                  {c.name}
+                                </span>
+                                <span className="block truncate text-[12px] text-brand-muted">
+                                  {preview
+                                    ? `${
+                                        preview.author_id === me.id
+                                          ? t.you
+                                          : preview.author?.full_name?.split(" ")[0] ||
+                                            ""
+                                      }: ${preview.content}`
+                                    : c.description || t.emptyChannel}
+                                </span>
+                              </span>
+                              {preview && (
+                                <span className="flex-shrink-0 self-start pt-0.5 text-[10px] text-brand-muted">
+                                  {timeLabel(preview.created_at)}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </>
+        )}
       </aside>
 
-      {/* -------------------------------------------------------- chat --- */}
+      {/* ------------------------------------------------------- chat --- */}
       <section
         className={`${
           mobileChat ? "flex" : "hidden"
-        } md:flex flex-1 flex-col bg-brand-dark min-w-0`}
+        } md:flex min-w-0 flex-1 flex-col bg-brand-dark`}
       >
         {!activeChannel ? (
-          <EmptyState
-            icon={<Hash className="h-9 w-9 text-brand-muted" />}
-            title={t.pickChat}
-          />
+          <EmptyState icon={<Hash className="h-9 w-9 text-brand-muted" />} title={t.pickChat} />
         ) : (
           <>
-            {/* header */}
             <header className="flex items-center gap-3 border-b border-[#2a2d35] bg-[#16181d] px-3 py-2.5">
               <button
                 onClick={() => setMobileChat(false)}
-                className="md:hidden -ml-1 rounded-full p-1.5 text-brand-muted hover:text-white"
+                className="-ml-1 rounded-full p-1.5 text-brand-muted hover:text-white md:hidden"
                 aria-label="Back"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -617,14 +783,11 @@ export default function GroupClient({
                 </p>
                 <p className="truncate text-[11px] text-brand-muted">
                   {activeGroup?.name}
-                  {activeGroup
-                    ? ` · ${t.members(activeGroup.member_count)}`
-                    : ""}
+                  {activeGroup ? ` · ${t.members(activeGroup.member_count)}` : ""}
                 </p>
               </div>
             </header>
 
-            {/* messages */}
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-3 py-4 md:px-6"
@@ -646,7 +809,8 @@ export default function GroupClient({
                   {messages.map((m, i) => {
                     const prev = messages[i - 1];
                     const mine = m.author_id === me.id;
-                    const newDay = !prev || dayKey(prev.created_at) !== dayKey(m.created_at);
+                    const newDay =
+                      !prev || dayKey(prev.created_at) !== dayKey(m.created_at);
                     const grouped =
                       !!prev &&
                       !newDay &&
@@ -728,7 +892,6 @@ export default function GroupClient({
               )}
             </div>
 
-            {/* composer */}
             <div className="border-t border-[#2a2d35] bg-[#16181d] px-3 py-2.5">
               <div className="mx-auto flex max-w-2xl items-end gap-2">
                 <textarea
@@ -762,14 +925,23 @@ export default function GroupClient({
         )}
       </section>
 
-      {/* --------------------------------------------------------- modals --- */}
-      {modal?.type === "group" && (
+      {/* ------------------------------------------------------ modals --- */}
+      {modal?.type === "room" && (
+        <NewRoomModal
+          t={t}
+          pending={pending}
+          error={actionError}
+          onClose={closeModal}
+          onCreate={createRoom}
+        />
+      )}
+      {modal?.type === "group" && activeRoomId && (
         <NewGroupModal
           t={t}
           pending={pending}
           error={actionError}
           onClose={closeModal}
-          onCreate={createGroup}
+          onCreate={(name, chan) => createGroup(activeRoomId, name, chan)}
         />
       )}
       {modal?.type === "channel" && (
@@ -834,16 +1006,103 @@ function ModalShell({
   );
 }
 
-function Field(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+function Field(
+  props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }
+) {
   const { label, ...rest } = props;
   return (
     <label className="mb-3 block">
-      <span className="mb-1 block text-[12px] font-medium text-brand-muted">{label}</span>
+      <span className="mb-1 block text-[12px] font-medium text-brand-muted">
+        {label}
+      </span>
       <input
         {...rest}
         className="w-full rounded-lg border border-[#333] bg-[#232730] px-3 py-2.5 text-[14px] text-white placeholder-gray-500 focus:border-brand-gold/60 focus:outline-none"
       />
     </label>
+  );
+}
+
+function ModalActions({
+  t,
+  pending,
+  error,
+  disabled,
+  onClose,
+  onConfirm,
+}: {
+  t: T;
+  pending: boolean;
+  error?: string | null;
+  disabled: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <>
+      {error && (
+        <p className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400">
+          {error}
+        </p>
+      )}
+      <div className="mt-2 flex gap-2">
+        <button
+          onClick={onClose}
+          className="flex-1 rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+        >
+          {t.cancel}
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={disabled || pending}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-gold py-2.5 text-[13px] font-bold text-brand-dark hover:bg-yellow-400 disabled:opacity-40"
+        >
+          {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+          {t.create}
+        </button>
+      </div>
+    </>
+  );
+}
+
+function NewRoomModal({
+  t,
+  pending,
+  error,
+  onClose,
+  onCreate,
+}: {
+  t: T;
+  pending: boolean;
+  error?: string | null;
+  onClose: () => void;
+  onCreate: (name: string, description: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  return (
+    <ModalShell title={t.newRoom} onClose={onClose}>
+      <Field
+        label={t.roomName}
+        value={name}
+        autoFocus
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Paroki · Wilayah · Lingkungan …"
+      />
+      <Field
+        label={t.description}
+        value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+      />
+      <ModalActions
+        t={t}
+        pending={pending}
+        error={error}
+        disabled={!name.trim()}
+        onClose={onClose}
+        onConfirm={() => onCreate(name.trim(), desc.trim())}
+      />
+    </ModalShell>
   );
 }
 
@@ -854,7 +1113,7 @@ function NewGroupModal({
   onClose,
   onCreate,
 }: {
-  t: (typeof DICT)["en"];
+  t: T;
   pending: boolean;
   error?: string | null;
   onClose: () => void;
@@ -869,7 +1128,7 @@ function NewGroupModal({
         value={name}
         autoFocus
         onChange={(e) => setName(e.target.value)}
-        placeholder="Legio Maria · KTM · …"
+        placeholder="Legio Maria · KTM · OMK …"
       />
       <Field
         label={t.firstChannel}
@@ -895,7 +1154,7 @@ function NewChannelModal({
   onClose,
   onCreate,
 }: {
-  t: (typeof DICT)["en"];
+  t: T;
   pending: boolean;
   error?: string | null;
   onClose: () => void;
@@ -909,7 +1168,7 @@ function NewChannelModal({
         value={name}
         autoFocus
         onChange={(e) => setName(e.target.value)}
-        placeholder="prayer-requests · events · …"
+        placeholder="prayer-requests · events …"
       />
       <ModalActions
         t={t}
@@ -920,47 +1179,5 @@ function NewChannelModal({
         onConfirm={() => onCreate(name.trim())}
       />
     </ModalShell>
-  );
-}
-
-function ModalActions({
-  t,
-  pending,
-  error,
-  disabled,
-  onClose,
-  onConfirm,
-}: {
-  t: (typeof DICT)["en"];
-  pending: boolean;
-  error?: string | null;
-  disabled: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <>
-      {error && (
-        <p className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400">
-          {error}
-        </p>
-      )}
-      <div className="mt-2 flex gap-2">
-      <button
-        onClick={onClose}
-        className="flex-1 rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
-      >
-        {t.cancel}
-      </button>
-      <button
-        onClick={onConfirm}
-        disabled={disabled || pending}
-        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-gold py-2.5 text-[13px] font-bold text-brand-dark hover:bg-yellow-400 disabled:opacity-40"
-      >
-        {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-        {t.create}
-      </button>
-      </div>
-    </>
   );
 }

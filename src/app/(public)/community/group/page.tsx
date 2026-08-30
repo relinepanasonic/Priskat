@@ -6,6 +6,8 @@ import GroupClient from "./GroupClient";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Group" };
 
+const ROOM_ADMIN_ROLES = ["founder", "superadmin"];
+
 export default async function GroupPage() {
   const supabase = await createClient();
   const {
@@ -17,41 +19,62 @@ export default async function GroupPage() {
 
   const { data: profileRow } = await supabase
     .from("profiles")
-    .select("id, full_name, avatar_url")
+    .select("id, full_name, avatar_url, role")
     .eq("id", user.id)
     .single();
 
-  // Fall back to the auth user so the client always has a valid identity even
-  // if the profiles row is missing.
-  const me = profileRow ?? {
-    id: user.id,
-    full_name: (user.user_metadata?.full_name as string) || user.email || null,
-    avatar_url: null,
+  const me = {
+    id: profileRow?.id ?? user.id,
+    full_name:
+      profileRow?.full_name ??
+      ((user.user_metadata?.full_name as string) || user.email || null),
+    avatar_url: profileRow?.avatar_url ?? null,
   };
+  const canCreateRoom = ROOM_ADMIN_ROLES.includes(profileRow?.role ?? "");
 
-  // Groups I'm an accepted member of (Telegram "chats").
+  // Rooms (everyone sees every room).
+  const { data: rooms } = await supabase
+    .from("rooms")
+    .select("id, name, description, created_at")
+    .eq("is_archived", false)
+    .order("created_at", { ascending: true });
+
+  // Groups I'm an accepted member of.
   const { data: memberships } = await supabase
     .from("group_members")
-    .select(
-      "role, group:groups(id, name, description, avatar_url, member_count, is_private, owner_id)"
-    )
+    .select("role, group_id")
     .eq("user_id", user.id)
     .eq("status", "accepted");
+  const myGroupIds = (memberships || []).map((m: any) => m.group_id);
+  const myRoleByGroup: Record<string, string> = {};
+  (memberships || []).forEach((m: any) => (myRoleByGroup[m.group_id] = m.role));
 
-  const groups = (memberships || [])
-    .map((m: any) => (m.group ? { ...m.group, myRole: m.role } : null))
-    .filter((g: any): g is any => !!g && !!g.id)
-    .sort((a: any, b: any) => a.name.localeCompare(b.name));
+  const roomIds = (rooms || []).map((r: any) => r.id);
 
-  const groupIds = groups.map((g: any) => g.id);
+  // Every group inside those rooms that RLS lets me see (public ones + mine).
+  let groups: any[] = [];
+  if (roomIds.length) {
+    const { data } = await supabase
+      .from("groups")
+      .select(
+        "id, room_id, name, description, avatar_url, member_count, is_private, owner_id"
+      )
+      .in("room_id", roomIds)
+      .order("created_at", { ascending: true });
+    groups = (data || []).map((g: any) => ({
+      ...g,
+      joined: myGroupIds.includes(g.id),
+      myRole: myRoleByGroup[g.id] ?? null,
+    }));
+  }
 
-  // Sub-channels (Telegram "topics") for every group I belong to.
+  // Sub-channels for groups I've actually joined.
   let channels: any[] = [];
-  if (groupIds.length) {
+  if (myGroupIds.length) {
     const { data } = await supabase
       .from("group_subgroups")
       .select("id, group_id, name, description, created_at")
-      .in("group_id", groupIds)
+      .in("group_id", myGroupIds)
       .order("created_at", { ascending: true });
     channels = data || [];
   }
@@ -60,6 +83,8 @@ export default async function GroupPage() {
     <GroupClient
       lang={lang}
       me={me}
+      canCreateRoom={canCreateRoom}
+      rooms={rooms || []}
       groups={groups}
       channels={channels}
     />
