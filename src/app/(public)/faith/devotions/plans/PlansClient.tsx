@@ -21,7 +21,7 @@ export default function PlansClient({
   userId?: string,
   language: "id" | "en"
 }) {
-  const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
+  const [selectedCatId, setSelectedCatId] = useState<string | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
@@ -144,19 +144,9 @@ export default function PlansClient({
       
       {/* Header & Search */}
       <div className="px-6 pt-8 pb-4">
-        {selectedCatId ? (
-          <button 
-            onClick={() => setSelectedCatId(null)}
-            className="flex items-center gap-2 text-brand-muted hover:text-brand-gold transition-colors mb-6 font-medium text-sm"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            {language === "id" ? "Kembali ke Perpustakaan" : "Back to Library"}
-          </button>
-        ) : (
-          <h1 className="text-3xl font-bold tracking-tight mb-6">
-            {language === "id" ? "Perpustakaan Renungan" : "Devotion Library"}
-          </h1>
-        )}
+        <h1 className="text-3xl font-bold tracking-tight mb-6">
+          {language === "id" ? "Perpustakaan Renungan" : "Devotion Library"}
+        </h1>
         
         <div className="relative mb-6">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -173,87 +163,72 @@ export default function PlansClient({
       </div>
 
       <div className="px-6 space-y-8">
-        
-        {!selectedCatId ? (
-          // --- MAIN LIBRARY VIEW ---
-          <>
-            {/* Currently Reading */}
-            {readingPlans.length > 0 && renderBookShelf(language === "id" ? "Sedang Dibaca" : "Currently Reading", readingPlans, false, true)}
-            
-            {/* Categories Grid */}
-            <div className="mb-12">
-              <h2 className="text-xl font-bold text-white/90 mb-6">{language === "id" ? "Jelajahi Kategori" : "Browse Categories"}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {topCategories.map(cat => {
-                  const catName = language === "id" && cat.name_id ? cat.name_id : cat.name;
-                  return (
-                    <button 
-                      key={cat.id}
-                      onClick={() => setSelectedCatId(cat.id)}
-                      className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border border-[#333] hover:border-brand-gold/50 transition-all duration-300 transform hover:-translate-y-1"
-                    >
-                      {cat.image_url ? (
-                        <Image src={cat.image_url} alt={catName} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#2a2d35] to-[#1a1d24]" />
-                      )}
-                      
-                      {/* Gradient Overlay for text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                      
-                      {/* Content */}
-                      <div className="absolute inset-0 p-4 flex flex-col justify-end items-start text-left">
-                        <h3 className="text-lg font-bold text-white shadow-sm">{catName}</h3>
-                        <p className="text-xs text-brand-gold font-medium mt-1 flex items-center gap-1 opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                          {language === "id" ? "Lihat koleksi" : "View collection"} <ChevronRight className="h-3 w-3" />
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+        {/* Currently Reading & Finished (Always visible if exists) */}
+        {readingPlans.length > 0 && renderBookShelf(language === "id" ? "Sedang Dibaca" : "Currently Reading", readingPlans, false, true)}
+        {finishedPlans.length > 0 && renderBookShelf(language === "id" ? "Selesai" : "Finished", finishedPlans, true, false)}
 
-            {/* Finished Shelves */}
-            {finishedPlans.length > 0 && renderBookShelf(language === "id" ? "Selesai" : "Finished", finishedPlans, true, false)}
-          </>
-        ) : (
-          // --- SPECIFIC CATEGORY VIEW ---
-          <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            {(() => {
-              const currentCat = categories.find(c => c.id === selectedCatId);
-              const catName = language === "id" && currentCat?.name_id ? currentCat.name_id : currentCat?.name;
+        {/* Categories Pills */}
+        <div className="mb-10">
+          <h2 className="text-xl font-bold text-white/90 mb-4">{language === "id" ? "Jelajahi Kategori" : "Browse Categories"}</h2>
+          <div className="flex flex-wrap gap-2.5">
+            {topCategories.map(cat => {
+              const catName = language === "id" && cat.name_id ? cat.name_id : cat.name;
+              const isSelected = selectedCatId === cat.id;
               
               return (
-                <div className="mb-8 relative rounded-3xl overflow-hidden shadow-xl aspect-[21/9] flex items-center justify-center border border-[#333]">
-                  {currentCat?.image_url ? (
-                    <>
-                      <Image src={currentCat.image_url} alt={catName || ""} fill className="object-cover opacity-50" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/40 to-transparent"></div>
-                    </>
+                <button 
+                  key={cat.id}
+                  onClick={() => setSelectedCatId(isSelected ? "all" : cat.id)}
+                  className={`relative overflow-hidden rounded-full px-6 py-2.5 transition-all duration-300 border ${
+                    isSelected 
+                      ? "border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-105" 
+                      : "border-[#333] grayscale opacity-70 hover:opacity-100 hover:scale-105"
+                  }`}
+                >
+                  {cat.image_url ? (
+                    <Image 
+                      src={cat.image_url} 
+                      alt={catName} 
+                      fill 
+                      className={`object-cover transition-opacity duration-300 ${isSelected ? "opacity-80" : "opacity-40"}`} 
+                    />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/20 to-brand-dark"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#2a2d35] to-[#1a1d24]" />
                   )}
-                  <h1 className="relative z-10 text-3xl sm:text-5xl font-extrabold text-white tracking-wider uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                  
+                  <div className="absolute inset-0 bg-black/40"></div>
+                  <span className={`relative z-10 font-bold text-sm tracking-wide ${isSelected ? "text-white drop-shadow-md" : "text-gray-300"}`}>
                     {catName}
-                  </h1>
-                </div>
+                  </span>
+                </button>
               );
-            })()}
+            })}
+          </div>
+        </div>
 
-            <div className="space-y-4">
+        {/* Render Shelves below */}
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {selectedCatId === "all" ? (
+            // Show all subcategories of all top categories OR just all categories?
+            // Actually, if "all", we can just render shelves for all sub-categories that have plans
+            categories.filter(c => c.parent_id).map(subCat => {
+              const subCatName = language === "id" && subCat.name_id ? subCat.name_id : subCat.name;
+              const catPlans = filteredPlans.filter(p => p.category_id === subCat.id);
+              return catPlans.length > 0 ? renderBookShelf(subCatName, catPlans) : null;
+            })
+          ) : (
+            // Show only shelves for the selected category
+            <>
               {categories.filter(c => c.parent_id === selectedCatId).map(subCat => {
                 const subCatName = language === "id" && subCat.name_id ? subCat.name_id : subCat.name;
                 const catPlans = filteredPlans.filter(p => p.category_id === subCat.id);
                 return catPlans.length > 0 ? renderBookShelf(subCatName, catPlans) : null;
               })}
-              
-              {/* If a top category doesn't have subcategories, maybe it has direct plans */}
+              {/* Fallback if top category has direct plans */}
               {renderBookShelf(language === "id" ? "Lainnya" : "Others", filteredPlans.filter(p => p.category_id === selectedCatId))}
-            </div>
-          </div>
-        )}
-
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
