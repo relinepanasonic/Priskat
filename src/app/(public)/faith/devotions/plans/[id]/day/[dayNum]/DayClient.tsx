@@ -114,27 +114,46 @@ export default function DayClient({
           </Link>
         )}
 
-        {/* Verses Items */}
-        {dayData?.verses?.map((verse: any, idx: number) => {
+        {/* Verses Items — filtered by language */}
+        {(() => {
+          // Filter verses to only show the correct language translation
+          const filteredVerses = (dayData?.verses || []).filter((verse: any) => {
+            const translation = (verse.translation || "").toUpperCase();
+            if (language === "id") {
+              // Indonesian: show TB (Terjemahan Baru) only
+              return translation === "TB" || translation === "";
+            } else {
+              // English: show anything that's NOT TB
+              return translation !== "TB";
+            }
+          });
+
           const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
-          const pageIndex = hasDevotional ? idx + 1 : idx;
-          return (
-            <Link key={idx} href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${pageIndex}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
-              <div className="flex items-center gap-4">
-                {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
-                <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{verse.verse_reference} {verse.translation}</span>
-              </div>
-              <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
-            </Link>
-          );
-        })}
+
+          return filteredVerses.map((verse: any, idx: number) => {
+            const pageIndex = hasDevotional ? idx + 1 : idx;
+            return (
+              <Link key={idx} href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${pageIndex}&lang=${language}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+                <div className="flex items-center gap-4">
+                  {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
+                  <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{verse.verse_reference}</span>
+                </div>
+                <span className="text-xl text-brand-muted group-hover:text-brand-gold transition-colors">&gt;</span>
+              </Link>
+            );
+          });
+        })()}
 
         {/* Reflection Item — show if column has data */}
         {(dayData?.reflection || dayData?.reflection_id) && (() => {
           const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
-          const page = (dayData?.verses?.length || 0) + (hasDevotional ? 1 : 0);
+          const filteredVerseCount = (dayData?.verses || []).filter((v: any) => {
+            const t = (v.translation || "").toUpperCase();
+            return language === "id" ? (t === "TB" || t === "") : t !== "TB";
+          }).length;
+          const page = filteredVerseCount + (hasDevotional ? 1 : 0);
           return (
-            <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${page}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+            <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${page}&lang=${language}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
               <div className="flex items-center gap-4">
                 {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
                 <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Refleksi" : "Reflection"}</span>
@@ -148,9 +167,13 @@ export default function DayClient({
         {(dayData?.prayer || dayData?.prayer_id) && (() => {
           const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
           const hasReflection = !!(dayData?.reflection || dayData?.reflection_id);
-          const page = (dayData?.verses?.length || 0) + (hasDevotional ? 1 : 0) + (hasReflection ? 1 : 0);
+          const filteredVerseCount = (dayData?.verses || []).filter((v: any) => {
+            const t = (v.translation || "").toUpperCase();
+            return language === "id" ? (t === "TB" || t === "") : t !== "TB";
+          }).length;
+          const page = filteredVerseCount + (hasDevotional ? 1 : 0) + (hasReflection ? 1 : 0);
           return (
-            <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${page}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
+            <Link href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=${page}&lang=${language}`} className="flex items-center justify-between cursor-pointer group hover:bg-[#1a1d24] p-2 -mx-2 rounded-xl transition-colors">
               <div className="flex items-center gap-4">
                 {isDayCompleted ? <CheckCircle2 className="h-6 w-6 text-brand-gold" /> : <Circle className="h-6 w-6 text-[#333]" />}
                 <span className="text-[17px] font-medium group-hover:text-brand-gold transition-colors">{language === "id" ? "Doa" : "Prayer"}</span>
