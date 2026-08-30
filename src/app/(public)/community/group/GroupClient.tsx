@@ -58,7 +58,6 @@ const DICT = {
   en: {
     title: "Group",
     noGroups: "You're not in any group yet",
-    noGroupsSub: "Create one to start a Telegram-style chat with sub-channels.",
     newGroup: "New group",
     newChannel: "New channel",
     groupName: "Group name",
@@ -80,7 +79,6 @@ const DICT = {
   id: {
     title: "Grup",
     noGroups: "Kamu belum tergabung di grup mana pun",
-    noGroupsSub: "Buat grup untuk memulai obrolan ala Telegram dengan sub-saluran.",
     newGroup: "Grup baru",
     newChannel: "Saluran baru",
     groupName: "Nama grup",
@@ -385,23 +383,42 @@ export default function GroupClient({
 
   /* ---- create group / channel ------------------------------------- */
   const [pending, startTransition] = useTransition();
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const closeModal = () => {
+    setModal(null);
+    setActionError(null);
+  };
 
   const createGroup = (groupName: string, channelName: string) =>
     startTransition(async () => {
-      const { data: g, error } = await supabase
+      setActionError(null);
+      const { data: g, error: gErr } = await supabase
         .from("groups")
         .insert({ name: groupName, owner_id: me.id, is_private: true, member_count: 1 })
         .select("id, name, description, avatar_url, member_count, is_private, owner_id")
         .single();
-      if (error || !g) return;
-      await supabase
+      if (gErr || !g) {
+        console.error("[group] create group failed", gErr);
+        setActionError(gErr?.message || "Could not create the group.");
+        return;
+      }
+
+      const { error: mErr } = await supabase
         .from("group_members")
         .insert({ group_id: g.id, user_id: me.id, role: "owner", status: "accepted" });
-      const { data: sub } = await supabase
+      if (mErr) {
+        console.error("[group] join own group failed", mErr);
+        setActionError(mErr.message);
+        return;
+      }
+
+      const { data: sub, error: sErr } = await supabase
         .from("group_subgroups")
         .insert({ group_id: g.id, name: channelName || "General" })
         .select("id, group_id, name, description, created_at")
         .single();
+      if (sErr) console.error("[group] create first channel failed", sErr);
 
       setGroups((prev) => [...prev, { ...(g as any), myRole: "owner" }]);
       if (sub) {
@@ -409,22 +426,26 @@ export default function GroupClient({
         setActiveId((sub as Channel).id);
         setMobileChat(true);
       }
-      setModal(null);
+      closeModal();
     });
 
   const createChannel = (groupId: string, name: string) =>
     startTransition(async () => {
-      const { data: sub } = await supabase
+      setActionError(null);
+      const { data: sub, error } = await supabase
         .from("group_subgroups")
         .insert({ group_id: groupId, name })
         .select("id, group_id, name, description, created_at")
         .single();
-      if (sub) {
-        setChannels((prev) => [...prev, sub as Channel]);
-        setActiveId((sub as Channel).id);
-        setMobileChat(true);
+      if (error || !sub) {
+        console.error("[group] create channel failed", error);
+        setActionError(error?.message || "Could not create the channel.");
+        return;
       }
-      setModal(null);
+      setChannels((prev) => [...prev, sub as Channel]);
+      setActiveId((sub as Channel).id);
+      setMobileChat(true);
+      closeModal();
     });
 
   /* ---- render ----------------------------------------------------- */
@@ -438,7 +459,6 @@ export default function GroupClient({
         <EmptyState
           icon={<UsersRound className="h-9 w-9 text-brand-gold" />}
           title={t.noGroups}
-          sub={t.noGroupsSub}
           action={
             <button
               onClick={() => setModal({ type: "group" })}
@@ -449,7 +469,13 @@ export default function GroupClient({
           }
         />
         {modal?.type === "group" && (
-          <NewGroupModal t={t} pending={pending} onClose={() => setModal(null)} onCreate={createGroup} />
+          <NewGroupModal
+            t={t}
+            pending={pending}
+            error={actionError}
+            onClose={closeModal}
+            onCreate={createGroup}
+          />
         )}
       </div>
     );
@@ -741,7 +767,8 @@ export default function GroupClient({
         <NewGroupModal
           t={t}
           pending={pending}
-          onClose={() => setModal(null)}
+          error={actionError}
+          onClose={closeModal}
           onCreate={createGroup}
         />
       )}
@@ -749,7 +776,8 @@ export default function GroupClient({
         <NewChannelModal
           t={t}
           pending={pending}
-          onClose={() => setModal(null)}
+          error={actionError}
+          onClose={closeModal}
           onCreate={(name) => createChannel(modal.groupId, name)}
         />
       )}
@@ -822,11 +850,13 @@ function Field(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
 function NewGroupModal({
   t,
   pending,
+  error,
   onClose,
   onCreate,
 }: {
   t: (typeof DICT)["en"];
   pending: boolean;
+  error?: string | null;
   onClose: () => void;
   onCreate: (groupName: string, channelName: string) => void;
 }) {
@@ -849,6 +879,7 @@ function NewGroupModal({
       <ModalActions
         t={t}
         pending={pending}
+        error={error}
         disabled={!name.trim() || !chan.trim()}
         onClose={onClose}
         onConfirm={() => onCreate(name.trim(), chan.trim())}
@@ -860,11 +891,13 @@ function NewGroupModal({
 function NewChannelModal({
   t,
   pending,
+  error,
   onClose,
   onCreate,
 }: {
   t: (typeof DICT)["en"];
   pending: boolean;
+  error?: string | null;
   onClose: () => void;
   onCreate: (name: string) => void;
 }) {
@@ -881,6 +914,7 @@ function NewChannelModal({
       <ModalActions
         t={t}
         pending={pending}
+        error={error}
         disabled={!name.trim()}
         onClose={onClose}
         onConfirm={() => onCreate(name.trim())}
@@ -892,18 +926,26 @@ function NewChannelModal({
 function ModalActions({
   t,
   pending,
+  error,
   disabled,
   onClose,
   onConfirm,
 }: {
   t: (typeof DICT)["en"];
   pending: boolean;
+  error?: string | null;
   disabled: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }) {
   return (
-    <div className="mt-2 flex gap-2">
+    <>
+      {error && (
+        <p className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400">
+          {error}
+        </p>
+      )}
+      <div className="mt-2 flex gap-2">
       <button
         onClick={onClose}
         className="flex-1 rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
@@ -918,6 +960,7 @@ function ModalActions({
         {pending && <Loader2 className="h-4 w-4 animate-spin" />}
         {t.create}
       </button>
-    </div>
+      </div>
+    </>
   );
 }

@@ -15,11 +15,19 @@ export default async function GroupPage() {
 
   const lang = await getLanguage();
 
-  const { data: me } = await supabase
+  const { data: profileRow } = await supabase
     .from("profiles")
     .select("id, full_name, avatar_url")
     .eq("id", user.id)
     .single();
+
+  // Fall back to the auth user so the client always has a valid identity even
+  // if the profiles row is missing.
+  const me = profileRow ?? {
+    id: user.id,
+    full_name: (user.user_metadata?.full_name as string) || user.email || null,
+    avatar_url: null,
+  };
 
   // Groups I'm an accepted member of (Telegram "chats").
   const { data: memberships } = await supabase
