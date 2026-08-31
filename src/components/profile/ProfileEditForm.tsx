@@ -144,11 +144,7 @@ export default function ProfileEditForm({ profile }: Props) {
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
-      {success && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-          Profile updated successfully!
-        </div>
-      )}
+
 
       {/* Avatar */}
       <div className="flex items-center gap-5">
@@ -260,7 +256,10 @@ export default function ProfileEditForm({ profile }: Props) {
         <input {...register("interests")} placeholder="e.g. Prayer, Worship, Youth Ministry" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-4">
+        {success && !isDirty && (
+          <span className="text-brand-gold text-sm font-medium">Profile updated successfully!</span>
+        )}
         <Button type="submit" loading={isSubmitting}>{success && !isDirty ? "Saved" : "Save Profile"}</Button>
       </div>
     </form>
