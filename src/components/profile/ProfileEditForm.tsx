@@ -223,9 +223,15 @@ export default function ProfileEditForm({ profile }: Props) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">No HP (WhatsApp)</label>
-        <input {...register("phone")} placeholder="08xxxxxxxxxx" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
-        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
+        <label className="mb-1 block text-sm font-medium text-brand-light">Instagram Username</label>
+        <div className="flex items-center rounded-lg border border-brand-border bg-[#1a1d24] overflow-hidden focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-brand-blue transition-all">
+          <span className="pl-4 text-gray-500">@</span>
+          <input
+            {...register("instagram")}
+            placeholder="username"
+            className="w-full bg-transparent px-2 py-2.5 text-white placeholder-gray-500 focus:outline-none text-sm"
+          />
+        </div>
       </div>
 
       <div>
