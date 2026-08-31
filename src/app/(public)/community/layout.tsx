@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, MessageCircle, UsersRound } from "lucide-react";
+import { Users, MessageCircle, UsersRound, Mail } from "lucide-react";
 import GroupUnreadBadge from "@/components/community/GroupUnreadBadge";
+import DmUnreadBadge from "@/components/community/DmUnreadBadge";
 
-const TABS = [
+const TABS: {
+  href: string;
+  label: string;
+  icon: typeof Users;
+  badge?: "group" | "dm";
+}[] = [
   { href: "/community/friends", label: "Friends", icon: Users },
   { href: "/community/thought", label: "Thought", icon: MessageCircle },
-  { href: "/community/group", label: "Group", icon: UsersRound, badge: true },
+  { href: "/community/messages", label: "Messages", icon: Mail, badge: "dm" },
+  { href: "/community/group", label: "Group", icon: UsersRound, badge: "group" },
 ];
 
 export default function CommunityLayout({ children }: { children: React.ReactNode }) {
@@ -31,7 +38,8 @@ export default function CommunityLayout({ children }: { children: React.ReactNod
               >
                 <Icon className="h-5 w-5" />
                 {label}
-                {badge && <GroupUnreadBadge />}
+                {badge === "group" && <GroupUnreadBadge />}
+                {badge === "dm" && <DmUnreadBadge />}
               </Link>
             );
           })}

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { UserPlus, Clock, Search, Users, UserCheck } from "lucide-react";
+import Link from "next/link";
+import { UserPlus, Clock, Search, Users, UserCheck, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -224,6 +225,13 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                           {[f.angkatan ? `Angkatan ${f.angkatan}` : null, f.kota].filter(Boolean).join(" • ")}
                         </p>
                       </div>
+                      <Link
+                        href={`/community/messages?u=${f.id}`}
+                        aria-label={isEn ? "Message" : "Pesan"}
+                        className="flex-shrink-0 rounded-full p-2 text-brand-muted hover:bg-brand-gold/10 hover:text-brand-gold transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Link>
                     </div>
                   ))}
                 </div>
