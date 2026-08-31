@@ -4,18 +4,25 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DM_CHANGED } from "@/lib/dmEvents";
 
-/** Small red count shown on the "Messages" tab when there are unread DMs. */
-export default function DmUnreadBadge() {
-  const [count, setCount] = useState(0);
+/**
+ * Small red dot for the "Connect" nav item — lit whenever there are
+ * unread direct messages or group chats.
+ */
+export default function ConnectUnreadDot({ className = "" }: { className?: string }) {
+  const [has, setHas] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     let alive = true;
 
     const check = async () => {
-      const { data, error } = await supabase.rpc("my_unread_dm_count");
-      if (!alive || error) return;
-      setCount(typeof data === "number" ? data : Number(data) || 0);
+      const [dm, grp] = await Promise.all([
+        supabase.rpc("my_unread_dm_count"),
+        supabase.rpc("my_unread_group_count"),
+      ]);
+      if (!alive) return;
+      const n = (Number(dm.data) || 0) + (Number(grp.data) || 0);
+      setHas(n > 0);
     };
 
     check();
@@ -36,10 +43,10 @@ export default function DmUnreadBadge() {
     };
   }, []);
 
-  if (count <= 0) return null;
+  if (!has) return null;
   return (
-    <span className="absolute right-1/2 top-1.5 translate-x-3 rounded-full bg-red-500 px-1 text-[9px] font-bold leading-4 text-white">
-      {count > 9 ? "9+" : count}
-    </span>
+    <span
+      className={`absolute h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#1a1d24] ${className}`}
+    />
   );
 }

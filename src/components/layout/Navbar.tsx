@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Profile } from "@/lib/types/database.types";
 import LanguageToggle from "@/components/ui/LanguageToggle";
+import ConnectUnreadDot from "@/components/community/ConnectUnreadDot";
 
 interface NavbarProps {
   profile?: Profile | null;
@@ -88,7 +89,10 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                     : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent",
                 ].join(" ")}
               >
-                <Icon className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />
+                <span className="relative">
+                  <Icon className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-gray-400"}`} />
+                  {href === "/community" && <ConnectUnreadDot className="-right-1 -top-0.5" />}
+                </span>
                 <span>{label}</span>
               </Link>
             );
@@ -220,7 +224,10 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
 
         {/* Connect (formerly Community) */}
         <Link prefetch={true} href="/community" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/community') ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Users className="h-5 w-5" />
+          <span className="relative">
+            <Users className="h-5 w-5" />
+            <ConnectUnreadDot className="-right-1.5 -top-1" />
+          </span>
           <span className="text-[10px] font-medium">{isEn ? "Connect" : "Koneksi"}</span>
         </Link>
 

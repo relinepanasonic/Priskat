@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { pingDmChanged } from "@/lib/dmEvents";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -237,11 +238,12 @@ export default function MessagesClient({
   );
 
   const markRead = useCallback(
-    (id: string) => {
-      supabase.rpc("mark_dm_read", { tid: id });
+    async (id: string) => {
       setThreads((prev) =>
         prev.map((x) => (x.thread_id === id ? { ...x, unread: false } : x))
       );
+      await supabase.rpc("mark_dm_read", { tid: id });
+      pingDmChanged();
     },
     [supabase]
   );
@@ -255,6 +257,8 @@ export default function MessagesClient({
   /* ---- realtime across every thread I'm in ------------------ */
   const activeIdRef = useRef<string | null>(activeId);
   activeIdRef.current = activeId;
+  const byThreadRef = useRef(byThread);
+  byThreadRef.current = byThread;
 
   const threadIds = useMemo(
     () => threads.map((x) => x.thread_id),
@@ -314,6 +318,86 @@ export default function MessagesClient({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadKey, supabase, me.id, scrollToBottom, markRead]);
+
+  /* ---- polling fallback: new messages in the open thread ---- */
+  useEffect(() => {
+    if (!activeId) return;
+    let stop = false;
+    const tick = async () => {
+      if (document.visibilityState !== "visible") return;
+      const id = activeIdRef.current;
+      if (!id) return;
+      const list = byThreadRef.current[id] || [];
+      const since = list.length
+        ? list[list.length - 1].created_at
+        : new Date(Date.now() - 7 * 86400000).toISOString();
+      const { data } = await supabase
+        .from("dm_messages")
+        .select("id, thread_id, author_id, content, created_at")
+        .eq("thread_id", id)
+        .gte("created_at", since)
+        .order("created_at", { ascending: true })
+        .limit(50);
+      if (stop || !data) return;
+      const fresh = (data as Msg[]).filter((m) => !seen.current.has(m.id));
+      if (!fresh.length) return;
+      fresh.forEach((m) => seen.current.add(m.id));
+      setByThread((prev) => {
+        const cur = prev[id] || [];
+        const merged = cur.slice();
+        for (const m of fresh)
+          if (!merged.some((x) => x.id === m.id)) merged.push(m);
+        return { ...prev, [id]: merged };
+      });
+      scrollToBottom(true);
+      if (fresh.some((m) => m.author_id !== me.id)) markRead(id);
+      const latest = fresh[fresh.length - 1];
+      setThreads((prev) => {
+        const idx = prev.findIndex((x) => x.thread_id === id);
+        if (idx === -1) return prev;
+        const updated: ThreadRow = {
+          ...prev[idx],
+          last_content: latest.content,
+          last_author_id: latest.author_id,
+          last_at: latest.created_at,
+          unread: false,
+        };
+        const next = prev.slice();
+        next.splice(idx, 1);
+        return [updated, ...next];
+      });
+    };
+    const iv = setInterval(tick, 4000);
+    return () => {
+      stop = true;
+      clearInterval(iv);
+    };
+  }, [activeId, supabase, me.id, scrollToBottom, markRead]);
+
+  /* ---- polling fallback: inbox list + unread ---------------- */
+  useEffect(() => {
+    let stop = false;
+    const tick = async () => {
+      if (document.visibilityState !== "visible") return;
+      const { data } = await supabase.rpc("my_dm_overview");
+      if (stop || !Array.isArray(data)) return;
+      const rows = data as ThreadRow[];
+      const openId = activeIdRef.current;
+      setThreads((prev) => {
+        const merged: ThreadRow[] = rows.map((r) =>
+          r.thread_id === openId ? { ...r, unread: false } : r
+        );
+        for (const p of prev)
+          if (!merged.some((r) => r.thread_id === p.thread_id)) merged.push(p);
+        return merged;
+      });
+    };
+    const iv = setInterval(tick, 12000);
+    return () => {
+      stop = true;
+      clearInterval(iv);
+    };
+  }, [supabase]);
 
   /* ---- send ------------------------------------------------- */
   const [text, setText] = useState("");
