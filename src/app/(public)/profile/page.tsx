@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { MessageCircle, Phone, Video, Calendar, MapPin, Award, Book, Newspaper, Users, Tent, Settings, LogOut, Heart } from "lucide-react";
+import { MessageCircle, Phone, Video, Calendar, MapPin, Award, Book, Newspaper, Users, Tent, Settings, LogOut, Heart, Instagram } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 
 export const revalidate = 0; // Dynamic route
@@ -45,9 +45,8 @@ export default async function HomePage() {
   // Fallbacks if no alumni data
   const angkatan = alumniData?.angkatan || "44";
   const city = alumniData?.city || "Surabaya";
-  const mobile = String(alumniData?.mobile || "+6281234567890");
+  const instagram = profile.instagram || "";
   const modules = profile.completed_modules?.length ? profile.completed_modules : ["Pria Sejati", "Patriot 19"];
-  const waLink = `https://wa.me/${mobile.replace(/\D/g, '')}`;
 
   return (
     <div className="min-h-screen bg-brand-dark md:py-12 md:px-8 overflow-y-auto pb-24 md:pb-12">
