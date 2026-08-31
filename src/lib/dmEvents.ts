@@ -10,3 +10,15 @@ export function pingDmChanged() {
     window.dispatchEvent(new Event(DM_CHANGED));
   }
 }
+
+// Which thread the user is actively looking at (chat pane on screen).
+// The global notifier uses this to suppress the chime for the open chat.
+let viewingThreadId: string | null = null;
+
+export function setViewingThread(id: string | null) {
+  viewingThreadId = id;
+}
+
+export function getViewingThread() {
+  return viewingThreadId;
+}

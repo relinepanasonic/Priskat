@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/Navbar";
+import DmNotifier from "@/components/community/DmNotifier";
 import { getLanguage } from "@/lib/lang";
 
 export default async function PublicLayout({
@@ -36,6 +37,7 @@ export default async function PublicLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
       <Navbar profile={profile} lang={lang} isCommunityAdmin={isCommunityAdmin} />
+      {user && <DmNotifier />}
       <main className="flex-1 overflow-x-hidden md:h-screen md:overflow-y-auto">{children}</main>
     </div>
   );

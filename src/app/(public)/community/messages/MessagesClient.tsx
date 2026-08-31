@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { pingDmChanged } from "@/lib/dmEvents";
+import { pingDmChanged, setViewingThread } from "@/lib/dmEvents";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -251,14 +251,29 @@ export default function MessagesClient({
   useEffect(() => {
     if (!activeId) return;
     loadThread(activeId);
-    markRead(activeId);
-  }, [activeId, loadThread, markRead]);
+  }, [activeId, loadThread]);
 
   /* ---- realtime across every thread I'm in ------------------ */
   const activeIdRef = useRef<string | null>(activeId);
   activeIdRef.current = activeId;
   const byThreadRef = useRef(byThread);
   byThreadRef.current = byThread;
+
+  // Is the conversation actually on screen? (desktop: always when a
+  // thread is picked; mobile: only when the chat column is showing.)
+  // Being on the inbox list is NOT "viewing" — messages stay unread,
+  // WhatsApp-style, until the chat box is opened.
+  const chatVisibleRef = useRef(false);
+  useEffect(() => {
+    const desktop =
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 768px)").matches;
+    const visible = !!activeId && (desktop || mobileView === "chat");
+    chatVisibleRef.current = visible;
+    setViewingThread(visible ? activeId : null);
+    if (visible && activeId) markRead(activeId);
+  }, [activeId, mobileView, markRead]);
+  useEffect(() => () => setViewingThread(null), []);
 
   const threadIds = useMemo(
     () => threads.map((x) => x.thread_id),
@@ -282,18 +297,22 @@ export default function MessagesClient({
           const row = payload.new as Msg;
           if (seen.current.has(row.id)) return;
           seen.current.add(row.id);
-          const isActive = row.thread_id === activeIdRef.current;
+          const onThread = row.thread_id === activeIdRef.current;
+          const viewing = onThread && chatVisibleRef.current;
           const mine = row.author_id === me.id;
 
-          if (isActive) {
+          if (onThread) {
             setByThread((prev) => {
               const list = prev[row.thread_id] || [];
               if (list.some((m) => m.id === row.id)) return prev;
               return { ...prev, [row.thread_id]: [...list, row] };
             });
-            scrollToBottom(true);
-            if (!mine) markRead(row.thread_id);
+            if (viewing) {
+              scrollToBottom(true);
+              if (!mine) markRead(row.thread_id);
+            }
           }
+          if (!mine && !viewing) pingDmChanged();
 
           setThreads((prev) => {
             const idx = prev.findIndex((x) => x.thread_id === row.thread_id);
@@ -303,7 +322,7 @@ export default function MessagesClient({
               last_content: row.content,
               last_author_id: row.author_id,
               last_at: row.created_at,
-              unread: !mine && !isActive,
+              unread: !mine && !viewing,
             };
             const next = prev.slice();
             next.splice(idx, 1);
@@ -349,8 +368,14 @@ export default function MessagesClient({
           if (!merged.some((x) => x.id === m.id)) merged.push(m);
         return { ...prev, [id]: merged };
       });
-      scrollToBottom(true);
-      if (fresh.some((m) => m.author_id !== me.id)) markRead(id);
+      const viewing = chatVisibleRef.current && activeIdRef.current === id;
+      const anyIncoming = fresh.some((m) => m.author_id !== me.id);
+      if (viewing) {
+        scrollToBottom(true);
+        if (anyIncoming) markRead(id);
+      } else if (anyIncoming) {
+        pingDmChanged();
+      }
       const latest = fresh[fresh.length - 1];
       setThreads((prev) => {
         const idx = prev.findIndex((x) => x.thread_id === id);
@@ -360,7 +385,7 @@ export default function MessagesClient({
           last_content: latest.content,
           last_author_id: latest.author_id,
           last_at: latest.created_at,
-          unread: false,
+          unread: viewing ? false : anyIncoming || prev[idx].unread,
         };
         const next = prev.slice();
         next.splice(idx, 1);
