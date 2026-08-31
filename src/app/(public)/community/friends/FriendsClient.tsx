@@ -12,7 +12,7 @@ function Avatar({ url, name, size = 40 }: { url?: string | null; name?: string |
   return url ? (
     <Image src={url} alt={name || "User"} width={size} height={size} className={`rounded-full object-cover`} style={{ width: size, height: size }} />
   ) : (
-    <div className={`rounded-full bg-brand-bg border border-[#333] flex items-center justify-center text-brand-gold font-bold`} style={{ width: size, height: size, fontSize: size * 0.38 }}>
+    <div className={`rounded-full bg-brand-bg border border-brand-border flex items-center justify-center text-brand-gold font-bold`} style={{ width: size, height: size, fontSize: size * 0.38 }}>
       {(name || "?")[0].toUpperCase()}
     </div>
   );
@@ -33,7 +33,7 @@ function FriendCard({ user, userId, isPending, onAction, onOpen, subtitle, lang 
   };
 
   return (
-    <div className="bg-[#111] border border-[#2a2d35] rounded-2xl p-4 flex flex-col gap-3 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+    <div className="bg-brand-bg border border-brand-border rounded-2xl p-4 flex flex-col gap-3 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
       <button type="button" onClick={onOpen} className="flex items-center gap-3 text-left -m-1 p-1 rounded-xl hover:bg-white/[0.03] transition-colors">
         <Avatar url={user.avatar_url} name={user.full_name} size={48} />
         <div className="flex-1 min-w-0">
@@ -50,9 +50,9 @@ function FriendCard({ user, userId, isPending, onAction, onOpen, subtitle, lang 
           ))}
         </div>
       )}
-      <div className="mt-1 pt-3 border-t border-[#2a2d35]">
+      <div className="mt-1 pt-3 border-t border-brand-border">
         {isPending ? (
-          <button disabled className="w-full py-2 rounded-xl text-xs font-bold bg-[#2a2d35] text-brand-muted flex items-center justify-center gap-2">
+          <button disabled className="w-full py-2 rounded-xl text-xs font-bold bg-brand-surface text-brand-muted flex items-center justify-center gap-2">
             <Clock className="h-4 w-4" /> {isEn ? "Request Sent" : "Terkirim"}
           </button>
         ) : (
@@ -102,9 +102,9 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
   ] as const;
 
   return (
-    <div className="pb-32 min-h-screen bg-[#0a0d1a]">
+    <div className="pb-32 min-h-screen bg-brand-dark">
       {/* Sleek Tab Navigation */}
-      <div className="sticky top-0 z-10 bg-[#0a0d1a]/90 backdrop-blur-md border-b border-[#2a2d35] px-4 pt-4 pb-0 mb-6">
+      <div className="sticky top-0 z-10 bg-brand-dark/90 backdrop-blur-md border-b border-brand-border px-4 pt-4 pb-0 mb-6">
         <div className="flex justify-between items-center max-w-lg mx-auto">
           {tabs.map((tab) => (
             <button
@@ -145,7 +145,7 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                 ))}
               </div>
             ) : (
-              <p className="text-brand-muted text-center py-10 bg-[#111] rounded-2xl border border-[#222]">
+              <p className="text-brand-muted text-center py-10 bg-brand-bg rounded-2xl border border-brand-border">
                 {isEn ? "No recommendations right now." : "Belum ada rekomendasi saat ini."}
               </p>
             )}
@@ -173,7 +173,7 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                 ))}
               </div>
             ) : (
-              <p className="text-brand-muted text-center py-10 bg-[#111] rounded-2xl border border-[#222]">
+              <p className="text-brand-muted text-center py-10 bg-brand-bg rounded-2xl border border-brand-border">
                 {isEn ? "You don't have any mutual friends yet. Connect with more people first!" : "Anda belum memiliki teman mutual. Berteman dengan lebih banyak orang dulu!"}
               </p>
             )}
@@ -190,7 +190,7 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                 <h2 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-3">{isEn ? "Friend Requests" : "Permintaan Pertemanan"} ({localIncoming.length})</h2>
                 <div className="space-y-3">
                   {localIncoming.map((req: any) => (
-                    <div key={req.friendshipId} className="bg-[#111] border border-brand-gold/30 rounded-2xl p-4 flex items-center gap-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                    <div key={req.friendshipId} className="bg-brand-bg border border-brand-gold/30 rounded-2xl p-4 flex items-center gap-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                       <button type="button" onClick={() => setViewMember(req)} className="flex-shrink-0">
                         <Avatar url={req.avatar_url} name={req.full_name} size={48} />
                       </button>
@@ -200,7 +200,7 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                           <button onClick={() => handleAccept(req.friendshipId, req)} className="flex-1 py-1.5 bg-brand-gold text-brand-dark text-xs font-bold rounded-lg hover:bg-yellow-500 transition-colors">
                             {isEn ? "Accept" : "Terima"}
                           </button>
-                          <button onClick={() => handleDecline(req.friendshipId)} className="flex-1 py-1.5 bg-[#222] text-brand-muted text-xs font-bold rounded-lg hover:bg-[#333] hover:text-white transition-colors">
+                          <button onClick={() => handleDecline(req.friendshipId)} className="flex-1 py-1.5 bg-brand-surface text-brand-muted text-xs font-bold rounded-lg hover:bg-[#333] hover:text-white transition-colors">
                             {isEn ? "Decline" : "Tolak"}
                           </button>
                         </div>
@@ -217,13 +217,13 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                 <UserCheck className="h-5 w-5 text-brand-gold" /> {isEn ? "My Connections" : "Koneksi Saya"}
               </h2>
               {localFriends.length === 0 ? (
-                <p className="text-brand-muted text-center py-10 bg-[#111] rounded-2xl border border-[#222]">
+                <p className="text-brand-muted text-center py-10 bg-brand-bg rounded-2xl border border-brand-border">
                   {isEn ? "You haven't added any friends yet." : "Anda belum menambahkan teman satupun."}
                 </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {localFriends.map((f: any) => (
-                    <div key={f.id} className="bg-[#111] border border-[#222] rounded-xl p-3 flex items-center gap-3">
+                    <div key={f.id} className="bg-brand-bg border border-brand-border rounded-xl p-3 flex items-center gap-3">
                       <button type="button" onClick={() => setViewMember(f)} className="flex items-center gap-3 flex-1 min-w-0 text-left -m-1 p-1 rounded-lg hover:bg-white/[0.03] transition-colors">
                         <Avatar url={f.avatar_url} name={f.full_name} size={40} />
                         <div className="flex-1 min-w-0">

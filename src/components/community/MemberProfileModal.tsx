@@ -3,21 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 import {
-  Award,
-  Calendar,
   Check,
   Clock,
+  Heart,
   Instagram,
   Loader2,
-  MapPin,
-  MessageCircle,
+  MessageSquare,
   Tent,
-  UserCheck,
   UserPlus,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import VinylPlayer from "@/components/home/VinylPlayer";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -27,75 +26,34 @@ export type MemberSeed = {
   avatar_url: string | null;
   angkatan?: string | null;
   kota?: string | null;
-  interests?: string[] | null;
-  skills?: string[] | null;
-  badges?: string[] | null;
 };
 
-type FullProfile = MemberSeed & {
+type Camp = { camp?: string; angkatan?: string; kota?: string };
+type Service = { position?: string; camp?: string; angkatan?: string };
+type Song = { id: string; title: string; url: string; coverImage: string };
+
+type Prof = MemberSeed & {
   nama_panggilan?: string | null;
   bio?: string | null;
-  birthdate?: string | null;
-  instagram?: string | null;
   favorite_verse?: string | null;
+  instagram?: string | null;
   created_at?: string | null;
+  gallery_urls?: string[] | null;
+  favorite_songs?: Song[] | null;
+  camp_history?: Camp[] | null;
+  services_history?: Service[] | null;
   community?: { name: string | null } | null;
 };
 
-type Friendship = "loading" | "self" | "none" | "pending_out" | "pending_in" | "accepted";
+type Post = { id: string; content: string; created_at: string };
 
-/* ---------------------------------------------------------------- helpers --- */
-
-function Avatar({
-  url,
-  name,
-  size,
-}: {
-  url?: string | null;
-  name?: string | null;
-  size: number;
-}) {
-  if (url)
-    return (
-      <Image
-        src={url}
-        alt={name || ""}
-        width={size}
-        height={size}
-        className="rounded-full object-cover"
-        style={{ width: size, height: size }}
-      />
-    );
-  return (
-    <div
-      className="flex items-center justify-center rounded-full bg-brand-bg font-bold text-brand-gold"
-      style={{ width: size, height: size, fontSize: size * 0.36 }}
-    >
-      {(name || "?")[0]?.toUpperCase()}
-    </div>
-  );
-}
-
-function Chips({ label, items }: { label: string; items?: string[] | null }) {
-  if (!items || items.length === 0) return null;
-  return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-gold">
-        {label}
-      </h3>
-      <div className="flex flex-wrap gap-1.5">
-        {items.map((it) => (
-          <span
-            key={it}
-            className="rounded-full border border-[#333] bg-[#111] px-2.5 py-1 text-xs text-brand-light"
-          >
-            {it}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
+type Friendship =
+  | "loading"
+  | "self"
+  | "none"
+  | "pending_out"
+  | "pending_in"
+  | "accepted";
 
 /* --------------------------------------------------------------- component --- */
 
@@ -112,15 +70,27 @@ export default function MemberProfileModal({
 }) {
   const isEn = lang === "en";
   const supabase = useMemo(() => createClient(), []);
-  const [data, setData] = useState<FullProfile>(member);
+
+  const [p, setP] = useState<Prof>(member);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"thought" | "profile">("profile");
+
   const [friendship, setFriendship] = useState<Friendship>(
     member.id === viewerId ? "self" : "loading"
   );
   const [friendshipId, setFriendshipId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  /* lock body scroll + Esc to close */
+  const gallery = useMemo(() => {
+    const base = p.avatar_url ? [p.avatar_url] : [];
+    return [...base, ...((p.gallery_urls || []).filter(Boolean) as string[])];
+  }, [p.avatar_url, p.gallery_urls]);
+  const [activeImage, setActiveImage] = useState<string | null>(
+    member.avatar_url
+  );
+
+  /* body scroll lock + Esc */
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -132,18 +102,24 @@ export default function MemberProfileModal({
     };
   }, [onClose]);
 
-  /* load full profile + friendship status */
+  /* load full profile + recent thoughts + friendship */
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [{ data: p }, { data: f }] = await Promise.all([
+      const [{ data: prof }, { data: feed }, { data: fr }] = await Promise.all([
         supabase
           .from("profiles")
           .select(
-            "id, full_name, nama_panggilan, avatar_url, bio, angkatan, kota, birthdate, instagram, favorite_verse, created_at, interests, skills, community:communities(name)"
+            "id, full_name, nama_panggilan, avatar_url, bio, angkatan, kota, instagram, favorite_verse, favorite_songs, gallery_urls, camp_history, services_history, created_at, community:communities(name)"
           )
           .eq("id", member.id)
           .maybeSingle(),
+        supabase
+          .from("community_posts")
+          .select("id, content, created_at")
+          .eq("author_id", member.id)
+          .order("created_at", { ascending: false })
+          .limit(30),
         member.id === viewerId
           ? Promise.resolve({ data: null })
           : supabase
@@ -155,22 +131,28 @@ export default function MemberProfileModal({
               .maybeSingle(),
       ]);
       if (!alive) return;
-      if (p) setData((d) => ({ ...d, ...(p as FullProfile) }));
+
+      if (prof) {
+        const full = prof as Prof;
+        setP((d) => ({ ...d, ...full }));
+        if (!activeImage && full.avatar_url) setActiveImage(full.avatar_url);
+      }
+      setPosts((feed as Post[]) || []);
       setLoading(false);
-      if (member.id === viewerId) {
-        setFriendship("self");
-      } else if (!f) {
-        setFriendship("none");
-      } else {
-        setFriendshipId(f.id);
-        if (f.status === "accepted") setFriendship("accepted");
-        else if (f.requester_id === viewerId) setFriendship("pending_out");
+
+      if (member.id === viewerId) setFriendship("self");
+      else if (!fr) setFriendship("none");
+      else {
+        setFriendshipId(fr.id);
+        if (fr.status === "accepted") setFriendship("accepted");
+        else if (fr.requester_id === viewerId) setFriendship("pending_out");
         else setFriendship("pending_in");
       }
     })();
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, member.id, viewerId]);
 
   const connect = async () => {
@@ -198,209 +180,368 @@ export default function MemberProfileModal({
     setFriendship("accepted");
   };
 
-  const name = data.nama_panggilan || data.full_name || (isEn ? "Member" : "Anggota");
-  const sub = [data.angkatan ? `Angkatan ${data.angkatan}` : null, data.kota]
-    .filter(Boolean)
-    .join(" • ");
-  const joined = data.created_at
-    ? new Date(data.created_at).getFullYear()
-    : null;
+  const name = p.nama_panggilan || p.full_name || (isEn ? "Member" : "Anggota");
+  const journey = (p.camp_history || []) as Camp[];
+  const services = (p.services_history || []) as Service[];
+  const img = activeImage || p.avatar_url || null;
+
+  const friendBtn = () => {
+    if (friendship === "self" || friendship === "loading") return null;
+    const base =
+      "h-12 w-12 rounded-full flex items-center justify-center backdrop-blur-md border shadow-lg shadow-black/50 transition-colors disabled:opacity-60";
+    if (friendship === "accepted")
+      return (
+        <span
+          className={`${base} bg-brand-gold/20 border-brand-gold/40 text-brand-gold`}
+          aria-label={isEn ? "Friends" : "Berteman"}
+        >
+          <Check className="h-5 w-5" />
+        </span>
+      );
+    if (friendship === "pending_out")
+      return (
+        <span
+          className={`${base} bg-[#1a1d24]/80 border-[#333] text-brand-muted`}
+          aria-label={isEn ? "Requested" : "Terkirim"}
+        >
+          <Clock className="h-5 w-5" />
+        </span>
+      );
+    return (
+      <button
+        onClick={friendship === "pending_in" ? accept : connect}
+        disabled={busy}
+        aria-label={
+          friendship === "pending_in"
+            ? isEn
+              ? "Accept request"
+              : "Terima"
+            : isEn
+            ? "Connect"
+            : "Berteman"
+        }
+        className={`${base} bg-[#1a1d24]/80 border-[#333] text-brand-gold hover:bg-[#2a2d35]`}
+      >
+        {busy ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : friendship === "pending_in" ? (
+          <Check className="h-5 w-5" />
+        ) : (
+          <UserPlus className="h-5 w-5" />
+        )}
+      </button>
+    );
+  };
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4"
-      onClick={onClose}
+      className="fixed inset-0 z-[90] overflow-y-auto bg-brand-dark text-white"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-[#2a2d35] bg-[#1a1d24] pb-6 sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
+      <button
+        onClick={onClose}
+        aria-label={isEn ? "Close" : "Tutup"}
+        className="fixed right-4 top-4 z-[95] flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
       >
-        {/* header */}
-        <div className="relative h-28 bg-gradient-to-b from-[#111] to-[#222]">
-          <div className="absolute -bottom-16 left-1/2 h-32 w-[150%] -translate-x-1/2 rounded-[100%] border-t-2 border-brand-gold/30 bg-[#1a1d24]" />
-          <button
-            onClick={onClose}
-            aria-label={isEn ? "Close" : "Tutup"}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <X className="h-5 w-5" />
+      </button>
 
-        {/* avatar + identity */}
-        <div className="relative -mt-14 flex flex-col items-center px-6">
-          <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-[#1a1d24] bg-brand-bg shadow-xl">
-            <Avatar url={data.avatar_url} name={data.full_name} size={112} />
-          </div>
-          <h1 className="mt-3 text-center text-xl font-bold text-white">{name}</h1>
-          {sub && <p className="mt-0.5 text-center text-xs text-brand-muted">{sub}</p>}
-          <p className="mt-1 flex items-center gap-1.5 text-center text-sm font-semibold text-brand-gold">
-            <Tent className="h-4 w-4" />
-            {data.community?.name || "Ruang Iman"}
-          </p>
-
-          {data.favorite_verse && (
-            <div className="mt-3 max-w-sm rounded-lg border border-brand-gold/20 bg-brand-surface px-4 py-2 text-center">
-              <p className="text-xs italic text-brand-light">
-                &ldquo;{data.favorite_verse}&rdquo;
-              </p>
+      <div className="mx-auto w-full max-w-md pb-24">
+        {/* ---------------------------------------------------- header --- */}
+        <div className="relative h-[440px] w-full bg-[#222]">
+          {img ? (
+            <Image
+              src={img}
+              alt={p.full_name || ""}
+              fill
+              className="object-cover transition-all duration-300"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-[#111] to-[#222] text-7xl font-bold text-brand-gold/40">
+              {(p.full_name || "?")[0]?.toUpperCase()}
             </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/30 to-transparent" />
 
-          {/* actions */}
-          {friendship !== "self" && (
-            <div className="mt-5 flex w-full items-center gap-2">
+          <div className="absolute bottom-[92px] right-4 z-20 flex flex-col gap-3">
+            {p.instagram && (
+              <a
+                href={`https://instagram.com/${p.instagram.replace(/^@/, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#333] bg-[#1a1d24]/80 text-brand-gold shadow-lg shadow-black/50 backdrop-blur-md transition-colors hover:bg-[#2a2d35]"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+            )}
+            {friendship !== "self" && (
               <Link
                 href={`/community/messages?u=${member.id}`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-gold py-2.5 text-sm font-bold text-brand-dark transition-colors hover:bg-yellow-400"
+                aria-label={isEn ? "Message" : "Pesan"}
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#333] bg-[#1a1d24]/80 text-brand-gold shadow-lg shadow-black/50 backdrop-blur-md transition-colors hover:bg-[#2a2d35]"
               >
-                <MessageCircle className="h-4 w-4" />
-                {isEn ? "Message" : "Pesan"}
+                <MessageSquare className="h-5 w-5 fill-current" />
               </Link>
+            )}
+            {friendBtn()}
+          </div>
 
-              {friendship === "accepted" && (
-                <span className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-gold/30 bg-brand-gold/10 py-2.5 text-sm font-bold text-brand-gold">
-                  <UserCheck className="h-4 w-4" />
-                  {isEn ? "Friends" : "Berteman"}
-                </span>
-              )}
-              {friendship === "pending_out" && (
-                <span className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#333] bg-[#222] py-2.5 text-sm font-bold text-brand-muted">
-                  <Clock className="h-4 w-4" />
-                  {isEn ? "Requested" : "Terkirim"}
-                </span>
-              )}
-              {friendship === "pending_in" && (
-                <button
-                  onClick={accept}
-                  disabled={busy}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-gold/40 bg-brand-gold/10 py-2.5 text-sm font-bold text-brand-gold transition-colors hover:bg-brand-gold hover:text-brand-dark disabled:opacity-50"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {isEn ? "Accept" : "Terima"}
-                </button>
-              )}
-              {friendship === "none" && (
-                <button
-                  onClick={connect}
-                  disabled={busy}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-gold/30 bg-brand-gold/10 py-2.5 text-sm font-bold text-brand-gold transition-colors hover:bg-brand-gold hover:text-brand-dark disabled:opacity-50"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                  {isEn ? "Connect" : "Berteman"}
-                </button>
-              )}
-              {friendship === "loading" && (
-                <span className="flex flex-1 items-center justify-center rounded-xl border border-[#333] bg-[#222] py-2.5">
-                  <Loader2 className="h-4 w-4 animate-spin text-brand-muted" />
-                </span>
-              )}
+          <div className="absolute bottom-[104px] left-6 z-10 max-w-[65%]">
+            <h1 className="text-3xl font-bold leading-tight drop-shadow-md">
+              {name}
+            </h1>
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-brand-light drop-shadow-md">
+              <Tent className="h-4 w-4" />
+              {p.community?.name || "Ruang Iman"}
+            </p>
+            {p.favorite_verse && (
+              <p className="mt-1 text-xs italic text-brand-gold drop-shadow-md">
+                &ldquo;{p.favorite_verse}&rdquo;
+              </p>
+            )}
+          </div>
+
+          {gallery.length > 1 && (
+            <div className="absolute inset-x-0 bottom-4 z-20 px-4">
+              <div className="flex items-center gap-2 rounded-[20px] border border-[#333] bg-[#1a1d24]/60 p-2 backdrop-blur-md">
+                {gallery.slice(0, 5).map((g, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(g)}
+                    className={`relative h-14 w-[18%] shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                      img === g
+                        ? "scale-105 border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                        : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <Image src={g} alt="" fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        {/* stat pills */}
-        <div className="px-6 pt-6">
-          <div className="flex items-center justify-around rounded-2xl border border-[#333] bg-brand-surface/50 p-4">
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111] text-brand-gold">
-                <MapPin className="h-4 w-4" />
+        {/* ---------------------------------------------------- vinyl --- */}
+        {(p.favorite_songs?.length ?? 0) > 0 && (
+          <VinylPlayer
+            initialSongs={p.favorite_songs || []}
+            userId={member.id}
+            readOnly
+          />
+        )}
+
+        {/* ------------------------------------------------ stat cards --- */}
+        <div className="mt-6 grid grid-cols-2 gap-3 px-6">
+          <div className="flex flex-col gap-2 rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gold/10">
+                <Heart className="h-[18px] w-[18px] text-brand-gold" />
               </div>
-              <span className="text-[11px] text-brand-muted">
-                {isEn ? "Region" : "Regional"}
-              </span>
-              <span className="text-sm font-semibold text-white">
-                {data.kota || "—"}
+              <span className="text-2xl font-bold text-white">
+                {services.length}
               </span>
             </div>
-            <div className="h-10 w-px bg-[#333]" />
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111] text-brand-gold">
-                <Award className="h-4 w-4" />
+            <div>
+              <p className="text-xs font-semibold text-white">
+                {isEn ? "My Services" : "Pelayanan Saya"}
+              </p>
+              <p className="mt-0.5 text-[10px] text-brand-muted">
+                {services.length
+                  ? `${isEn ? "Last:" : "Terakhir:"} ${
+                      services[services.length - 1]?.position || "—"
+                    }`
+                  : isEn
+                  ? "None yet"
+                  : "Belum ada"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gold/10">
+                <Tent className="h-[18px] w-[18px] text-brand-gold" />
               </div>
-              <span className="text-[11px] text-brand-muted">Angkatan</span>
-              <span className="text-sm font-semibold text-white">
-                {data.angkatan || "—"}
+              <span className="text-2xl font-bold text-white">
+                {journey.length}
               </span>
             </div>
-            <div className="h-10 w-px bg-[#333]" />
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111] text-brand-gold">
-                <Calendar className="h-4 w-4" />
-              </div>
-              <span className="text-[11px] text-brand-muted">
-                {isEn ? "Joined" : "Bergabung"}
-              </span>
-              <span className="text-sm font-semibold text-white">
-                {joined || "—"}
-              </span>
+            <div>
+              <p className="text-xs font-semibold text-white">
+                {isEn ? "My Journey" : "Perjalanan Saya"}
+              </p>
+              <p className="mt-0.5 text-[10px] text-brand-muted">
+                {journey.length
+                  ? journey[journey.length - 1]?.camp || "—"
+                  : isEn
+                  ? "None yet"
+                  : "Belum ada"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* body */}
-        <div className="space-y-5 px-6 pt-6">
+        {/* --------------------------------------------------- toggle --- */}
+        <div className="mt-4 px-6">
+          <div className="mx-auto flex w-full max-w-[280px] items-center gap-1 rounded-full border border-[#333] bg-[#1a1d24] p-1.5 shadow-lg">
+            <button
+              onClick={() => setTab("thought")}
+              className={`flex-1 rounded-full py-2.5 text-sm font-bold transition-all ${
+                tab === "thought"
+                  ? "bg-brand-gold text-brand-dark shadow-md"
+                  : "text-brand-muted hover:text-white"
+              }`}
+            >
+              {isEn ? "Thoughts" : "Pikiran"}
+            </button>
+            <button
+              onClick={() => setTab("profile")}
+              className={`flex-1 rounded-full py-2.5 text-sm font-bold transition-all ${
+                tab === "profile"
+                  ? "bg-brand-gold text-brand-dark shadow-md"
+                  : "text-brand-muted hover:text-white"
+              }`}
+            >
+              {isEn ? "Profile" : "Profil"}
+            </button>
+          </div>
+        </div>
+
+        {/* ---------------------------------------------------- body --- */}
+        <div className="mt-6 px-6">
           {loading && (
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center py-6">
               <Loader2 className="h-5 w-5 animate-spin text-brand-muted" />
             </div>
           )}
 
-          {(data.badges?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {data.badges!.map((b) => (
-                <span
-                  key={b}
-                  className="rounded-full border border-brand-gold/30 bg-brand-gold/10 px-2.5 py-1 text-[11px] text-brand-gold"
-                >
-                  {b}
-                </span>
-              ))}
-            </div>
-          )}
+          {tab === "profile" && !loading && (
+            <div className="space-y-8 pb-4">
+              {p.bio && (
+                <p className="text-sm leading-relaxed text-brand-light">
+                  {p.bio}
+                </p>
+              )}
 
-          <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-gold">
-              {isEn ? "Biography" : "Biografi"}
-            </h3>
-            <div className="rounded-xl border border-[#333] bg-[#111] p-4">
-              <p className="text-sm leading-relaxed text-brand-light">
-                {data.bio ||
-                  (isEn
-                    ? "This member hasn't added a bio yet."
-                    : "Anggota ini belum menambahkan biografi.")}
-              </p>
-            </div>
-          </div>
-
-          <Chips label={isEn ? "Interests" : "Minat"} items={data.interests} />
-          <Chips label={isEn ? "Skills" : "Keahlian"} items={data.skills} />
-
-          {data.birthdate && (
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-gold">
-                {isEn ? "Birthday" : "Ulang Tahun"}
-              </h3>
-              <div className="rounded-xl border border-[#333] bg-[#111] p-4">
-                <span className="text-sm font-medium text-white">
-                  {new Date(data.birthdate).toLocaleDateString(
-                    isEn ? "en-US" : "id-ID",
-                    { day: "numeric", month: "long" }
+              <div>
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-gold">
+                  <Tent className="h-4 w-4" />
+                  {isEn ? "My Journey" : "Perjalanan Saya"}
+                </h3>
+                <div className="relative space-y-5 pl-6 before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-[#333]">
+                  {journey.length ? (
+                    journey.map((c, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full bg-brand-gold ring-4 ring-brand-dark shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                        <div className="relative overflow-hidden rounded-2xl border border-[#333] bg-[#1a1d24] p-4">
+                          <div className="absolute left-0 top-0 h-full w-1 bg-brand-gold/20" />
+                          <h4 className="text-sm font-bold text-white">
+                            {c.camp}
+                          </h4>
+                          <p className="mt-1 text-xs text-gray-400">
+                            Angkatan {c.angkatan}
+                            {c.kota ? (
+                              <>
+                                <span className="mx-1 text-[#444]">•</span>
+                                {c.kota}
+                              </>
+                            ) : null}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm italic text-brand-muted">
+                      {isEn ? "No camps added yet." : "Belum ada camp."}
+                    </p>
                   )}
-                </span>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-gold">
+                  <Heart className="h-4 w-4" />
+                  {isEn ? "My Services" : "Pelayanan Saya"}
+                </h3>
+                <div className="relative space-y-5 pl-6 before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-gradient-to-b before:from-brand-gold/50 before:to-[#333]">
+                  {services.length ? (
+                    services.map((s, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full bg-brand-gold ring-4 ring-brand-dark shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                        <div className="relative overflow-hidden rounded-2xl border border-[#333] bg-[#1a1d24] p-4">
+                          <div className="absolute left-0 top-0 h-full w-1 bg-brand-gold/20" />
+                          <div className="mb-1 flex items-center gap-2">
+                            <Heart className="h-3.5 w-3.5 text-brand-gold" />
+                            <h4 className="text-sm font-bold text-white">
+                              {s.position}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            {s.camp}
+                            <span className="mx-1 text-[#444]">•</span>
+                            Angkatan {s.angkatan}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm italic text-brand-muted">
+                      {isEn ? "No services added yet." : "Belum ada pelayanan."}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {data.instagram && (
-            <a
-              href={`https://instagram.com/${data.instagram.replace(/^@/, "")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-xl border border-[#333] bg-[#111] p-4 text-sm font-medium text-brand-light transition-colors hover:border-brand-gold/50 hover:text-brand-gold"
-            >
-              <Instagram className="h-4 w-4" />@{data.instagram.replace(/^@/, "")}
-            </a>
+          {tab === "thought" && !loading && (
+            <div className="space-y-3 pb-4">
+              {posts.length ? (
+                posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="rounded-2xl border border-[#2a2d35] bg-[#111] p-4"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="h-7 w-7 overflow-hidden rounded-full bg-brand-bg">
+                        {p.avatar_url ? (
+                          <Image
+                            src={p.avatar_url}
+                            alt=""
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-7 w-7 items-center justify-center text-xs font-bold text-brand-gold">
+                            {(p.full_name || "?")[0]?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-white">
+                        {name}
+                      </span>
+                      <span className="text-[10px] text-brand-muted">
+                        {formatDistanceToNow(new Date(post.created_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-brand-light">
+                      {post.content}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="py-6 text-center text-sm italic text-brand-muted">
+                  {isEn
+                    ? "No thoughts shared yet."
+                    : "Belum ada pikiran yang dibagikan."}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

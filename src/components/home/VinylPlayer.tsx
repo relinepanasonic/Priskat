@@ -16,12 +16,14 @@ type Song = {
   coverImage: string;
 };
 
-export default function VinylPlayer({ 
+export default function VinylPlayer({
   initialSongs = [],
-  userId
+  userId,
+  readOnly = false
 }: {
   initialSongs?: Song[],
-  userId: string
+  userId: string,
+  readOnly?: boolean
 }) {
   const [songs, setSongs] = useState<Song[]>(initialSongs);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
@@ -68,6 +70,15 @@ export default function VinylPlayer({
   };
 
   const handleVinylClick = (idx: number) => {
+    if (readOnly) {
+      if (!songs[idx]) return;
+      if (playingIdx === idx) togglePlay();
+      else {
+        setPlayingIdx(idx);
+        setIsPlaying(true);
+      }
+      return;
+    }
     if (songs[idx]) {
       // Already has a song, toggle play
       if (playingIdx === idx) {
@@ -195,13 +206,13 @@ export default function VinylPlayer({
                       <div className="absolute inset-0 m-auto w-2 h-2 sm:w-2.5 sm:h-2.5 bg-black rounded-full shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]"></div>
                     </div>
                   </>
-                ) : (
+                ) : readOnly ? null : (
                   <Plus className="w-5 h-5 text-gray-500" />
                 )}
               </button>
 
               {/* Delete Button */}
-              {song && (
+              {song && !readOnly && (
                 <button
                   onClick={(e) => deleteSong(idx, e)}
                   className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-20"
