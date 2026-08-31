@@ -11,7 +11,7 @@ function Avatar({ url, name, size = 36 }: { url?: string | null; name?: string |
   return url ? (
     <Image src={url} alt={name || ""} width={size} height={size} className="rounded-full object-cover flex-shrink-0" style={{ width: size, height: size }} />
   ) : (
-    <div className="rounded-full bg-brand-bg border border-[#333] flex items-center justify-center text-brand-gold font-bold flex-shrink-0" style={{ width: size, height: size, fontSize: size * 0.38 }}>
+    <div className="rounded-full bg-brand-bg border border-brand-border flex items-center justify-center text-brand-gold font-bold flex-shrink-0" style={{ width: size, height: size, fontSize: size * 0.38 }}>
       {(name || "?")[0].toUpperCase()}
     </div>
   );
@@ -21,7 +21,7 @@ function CommentItem({ comment }: { comment: any }) {
   return (
     <div className="flex gap-2 mt-3">
       <Avatar url={comment.author?.avatar_url} name={comment.author?.full_name} size={28} />
-      <div className="flex-1 bg-[#2a2d35] rounded-2xl px-3 py-2">
+      <div className="flex-1 bg-brand-surface rounded-2xl px-3 py-2">
         <span className="font-bold text-white text-[13px] mr-2">{comment.author?.full_name}</span>
         <span className="text-[13px] text-brand-light">{comment.content}</span>
         <p className="text-[10px] text-brand-muted mt-1">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</p>
@@ -73,12 +73,12 @@ function CommentSection({ postId, userId, initialCount, lang = "id" }: { postId:
         <span>{initialCount > 0 ? initialCount : (isEn ? "Comment" : "Komentar")}</span>
       </button>
       {open && (
-        <div className="mt-3 border-t border-[#2a2d35] pt-3">
+        <div className="mt-3 border-t border-brand-border pt-3">
           {loading && <p className="text-xs text-brand-muted">{isEn ? "Loading..." : "Memuat..."}</p>}
           {comments.map(c => <CommentItem key={c.id} comment={c} />)}
           {userId && (
             <div className="flex gap-2 mt-3">
-              <div className="flex-1 flex items-center bg-[#2a2d35] rounded-2xl px-3 gap-2">
+              <div className="flex-1 flex items-center bg-brand-surface rounded-2xl px-3 gap-2">
                 <input
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -124,12 +124,12 @@ function ThoughtCard({ post, userId, isLiked: initialLiked, lang = "id" }: { pos
   const author = post.author;
 
   return (
-    <article className="border-b border-[#2a2d35] px-4 py-5">
+    <article className="border-b border-brand-border px-4 py-5">
       <div className="flex gap-3">
         {/* Avatar col with thread line */}
         <div className="flex flex-col items-center">
           <Avatar url={author?.avatar_url} name={author?.full_name} size={40} />
-          <div className="w-px bg-[#2a2d35] flex-1 mt-2" />
+          <div className="w-px bg-brand-surface flex-1 mt-2" />
         </div>
 
         {/* Content */}
@@ -144,7 +144,7 @@ function ThoughtCard({ post, userId, isLiked: initialLiked, lang = "id" }: { pos
           <p className="text-[15px] text-brand-light leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
           {post.image_url && (
-            <div className="mt-3 rounded-2xl overflow-hidden border border-[#2a2d35]">
+            <div className="mt-3 rounded-2xl overflow-hidden border border-brand-border">
               <img src={post.image_url} alt="post image" className="w-full object-cover max-h-80" />
             </div>
           )}

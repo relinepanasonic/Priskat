@@ -796,7 +796,7 @@ export default function GroupClient({
       <nav
         className={`${
           mobileCol === "rooms" ? "hidden" : "flex"
-        } w-16 flex-shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-[#2a2d35] bg-[#111317] py-3 md:hidden`}
+        } w-16 flex-shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-brand-border bg-[#111317] py-3 md:hidden`}
       >
         <button
           onClick={() => setMobileCol("rooms")}
@@ -838,9 +838,9 @@ export default function GroupClient({
       <aside
         className={`${
           mobileCol === "rooms" ? "flex" : "hidden"
-        } md:flex w-full md:w-60 lg:w-64 flex-col border-r border-[#2a2d35] bg-[#16181d]`}
+        } md:flex w-full md:w-60 lg:w-64 flex-col border-r border-brand-border bg-[#16181d]`}
       >
-        <div className="flex items-center justify-between border-b border-[#2a2d35] px-4 py-3">
+        <div className="flex items-center justify-between border-b border-brand-border px-4 py-3">
           <h1 className="text-[15px] font-bold tracking-wide">{t.rooms}</h1>
           {canCreateRoom && (
             <button
@@ -914,9 +914,9 @@ export default function GroupClient({
       <aside
         className={`${
           mobileCol === "groups" ? "flex" : "hidden"
-        } md:flex min-w-0 flex-1 md:w-64 md:flex-none lg:w-72 flex-col border-r border-[#2a2d35] bg-[#191c22]`}
+        } md:flex min-w-0 flex-1 md:w-64 md:flex-none lg:w-72 flex-col border-r border-brand-border bg-[#191c22]`}
       >
-        <div className="flex items-center gap-2 border-b border-[#2a2d35] px-3 py-3">
+        <div className="flex items-center gap-2 border-b border-brand-border px-3 py-3">
           <h2 className="flex-1 truncate text-[14px] font-bold">
             {activeRoom?.name || t.groups}
           </h2>
@@ -1040,7 +1040,7 @@ export default function GroupClient({
           />
         ) : (
           <>
-            <header className="flex items-center gap-3 border-b border-[#2a2d35] bg-[#16181d] px-3 py-2.5">
+            <header className="flex items-center gap-3 border-b border-brand-border bg-[#16181d] px-3 py-2.5">
               <button
                 onClick={() => setMobileCol("groups")}
                 className="-ml-1 rounded-full p-1.5 text-brand-muted hover:text-white md:hidden"
@@ -1191,7 +1191,7 @@ export default function GroupClient({
                   )}
                 </div>
 
-                <div className="border-t border-[#2a2d35] bg-[#16181d] px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
+                <div className="border-t border-brand-border bg-[#16181d] px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
                   <div className="mx-auto flex max-w-2xl items-end gap-2">
                     <textarea
                       ref={taRef}
@@ -1338,7 +1338,7 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#333] bg-brand-surface">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-brand-border bg-brand-surface">
         {icon}
       </div>
       <h2 className="text-[15px] font-bold text-white">{title}</h2>
@@ -1359,7 +1359,7 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
-      <div className="max-h-[88vh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-[#2a2d35] bg-[#16181d] p-5 sm:rounded-2xl">
+      <div className="max-h-[88vh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-brand-border bg-[#16181d] p-5 sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-[15px] font-bold text-white">{title}</h3>
           <button onClick={onClose} className="text-brand-muted hover:text-white">
@@ -1383,7 +1383,7 @@ function Field(
       </span>
       <input
         {...rest}
-        className="w-full rounded-lg border border-[#333] bg-[#232730] px-3 py-2.5 text-[14px] text-white placeholder-gray-500 focus:border-brand-gold/60 focus:outline-none"
+        className="w-full rounded-lg border border-brand-border bg-[#232730] px-3 py-2.5 text-[14px] text-white placeholder-gray-500 focus:border-brand-gold/60 focus:outline-none"
       />
     </label>
   );
@@ -1420,7 +1420,7 @@ function PictureField({
         ) : (
           <Avatar name={name} size={56} />
         )}
-        <span className="inline-flex items-center gap-2 rounded-lg border border-[#333] px-3 py-2 text-[13px] font-semibold text-brand-light hover:bg-white/5">
+        <span className="inline-flex items-center gap-2 rounded-lg border border-brand-border px-3 py-2 text-[13px] font-semibold text-brand-light hover:bg-white/5">
           {busy ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -1482,7 +1482,7 @@ function ModalActions({
       <div className="mt-2 flex gap-2">
         <button
           onClick={onClose}
-          className="flex-1 rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+          className="flex-1 rounded-lg border border-brand-border py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
         >
           {cancelLabel}
         </button>
@@ -1608,7 +1608,7 @@ function ShareRow({ t, onShare }: { t: T; onShare: () => void }) {
           setTimeout(() => setCopied(false), 1600);
         }
       }}
-      className="flex w-full items-center gap-2 rounded-lg border border-[#333] px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+      className="flex w-full items-center gap-2 rounded-lg border border-brand-border px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
     >
       <Share2 className="h-4 w-4" /> {copied ? t.linkCopied : t.share}
     </button>
@@ -1676,7 +1676,7 @@ function EditRoomModal({
       <div className="mb-3 grid grid-cols-2 gap-2">
         <button
           onClick={onAddMember}
-          className="flex items-center justify-center gap-2 rounded-lg border border-[#333] px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+          className="flex items-center justify-center gap-2 rounded-lg border border-brand-border px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
         >
           <UserPlus className="h-4 w-4" /> {t.addMember}
         </button>
@@ -1743,7 +1743,7 @@ function EditGroupModal({
       <div className="mb-3 grid grid-cols-2 gap-2">
         <button
           onClick={onAddMember}
-          className="flex items-center justify-center gap-2 rounded-lg border border-[#333] px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+          className="flex items-center justify-center gap-2 rounded-lg border border-brand-border px-3 py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
         >
           <UserPlus className="h-4 w-4" /> {t.addMember}
         </button>
@@ -1817,7 +1817,7 @@ function AddMemberModal({
 
   return (
     <ModalShell title={t.addMember} onClose={onClose}>
-      <div className="mb-3 flex items-center gap-2 rounded-lg border border-[#333] bg-[#232730] px-3">
+      <div className="mb-3 flex items-center gap-2 rounded-lg border border-brand-border bg-[#232730] px-3">
         <Search className="h-4 w-4 flex-shrink-0 text-brand-muted" />
         <input
           value={q}
@@ -1862,7 +1862,7 @@ function AddMemberModal({
       </ul>
       <button
         onClick={onClose}
-        className="mt-3 w-full rounded-lg border border-[#333] py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+        className="mt-3 w-full rounded-lg border border-brand-border py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
       >
         {t.close}
       </button>

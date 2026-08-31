@@ -24,7 +24,7 @@ export default function CommunityLayout({ children }: { children: React.ReactNod
   return (
     <div className="w-full min-h-[100dvh] bg-brand-dark text-white font-sans">
       {/* Sub-tab header */}
-      <div className="sticky top-0 z-30 bg-[#1a1d24] border-b border-[#333]">
+      <div className="sticky top-0 z-30 bg-brand-bg border-b border-brand-border">
         <div className="flex">
           {TABS.map(({ href, label, icon: Icon, badge }) => {
             const active = pathname.startsWith(href);
