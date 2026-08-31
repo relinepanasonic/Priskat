@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
-import { Map, Calendar, LayoutDashboard, Tent, Users, ChevronLeft } from "lucide-react";
+import { Map, Calendar, LayoutDashboard, Tent, Users, ChevronLeft, Network } from "lucide-react";
 
 export default function CommunitySlugLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,6 +23,7 @@ export default function CommunitySlugLayout({ children }: { children: React.Reac
 
   const tabs = [
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
+    { name: "Org Structure", href: `/camp/${slug}/org-structure`, icon: Network },
     { name: "My Ongoing Camp", href: `/camp/${slug}/ongoing`, icon: Tent },
     { name: "Camp Crew", href: `/camp/${slug}/crew`, icon: Users },
     { name: "Schedule", href: `/camp/${slug}/schedule`, icon: Calendar },
