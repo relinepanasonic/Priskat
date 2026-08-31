@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
+  BellRing,
   Check,
   DoorClosed,
   DoorOpen,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
+import { pingGroupChanged, GROUP_CHANGED } from "@/lib/dmEvents";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -65,6 +67,15 @@ type Message = {
   author?: Profile | null;
   pending?: boolean;
   failed?: boolean;
+};
+type JoinRequest = {
+  request_id: string;
+  group_id: string;
+  group_name: string | null;
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
 };
 
 /* --------------------------------------------------------------- i18n dict --- */
@@ -105,6 +116,13 @@ const DICT = {
     newGroup: "New group",
     join: "Join",
     joining: "Joining…",
+    requestJoin: "Request",
+    requested: "Requested",
+    requests: "Join requests",
+    noRequests: "No pending requests",
+    wantsToJoin: "wants to join",
+    accept: "Accept",
+    decline: "Decline",
     pickGroup: "Select a group to open the chat",
     create: "Create",
     cancel: "Cancel",
@@ -153,6 +171,13 @@ const DICT = {
     newGroup: "Grup baru",
     join: "Gabung",
     joining: "Bergabung…",
+    requestJoin: "Minta gabung",
+    requested: "Menunggu",
+    requests: "Permintaan gabung",
+    noRequests: "Tidak ada permintaan",
+    wantsToJoin: "ingin bergabung",
+    accept: "Terima",
+    decline: "Tolak",
     pickGroup: "Pilih grup untuk membuka obrolan",
     create: "Buat",
     cancel: "Batal",
@@ -294,6 +319,7 @@ export default function GroupClient({
   groups: initialGroups,
   myRoomIds: initialRoomIds,
   unreadGroupIds: initialUnread,
+  pendingRequests: initialRequests = [],
 }: {
   lang?: "id" | "en";
   me: Profile;
@@ -302,6 +328,7 @@ export default function GroupClient({
   groups: Group[];
   myRoomIds: string[];
   unreadGroupIds: string[];
+  pendingRequests?: JoinRequest[];
 }) {
   const t = DICT[lang];
   const supabase = useMemo(() => createClient(), []);
@@ -333,10 +360,70 @@ export default function GroupClient({
     | { type: "editRoom"; id: string }
     | { type: "editGroup"; id: string }
     | { type: "addMember"; scope: "room" | "group"; id: string }
+    | { type: "requests" }
   >(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  const [requests, setRequests] = useState<JoinRequest[]>(initialRequests);
+  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
+  const [busyReqId, setBusyReqId] = useState<string | null>(null);
+
+  const refreshRequests = useCallback(async () => {
+    const { data } = await supabase.rpc("my_pending_group_requests");
+    if (Array.isArray(data)) setRequests(data as JoinRequest[]);
+  }, [supabase]);
+
+  useEffect(() => {
+    const onChange = () => refreshRequests();
+    window.addEventListener(GROUP_CHANGED, onChange);
+    const iv = setInterval(refreshRequests, 20000);
+    return () => {
+      window.removeEventListener(GROUP_CHANGED, onChange);
+      clearInterval(iv);
+    };
+  }, [refreshRequests]);
+
+  const acceptRequest = async (r: JoinRequest) => {
+    setBusyReqId(r.request_id);
+    const { error } = await supabase
+      .from("group_members")
+      .update({ status: "accepted" })
+      .eq("id", r.request_id);
+    if (!error) {
+      const g = groups.find((x) => x.id === r.group_id);
+      if (g)
+        await supabase
+          .from("groups")
+          .update({ member_count: g.member_count + 1 })
+          .eq("id", r.group_id)
+          .then(() => {}, () => {});
+      setGroups((prev) =>
+        prev.map((x) =>
+          x.id === r.group_id
+            ? { ...x, member_count: x.member_count + 1 }
+            : x
+        )
+      );
+      setRequests((prev) => prev.filter((x) => x.request_id !== r.request_id));
+      pingGroupChanged();
+    }
+    setBusyReqId(null);
+  };
+
+  const declineRequest = async (r: JoinRequest) => {
+    setBusyReqId(r.request_id);
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("id", r.request_id);
+    if (!error) {
+      setRequests((prev) => prev.filter((x) => x.request_id !== r.request_id));
+      pingGroupChanged();
+    }
+    setBusyReqId(null);
+  };
 
   const closeModal = () => {
     setModal(null);
@@ -677,6 +764,20 @@ export default function GroupClient({
   const joinGroup = (group: Group) => {
     setJoiningId(group.id);
     startTransition(async () => {
+      // Private groups take a request the owner/admins must accept.
+      if (group.is_private) {
+        const { error: reqErr } = await supabase.from("group_members").insert({
+          group_id: group.id,
+          user_id: me.id,
+          role: "member",
+          status: "pending",
+        });
+        if (reqErr) console.error("[group] request failed", reqErr);
+        else setRequestedIds((prev) => new Set(prev).add(group.id));
+        setJoiningId(null);
+        return;
+      }
+
       const { error } = await supabase.from("group_members").insert({
         group_id: group.id,
         user_id: me.id,
@@ -920,6 +1021,18 @@ export default function GroupClient({
           <h2 className="flex-1 truncate text-[14px] font-bold">
             {activeRoom?.name || t.groups}
           </h2>
+          {requests.length > 0 && (
+            <button
+              onClick={() => setModal({ type: "requests" })}
+              className="relative rounded-full p-1.5 text-brand-gold hover:bg-white/5"
+              aria-label={t.requests}
+            >
+              <BellRing className="h-[18px] w-[18px]" />
+              <span className="absolute -right-0.5 -top-0.5 min-w-[15px] rounded-full bg-red-500 px-1 text-[9px] font-bold leading-[15px] text-white">
+                {requests.length > 9 ? "9+" : requests.length}
+              </span>
+            </button>
+          )}
           {canEditRoom && (
             <button
               onClick={() => setModal({ type: "editRoom", id: activeRoom!.id })}
@@ -971,7 +1084,10 @@ export default function GroupClient({
                 <button
                   key={g.id}
                   onClick={() => {
-                    if (!g.joined) return joinGroup(g);
+                    if (!g.joined) {
+                      if (requestedIds.has(g.id)) return;
+                      return joinGroup(g);
+                    }
                     setActiveGroupId(g.id);
                     setMobileCol("chat");
                   }}
@@ -1004,13 +1120,21 @@ export default function GroupClient({
                     </span>
                   </span>
                   {!g.joined ? (
-                    <span className="flex-shrink-0 rounded-full border border-brand-gold/40 px-2.5 py-1 text-[11px] font-semibold text-brand-gold">
-                      {joiningId === g.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        t.join
-                      )}
-                    </span>
+                    requestedIds.has(g.id) ? (
+                      <span className="flex-shrink-0 rounded-full border border-[#333] px-2.5 py-1 text-[11px] font-semibold text-brand-muted">
+                        {t.requested}
+                      </span>
+                    ) : (
+                      <span className="flex-shrink-0 rounded-full border border-brand-gold/40 px-2.5 py-1 text-[11px] font-semibold text-brand-gold">
+                        {joiningId === g.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : g.is_private ? (
+                          t.requestJoin
+                        ) : (
+                          t.join
+                        )}
+                      </span>
+                    )
                   ) : isUnread ? (
                     <Dot />
                   ) : (
@@ -1072,16 +1196,26 @@ export default function GroupClient({
             {!activeGroup.joined || !chatId ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
                 <p className="text-sm text-brand-muted">{t.joinToChat}</p>
-                <button
-                  onClick={() => joinGroup(activeGroup)}
-                  disabled={joiningId === activeGroup.id}
-                  className="inline-flex items-center gap-2 rounded-full bg-brand-gold px-5 py-2.5 text-sm font-bold text-brand-dark hover:bg-yellow-400 disabled:opacity-50"
-                >
-                  {joiningId === activeGroup.id && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  )}
-                  {joiningId === activeGroup.id ? t.joining : t.join}
-                </button>
+                {requestedIds.has(activeGroup.id) ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#333] px-5 py-2.5 text-sm font-bold text-brand-muted">
+                    {t.requested}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => joinGroup(activeGroup)}
+                    disabled={joiningId === activeGroup.id}
+                    className="inline-flex items-center gap-2 rounded-full bg-brand-gold px-5 py-2.5 text-sm font-bold text-brand-dark hover:bg-yellow-400 disabled:opacity-50"
+                  >
+                    {joiningId === activeGroup.id && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    {joiningId === activeGroup.id
+                      ? t.joining
+                      : activeGroup.is_private
+                      ? t.requestJoin
+                      : t.join}
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -1293,6 +1427,16 @@ export default function GroupClient({
           id={modal.id}
           onClose={closeModal}
           onAdd={(userId) => addMember(modal.scope, modal.id, userId)}
+        />
+      )}
+      {modal?.type === "requests" && (
+        <RequestsModal
+          t={t}
+          requests={requests}
+          busyId={busyReqId}
+          onClose={closeModal}
+          onAccept={acceptRequest}
+          onDecline={declineRequest}
         />
       )}
     </div>
@@ -1860,6 +2004,84 @@ function AddMemberModal({
           );
         })}
       </ul>
+      <button
+        onClick={onClose}
+        className="mt-3 w-full rounded-lg border border-brand-border py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"
+      >
+        {t.close}
+      </button>
+    </ModalShell>
+  );
+}
+
+function RequestsModal({
+  t,
+  requests,
+  busyId,
+  onClose,
+  onAccept,
+  onDecline,
+}: {
+  t: T;
+  requests: JoinRequest[];
+  busyId: string | null;
+  onClose: () => void;
+  onAccept: (r: JoinRequest) => void;
+  onDecline: (r: JoinRequest) => void;
+}) {
+  return (
+    <ModalShell title={t.requests} onClose={onClose}>
+      {requests.length === 0 ? (
+        <p className="py-6 text-center text-[13px] text-brand-muted">
+          {t.noRequests}
+        </p>
+      ) : (
+        <ul className="max-h-80 space-y-2 overflow-y-auto">
+          {requests.map((r) => {
+            const busy = busyId === r.request_id;
+            return (
+              <li
+                key={r.request_id}
+                className="rounded-xl border border-brand-border bg-[#111] p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar url={r.avatar_url} name={r.full_name} size={38} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-semibold text-white">
+                      {r.full_name || "—"}
+                    </p>
+                    <p className="truncate text-[11px] text-brand-muted">
+                      {t.wantsToJoin} · {r.group_name}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => onAccept(r)}
+                    disabled={busy}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-gold py-1.5 text-[12px] font-bold text-brand-dark hover:bg-yellow-400 disabled:opacity-50"
+                  >
+                    {busy ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Check className="h-3.5 w-3.5" />
+                    )}
+                    {t.accept}
+                  </button>
+                  <button
+                    onClick={() => onDecline(r)}
+                    disabled={busy}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-border py-1.5 text-[12px] font-bold text-brand-muted hover:bg-white/5 hover:text-white disabled:opacity-50"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    {t.decline}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <button
         onClick={onClose}
         className="mt-3 w-full rounded-lg border border-brand-border py-2.5 text-[13px] font-semibold text-brand-light hover:bg-white/5"

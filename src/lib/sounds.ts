@@ -1,10 +1,7 @@
-// A short, gentle two-note bell — synthesised with the Web Audio API so
-// there's no asset to ship. Reads as calm / "holy" (a meditation-bell
-// fifth, soft attack, ~1.4s exponential decay).
-//
-// Browsers block audio until the user has interacted with the page, so
-// unlockChime() must be wired to a first gesture; playChime() is a no-op
-// until the context is running.
+// Short UI sounds synthesised with the Web Audio API — no assets to ship.
+// Browsers block audio until the user interacts with the page, so
+// unlockAudio() must be wired to a first gesture; the play* functions are
+// no-ops until the context is running.
 
 let ctx: AudioContext | null = null;
 
@@ -21,12 +18,16 @@ function getCtx(): AudioContext | null {
 }
 
 /** Call from a user-gesture handler so the audio context is allowed to run. */
-export function unlockChime() {
+export function unlockAudio() {
   const c = getCtx();
   if (c && c.state === "suspended") c.resume().catch(() => {});
 }
 
-export function playChime() {
+/**
+ * Incoming direct message: a serene rising fifth (C6 -> G6), bell-like
+ * shimmer, ~1.4s soft decay. Reads as calm / "holy".
+ */
+export function playMessageChime() {
   const c = getCtx();
   if (!c || c.state !== "running") return;
 
@@ -36,13 +37,11 @@ export function playChime() {
   master.gain.exponentialRampToValueAtTime(0.0001, now + 1.7);
   master.connect(c.destination);
 
-  // C6, then G6 a beat later — a serene rising fifth.
   const notes: Array<[number, number]> = [
     [1046.5, 0],
     [1567.98, 0.15],
   ];
   for (const [freq, delay] of notes) {
-    // A few inharmonic partials give it a bell-like shimmer.
     [1, 2.01, 3.03].forEach((mult, i) => {
       const osc = c.createOscillator();
       osc.type = "sine";
@@ -58,4 +57,32 @@ export function playChime() {
       osc.stop(now + delay + 1.45);
     });
   }
+}
+
+/**
+ * Someone knocking to join a group: two soft, low wooden knocks
+ * (~180 -> 90 Hz drop each), ~0.3s total, quiet. Distinct from the
+ * message chime.
+ */
+export function playKnock() {
+  const c = getCtx();
+  if (!c || c.state !== "running") return;
+
+  const now = c.currentTime;
+  [0, 0.15].forEach((delay) => {
+    const osc = c.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(180, now + delay);
+    osc.frequency.exponentialRampToValueAtTime(90, now + delay + 0.09);
+
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, now + delay);
+    g.gain.linearRampToValueAtTime(0.14, now + delay + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.13);
+
+    osc.connect(g);
+    g.connect(c.destination);
+    osc.start(now + delay);
+    osc.stop(now + delay + 0.17);
+  });
 }

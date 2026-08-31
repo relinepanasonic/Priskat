@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DM_CHANGED } from "@/lib/dmEvents";
+import { DM_CHANGED, GROUP_CHANGED } from "@/lib/dmEvents";
 
 /**
  * Small red dot for the "Connect" nav item — lit whenever there are
- * unread direct messages or group chats.
+ * unread direct messages, unread group chats, or pending group join
+ * requests waiting on the viewer.
  */
 export default function ConnectUnreadDot({ className = "" }: { className?: string }) {
   const [has, setHas] = useState(false);
@@ -16,12 +17,16 @@ export default function ConnectUnreadDot({ className = "" }: { className?: strin
     let alive = true;
 
     const check = async () => {
-      const [dm, grp] = await Promise.all([
+      const [dm, grp, req] = await Promise.all([
         supabase.rpc("my_unread_dm_count"),
         supabase.rpc("my_unread_group_count"),
+        supabase.rpc("my_pending_group_request_count"),
       ]);
       if (!alive) return;
-      const n = (Number(dm.data) || 0) + (Number(grp.data) || 0);
+      const n =
+        (Number(dm.data) || 0) +
+        (Number(grp.data) || 0) +
+        (Number(req.data) || 0);
       setHas(n > 0);
     };
 
@@ -33,12 +38,14 @@ export default function ConnectUnreadDot({ className = "" }: { className?: strin
     };
     window.addEventListener("focus", onFocus);
     window.addEventListener(DM_CHANGED, check);
+    window.addEventListener(GROUP_CHANGED, check);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
       clearInterval(iv);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener(DM_CHANGED, check);
+      window.removeEventListener(GROUP_CHANGED, check);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);

@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { GROUP_CHANGED } from "@/lib/dmEvents";
 
-/** Small red dot shown on the "Group" tab when there are unread group chats. */
+/**
+ * Red count on the "Group" tab — unread group chats plus pending join
+ * requests waiting on the viewer.
+ */
 export default function GroupUnreadBadge() {
   const [count, setCount] = useState(0);
 
@@ -12,19 +16,30 @@ export default function GroupUnreadBadge() {
     let alive = true;
 
     const check = async () => {
-      const { data, error } = await supabase.rpc("my_unread_group_count");
-      if (!alive || error) return;
-      setCount(typeof data === "number" ? data : Number(data) || 0);
+      const [unread, requests] = await Promise.all([
+        supabase.rpc("my_unread_group_count"),
+        supabase.rpc("my_pending_group_request_count"),
+      ]);
+      if (!alive) return;
+      const n = (Number(unread.data) || 0) + (Number(requests.data) || 0);
+      setCount(n);
     };
 
     check();
-    const iv = setInterval(check, 20000);
+    const iv = setInterval(check, 15000);
     const onFocus = () => check();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
     window.addEventListener("focus", onFocus);
+    window.addEventListener(GROUP_CHANGED, check);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
       clearInterval(iv);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener(GROUP_CHANGED, check);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

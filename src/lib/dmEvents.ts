@@ -4,10 +4,17 @@
 // their poll interval.
 
 export const DM_CHANGED = "dm:changed";
+export const GROUP_CHANGED = "group:changed";
 
 export function pingDmChanged() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(DM_CHANGED));
+  }
+}
+
+export function pingGroupChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(GROUP_CHANGED));
   }
 }
 

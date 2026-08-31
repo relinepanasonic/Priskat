@@ -41,6 +41,11 @@ export default async function GroupPage() {
     .eq("is_archived", false)
     .order("created_at", { ascending: true });
 
+  const { data: pendingReqRows } = await supabase.rpc(
+    "my_pending_group_requests"
+  );
+  const pendingRequests = Array.isArray(pendingReqRows) ? pendingReqRows : [];
+
   const { data: unreadRows } = await supabase.rpc("my_unread_group_ids");
   const unreadGroupIds: string[] = Array.isArray(unreadRows)
     ? unreadRows.map((r: any) => (typeof r === "string" ? r : r?.my_unread_group_ids ?? r))
@@ -104,6 +109,7 @@ export default async function GroupPage() {
       groups={shapedGroups}
       myRoomIds={myRoomIds}
       unreadGroupIds={unreadGroupIds}
+      pendingRequests={pendingRequests}
     />
   );
 }

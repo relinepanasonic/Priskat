@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { pingDmChanged, getViewingThread } from "@/lib/dmEvents";
-import { unlockChime, playChime } from "@/lib/dmChime";
+import { unlockAudio, playMessageChime } from "@/lib/sounds";
 
 /**
  * Mounted once, app-wide. Keeps a realtime subscription on dm_messages so
@@ -22,7 +22,7 @@ export default function DmNotifier() {
     });
 
     // Audio can't start until the user has interacted with the page.
-    const unlock = () => unlockChime();
+    const unlock = () => unlockAudio();
     const gestureEvents = ["pointerdown", "keydown", "touchstart"];
     gestureEvents.forEach((e) =>
       window.addEventListener(e, unlock, { once: true, passive: true })
@@ -44,7 +44,7 @@ export default function DmNotifier() {
           const mine = myId != null && row.author_id === myId;
           const viewing = row.thread_id === getViewingThread();
           if (!mine && !viewing && document.visibilityState === "visible") {
-            playChime();
+            playMessageChime();
           }
         }
       )
