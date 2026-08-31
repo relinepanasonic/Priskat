@@ -1,3 +1,11 @@
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE IF NOT EXISTS public.community_org_structure (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
@@ -62,6 +70,7 @@ CREATE POLICY "Community admins can delete community_org_structure"
     );
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS handle_updated_at_community_org_structure ON public.community_org_structure;
 CREATE TRIGGER handle_updated_at_community_org_structure
     BEFORE UPDATE ON public.community_org_structure
     FOR EACH ROW
