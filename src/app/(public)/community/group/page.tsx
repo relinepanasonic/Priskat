@@ -93,11 +93,21 @@ export default async function GroupPage() {
     });
   }
 
+  const { data: previewRows } = await supabase.rpc("my_group_previews");
+  const previewByGroup: Record<string, any> = {};
+  (Array.isArray(previewRows) ? previewRows : []).forEach((p: any) => {
+    previewByGroup[p.group_id] = p;
+  });
+
   const shapedGroups = groups.map((g: any) => ({
     ...g,
     joined: myGroupIds.includes(g.id),
     myRole: myRoleByGroup[g.id] ?? null,
     chat_id: chatIdByGroup[g.id] ?? null,
+    last_content: previewByGroup[g.id]?.last_content ?? null,
+    last_author_id: previewByGroup[g.id]?.last_author_id ?? null,
+    last_author_name: previewByGroup[g.id]?.last_author_name ?? null,
+    last_at: previewByGroup[g.id]?.last_at ?? null,
   }));
 
   return (

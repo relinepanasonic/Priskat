@@ -45,7 +45,7 @@ export default function GroupUnreadBadge() {
 
   if (count <= 0) return null;
   return (
-    <span className="absolute right-1/2 top-1.5 translate-x-3 rounded-full bg-red-500 px-1 text-[9px] font-bold leading-4 text-white">
+    <span className="absolute right-1/2 top-1.5 translate-x-3 rounded-full bg-purple-400 px-1 text-[9px] font-bold leading-4 text-white">
       {count > 9 ? "9+" : count}
     </span>
   );

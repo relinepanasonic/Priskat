@@ -57,6 +57,10 @@ type Group = {
   joined: boolean;
   myRole: "owner" | "admin" | "member" | null;
   chat_id: string | null;
+  last_content?: string | null;
+  last_author_id?: string | null;
+  last_author_name?: string | null;
+  last_at?: string | null;
 };
 type Message = {
   id: string;
@@ -266,7 +270,7 @@ function Avatar({
 
 function Dot() {
   return (
-    <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-red-500 ring-2 ring-[#16181d]" />
+    <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-purple-400 ring-2 ring-[#16181d]" />
   );
 }
 
@@ -348,6 +352,9 @@ export default function GroupClient({
   const [mobileCol, setMobileCol] = useState<"rooms" | "groups" | "chat">("rooms");
 
   const [byChat, setByChat] = useState<Record<string, Message[]>>({});
+  const [livePreview, setLivePreview] = useState<
+    Record<string, { content: string; author_id: string; created_at: string; name: string | null }>
+  >({});
   const [loading, setLoading] = useState(false);
   const profileCache = useRef<Record<string, Profile>>({ [me.id]: me });
   const seen = useRef<Set<string>>(new Set());
@@ -521,7 +528,9 @@ export default function GroupClient({
   useEffect(() => {
     if (!activeGroup?.joined || !chatId) return;
     loadChat(chatId);
-    supabase.rpc("mark_group_read", { gid: activeGroup.id });
+    supabase
+      .rpc("mark_group_read", { gid: activeGroup.id })
+      .then(() => pingGroupChanged());
     setUnread((prev) => {
       if (!prev.has(activeGroup.id)) return prev;
       const n = new Set(prev);
@@ -566,11 +575,28 @@ export default function GroupClient({
           const isActive = row.subgroup_id === activeChatRef.current;
           const gid = groupIdByChatRef.current[row.subgroup_id];
 
+          if (gid) {
+            const pName =
+              row.author_id === me.id
+                ? me.full_name
+                : profileCache.current[row.author_id]?.full_name ?? null;
+            setLivePreview((prev) => ({
+              ...prev,
+              [gid]: {
+                content: row.content,
+                author_id: row.author_id,
+                created_at: row.created_at,
+                name: pName,
+              },
+            }));
+          }
+
           if (row.author_id !== me.id) {
             if (isActive) {
-              supabase.rpc("mark_group_read", { gid });
+              supabase.rpc("mark_group_read", { gid }).then(() => pingGroupChanged());
             } else if (gid) {
               setUnread((prev) => new Set(prev).add(gid));
+              pingGroupChanged();
             }
           }
           if (!isActive) return;
@@ -1028,7 +1054,7 @@ export default function GroupClient({
               aria-label={t.requests}
             >
               <BellRing className="h-[18px] w-[18px]" />
-              <span className="absolute -right-0.5 -top-0.5 min-w-[15px] rounded-full bg-red-500 px-1 text-[9px] font-bold leading-[15px] text-white">
+              <span className="absolute -right-0.5 -top-0.5 min-w-[15px] rounded-full bg-purple-400 px-1 text-[9px] font-bold leading-[15px] text-white">
                 {requests.length > 9 ? "9+" : requests.length}
               </span>
             </button>
@@ -1077,9 +1103,24 @@ export default function GroupClient({
             roomGroups.map((g) => {
               const active = g.id === activeGroupId;
               const isUnread = unread.has(g.id);
-              const preview = g.chat_id
+              // Prefer this session's live/loaded message, then the
+              // server-side preview from my_group_previews.
+              const loaded = g.chat_id
                 ? (byChat[g.chat_id] || []).slice(-1)[0]
                 : undefined;
+              const lp = livePreview[g.id];
+              const previewContent =
+                loaded?.content ?? lp?.content ?? g.last_content ?? null;
+              const previewAuthorId =
+                loaded?.author_id ?? lp?.author_id ?? g.last_author_id ?? null;
+              const previewName =
+                loaded?.author?.full_name ??
+                lp?.name ??
+                g.last_author_name ??
+                null;
+              const previewAt =
+                loaded?.created_at ?? lp?.created_at ?? g.last_at ?? null;
+              const hasPreview = g.joined && !!previewContent;
               return (
                 <button
                   key={g.id}
@@ -1110,12 +1151,12 @@ export default function GroupClient({
                       )}
                     </span>
                     <span className="block truncate text-[12px] text-brand-muted">
-                      {g.joined && preview
+                      {hasPreview
                         ? `${
-                            preview.author_id === me.id
+                            previewAuthorId === me.id
                               ? t.you
-                              : preview.author?.full_name?.split(" ")[0] || ""
-                          }: ${preview.content}`
+                              : previewName?.split(" ")[0] || ""
+                          }: ${previewContent}`
                         : t.members(g.member_count)}
                     </span>
                   </span>
@@ -1138,9 +1179,9 @@ export default function GroupClient({
                   ) : isUnread ? (
                     <Dot />
                   ) : (
-                    preview && (
+                    previewAt && (
                       <span className="flex-shrink-0 self-start pt-0.5 text-[10px] text-brand-muted">
-                        {timeLabel(preview.created_at)}
+                        {timeLabel(previewAt)}
                       </span>
                     )
                   )}

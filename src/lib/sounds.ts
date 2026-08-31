@@ -60,29 +60,56 @@ export function playMessageChime() {
 }
 
 /**
- * Someone knocking to join a group: two soft, low wooden knocks
- * (~180 -> 90 Hz drop each), ~0.3s total, quiet. Distinct from the
- * message chime.
+ * Someone knocking to join a group: two firm wooden knocks — a broadband
+ * noise "tap" plus a low body tone with a fast pitch drop — ~0.35s total.
+ * Distinct from the message chime, audible on laptop speakers, not loud.
  */
 export function playKnock() {
   const c = getCtx();
   if (!c || c.state !== "running") return;
 
   const now = c.currentTime;
-  [0, 0.15].forEach((delay) => {
+
+  // one short noise buffer, reused for both taps
+  const dur = 0.2;
+  const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+  const ch = buf.getChannelData(0);
+  for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+
+  const knock = (delay: number) => {
+    const t0 = now + delay;
+
+    // wooden "tap" transient
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const bp = c.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 260;
+    bp.Q.value = 6;
+    const ng = c.createGain();
+    ng.gain.setValueAtTime(0.5, t0);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
+    src.connect(bp);
+    bp.connect(ng);
+    ng.connect(c.destination);
+    src.start(t0);
+    src.stop(t0 + 0.12);
+
+    // low body thump
     const osc = c.createOscillator();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(180, now + delay);
-    osc.frequency.exponentialRampToValueAtTime(90, now + delay + 0.09);
+    osc.frequency.setValueAtTime(190, t0);
+    osc.frequency.exponentialRampToValueAtTime(95, t0 + 0.08);
+    const og = c.createGain();
+    og.gain.setValueAtTime(0.0001, t0);
+    og.gain.linearRampToValueAtTime(0.32, t0 + 0.006);
+    og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+    osc.connect(og);
+    og.connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.2);
+  };
 
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.0001, now + delay);
-    g.gain.linearRampToValueAtTime(0.14, now + delay + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.13);
-
-    osc.connect(g);
-    g.connect(c.destination);
-    osc.start(now + delay);
-    osc.stop(now + delay + 0.17);
-  });
+  knock(0);
+  knock(0.17);
 }
