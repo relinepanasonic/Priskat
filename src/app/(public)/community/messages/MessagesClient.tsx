@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -23,7 +24,11 @@ import { createClient } from "@/lib/supabase/client";
 /* ------------------------------------------------------------------ types --- */
 
 type Me = { id: string; full_name: string | null; avatar_url: string | null };
-type Person = { id: string; full_name: string | null; avatar_url: string | null };
+export type Person = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
 
 export type ThreadRow = {
   thread_id: string;
@@ -53,6 +58,11 @@ const DICT = {
     messages: "Messages",
     newMessage: "New message",
     searchPeople: "Search people…",
+    friendsHeading: "Friends",
+    othersHeading: "Other members",
+    noFriendsHint: "Type a name to search members.",
+    noneFound: "No one found",
+    friendTag: "Friend",
     noThreads: "No conversations yet",
     noThreadsSub: "Start one with the pencil button.",
     pickThread: "Select a conversation",
@@ -67,6 +77,11 @@ const DICT = {
     messages: "Pesan",
     newMessage: "Pesan baru",
     searchPeople: "Cari orang…",
+    friendsHeading: "Teman",
+    othersHeading: "Anggota lain",
+    noFriendsHint: "Ketik nama untuk mencari anggota.",
+    noneFound: "Tidak ada yang cocok",
+    friendTag: "Teman",
     noThreads: "Belum ada percakapan",
     noThreadsSub: "Mulai dengan tombol pensil.",
     pickThread: "Pilih percakapan",
@@ -164,11 +179,13 @@ export default function MessagesClient({
   me,
   threads: initialThreads,
   openThreadId,
+  friends = [],
 }: {
   lang?: "id" | "en";
   me: Me;
   threads: ThreadRow[];
   openThreadId: string | null;
+  friends?: Person[];
 }) {
   const t = DICT[lang];
   const supabase = useMemo(() => createClient(), []);
@@ -659,6 +676,7 @@ export default function MessagesClient({
           t={t}
           supabase={supabase}
           meId={me.id}
+          friends={friends}
           onClose={() => setCompose(false)}
           onPick={openConversation}
         />
@@ -693,40 +711,101 @@ function ComposeModal({
   t,
   supabase,
   meId,
+  friends,
   onClose,
   onPick,
 }: {
   t: T;
   supabase: ReturnType<typeof createClient>;
   meId: string;
+  friends: Person[];
   onClose: () => void;
   onPick: (p: Person) => void;
 }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Person[]>([]);
+  const [searching, setSearching] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const friendIds = useMemo(() => new Set(friends.map((f) => f.id)), [friends]);
+  const term = q.trim();
+  const isSearch = term.length >= 2;
+
   useEffect(() => {
-    const term = q.trim();
-    if (term.length < 2) {
+    if (!isSearch) {
       setResults([]);
+      setSearching(false);
       return;
     }
     let cancelled = false;
+    setSearching(true);
     const h = setTimeout(async () => {
       const { data } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
         .ilike("full_name", `%${term}%`)
         .neq("id", meId)
-        .limit(20);
-      if (!cancelled) setResults((data as Person[]) || []);
+        .limit(30);
+      if (!cancelled) {
+        setResults((data as Person[]) || []);
+        setSearching(false);
+      }
     }, 250);
     return () => {
       cancelled = true;
       clearTimeout(h);
     };
-  }, [q, supabase, meId]);
+  }, [term, isSearch, supabase, meId]);
+
+  // Friends first, then everyone else — both alphabetical.
+  const ordered = useMemo(() => {
+    if (!isSearch) return friends;
+    const rank = (p: Person) => (friendIds.has(p.id) ? 0 : 1);
+    return [...results].sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        (a.full_name || "").localeCompare(b.full_name || "")
+    );
+  }, [isSearch, friends, results, friendIds]);
+
+  const firstOtherIdx = isSearch
+    ? ordered.findIndex((p) => !friendIds.has(p.id))
+    : -1;
+
+  const row = (p: Person) => (
+    <li key={p.id}>
+      <button
+        disabled={busyId === p.id}
+        onClick={async () => {
+          setBusyId(p.id);
+          await onPick(p);
+        }}
+        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-white/5 disabled:opacity-60"
+      >
+        <Avatar url={p.avatar_url} name={p.full_name} size={34} />
+        <span className="flex-1 truncate text-[14px] text-white">
+          {p.full_name || "—"}
+        </span>
+        {friendIds.has(p.id) && (
+          <span className="flex-shrink-0 rounded-full border border-brand-gold/40 px-2 py-0.5 text-[10px] font-semibold text-brand-gold">
+            {t.friendTag}
+          </span>
+        )}
+        {busyId === p.id && (
+          <Loader2 className="h-4 w-4 animate-spin text-brand-muted" />
+        )}
+      </button>
+    </li>
+  );
+
+  const heading = (key: string, label: string) => (
+    <li
+      key={key}
+      className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-brand-muted"
+    >
+      {label}
+    </li>
+  );
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
@@ -746,28 +825,36 @@ function ComposeModal({
             placeholder={t.searchPeople}
             className="flex-1 bg-transparent py-2.5 text-[14px] text-white placeholder-gray-500 focus:outline-none"
           />
+          {searching && (
+            <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin text-brand-muted" />
+          )}
         </div>
+
         <ul className="max-h-72 space-y-1 overflow-y-auto">
-          {results.map((p) => (
-            <li key={p.id}>
-              <button
-                disabled={busyId === p.id}
-                onClick={async () => {
-                  setBusyId(p.id);
-                  await onPick(p);
-                }}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-white/5 disabled:opacity-60"
-              >
-                <Avatar url={p.avatar_url} name={p.full_name} size={34} />
-                <span className="flex-1 truncate text-[14px] text-white">
-                  {p.full_name || "—"}
-                </span>
-                {busyId === p.id && (
-                  <Loader2 className="h-4 w-4 animate-spin text-brand-muted" />
-                )}
-              </button>
+          {!isSearch ? (
+            friends.length ? (
+              <>
+                {heading("f", t.friendsHeading)}
+                {friends.map(row)}
+              </>
+            ) : (
+              <li className="px-2 py-6 text-center text-[13px] text-brand-muted">
+                {t.noFriendsHint}
+              </li>
+            )
+          ) : ordered.length ? (
+            ordered.map((p, i) => (
+              <Fragment key={p.id}>
+                {i === 0 && friendIds.has(p.id) && heading("f", t.friendsHeading)}
+                {i === firstOtherIdx && heading("o", t.othersHeading)}
+                {row(p)}
+              </Fragment>
+            ))
+          ) : !searching ? (
+            <li className="px-2 py-6 text-center text-[13px] text-brand-muted">
+              {t.noneFound}
             </li>
-          ))}
+          ) : null}
         </ul>
       </div>
     </div>
