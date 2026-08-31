@@ -6,6 +6,7 @@ import Link from "next/link";
 import { UserPlus, Clock, Search, Users, UserCheck, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import MemberProfileModal, { type MemberSeed } from "@/components/community/MemberProfileModal";
 
 function Avatar({ url, name, size = 40 }: { url?: string | null; name?: string | null; size?: number }) {
   return url ? (
@@ -17,7 +18,7 @@ function Avatar({ url, name, size = 40 }: { url?: string | null; name?: string |
   );
 }
 
-function FriendCard({ user, userId, isPending, onAction, subtitle, lang = "id" }: { user: any; userId: string; isPending?: boolean; onAction: () => void, subtitle?: string, lang?: "id" | "en" }) {
+function FriendCard({ user, userId, isPending, onAction, onOpen, subtitle, lang = "id" }: { user: any; userId: string; isPending?: boolean; onAction: () => void, onOpen: () => void, subtitle?: string, lang?: "id" | "en" }) {
   const [loading, startTransition] = useTransition();
   const supabase = createClient();
   const router = useRouter();
@@ -33,7 +34,7 @@ function FriendCard({ user, userId, isPending, onAction, subtitle, lang = "id" }
 
   return (
     <div className="bg-[#111] border border-[#2a2d35] rounded-2xl p-4 flex flex-col gap-3 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-      <div className="flex items-center gap-3">
+      <button type="button" onClick={onOpen} className="flex items-center gap-3 text-left -m-1 p-1 rounded-xl hover:bg-white/[0.03] transition-colors">
         <Avatar url={user.avatar_url} name={user.full_name} size={48} />
         <div className="flex-1 min-w-0">
           <p className="font-bold text-white truncate text-base">{user.full_name}</p>
@@ -41,7 +42,7 @@ function FriendCard({ user, userId, isPending, onAction, subtitle, lang = "id" }
             {subtitle || [user.angkatan ? `Angkatan ${user.angkatan}` : null, user.kota].filter(Boolean).join(" • ")}
           </p>
         </div>
-      </div>
+      </button>
       {user.badges && user.badges.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">
           {user.badges.slice(0, 2).map((b: string) => (
@@ -76,6 +77,7 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
   const [localPending, setLocalPending] = useState<Set<string>>(new Set());
   const [localFriends, setLocalFriends] = useState(friends);
   const [localIncoming, setLocalIncoming] = useState(pendingIncoming);
+  const [viewMember, setViewMember] = useState<MemberSeed | null>(null);
   const supabase = createClient();
   const router = useRouter();
   const isEn = lang === "en";
@@ -131,12 +133,13 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
             {recommendations.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {recommendations.map((user) => (
-                  <FriendCard 
-                    key={user.id} 
-                    user={user} 
-                    userId={userId} 
+                  <FriendCard
+                    key={user.id}
+                    user={user}
+                    userId={userId}
                     isPending={localPending.has(user.id)}
                     onAction={() => setLocalPending(prev => new Set(prev).add(user.id))}
+                    onOpen={() => setViewMember(user)}
                     lang={lang}
                   />
                 ))}
@@ -158,12 +161,13 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
             {mutuals.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {mutuals.map((user) => (
-                  <FriendCard 
-                    key={user.id} 
-                    user={user} 
-                    userId={userId} 
+                  <FriendCard
+                    key={user.id}
+                    user={user}
+                    userId={userId}
                     isPending={localPending.has(user.id)}
                     onAction={() => setLocalPending(prev => new Set(prev).add(user.id))}
+                    onOpen={() => setViewMember(user)}
                     lang={lang}
                   />
                 ))}
@@ -187,9 +191,11 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                 <div className="space-y-3">
                   {localIncoming.map((req: any) => (
                     <div key={req.friendshipId} className="bg-[#111] border border-brand-gold/30 rounded-2xl p-4 flex items-center gap-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
-                      <Avatar url={req.avatar_url} name={req.full_name} size={48} />
+                      <button type="button" onClick={() => setViewMember(req)} className="flex-shrink-0">
+                        <Avatar url={req.avatar_url} name={req.full_name} size={48} />
+                      </button>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white truncate">{req.full_name}</p>
+                        <button type="button" onClick={() => setViewMember(req)} className="font-bold text-white truncate block max-w-full hover:text-brand-gold transition-colors">{req.full_name}</button>
                         <div className="flex gap-2 mt-2">
                           <button onClick={() => handleAccept(req.friendshipId, req)} className="flex-1 py-1.5 bg-brand-gold text-brand-dark text-xs font-bold rounded-lg hover:bg-yellow-500 transition-colors">
                             {isEn ? "Accept" : "Terima"}
@@ -218,13 +224,15 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {localFriends.map((f: any) => (
                     <div key={f.id} className="bg-[#111] border border-[#222] rounded-xl p-3 flex items-center gap-3">
-                      <Avatar url={f.avatar_url} name={f.full_name} size={40} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white truncate text-sm">{f.full_name}</p>
-                        <p className="text-[10px] text-brand-muted truncate">
-                          {[f.angkatan ? `Angkatan ${f.angkatan}` : null, f.kota].filter(Boolean).join(" • ")}
-                        </p>
-                      </div>
+                      <button type="button" onClick={() => setViewMember(f)} className="flex items-center gap-3 flex-1 min-w-0 text-left -m-1 p-1 rounded-lg hover:bg-white/[0.03] transition-colors">
+                        <Avatar url={f.avatar_url} name={f.full_name} size={40} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-white truncate text-sm">{f.full_name}</p>
+                          <p className="text-[10px] text-brand-muted truncate">
+                            {[f.angkatan ? `Angkatan ${f.angkatan}` : null, f.kota].filter(Boolean).join(" • ")}
+                          </p>
+                        </div>
+                      </button>
                       <Link
                         href={`/community/messages?u=${f.id}`}
                         aria-label={isEn ? "Message" : "Pesan"}
@@ -241,6 +249,15 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
         )}
 
       </div>
+
+      {viewMember && (
+        <MemberProfileModal
+          member={viewMember}
+          viewerId={userId}
+          lang={lang}
+          onClose={() => setViewMember(null)}
+        />
+      )}
     </div>
   );
 }
