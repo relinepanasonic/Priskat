@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import {
   Check,
   Clock,
@@ -45,8 +44,6 @@ type Prof = MemberSeed & {
   community?: { name: string | null } | null;
 };
 
-type Post = { id: string; content: string; created_at: string };
-
 type Friendship =
   | "loading"
   | "self"
@@ -72,9 +69,7 @@ export default function MemberProfileModal({
   const supabase = useMemo(() => createClient(), []);
 
   const [p, setP] = useState<Prof>(member);
-  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"thought" | "profile">("profile");
 
   const [friendship, setFriendship] = useState<Friendship>(
     member.id === viewerId ? "self" : "loading"
@@ -106,7 +101,7 @@ export default function MemberProfileModal({
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [{ data: prof }, { data: feed }, { data: fr }] = await Promise.all([
+      const [{ data: prof }, { data: fr }] = await Promise.all([
         supabase
           .from("profiles")
           .select(
@@ -114,12 +109,6 @@ export default function MemberProfileModal({
           )
           .eq("id", member.id)
           .maybeSingle(),
-        supabase
-          .from("community_posts")
-          .select("id, content, created_at")
-          .eq("author_id", member.id)
-          .order("created_at", { ascending: false })
-          .limit(30),
         member.id === viewerId
           ? Promise.resolve({ data: null })
           : supabase
@@ -137,7 +126,6 @@ export default function MemberProfileModal({
         setP((d) => ({ ...d, ...full }));
         if (!activeImage && full.avatar_url) setActiveImage(full.avatar_url);
       }
-      setPosts((feed as Post[]) || []);
       setLoading(false);
 
       if (member.id === viewerId) setFriendship("self");
@@ -383,32 +371,6 @@ export default function MemberProfileModal({
           </div>
         </div>
 
-        {/* --------------------------------------------------- toggle --- */}
-        <div className="mt-4 px-6">
-          <div className="mx-auto flex w-full max-w-[280px] items-center gap-1 rounded-full border border-[#333] bg-[#1a1d24] p-1.5 shadow-lg">
-            <button
-              onClick={() => setTab("thought")}
-              className={`flex-1 rounded-full py-2.5 text-sm font-bold transition-all ${
-                tab === "thought"
-                  ? "bg-brand-gold text-brand-dark shadow-md"
-                  : "text-brand-muted hover:text-white"
-              }`}
-            >
-              {isEn ? "Thoughts" : "Pikiran"}
-            </button>
-            <button
-              onClick={() => setTab("profile")}
-              className={`flex-1 rounded-full py-2.5 text-sm font-bold transition-all ${
-                tab === "profile"
-                  ? "bg-brand-gold text-brand-dark shadow-md"
-                  : "text-brand-muted hover:text-white"
-              }`}
-            >
-              {isEn ? "Profile" : "Profil"}
-            </button>
-          </div>
-        </div>
-
         {/* ---------------------------------------------------- body --- */}
         <div className="mt-6 px-6">
           {loading && (
@@ -417,7 +379,7 @@ export default function MemberProfileModal({
             </div>
           )}
 
-          {tab === "profile" && !loading && (
+          {!loading && (
             <div className="space-y-8 pb-4">
               {p.bio && (
                 <p className="text-sm leading-relaxed text-brand-light">
@@ -493,54 +455,6 @@ export default function MemberProfileModal({
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {tab === "thought" && !loading && (
-            <div className="space-y-3 pb-4">
-              {posts.length ? (
-                posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="rounded-2xl border border-[#2a2d35] bg-[#111] p-4"
-                  >
-                    <div className="mb-2 flex items-center gap-2">
-                      <div className="h-7 w-7 overflow-hidden rounded-full bg-brand-bg">
-                        {p.avatar_url ? (
-                          <Image
-                            src={p.avatar_url}
-                            alt=""
-                            width={28}
-                            height={28}
-                            className="h-7 w-7 object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-7 w-7 items-center justify-center text-xs font-bold text-brand-gold">
-                            {(p.full_name || "?")[0]?.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs font-semibold text-white">
-                        {name}
-                      </span>
-                      <span className="text-[10px] text-brand-muted">
-                        {formatDistanceToNow(new Date(post.created_at), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-brand-light">
-                      {post.content}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="py-6 text-center text-sm italic text-brand-muted">
-                  {isEn
-                    ? "No thoughts shared yet."
-                    : "Belum ada pikiran yang dibagikan."}
-                </p>
-              )}
             </div>
           )}
         </div>
