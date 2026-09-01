@@ -6,23 +6,27 @@ import { Plus, Tent, Users, ArrowRight, Trash2 } from "lucide-react";
 import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { resolveCommunity } from "@/lib/community";
 
 export default function CampCrewPage() {
   const params = useParams();
   const slug = (params.slug as string) || "";
   const [camps, setCamps] = useState<any[]>([]);
+  const [communityId, setCommunityId] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCamps();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
   const fetchCamps = async () => {
     setIsLoading(true);
     const supabase = createClient();
-    
+
     // Check role
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -32,12 +36,23 @@ export default function CampCrewPage() {
       }
     }
 
-    // Fetch all camp cohorts
-    const { data, error } = await supabase
+    // This workspace = one community
+    const community = await resolveCommunity(supabase, slug);
+    if (!community) {
+      setNotFound(true);
+      setCamps([]);
+      setIsLoading(false);
+      return;
+    }
+    setNotFound(false);
+    setCommunityId(community.id);
+
+    const { data } = await supabase
       .from("camp_cohorts")
       .select("*, camp_crew(count)")
+      .eq("community_id", community.id)
       .order("created_at", { ascending: false });
-      
+
     if (data) setCamps(data);
     setIsLoading(false);
   };
@@ -68,6 +83,14 @@ export default function CampCrewPage() {
 
       {isLoading ? (
         <div className="p-10 text-center text-gray-500">Loading camps...</div>
+      ) : notFound ? (
+        <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-10 text-center flex flex-col items-center">
+          <Tent className="w-10 h-10 text-gray-500 mb-4" />
+          <h3 className="text-lg font-bold text-white mb-1">Community not found</h3>
+          <p className="text-sm text-gray-400">
+            This link is broken. Open the community from the list again.
+          </p>
+        </div>
       ) : camps.length === 0 ? (
         <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-10 text-center flex flex-col items-center">
           <Tent className="w-10 h-10 text-gray-500 mb-4" />
@@ -129,7 +152,7 @@ export default function CampCrewPage() {
         </div>
       )}
 
-      <AddCampModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchCamps} />
+      <AddCampModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchCamps} communityId={communityId} />
     </div>
   );
 }

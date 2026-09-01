@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { X, Check } from "lucide-react";
 
-export default function AddCampModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: () => void }) {
+export default function AddCampModal({ isOpen, onClose, onSuccess, communityId = null }: { isOpen: boolean; onClose: () => void; onSuccess: () => void; communityId?: string | null }) {
   const [branches, setBranches] = useState<string[]>([]);
   const [branch, setBranch] = useState("");
   const [campName, setCampName] = useState("Pria Sejati");
@@ -68,12 +68,13 @@ export default function AddCampModal({ isOpen, onClose, onSuccess }: { isOpen: b
     // 1. Create cohort
     const { data: cohort, error: cohortError } = await supabase
       .from("camp_cohorts")
-      .insert({ 
-        branch, 
-        camp_name: campName, 
+      .insert({
+        branch,
+        camp_name: campName,
         angkatan: angkatan || "0",
         start_date: startDate,
-        custom_name: generatedTitle
+        custom_name: generatedTitle,
+        community_id: communityId,
       })
       .select("id")
       .single();

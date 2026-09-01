@@ -24,7 +24,7 @@ export default async function CommunityListingPage() {
         {(communities || []).map((c: any) => (
           <Link
             key={c.id}
-            href={`/camp/${c.slug}`}
+            href={`/camp/${c.slug || c.id}`}
             className="group bg-[#1a1d24] border border-[#2a2d35] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#1e2129] shadow-lg hover:shadow-brand-gold/10"
           >
             <div className="flex items-start justify-between mb-4">

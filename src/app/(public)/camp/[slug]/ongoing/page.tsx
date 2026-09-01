@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tent, Calendar, Users, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { resolveCommunity } from "@/lib/community";
 
 import { use } from "react";
 
@@ -22,6 +23,8 @@ export default function MyOngoingCampPage({ params }: { params: Promise<{ slug: 
         return;
       }
 
+      const community = await resolveCommunity(supabase, slug);
+
       // Fetch crew assignments for this user, joining with cohort data
       const { data, error } = await supabase
         .from("camp_crew")
@@ -32,7 +35,10 @@ export default function MyOngoingCampPage({ params }: { params: Promise<{ slug: 
         // Group by cohort in case they have multiple roles in the same camp
         const uniqueCohorts = new Map();
         for (const item of data) {
-          if (item.camp_cohorts && !uniqueCohorts.has(item.cohort_id)) {
+          if (!item.camp_cohorts) continue;
+          if (community && item.camp_cohorts.community_id !== community.id)
+            continue;
+          if (!uniqueCohorts.has(item.cohort_id)) {
             uniqueCohorts.set(item.cohort_id, {
               ...item.camp_cohorts,
               myRole: item.position
@@ -43,9 +49,9 @@ export default function MyOngoingCampPage({ params }: { params: Promise<{ slug: 
       }
       setIsLoading(false);
     }
-    
+
     fetchMyCamps();
-  }, []);
+  }, [slug]);
 
   if (isLoading) {
     return <div className="p-8 text-center text-gray-500">Loading your camps...</div>;

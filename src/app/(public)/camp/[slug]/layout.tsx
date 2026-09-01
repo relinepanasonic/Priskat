@@ -14,6 +14,7 @@ import {
   Network,
   Megaphone,
 } from "lucide-react";
+import { resolveCommunity } from "@/lib/community";
 
 const titleCase = (s: string) =>
   s
@@ -38,49 +39,15 @@ export default function CommunitySlugLayout({
   useEffect(() => {
     let alive = true;
     (async () => {
-      // Resolve the community: by slug, else the signed-in user's own
-      // community, else the first one — so the heading is never just
-      // "Community" when the URL slug is missing/wrong.
-      let community: { id: string; name: string | null } | null = null;
-
-      if (validSlug) {
-        const { data } = await supabase
-          .from("communities")
-          .select("id, name")
-          .eq("slug", slug)
-          .maybeSingle();
-        if (data) community = data;
-      }
+      // This URL segment identifies ONE community (slug or id). No
+      // fallback to "a" community — a wrong link must not silently open
+      // someone else's workspace.
+      const community = await resolveCommunity(supabase, slug);
+      if (alive && community?.name) setCommunityName(community.name);
 
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
-      if (!community && user) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("community_id")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (prof?.community_id) {
-          const { data } = await supabase
-            .from("communities")
-            .select("id, name")
-            .eq("id", prof.community_id)
-            .maybeSingle();
-          if (data) community = data;
-        }
-      }
-      if (!community) {
-        const { data } = await supabase
-          .from("communities")
-          .select("id, name")
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (data) community = data;
-      }
-      if (alive && community?.name) setCommunityName(community.name);
 
       if (user) {
         const { data: prof } = await supabase

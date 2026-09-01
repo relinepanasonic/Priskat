@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import OrgStructureClient from "./OrgStructureClient";
+import { resolveCommunity } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +15,8 @@ export default async function OrgStructurePage({ params }: { params: { slug: str
     redirect("/login");
   }
 
-  // Get community
-  const { data: community } = await supabase
-    .from("communities")
-    .select("id, name")
-    .eq("slug", slug)
-    .single();
-
+  // Get community (slug segment may be a slug or a community id)
+  const community = await resolveCommunity(supabase, slug);
   if (!community) {
     redirect("/camp");
   }
@@ -72,3 +68,4 @@ export default async function OrgStructurePage({ params }: { params: { slug: str
     />
   );
 }
+

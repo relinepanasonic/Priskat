@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CommunityEventsPanel from "@/components/admin/CommunityEventsPanel";
+import { resolveCommunity } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
@@ -16,41 +17,8 @@ export default async function CampPromotionPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  let community:
-    | { id: string; name: string | null }
-    | null = null;
-  {
-    const bySlug = await supabase
-      .from("communities")
-      .select("id, name")
-      .eq("slug", slug)
-      .maybeSingle();
-    community = bySlug.data;
-    if (!community) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("community_id")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (prof?.community_id) {
-        const { data } = await supabase
-          .from("communities")
-          .select("id, name")
-          .eq("id", prof.community_id)
-          .maybeSingle();
-        community = data;
-      }
-    }
-    if (!community) {
-      const { data } = await supabase
-        .from("communities")
-        .select("id, name")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      community = data;
-    }
-  }
+  const community = await resolveCommunity(supabase, slug);
+  if (!community) redirect("/camp");
 
   const [{ data: prof }, { data: ca }] = await Promise.all([
     supabase.from("profiles").select("role").eq("id", user.id).single(),
@@ -81,6 +49,7 @@ export default async function CampPromotionPage({
     .select(
       "id, title, description, event_date, end_date, location, maps_url, banner_image_url, status, created_at"
     )
+    .eq("community_id", community.id)
     .order("event_date", { ascending: false })
     .limit(50);
 
