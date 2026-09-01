@@ -205,20 +205,39 @@ export default function EventsExplore({
   }, [events, myCity, myCommunityId]);
 
   return (
-    <div className="p-4 md:p-6">
-      {/* premium ad banner — reserved block */}
-      <div className="relative flex aspect-[16/6] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-brand-gold/25 bg-gradient-to-br from-[#15181e] to-[#1a1d24]">
-        <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-muted">
-          Sponsored
-        </span>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <Megaphone className="h-6 w-6 text-brand-gold/60" />
-          <p className="text-sm font-bold text-brand-light">Premium ad space</p>
-          <p className="text-[11px] text-brand-muted">
-            Featured event placement — coming soon
-          </p>
+    <div className="p-4 pb-[calc(7rem+env(safe-area-inset-bottom))] md:p-6 md:pb-12">
+      {/* premium ad banner — infinite slow marquee, ~3 visible on desktop */}
+      <div className="premium-marquee -mx-4 overflow-hidden sm:mx-0">
+        <div className="premium-track flex gap-3 px-4 sm:px-0">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="relative flex aspect-[16/9] w-[78vw] flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-brand-gold/25 bg-gradient-to-br from-[#15181e] to-[#1a1d24] sm:w-[44vw] lg:w-[30vw] xl:w-[23vw]"
+            >
+              <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-muted">
+                Sponsored
+              </span>
+              <div className="flex flex-col items-center gap-1 text-center">
+                <Megaphone className="h-6 w-6 text-brand-gold/60" />
+                <p className="text-sm font-bold text-brand-light">
+                  Premium ad space
+                </p>
+                <p className="text-[11px] text-brand-muted">
+                  Featured event placement — coming soon
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+      <style>{`
+        .premium-track {
+          width: max-content;
+          animation: premiumScroll 60s linear infinite;
+        }
+        .premium-marquee:hover .premium-track { animation-play-state: paused; }
+        @keyframes premiumScroll { to { transform: translateX(-50%); } }
+      `}</style>
 
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
@@ -236,10 +255,7 @@ export default function EventsExplore({
         <div className="mt-6 space-y-8">
           {/* upcoming — soonest first */}
           <section>
-            <div className="mb-3 flex items-baseline gap-2">
-              <h2 className="text-lg font-bold text-white">Upcoming</h2>
-              <span className="text-[11px] text-brand-muted">soonest first</span>
-            </div>
+            <h2 className="mb-3 text-lg font-bold text-white">Upcoming</h2>
             <Row events={events} onOpen={setActive} />
           </section>
 
