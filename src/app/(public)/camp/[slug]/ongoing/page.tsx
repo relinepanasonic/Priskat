@@ -54,26 +54,26 @@ export default function MyOngoingCampPage({ params }: { params: Promise<{ slug: 
   }, [slug]);
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading your camps...</div>;
+    return <div className="p-8 text-center text-gray-500">Loading your services...</div>;
   }
 
   if (camps.length === 0) {
     return (
-      <div className="p-8 text-center flex flex-col items-center justify-center min-h-[400px]">
+      <div className="p-8 pb-28 md:pb-8 text-center flex flex-col items-center justify-center min-h-[400px]">
         <div className="w-16 h-16 bg-[#222] rounded-full flex items-center justify-center mb-4">
           <Tent className="w-8 h-8 text-gray-500" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">No Ongoing Camps</h2>
-        <p className="text-gray-400">You are not currently assigned to any active camps.</p>
+        <h2 className="text-xl font-bold text-white mb-2">No Ongoing Services</h2>
+        <p className="text-gray-400">You are not currently assigned to any active services.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-5 md:p-8 space-y-6 w-full">
+    <div className="p-5 md:p-8 pb-28 md:pb-8 space-y-6 w-full">
       <div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">My Ongoing Camps</h2>
-        <p className="text-brand-muted mt-1">Select a camp to view its productivity dashboard.</p>
+        <h2 className="text-2xl font-bold text-white tracking-tight">My Ongoing Services</h2>
+        <p className="text-brand-muted mt-1">Select a service to view its productivity dashboard.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

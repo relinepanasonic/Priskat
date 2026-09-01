@@ -377,7 +377,7 @@ export default function HomeTabsClient({
                 </div>
                 <h4 className="text-base font-bold text-white mb-1">{isEn ? "No Service Yet" : "Belum Ada Pelayanan"}</h4>
                 <p className="text-sm text-brand-muted max-w-[240px]">
-                  {isEn ? "You are not currently assigned to any active camps." : "Kamu belum ditugaskan di camp aktif mana pun."}
+                  {isEn ? "You are not currently assigned to any active services." : "Kamu belum ditugaskan di pelayanan aktif mana pun."}
                 </p>
               </div>
             )}

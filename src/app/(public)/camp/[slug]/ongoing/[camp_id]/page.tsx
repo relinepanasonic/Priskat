@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckSquare, Calendar, MessageSquare, Plus, Download, Send, Users, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export default function ProductivityDashboard({ params }: { params: Promise<{ slug: string; camp_id: string }> }) {
@@ -10,7 +10,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const camp_id = unwrappedParams.camp_id;
   const slug = unwrappedParams.slug;
 
-  const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew">("crew");
+  const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew">("todo");
   const [camp, setCamp] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -193,26 +193,20 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
     if (data) setChats(data);
   };
 
-  const generateICS = (meeting: any) => {
-    const dtStart = new Date(meeting.date_time).toISOString().replace(/-|:|\.\d+/g, "");
-    const dtEnd = new Date(new Date(meeting.date_time).getTime() + 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, "");
-    
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-SUMMARY:${meeting.title}
-DTSTART:${dtStart}
-DTEND:${dtEnd}
-DESCRIPTION:${meeting.mom_text || ""}
-END:VEVENT
-END:VCALENDAR`;
-
-    const blob = new Blob([icsContent], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `meeting_${meeting.id}.ics`;
-    link.click();
+  const addToCalendar = (meeting: any) => {
+    if (!meeting.date_time) {
+      alert("This meeting has no date & time set yet.");
+      return;
+    }
+    const start = new Date(meeting.date_time);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const fmt = (d: Date) => d.toISOString().replace(/-|:|\.\d+/g, "");
+    const url = new URL("https://calendar.google.com/calendar/render");
+    url.searchParams.set("action", "TEMPLATE");
+    url.searchParams.set("text", meeting.title || "Meeting");
+    url.searchParams.set("dates", `${fmt(start)}/${fmt(end)}`);
+    if (meeting.mom_text) url.searchParams.set("details", meeting.mom_text);
+    window.open(url.toString(), "_blank", "noopener,noreferrer");
   };
 
   const sendChat = async () => {
@@ -239,10 +233,10 @@ END:VCALENDAR`;
     <div className="flex flex-col h-full bg-[#111]">
       <div className="p-6 border-b border-[#333] bg-[#1a1d24]">
         <Link href={`/camp/${slug}/ongoing`} className="inline-flex items-center gap-2 text-brand-muted hover:text-brand-gold text-sm font-semibold mb-4 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to My Camps
+          <ArrowLeft className="w-4 h-4" /> Back to My Services
         </Link>
         <h1 className="text-2xl font-bold text-white mb-2">{camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name} {camp.camp_name !== "Other Event" && <span className="text-brand-gold">Angkatan {camp.angkatan}</span>}</h1>
-        <p className="text-gray-400 text-sm">Productivity Dashboard for {camp.branch}</p>
+        <p className="text-gray-400 text-sm">Service Dashboard for {camp.branch}</p>
       </div>
 
       <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto">
@@ -272,11 +266,11 @@ END:VCALENDAR`;
         </button>
       </div>
 
-      <div className="flex-1 p-4 md:p-6 overflow-y-auto flex flex-col">
+      <div className="flex-1 p-4 md:p-6 pb-28 md:pb-6 overflow-y-auto flex flex-col">
         {activeTab === "crew" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-white mb-4">Camp Crew Members</h2>
+              <h2 className="text-lg font-bold text-white mb-4">Crew Members</h2>
               {crewMembers.length === 0 ? (
                 <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-8 text-center text-gray-500">
                   No crew members yet. Add one below!
@@ -463,8 +457,8 @@ END:VCALENDAR`;
                       <h3 className="font-bold text-white text-lg">{meeting.title}</h3>
                       <p className="text-brand-gold font-semibold text-sm mt-1">{new Date(meeting.date_time).toLocaleString()}</p>
                     </div>
-                    <button onClick={() => generateICS(meeting)} className="bg-[#222] border border-[#444] hover:bg-[#333] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors">
-                      <Download className="w-3 h-3" /> Add to Calendar
+                    <button onClick={() => addToCalendar(meeting)} className="bg-brand-surface border border-brand-border hover:bg-brand-gold hover:text-brand-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors">
+                      <CalendarPlus className="w-3 h-3" /> Add to Calendar
                     </button>
                   </div>
                   {meeting.mom_text && (
@@ -490,18 +484,18 @@ END:VCALENDAR`;
               </select>
             </div>
             
-            <div className="flex-1 min-h-0 bg-[#0b141a] border border-[#333] rounded-xl mb-3 p-4 overflow-y-auto space-y-3">
+            <div className="flex-1 min-h-0 bg-brand-bg border border-brand-border rounded-xl mb-3 p-4 overflow-y-auto space-y-3">
               {chats.length === 0 ? (
-                <p className="text-gray-500 italic text-center mt-10 bg-[#111] max-w-xs mx-auto py-2 rounded-lg text-xs">No messages yet. Start the conversation!</p>
+                <p className="text-brand-muted italic text-center mt-10 bg-brand-surface max-w-xs mx-auto py-2 rounded-lg text-xs">No messages yet. Start the conversation!</p>
               ) : (
                 chats.map(chat => {
                   const isMe = chat.user_id === user?.id;
                   return (
                     <div key={chat.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <div className={`relative flex flex-col max-w-[85%] md:max-w-[70%] rounded-2xl px-3 pt-2 pb-1.5 shadow-sm ${
-                        isMe 
-                          ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-none' 
-                          : 'bg-[#202c33] text-[#e9edef] rounded-tl-none border border-[#2a3942]'
+                        isMe
+                          ? 'bg-brand-gold text-brand-dark rounded-tr-none'
+                          : 'bg-brand-surface text-brand-light rounded-tl-none border border-brand-border'
                       }`}>
                         {!isMe && (
                           <span className="text-[11px] font-bold text-brand-gold mb-0.5">
@@ -509,7 +503,7 @@ END:VCALENDAR`;
                           </span>
                         )}
                         <span className="text-[14.5px] leading-snug">{chat.message}</span>
-                        <span className={`text-[10px] text-right mt-1 opacity-70 ${isMe ? 'text-[#8696a0]' : 'text-[#8696a0]'}`}>
+                        <span className={`text-[10px] text-right mt-1 opacity-70 ${isMe ? 'text-brand-dark/70' : 'text-brand-muted'}`}>
                           {new Date(chat.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>

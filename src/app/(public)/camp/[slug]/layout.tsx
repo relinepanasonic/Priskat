@@ -79,7 +79,7 @@ export default function CommunitySlugLayout({
 
   const tabs = [
     { name: "Camp Event", href: `/camp/${slug}/crew`, icon: Users },
-    { name: "My Ongoing Camp", href: `/camp/${slug}/ongoing`, icon: Tent },
+    { name: "My Ongoing Services", href: `/camp/${slug}/ongoing`, icon: Tent },
     { name: "Schedule", href: `/camp/${slug}/schedule`, icon: Calendar },
     ...(canPromote
       ? [
