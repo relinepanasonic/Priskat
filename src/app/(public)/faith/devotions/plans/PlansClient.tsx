@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Search, BookOpen, CheckCircle } from "lucide-react";
+import { Search, BookOpen, CheckCircle, X } from "lucide-react";
 import { DevotionCategory, DevotionPlan } from "@/lib/types/database.types";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -23,7 +23,33 @@ export default function PlansClient({
 }) {
   const [selectedCatId, setSelectedCatId] = useState<string | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [progressList, setProgressList] = useState(userProgress);
   const router = useRouter();
+
+  const handleRemoveProgress = async (planId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!userId) return;
+    const confirmMsg = language === "id"
+      ? "Hapus renungan ini dari Sedang Dibaca?"
+      : "Remove this devotion from Currently Reading?";
+    if (!confirm(confirmMsg)) return;
+
+    const prevList = progressList;
+    setProgressList(prevList.filter(p => p.plan_id !== planId));
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("user_devotion_progress")
+      .delete()
+      .eq("user_id", userId)
+      .eq("plan_id", planId);
+
+    if (error) {
+      console.error(error);
+      setProgressList(prevList);
+      alert(language === "id" ? "Gagal menghapus" : "Failed to remove");
+    }
+  };
 
   const handleStartPlan = async (planId: string) => {
     if (!userId) {
@@ -59,7 +85,7 @@ export default function PlansClient({
   const topCategories = categories.filter(c => !c.parent_id);
 
   // Render a scrollable bookshelf row with peek effect
-  const renderBookShelf = (title: string, shelfPlans: DevotionPlan[], isCompletedShelf = false, showProgressDay?: boolean) => {
+  const renderBookShelf = (title: string, shelfPlans: DevotionPlan[], isCompletedShelf = false, showProgressDay?: boolean, isReadingShelf = false) => {
     if (shelfPlans.length === 0) return null;
     
     return (
@@ -80,11 +106,11 @@ export default function PlansClient({
             style={{ paddingRight: "2rem" }}>
             {shelfPlans.map(plan => {
               const displayTitle = language === "id" && plan.title_id ? plan.title_id : plan.title;
-              const prog = userProgress.find(p => p.plan_id === plan.id);
-              
+              const prog = progressList.find(p => p.plan_id === plan.id);
+
               return (
-                <div 
-                  key={plan.id} 
+                <div
+                  key={plan.id}
                   onClick={() => !isCompletedShelf && handleStartPlan(plan.id)}
                   className={`group relative cursor-pointer snap-start shrink-0 w-[120px] aspect-[3/4] transition-transform duration-300 ${isCompletedShelf ? "opacity-70 hover:opacity-100" : "hover:-translate-y-3"}`}
                 >
@@ -93,6 +119,17 @@ export default function PlansClient({
                     <div className="absolute -top-3 -right-2 bg-brand-gold text-brand-dark text-[10px] font-bold px-2.5 py-1 rounded-full z-20 shadow-md">
                       Day {prog.current_day}
                     </div>
+                  )}
+
+                  {/* Remove from Currently Reading */}
+                  {isReadingShelf && (
+                    <button
+                      onClick={(e) => handleRemoveProgress(plan.id, e)}
+                      className="absolute -top-2 -left-2 h-6 w-6 bg-white text-black rounded-full flex items-center justify-center z-20 shadow-md border border-black/10 hover:bg-black hover:text-white transition-colors"
+                      aria-label={language === "id" ? "Hapus dari Sedang Dibaca" : "Remove from Currently Reading"}
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    </button>
                   )}
 
                   {/* 3D Book Volume */}
@@ -140,8 +177,8 @@ export default function PlansClient({
     );
   };
 
-  const readingPlans = userProgress.filter(p => !p.is_finished).map(p => plans.find(plan => plan.id === p.plan_id)).filter(Boolean) as DevotionPlan[];
-  const finishedPlans = userProgress.filter(p => p.is_finished).map(p => plans.find(plan => plan.id === p.plan_id)).filter(Boolean) as DevotionPlan[];
+  const readingPlans = progressList.filter(p => !p.is_finished).map(p => plans.find(plan => plan.id === p.plan_id)).filter(Boolean) as DevotionPlan[];
+  const finishedPlans = progressList.filter(p => p.is_finished).map(p => plans.find(plan => plan.id === p.plan_id)).filter(Boolean) as DevotionPlan[];
 
   return (
     <div className="w-full min-h-[100dvh] bg-brand-dark text-white font-sans pb-32">
@@ -168,7 +205,7 @@ export default function PlansClient({
 
       <div className="px-4 space-y-6">
         {/* Currently Reading & Finished */}
-        {readingPlans.length > 0 && renderBookShelf(language === "id" ? "Sedang Dibaca" : "Currently Reading", readingPlans, false, true)}
+        {readingPlans.length > 0 && renderBookShelf(language === "id" ? "Sedang Dibaca" : "Currently Reading", readingPlans, false, true, true)}
         {finishedPlans.length > 0 && renderBookShelf(language === "id" ? "Selesai" : "Finished", finishedPlans, true, false)}
 
         {/* Categories */}
