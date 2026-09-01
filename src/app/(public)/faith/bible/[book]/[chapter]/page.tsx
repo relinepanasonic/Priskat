@@ -1,4 +1,4 @@
-﻿import { getLanguage } from "@/lib/lang";
+import { getLanguage } from "@/lib/lang";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -35,9 +35,16 @@ export default async function BibleChapterPage({
         .order('verse', { ascending: true });
         
       if (!error && verses && verses.length > 0) {
+        const mappedVerses = [];
+        for (const v of verses) {
+          if (v.title) {
+            mappedVerses.push({ verse: v.verse, type: 'title', content: v.title });
+          }
+          mappedVerses.push({ verse: v.verse, type: 'content', content: v.content });
+        }
         apiData = { 
           book: { no: bookId, name: verses[0].book_name, chapter: chapter }, 
-          verses: verses.map(v => ({ verse: v.verse, type: 'content', content: v.content })) 
+          verses: mappedVerses 
         };
       }
     } 
