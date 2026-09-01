@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, Play, X, ChevronDown } from "lucide-react";
+import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA, type BibleBook } from "@/lib/bibleBooks";
 
 interface Verse {
   verse: number;
@@ -99,13 +101,22 @@ function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse
 }
 
 export default function BookReader({ verses, bookName, bookId, chapter, lang = "en" }: Props) {
+  const router = useRouter();
   const pages = splitIntoPages(verses);
-  
+
   // Each "spread" shows 2 pages: left and right
   const totalSpreads = Math.ceil(pages.length / 2);
   const [spread, setSpread] = useState(0);
   const [animDir, setAnimDir] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showBookPicker, setShowBookPicker] = useState(false);
+
+  const isId = lang === "id";
+  const bookLabel = (b: BibleBook) => (isId ? b.name : b.name_en);
+  const pickBook = (b: BibleBook) => {
+    setShowBookPicker(false);
+    if (b.no !== bookId) router.push(`/faith/bible/${b.no}/1`);
+  };
 
   const goNext = () => {
     if (spread >= totalSpreads - 1 || isAnimating) return;
@@ -272,10 +283,14 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
             </Link>
           ) : <div className="h-8 w-8" />}
           
-          <span className="text-white font-sans text-sm font-semibold px-3">
+          <button
+            onClick={() => setShowBookPicker(true)}
+            className="flex items-center gap-1 text-white font-sans text-sm font-semibold px-3 py-1 rounded-full hover:bg-white/15 transition-colors"
+          >
             {bookName} {chapter}
-          </span>
-          
+            <ChevronDown className="h-3.5 w-3.5 text-white/60" />
+          </button>
+
           <Link href={`/faith/bible/${bookId}/${chapter + 1}`} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white/20 text-white transition-colors">
             <ChevronRight className="h-4 w-4" />
           </Link>
@@ -290,6 +305,61 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
       <div className="md:hidden fixed bottom-24 left-0 right-0 px-4 flex justify-center gap-3">
         {/* same nav pill but for mobile, sticky */}
       </div>
+
+      {/* Book Picker */}
+      {showBookPicker && (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowBookPicker(false)}
+        >
+          <div
+            className="mt-auto md:mt-0 md:mx-auto md:my-auto w-full md:max-w-md bg-white md:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <h2 className="text-lg font-bold text-gray-900">{isId ? "Kitab" : "Books"}</h2>
+              <button
+                onClick={() => setShowBookPicker(false)}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* List */}
+            <div className="overflow-y-auto flex-1 py-1">
+              {([
+                { label: isId ? "Perjanjian Lama" : "Old Testament", books: OLD_TESTAMENT },
+                { label: isId ? "Perjanjian Baru" : "New Testament", books: NEW_TESTAMENT },
+                { label: isId ? "Deuterokanonika" : "Deuterocanonicals", books: DEUTEROCANONICA },
+              ]).map((section) => (
+                <div key={section.label}>
+                  <p className="px-5 pt-4 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                    {section.label}
+                  </p>
+                  {section.books.map((b) => {
+                    const active = b.no === bookId;
+                    return (
+                      <button
+                        key={b.no}
+                        onClick={() => pickBook(b)}
+                        className={`w-full text-left px-5 py-3 text-[17px] transition-colors ${
+                          active
+                            ? "bg-brand-gold/15 text-brand-dark font-semibold"
+                            : "text-gray-800 hover:bg-gray-50"
+                        }`}
+                      >
+                        {bookLabel(b)}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

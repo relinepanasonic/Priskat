@@ -91,6 +91,7 @@ export default async function BibleChapterPage({
       bookName={apiData.book.name}
       bookId={bookId}
       chapter={chapter}
+      lang={lang}
     />
   );
 }
