@@ -89,7 +89,10 @@ export default async function CampPromotionPage({
       <h2 className="mb-4 text-lg font-bold text-white">
         Promotional{community?.name ? ` · ${community.name}` : ""}
       </h2>
-      <CommunityEventsPanel initialEvents={events || []} />
+      <CommunityEventsPanel
+        initialEvents={events || []}
+        communityId={community?.id ?? null}
+      />
     </div>
   );
 }

@@ -43,8 +43,10 @@ const POSTER_H = 1350; // 4:5
 
 export default function CommunityEventsPanel({
   initialEvents,
+  communityId = null,
 }: {
   initialEvents: EventRow[];
+  communityId?: string | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -61,6 +63,7 @@ export default function CommunityEventsPanel({
   const [eventDate, setEventDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [location, setLocation] = useState("");
+  const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [pushNews, setPushNews] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -73,6 +76,7 @@ export default function CommunityEventsPanel({
     setEventDate("");
     setEndDate("");
     setLocation("");
+    setCity("");
     setMapsUrl("");
     setPushNews(true);
     setError(null);
@@ -142,6 +146,8 @@ export default function CommunityEventsPanel({
     fd.append("event_date", eventDate);
     if (endDate) fd.append("end_date", endDate);
     fd.append("location", location.trim());
+    if (city.trim()) fd.append("city", city.trim());
+    if (communityId) fd.append("community_id", communityId);
     if (mapsUrl.trim()) fd.append("maps_url", mapsUrl.trim());
     if (banner) fd.append("banner_image_url", banner);
     if (pushNews) fd.append("push_to_news", "on");
@@ -366,16 +372,29 @@ export default function CommunityEventsPanel({
             </div>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm text-brand-light">
-              Location
-            </label>
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="input-3d w-full text-sm"
-              placeholder="Venue / address"
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm text-brand-light">
+                Location
+              </label>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="input-3d w-full text-sm"
+                placeholder="Venue / address"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-brand-light">
+                City
+              </label>
+              <input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="input-3d w-full text-sm"
+                placeholder="e.g. Bandung"
+              />
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-sm text-brand-light">

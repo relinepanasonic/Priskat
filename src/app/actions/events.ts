@@ -85,6 +85,8 @@ const promoSchema = z.object({
   event_date: z.string().min(1),
   end_date: z.string().optional(),
   location: z.string().min(1),
+  city: z.string().optional(),
+  community_id: z.string().uuid().optional().or(z.literal("")),
   maps_url: z.string().url().optional().or(z.literal("")),
   banner_image_url: z.string().optional(),
   push_to_news: z.string().optional(), // checkbox -> "on" | undefined
@@ -110,6 +112,8 @@ export async function promoteEvent(formData: FormData) {
       event_date: d.event_date,
       end_date: d.end_date || null,
       location: d.location,
+      city: d.city || null,
+      community_id: d.community_id || null,
       maps_url: d.maps_url || null,
       banner_image_url: d.banner_image_url || null,
       status: "published",
@@ -139,10 +143,18 @@ export async function promoteEvent(formData: FormData) {
       status: "published",
       published_at: new Date().toISOString(),
     });
-    if (!nErr) newsSlug = slug;
+    if (!nErr) {
+      newsSlug = slug;
+      if ((ev as { id?: string } | null)?.id)
+        await supabase
+          .from("events" as any)
+          .update({ news_slug: slug })
+          .eq("id", (ev as { id: string }).id);
+    }
   }
 
   revalidatePath("/events");
+  revalidatePath("/news/events");
   revalidatePath("/news");
   revalidatePath("/camp", "layout");
   revalidatePath("/");

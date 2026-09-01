@@ -200,6 +200,9 @@ export interface Event {
   end_date: string | null;
   location: string;
   maps_url: string | null;
+  city: string | null;
+  community_id: string | null;
+  news_slug: string | null;
   capacity: number | null;
   status: EventStatus;
   created_at: string;
