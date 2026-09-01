@@ -3,3 +3,4 @@
 
 ALTER TYPE public.prayer_category ADD VALUE IF NOT EXISTS 'basic_prayer';
 ALTER TYPE public.prayer_category ADD VALUE IF NOT EXISTS 'doa_ekaristi';
+

@@ -299,3 +299,4 @@ dalam persekutuan dengan Roh Kudus,
 segala hormat dan kemuliaan sepanjang segala masa.
 (Umat: Amin).'
 WHERE slug IN ('doa-syukur-agung-5', 'doa-syukur-agung-6', 'doa-syukur-agung-7', 'doa-syukur-agung-8', 'doa-syukur-agung-9', 'doa-syukur-agung-10');
+

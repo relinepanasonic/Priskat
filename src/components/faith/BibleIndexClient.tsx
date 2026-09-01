@@ -88,7 +88,7 @@ export default function BibleIndexClient({
             <h2 className="text-xl font-bold text-white tracking-wide mb-4 pl-2">
               {isId ? "Perjanjian Baru" : "New Testament"}
             </h2>
-            <BookListClient books={filteredNT} isId={isId} categoryFolder="new" />
+            <BookListClient books={filteredNT} isId={isId} categoryFolder="new" version={version} />
           </div>
         )}
         
@@ -98,7 +98,7 @@ export default function BibleIndexClient({
             <h2 className="text-xl font-bold text-white tracking-wide mb-4 pl-2">
               {isId ? "Perjanjian Lama" : "Old Testament"}
             </h2>
-            <BookListClient books={filteredOT} isId={isId} categoryFolder="old" />
+            <BookListClient books={filteredOT} isId={isId} categoryFolder="old" version={version} />
           </div>
         )}
 
@@ -108,7 +108,7 @@ export default function BibleIndexClient({
             <h2 className="text-xl font-bold text-white tracking-wide mb-4 pl-2">
               {isId ? "Deuterokanonika" : "Deuterocanonicals"}
             </h2>
-            <BookListClient books={filteredDC} isId={isId} categoryFolder="deu" />
+            <BookListClient books={filteredDC} isId={isId} categoryFolder="deu" version={version} />
           </div>
         )}
 

@@ -22,3 +22,4 @@ WHERE book_no = 19 AND chapter = 23 AND verse = 1;
 UPDATE public.bible_verses
 SET title = 'Percakapan dengan Nikodemus'
 WHERE book_no = 43 AND chapter = 3 AND verse = 1;
+

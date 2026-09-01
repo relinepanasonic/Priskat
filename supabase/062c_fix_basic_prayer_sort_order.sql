@@ -24,3 +24,4 @@ WHERE category = 'basic_prayer' AND title_id ILIKE '%Doa Tobat%';
 UPDATE public.prayers 
 SET sort_order = 5 
 WHERE category = 'basic_prayer' AND title_id ILIKE '%Syahadat%';
+

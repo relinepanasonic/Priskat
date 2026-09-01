@@ -6,16 +6,23 @@ import BookReader from "@/components/faith/BookReader";
 
 export default async function BibleChapterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ book: string; chapter: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const bookId = parseInt(resolvedParams.book);
   const chapter = parseInt(resolvedParams.chapter);
   
   if (isNaN(bookId) || isNaN(chapter)) return notFound();
 
   const lang = await getLanguage();
+  const isId = lang === 'id';
+  
+  // Default to TB for ID, NRSV-CE for EN
+  let version = isId ? 'TB' : (typeof resolvedSearchParams.version === 'string' ? resolvedSearchParams.version : 'NRSV-CE');
 
   let apiData = null;
   try {
@@ -24,29 +31,27 @@ export default async function BibleChapterPage({
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     
-    if (lang === 'id' || bookId >= 67) {
-      // Check our custom Indonesian DB first (Deuterocanonicals ONLY have ID right now)
-      const { data: verses, error } = await supabase
-        .from('bible_verses')
-        .select('*')
-        .eq('book_no', bookId)
-        .eq('chapter', chapter)
-        .eq('language', 'id') // Ensure we fetch ID
-        .order('verse', { ascending: true });
-        
-      if (!error && verses && verses.length > 0) {
-        const mappedVerses = [];
-        for (const v of verses) {
-          if (v.title) {
-            mappedVerses.push({ verse: v.verse, type: 'title', content: v.title });
-          }
-          mappedVerses.push({ verse: v.verse, type: 'content', content: v.content });
+    // Check our custom DB first
+    const { data: verses, error } = await supabase
+      .from('bible_verses')
+      .select('*')
+      .eq('book_no', bookId)
+      .eq('chapter', chapter)
+      .eq('translation', version)
+      .order('verse', { ascending: true });
+      
+    if (!error && verses && verses.length > 0) {
+      const mappedVerses = [];
+      for (const v of verses) {
+        if (v.title) {
+          mappedVerses.push({ verse: v.verse, type: 'title', content: v.title });
         }
-        apiData = { 
-          book: { no: bookId, name: verses[0].book_name, chapter: chapter }, 
-          verses: mappedVerses 
-        };
+        mappedVerses.push({ verse: v.verse, type: 'content', content: v.content });
       }
+      apiData = { 
+        book: { no: bookId, name: verses[0].book_name, chapter: chapter }, 
+        verses: mappedVerses 
+      };
     } 
     
     // Fallback to external API (for English, or if Indonesian is missing in our DB)

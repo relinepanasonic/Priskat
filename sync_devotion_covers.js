@@ -52,3 +52,4 @@ function processDirectory(dir) {
 processDirectory(srcDir);
 fs.writeFileSync(sqlFile, sql);
 console.log('Done! Generated SQL in supabase/042_set_devotion_covers.sql');
+

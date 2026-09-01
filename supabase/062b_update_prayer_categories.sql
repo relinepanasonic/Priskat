@@ -54,3 +54,4 @@ VALUES
 ('doa-syukur-agung-9', 'Doa Syukur Agung IX', 'Eucharistic Prayer IX', '[Teks Doa Syukur Agung IX - Silakan diisi dari buku Tata Perayaan Ekaristi / Puji Syukur]', '[Text for Eucharistic Prayer IX]', 'doa_ekaristi', 9, true),
 ('doa-syukur-agung-10', 'Doa Syukur Agung X', 'Eucharistic Prayer X', '[Teks Doa Syukur Agung X - Silakan diisi dari buku Tata Perayaan Ekaristi / Puji Syukur]', '[Text for Eucharistic Prayer X]', 'doa_ekaristi', 10, true)
 ON CONFLICT (slug) DO NOTHING;
+

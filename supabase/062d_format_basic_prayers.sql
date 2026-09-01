@@ -147,3 +147,4 @@ to sin no more and to avoid the near occasions of sin.
 
 Amen.'
 WHERE slug = 'doa-tobat';
+

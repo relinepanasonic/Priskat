@@ -4,7 +4,21 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BookOpen, X } from "lucide-react";
 
-function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
+function BookCard({ 
+  book, 
+  isId, 
+  isExpanded, 
+  onToggle,
+  categoryFolder,
+  version
+}: { 
+  book: any, 
+  isId: boolean, 
+  isExpanded: boolean, 
+  onToggle: (id: number) => void,
+  categoryFolder: string,
+  version: string
+}) {
   const [imgFailed, setImgFailed] = useState(false);
   const imagePath = `/images/bible/${categoryFolder}/${book.name_en}.jpeg`;
   const isGospel = ["Matthew", "Mark", "Luke", "John"].includes(book.name_en);
@@ -57,9 +71,9 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
           {/* Elegant Obi Band for Indonesian Translation */}
           {isId && !imgFailed && (
             <div className="absolute bottom-3 left-0 right-0 bg-black/80 backdrop-blur-md border-y border-[#8b6b22]/50 py-1.5 px-2 z-10 flex items-center justify-center shadow-[0_-2px_8px_rgba(0,0,0,0.6)] pointer-events-none">
-              <span className="text-[9px] md:text-[10px] font-serif font-bold text-[#e8decd] tracking-widest uppercase line-clamp-2 leading-tight w-full text-center drop-shadow-md">
+              <h3 className="text-[10px] md:text-xs font-serif font-bold text-brand-gold truncate drop-shadow-md tracking-wider">
                 {book.name}
-              </span>
+              </h3>
             </div>
           )}
 
@@ -67,6 +81,15 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
           <div className="absolute right-0 top-0 bottom-0 w-px bg-white/20 z-10 pointer-events-none"></div>
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"></div>
         </div>
+
+        {/* English Title Below Book (Simpler presentation for English) */}
+        {!isId && (
+          <div className="mt-3 text-center z-10 w-full px-1">
+            <h3 className="text-xs md:text-sm font-serif font-bold text-[#e8decd] tracking-wide truncate group-hover:text-brand-gold transition-colors">
+              {book.name_en}
+            </h3>
+          </div>
+        )}
       </div>
 
       {/* Magnified Open Book Overlay */}
@@ -146,7 +169,7 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
                   {Array.from({ length: book.chapter }).map((_, i) => (
                     <Link 
                       key={i} 
-                      href={`/faith/bible/${book.no}/${i + 1}`} 
+                      href={`/faith/bible/${book.no}/${i + 1}?version=${version}`} 
                       className="aspect-square flex items-center justify-center rounded-sm border border-[#2a2520]/20 text-[#2a2520] hover:bg-[#8b6b22] hover:text-white hover:border-[#8b6b22] hover:shadow-md font-serif text-sm md:text-lg font-bold transition-all duration-200 active:scale-95"
                     >
                       {i + 1}
@@ -170,11 +193,13 @@ function BookCard({ book, isId, isExpanded, onToggle, categoryFolder }: any) {
 export default function BookListClient({ 
   books, 
   isId,
-  categoryFolder
+  categoryFolder,
+  version
 }: { 
   books: any[], 
   isId: boolean,
-  categoryFolder: string
+  categoryFolder: string,
+  version: string
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -208,6 +233,7 @@ export default function BookListClient({
             isExpanded={expandedId === book.no} 
             onToggle={(id: number) => setExpandedId(prev => prev === id ? null : id)}
             categoryFolder={categoryFolder}
+            version={version}
           />
         ))}
       </div>
