@@ -37,6 +37,10 @@ const fmt = (iso: string) =>
     timeStyle: "short",
   });
 
+// Standard promo poster: Instagram portrait.
+const POSTER_W = 1080;
+const POSTER_H = 1350; // 4:5
+
 export default function CommunityEventsPanel({
   initialEvents,
 }: {
@@ -51,6 +55,7 @@ export default function CommunityEventsPanel({
   // form
   const [banner, setBanner] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [sizeNote, setSizeNote] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState("");
@@ -62,6 +67,7 @@ export default function CommunityEventsPanel({
 
   const reset = () => {
     setBanner("");
+    setSizeNote(null);
     setTitle("");
     setDescription("");
     setEventDate("");
@@ -77,6 +83,34 @@ export default function CommunityEventsPanel({
     if (!file) return;
     setUploading(true);
     setError(null);
+    setSizeNote(null);
+
+    // soft check against the 4:5 (1080x1350) standard
+    try {
+      const dims = await new Promise<{ w: number; h: number }>(
+        (resolve, reject) => {
+          const img = new window.Image();
+          img.onload = () =>
+            resolve({ w: img.naturalWidth, h: img.naturalHeight });
+          img.onerror = reject;
+          img.src = URL.createObjectURL(file);
+        }
+      );
+      const ratio = dims.w / dims.h;
+      const target = POSTER_W / POSTER_H; // 0.8
+      if (Math.abs(ratio - target) > 0.06) {
+        setSizeNote(
+          `This image is ${dims.w}×${dims.h}. Posters look best at ${POSTER_W}×${POSTER_H} (4:5 portrait) — it will be cropped to fit.`
+        );
+      } else if (dims.w < POSTER_W - 40) {
+        setSizeNote(
+          `This image is only ${dims.w}px wide. ${POSTER_W}×${POSTER_H} keeps it sharp.`
+        );
+      }
+    } catch {
+      /* ignore — proceed with upload */
+    }
+
     try {
       const {
         data: { user },
@@ -224,40 +258,56 @@ export default function CommunityEventsPanel({
         >
           {/* upload konten */}
           <div>
-            <label className="mb-1 block text-sm text-brand-light">
-              Content (poster / image)
+            <label className="mb-1 flex items-baseline justify-between gap-2 text-sm text-brand-light">
+              <span>Content (poster / image)</span>
+              <span className="text-[11px] font-normal text-brand-muted">
+                {POSTER_W}×{POSTER_H} · 4:5 portrait
+              </span>
             </label>
-            {banner ? (
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={banner}
-                  alt="preview"
-                  className="h-44 w-full rounded-xl object-cover"
-                />
+            <div className="mx-auto w-full max-w-[220px]">
+              {banner ? (
+                <div className="relative aspect-[4/5]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={banner}
+                    alt="preview"
+                    className="h-full w-full rounded-xl object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBanner("");
+                      setSizeNote(null);
+                    }}
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => setBanner("")}
-                  className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-border text-brand-muted hover:border-brand-gold"
                 >
-                  <X className="h-4 w-4" />
+                  {uploading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <>
+                      <ImagePlus className="h-6 w-6" />
+                      <span className="text-sm">Upload content</span>
+                      <span className="text-[11px]">
+                        {POSTER_W}×{POSTER_H}
+                      </span>
+                    </>
+                  )}
                 </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-border text-brand-muted hover:border-brand-gold"
-              >
-                {uploading ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <>
-                    <ImagePlus className="h-6 w-6" />
-                    <span className="text-sm">Upload content</span>
-                  </>
-                )}
-              </button>
+              )}
+            </div>
+            {sizeNote && (
+              <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] text-amber-400">
+                {sizeNote}
+              </p>
             )}
             <input
               ref={fileRef}
