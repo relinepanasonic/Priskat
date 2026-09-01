@@ -193,18 +193,40 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
     if (data) setChats(data);
   };
 
+  // meeting.date_time is saved as wall-clock time from a <datetime-local> input.
+  // Parse the raw Y-M-D H:M digits directly so no timezone shift is ever applied —
+  // what the user typed is what is displayed and what Google Calendar receives.
+  const MONTHS_ID = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+  const parseWall = (s: string | null) => {
+    if (!s) return null;
+    const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    if (!m) return null;
+    return { y: +m[1], mo: +m[2], d: +m[3], h: +m[4], mi: +m[5] };
+  };
+
+  const formatMeetingDate = (s: string | null) => {
+    const w = parseWall(s);
+    if (!w) return "No date set";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(w.d)} ${MONTHS_ID[w.mo - 1]} ${w.y}, ${pad(w.h)}.${pad(w.mi)}`;
+  };
+
   const addToCalendar = (meeting: any) => {
-    if (!meeting.date_time) {
+    const w = parseWall(meeting.date_time);
+    if (!w) {
       alert("This meeting has no date & time set yet.");
       return;
     }
-    const start = new Date(meeting.date_time);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
-    const fmt = (d: Date) => d.toISOString().replace(/-|:|\.\d+/g, "");
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const startLocal = `${w.y}${pad(w.mo)}${pad(w.d)}T${pad(w.h)}${pad(w.mi)}00`;
+    const end = new Date(w.y, w.mo - 1, w.d, w.h + 1, w.mi);
+    const endLocal = `${end.getFullYear()}${pad(end.getMonth() + 1)}${pad(end.getDate())}T${pad(end.getHours())}${pad(end.getMinutes())}00`;
     const url = new URL("https://calendar.google.com/calendar/render");
     url.searchParams.set("action", "TEMPLATE");
     url.searchParams.set("text", meeting.title || "Meeting");
-    url.searchParams.set("dates", `${fmt(start)}/${fmt(end)}`);
+    // No trailing "Z" / ctz => Google Calendar treats these as the user's local time.
+    url.searchParams.set("dates", `${startLocal}/${endLocal}`);
     if (meeting.mom_text) url.searchParams.set("details", meeting.mom_text);
     window.open(url.toString(), "_blank", "noopener,noreferrer");
   };
@@ -455,7 +477,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-bold text-white text-lg">{meeting.title}</h3>
-                      <p className="text-brand-gold font-semibold text-sm mt-1">{new Date(meeting.date_time).toLocaleString()}</p>
+                      <p className="text-brand-gold font-semibold text-sm mt-1">{formatMeetingDate(meeting.date_time)}</p>
                     </div>
                     <button onClick={() => addToCalendar(meeting)} className="bg-brand-surface border border-brand-border hover:bg-brand-gold hover:text-brand-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors">
                       <CalendarPlus className="w-3 h-3" /> Add to Calendar
