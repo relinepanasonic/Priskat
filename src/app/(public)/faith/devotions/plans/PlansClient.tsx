@@ -38,17 +38,22 @@ export default function PlansClient({
     setProgressList(prevList.filter(p => p.plan_id !== planId));
 
     const supabase = createClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("user_devotion_progress")
       .delete()
       .eq("user_id", userId)
-      .eq("plan_id", planId);
+      .eq("plan_id", planId)
+      .select("id");
 
-    if (error) {
-      console.error(error);
+    // No error but zero rows removed => RLS blocked it; don't leave the UI lying.
+    if (error || !data || data.length === 0) {
+      console.error("Failed to remove devotion progress", error);
       setProgressList(prevList);
       alert(language === "id" ? "Gagal menghapus" : "Failed to remove");
+      return;
     }
+
+    router.refresh();
   };
 
   const handleStartPlan = async (planId: string) => {
