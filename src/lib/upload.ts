@@ -10,7 +10,7 @@ const MAX_WIDTH_PX = 1200;
  */
 export async function uploadImage(
   file: File,
-  bucket: "avatars" | "news-covers" | "event-banners" | "devotion-covers",
+  bucket: "avatars" | "news-covers" | "event-banners" | "devotion-covers" | "org-structure",
   path: string
 ): Promise<string> {
   // 1. Compress/resize
