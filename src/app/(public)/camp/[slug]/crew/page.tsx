@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Tent, Users, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, Tent, Users, ArrowRight, Trash2, FolderInput, X } from "lucide-react";
 import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -13,6 +13,8 @@ export default function CampCrewPage() {
   const slug = (params.slug as string) || "";
   const [camps, setCamps] = useState<any[]>([]);
   const [communityId, setCommunityId] = useState<string | null>(null);
+  const [communities, setCommunities] = useState<{ id: string; name: string }[]>([]);
+  const [moveCamp, setMoveCamp] = useState<{ id: string; name: string } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
@@ -54,6 +56,13 @@ export default function CampCrewPage() {
       .order("created_at", { ascending: false });
 
     if (data) setCamps(data);
+
+    const { data: comms } = await supabase
+      .from("communities")
+      .select("id, name")
+      .order("created_at", { ascending: true });
+    if (comms) setCommunities(comms);
+
     setIsLoading(false);
   };
 
@@ -61,9 +70,20 @@ export default function CampCrewPage() {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm("Are you sure you want to delete this camp? This will also delete all tasks, meetings, chats, and crew assignments associated with it.")) return;
-    
+
     const supabase = createClient();
     await supabase.from("camp_cohorts").delete().eq("id", id);
+    fetchCamps();
+  };
+
+  const doMoveCamp = async (targetCommunityId: string) => {
+    if (!moveCamp) return;
+    const supabase = createClient();
+    await supabase
+      .from("camp_cohorts")
+      .update({ community_id: targetCommunityId })
+      .eq("id", moveCamp.id);
+    setMoveCamp(null);
     fetchCamps();
   };
 
@@ -133,8 +153,27 @@ export default function CampCrewPage() {
                     <span>Crew: <span className="text-white font-semibold">{camp.camp_crew?.[0]?.count || 0} members</span></span>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isSuperadmin && communities.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setMoveCamp({
+                            id: camp.id,
+                            name:
+                              camp.camp_name === "Other Event"
+                                ? camp.custom_name
+                                : `${camp.camp_name} ${camp.angkatan}`,
+                          });
+                        }}
+                        className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] transition-colors rounded"
+                        title="Move to another community"
+                      >
+                        <FolderInput className="w-4 h-4" />
+                      </button>
+                    )}
                     {isSuperadmin && (
-                      <button 
+                      <button
                         onClick={(e) => handleDeleteCamp(e, camp.id)}
                         className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] transition-colors rounded"
                         title="Delete Camp"
@@ -153,6 +192,43 @@ export default function CampCrewPage() {
       )}
 
       <AddCampModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchCamps} communityId={communityId} />
+
+      {moveCamp && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setMoveCamp(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-[#2a2d35] bg-[#16181d] p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[15px] font-bold text-white">Move camp</h3>
+              <button onClick={() => setMoveCamp(null)} className="text-brand-muted hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-3 text-sm text-brand-muted">
+              Move <span className="text-white">{moveCamp.name}</span> to:
+            </p>
+            <div className="space-y-1.5">
+              {communities.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => doMoveCamp(c.id)}
+                  disabled={c.id === communityId}
+                  className="flex w-full items-center justify-between rounded-lg border border-[#333] px-3 py-2.5 text-left text-sm text-brand-light hover:bg-white/5 disabled:opacity-40"
+                >
+                  {c.name}
+                  {c.id === communityId && (
+                    <span className="text-[11px] text-brand-muted">current</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

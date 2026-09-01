@@ -20,22 +20,43 @@ export async function resolveCommunity(
   slugOrId: string | null | undefined
 ): Promise<ResolvedCommunity | null> {
   const key = (slugOrId ?? "").trim();
-  if (!key || key === "undefined" || key === "null") return null;
 
-  const bySlug = await supabase
-    .from("communities")
-    .select("id, name, slug")
-    .eq("slug", key)
-    .maybeSingle();
-  if (bySlug.data) return bySlug.data as ResolvedCommunity;
-
-  if (UUID_RE.test(key)) {
-    const byId = await supabase
+  if (key && key !== "undefined" && key !== "null") {
+    const bySlug = await supabase
       .from("communities")
       .select("id, name, slug")
-      .eq("id", key)
+      .eq("slug", key)
       .maybeSingle();
-    if (byId.data) return byId.data as ResolvedCommunity;
+    if (bySlug.data) return bySlug.data as ResolvedCommunity;
+
+    if (UUID_RE.test(key)) {
+      const byId = await supabase
+        .from("communities")
+        .select("id, name, slug")
+        .eq("id", key)
+        .maybeSingle();
+      if (byId.data) return byId.data as ResolvedCommunity;
+    }
+    // a non-empty segment that matches nothing → genuinely broken
+    return null;
   }
-  return null;
+
+  // No usable segment (stale /camp/undefined link): fall back to the
+  // signed-in user's own community rather than erroring.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("community_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!prof?.community_id) return null;
+  const { data } = await supabase
+    .from("communities")
+    .select("id, name, slug")
+    .eq("id", prof.community_id)
+    .maybeSingle();
+  return (data as ResolvedCommunity) ?? null;
 }
