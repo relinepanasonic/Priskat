@@ -41,6 +41,8 @@ export default async function OrgStructurePage({ params }: { params: Promise<{ s
       role_title,
       order_index,
       user_id,
+      member_name,
+      photo_url,
       profiles (
         id,
         full_name,
@@ -62,7 +64,7 @@ export default async function OrgStructurePage({ params }: { params: Promise<{ s
     <OrgStructureClient 
       communityId={community.id}
       communityName={community.name ?? ""}
-      initialStructure={structure || []}
+      initialStructure={(structure as any) || []}
       isAdmin={isAdmin}
       profiles={profiles || []}
     />

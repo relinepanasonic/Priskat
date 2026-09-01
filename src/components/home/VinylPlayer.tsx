@@ -51,17 +51,30 @@ export default function VinylPlayer({
 
   const togglePlay = () => setIsPlaying(!isPlaying);
 
+  // Only step through slots that actually have a song loaded — the 5-slot
+  // grid can have empty/deleted slots in between filled ones.
+  const filledIndexes = () => songs.reduce<number[]>((acc, s, i) => {
+    if (s) acc.push(i);
+    return acc;
+  }, []);
+
   const nextSong = () => {
     if (playingIdx === null) return;
-    const nextIdx = (playingIdx + 1) % songs.length;
-    setPlayingIdx(nextIdx);
+    const order = filledIndexes();
+    if (order.length === 0) return;
+    const pos = order.indexOf(playingIdx);
+    const nextPos = pos === -1 ? 0 : (pos + 1) % order.length;
+    setPlayingIdx(order[nextPos]);
     setIsPlaying(true);
   };
 
   const prevSong = () => {
     if (playingIdx === null) return;
-    const prevIdx = (playingIdx - 1 + songs.length) % songs.length;
-    setPlayingIdx(prevIdx);
+    const order = filledIndexes();
+    if (order.length === 0) return;
+    const pos = order.indexOf(playingIdx);
+    const prevPos = pos === -1 ? 0 : (pos - 1 + order.length) % order.length;
+    setPlayingIdx(order[prevPos]);
     setIsPlaying(true);
   };
 
@@ -166,7 +179,7 @@ export default function VinylPlayer({
   return (
     <div className="w-full">
       {/* Vinyl Records Row */}
-      <div className="flex justify-center items-center gap-2 sm:gap-4 py-4 px-2 sm:px-6 overflow-x-auto hide-scrollbar min-h-[100px]">
+      <div className="flex justify-center items-center gap-2 py-4 px-6 overflow-x-auto hide-scrollbar min-h-[100px]">
         {Array.from({ length: 5 }).map((_, idx) => {
           const song = songs[idx];
           const isThisPlaying = playingIdx === idx && isPlaying;
