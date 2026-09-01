@@ -68,13 +68,44 @@ export default async function HomePage() {
     activeDevotion = devotionData;
   }
 
+  // Fetch the user's crew/service assignments across ALL communities for
+  // the "My Service" tab — home shows everything merged, the community
+  // page (/camp/[slug]/ongoing) keeps it scoped to just that community.
+  let myCamps: any[] = [];
+  try {
+    const { data: crewData } = await supabase
+      .from("camp_crew")
+      .select("cohort_id, position, camp_cohorts(*, community:communities(id, name, slug))")
+      .eq("user_id", user.id);
+
+    if (crewData) {
+      const uniqueCohorts = new Map<string, any>();
+      for (const item of crewData as any[]) {
+        if (!item.camp_cohorts) continue;
+        if (!uniqueCohorts.has(item.cohort_id)) {
+          const community = item.camp_cohorts.community;
+          uniqueCohorts.set(item.cohort_id, {
+            ...item.camp_cohorts,
+            myRole: item.position,
+            communityName: community?.name || null,
+            communitySlug: community?.slug || community?.id || null,
+          });
+        }
+      }
+      myCamps = Array.from(uniqueCohorts.values());
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
   return (
     <div className="md:p-6 md:h-full md:overflow-y-auto">
-      <HomeTabsClient 
-        profile={profile} 
-        posts={posts} 
-        userId={user.id} 
+      <HomeTabsClient
+        profile={profile}
+        posts={posts}
+        userId={user.id}
         activeDevotion={activeDevotion}
+        myCamps={myCamps}
         lang={lang}
       />
     </div>

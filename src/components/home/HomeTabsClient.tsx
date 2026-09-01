@@ -3,27 +3,29 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram } from "lucide-react";
+import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram, Users, ArrowRight } from "lucide-react";
 import FeedClient from "@/components/social/FeedClient";
 import { formatDistanceToNow } from "date-fns";
 import { uploadImage, storagePath } from "@/lib/upload";
 import VinylPlayer from "./VinylPlayer";
 import { createClient } from "@/lib/supabase/client";
 
-export default function HomeTabsClient({ 
-  profile, 
-  posts, 
+export default function HomeTabsClient({
+  profile,
+  posts,
   userId,
   activeDevotion,
+  myCamps = [],
   lang = "id"
-}: { 
-  profile: any, 
-  posts: any[], 
+}: {
+  profile: any,
+  posts: any[],
   userId: string,
   activeDevotion?: any,
+  myCamps?: any[],
   lang?: "id" | "en"
 }) {
-  const [activeTab, setActiveTab] = useState<"Thought" | "Profile">("Thought");
+  const [activeTab, setActiveTab] = useState<"Thought" | "Profile" | "Service">("Thought");
 
   const angkatan = profile.angkatan || "-";
   const city = profile.kota || "-";
@@ -198,19 +200,25 @@ export default function HomeTabsClient({
         </Link>
       </div>
 
-      <div className="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur-md pt-6 pb-4 px-6 mt-2 border-b border-[#333]">
-        <div className="bg-[#1a1d24] p-1.5 rounded-full shadow-lg flex items-center gap-1 border border-[#333] w-full max-w-[280px] mx-auto">
-          <button 
+      <div className="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur-md pt-6 pb-4 px-4 mt-2 border-b border-[#333]">
+        <div className="bg-[#1a1d24] p-1.5 rounded-full shadow-lg flex items-center gap-1 border border-[#333] w-full max-w-[360px] mx-auto">
+          <button
+            onClick={() => setActiveTab("Profile")}
+            className={`flex-1 py-2.5 px-1 rounded-full text-xs font-bold transition-all ${activeTab === "Profile" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
+          >
+            {isEn ? "Profile" : "Profil"}
+          </button>
+          <button
             onClick={() => setActiveTab("Thought")}
-            className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Thought" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
+            className={`flex-1 py-2.5 px-1 rounded-full text-xs font-bold transition-all ${activeTab === "Thought" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
             {isEn ? "My Thought" : "Pikiran Saya"}
           </button>
-          <button 
-            onClick={() => setActiveTab("Profile")}
-            className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === "Profile" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
+          <button
+            onClick={() => setActiveTab("Service")}
+            className={`flex-1 py-2.5 px-1 rounded-full text-xs font-bold transition-all whitespace-nowrap ${activeTab === "Service" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
-            {isEn ? "Profile" : "Profil"}
+            {isEn ? "My Service" : "Pelayanan Saya"}
           </button>
         </div>
       </div>
@@ -287,6 +295,75 @@ export default function HomeTabsClient({
         {activeTab === "Thought" && (
           <div className="px-6 animate-in fade-in duration-300 pb-12">
             <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} posts={posts} lang={lang} />
+          </div>
+        )}
+
+        {activeTab === "Service" && (
+          <div className="px-6 space-y-4 animate-in fade-in duration-300 pb-12">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
+                <Tent className="h-4 w-4" /> {isEn ? "My Service" : "Pelayanan Saya"}
+              </h3>
+            </div>
+            <p className="text-xs text-brand-muted -mt-2">
+              {isEn ? "Combined across all your communities." : "Digabung dari semua komunitasmu."}
+            </p>
+
+            {myCamps.length > 0 ? (
+              <div className="space-y-3">
+                {myCamps.map((camp: any) => {
+                  const title = camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name;
+                  const subtitle = camp.camp_name !== "Other Event"
+                    ? `${isEn ? "Angkatan" : "Angkatan"} ${camp.angkatan}`
+                    : (isEn ? "Custom Event" : "Acara Khusus");
+                  const inner = (
+                    <div className="bg-[#1a1d24] border border-[#333] rounded-2xl p-4 group hover:border-brand-gold/40 transition-colors relative overflow-hidden shadow-sm">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="h-10 w-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                          <Tent className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {camp.communityName && (
+                            <span className="bg-brand-gold/10 text-[10px] font-bold px-2.5 py-1 rounded-full text-brand-gold border border-brand-gold/30">
+                              {camp.communityName}
+                            </span>
+                          )}
+                          {camp.branch && (
+                            <span className="bg-[#222] text-[10px] font-bold px-2.5 py-1 rounded-full text-gray-300 border border-[#333]">
+                              {camp.branch}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <h4 className="font-bold text-sm text-white group-hover:text-brand-gold transition-colors">{title}</h4>
+                      <p className="text-xs text-brand-muted mt-0.5">{subtitle}</p>
+                      <div className="mt-3 pt-3 border-t border-[#222] flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <Users className="h-3.5 w-3.5" />
+                          <span>{isEn ? "Role:" : "Peran:"} <span className="text-white font-semibold">{camp.myRole}</span></span>
+                        </div>
+                        {camp.communitySlug && <ArrowRight className="h-4 w-4 text-[#555] group-hover:text-brand-gold transition-colors" />}
+                      </div>
+                    </div>
+                  );
+                  return camp.communitySlug ? (
+                    <Link key={camp.id} href={`/camp/${camp.communitySlug}/ongoing/${camp.id}`}>{inner}</Link>
+                  ) : (
+                    <div key={camp.id}>{inner}</div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center py-12">
+                <div className="w-16 h-16 bg-[#1a1d24] border border-[#333] rounded-full flex items-center justify-center mb-4">
+                  <Tent className="w-7 h-7 text-brand-muted" />
+                </div>
+                <h4 className="text-base font-bold text-white mb-1">{isEn ? "No Service Yet" : "Belum Ada Pelayanan"}</h4>
+                <p className="text-sm text-brand-muted max-w-[240px]">
+                  {isEn ? "You are not currently assigned to any active camps." : "Kamu belum ditugaskan di camp aktif mana pun."}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
