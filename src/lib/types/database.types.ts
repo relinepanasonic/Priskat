@@ -134,7 +134,7 @@ export type PrayerCategory =
   | 'tobat_syukur';
 
 export const PRAYER_CATEGORIES: { value: PrayerCategory; label_id: string; label_en: string }[] = [
-  { value: 'basic_prayer', label_id: 'Basic Prayer', label_en: 'Basic Prayer' },
+  { value: 'basic_prayer', label_id: 'Doa Dasar', label_en: 'Basic Prayer' },
   { value: 'doa_harian', label_id: 'Doa Harian', label_en: 'Daily Prayers' },
   { value: 'doa_ekaristi', label_id: 'Doa Ekaristi', label_en: 'Eucharistic Prayer' },
   { value: 'hati_kudus_yesus', label_id: 'Hati Kudus Yesus', label_en: 'Sacred Heart' },
