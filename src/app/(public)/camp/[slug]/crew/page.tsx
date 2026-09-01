@@ -5,8 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Plus, Tent, Users, ArrowRight, Trash2 } from "lucide-react";
 import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 export default function CampCrewPage() {
+  const params = useParams();
+  const slug = (params.slug as string) || "";
   const [camps, setCamps] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
@@ -79,7 +82,7 @@ export default function CampCrewPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {camps.map((camp) => (
-            <Link href={`/camp/ongoing/${camp.id}`} key={camp.id}>
+            <Link href={`/camp/${slug}/ongoing/${camp.id}`} key={camp.id}>
               <div className="bg-[#111] border border-[#333] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#15181e] group h-full flex flex-col cursor-pointer shadow-lg hover:shadow-brand-gold/10 relative">
 
                 <div className="flex justify-between items-start mb-4">
