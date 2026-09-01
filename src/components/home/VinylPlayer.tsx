@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Play, Pause, SkipForward, SkipBack, Music, Plus, X, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { storagePath, uploadAudio } from "@/lib/upload";
+import { usePlayer } from "@/components/audio/PlayerProvider";
 import Image from "next/image";
 
 // Compressed cover images from public/images/vinyl
@@ -26,85 +27,33 @@ export default function VinylPlayer({
   readOnly?: boolean
 }) {
   const [songs, setSongs] = useState<Song[]>(initialSongs);
-  const [playingIdx, setPlayingIdx] = useState<number | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [showCoverPicker, setShowCoverPicker] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const { currentSong, isPlaying, playFrom, toggle, loadQueue, playingIdx } = usePlayer();
   const supabase = createClient();
 
+  // Keep the global queue aligned with this profile's songs while nothing is
+  // playing (so returning to Home doesn't wipe an in-progress track).
   useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play().catch(e => {
-          console.error("Autoplay prevented:", e);
-          setIsPlaying(false);
-        });
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isPlaying, playingIdx]);
-
-  const togglePlay = () => setIsPlaying(!isPlaying);
-
-  // Only step through slots that actually have a song loaded — the 5-slot
-  // grid can have empty/deleted slots in between filled ones.
-  const filledIndexes = () => songs.reduce<number[]>((acc, s, i) => {
-    if (s) acc.push(i);
-    return acc;
-  }, []);
-
-  const nextSong = () => {
-    if (playingIdx === null) return;
-    const order = filledIndexes();
-    if (order.length === 0) return;
-    const pos = order.indexOf(playingIdx);
-    const nextPos = pos === -1 ? 0 : (pos + 1) % order.length;
-    setPlayingIdx(order[nextPos]);
-    setIsPlaying(true);
-  };
-
-  const prevSong = () => {
-    if (playingIdx === null) return;
-    const order = filledIndexes();
-    if (order.length === 0) return;
-    const pos = order.indexOf(playingIdx);
-    const prevPos = pos === -1 ? 0 : (pos - 1 + order.length) % order.length;
-    setPlayingIdx(order[prevPos]);
-    setIsPlaying(true);
-  };
-
-  const handleEnded = () => {
-    nextSong();
-  };
+    if (!readOnly && playingIdx === null) loadQueue(songs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songs]);
 
   const handleVinylClick = (idx: number) => {
-    if (readOnly) {
-      if (!songs[idx]) return;
-      if (playingIdx === idx) togglePlay();
-      else {
-        setPlayingIdx(idx);
-        setIsPlaying(true);
+    const song = songs[idx];
+    if (song) {
+      if (currentSong?.url === song.url) {
+        toggle();
+      } else {
+        playFrom(songs, idx);
       }
       return;
     }
-    if (songs[idx]) {
-      // Already has a song, toggle play
-      if (playingIdx === idx) {
-        togglePlay();
-      } else {
-        setPlayingIdx(idx);
-        setIsPlaying(true);
-      }
-    } else {
-      // Empty slot, prompt to add song
-      // Trigger hidden file input
-      document.getElementById(`song-upload-${idx}`)?.click();
-    }
+    if (readOnly) return;
+    // Empty slot — prompt to add a song
+    document.getElementById(`song-upload-${idx}`)?.click();
   };
 
   const handleFileSelect = (idx: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,7 +62,6 @@ export default function VinylPlayer({
       setSelectedFile(file);
       setShowCoverPicker(idx); // Next step: pick a cover
     }
-    // reset input
     e.target.value = "";
   };
 
@@ -123,14 +71,12 @@ export default function VinylPlayer({
     setShowCoverPicker(null);
 
     try {
-      // 1. Upload audio
       const path = storagePath(userId, selectedFile.name);
       const url = await uploadAudio(selectedFile, "profile-songs", path);
 
-      // 2. Update DB
       const newSong: Song = {
         id: idx.toString(),
-        title: selectedFile.name.replace(/\.[^/.]+$/, ""), // remove extension
+        title: selectedFile.name.replace(/\.[^/.]+$/, ""),
         url,
         coverImage: coverUrl
       };
@@ -144,7 +90,7 @@ export default function VinylPlayer({
 
       if (error) throw error;
       setSongs(newSongs);
-
+      loadQueue(newSongs);
     } catch (e: any) {
       alert("Failed to upload song: " + e.message);
     } finally {
@@ -157,11 +103,6 @@ export default function VinylPlayer({
     e.stopPropagation();
     if (!confirm("Remove this song?")) return;
 
-    if (playingIdx === idx) {
-      setIsPlaying(false);
-      setPlayingIdx(null);
-    }
-
     const newSongs = [...songs];
     delete newSongs[idx]; // leaves undefined at idx
 
@@ -169,8 +110,9 @@ export default function VinylPlayer({
       await supabase.from("profiles")
         .update({ favorite_songs: newSongs.filter(Boolean) })
         .eq("id", userId);
-      
+
       setSongs(newSongs);
+      loadQueue(newSongs);
     } catch (err: any) {
       alert("Error removing song");
     }
@@ -182,16 +124,16 @@ export default function VinylPlayer({
       <div className="flex justify-center items-center gap-2 py-4 px-6 overflow-x-auto hide-scrollbar min-h-[100px]">
         {Array.from({ length: 5 }).map((_, idx) => {
           const song = songs[idx];
-          const isThisPlaying = playingIdx === idx && isPlaying;
+          const isThisPlaying = !!song && currentSong?.url === song.url && isPlaying;
           const isUploading = uploadingIdx === idx;
 
           return (
             <div key={idx} className="relative group shrink-0">
-              <input 
-                type="file" 
-                id={`song-upload-${idx}`} 
-                accept="audio/*" 
-                className="hidden" 
+              <input
+                type="file"
+                id={`song-upload-${idx}`}
+                accept="audio/*"
+                className="hidden"
                 onChange={(e) => handleFileSelect(idx, e)}
               />
 
@@ -199,8 +141,8 @@ export default function VinylPlayer({
                 onClick={() => handleVinylClick(idx)}
                 disabled={isUploading}
                 className={`
-                  w-16 h-16 sm:w-20 sm:h-20 rounded-full relative flex items-center justify-center 
-                  transition-all duration-300 shadow-xl border-4 
+                  w-16 h-16 sm:w-20 sm:h-20 rounded-full relative flex items-center justify-center
+                  transition-all duration-300 shadow-xl border-4
                   ${song ? "border-[#111] bg-[#111]" : "border-[#333] border-dashed bg-[#1a1d24] hover:border-brand-gold"}
                   ${isThisPlaying ? "animate-[spin_4s_linear_infinite] shadow-[0_0_15px_rgba(212,175,55,0.4)]" : ""}
                 `}
@@ -211,7 +153,7 @@ export default function VinylPlayer({
                   <>
                     {/* Thin Black Edge / Vinyl Texture */}
                     <div className="absolute inset-0 rounded-full border border-[#222] m-0.5"></div>
-                    
+
                     {/* Center Label (Cover Image) fills almost the entire vinyl */}
                     <div className="absolute inset-1 rounded-full overflow-hidden z-10 border border-black shadow-inner bg-white">
                       <Image src={song.coverImage} alt="Cover" fill className="object-cover" />
@@ -250,7 +192,7 @@ export default function VinylPlayer({
             </div>
             <div className="overflow-y-auto flex-1 grid grid-cols-4 gap-3 pr-2">
               {COVER_OPTIONS.map((url, i) => (
-                <button 
+                <button
                   key={i}
                   onClick={() => saveSong(showCoverPicker, url)}
                   className="aspect-square relative rounded-full overflow-hidden border-2 border-transparent hover:border-brand-gold transition-all"
@@ -264,61 +206,6 @@ export default function VinylPlayer({
           </div>
         </div>
       )}
-
-      {/* Mini Player Controls (Only shows if a song is loaded and selected/playing) */}
-      {playingIdx !== null && songs[playingIdx] && (
-        <div className="mx-6 mt-2 relative overflow-hidden rounded-full p-[1px] bg-gradient-to-r from-brand-gold/40 via-brand-gold/10 to-brand-gold/40 shadow-lg animate-in slide-in-from-bottom-2">
-          <div className="flex items-center gap-3 bg-[#1a1d24]/80 backdrop-blur-xl rounded-full px-4 py-2 relative z-10">
-            
-            <audio 
-              ref={audioRef} 
-              src={songs[playingIdx].url} 
-              onEnded={handleEnded} 
-              className="hidden" 
-            />
-
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center border border-brand-gold/30 shrink-0 relative overflow-hidden ${isPlaying ? 'bg-brand-dark' : 'bg-brand-dark/50'}`}>
-              {isPlaying ? (
-                <div className="flex items-end gap-0.5 h-3">
-                  <div className="w-1 bg-brand-gold animate-[bounce_0.8s_infinite] h-full"></div>
-                  <div className="w-1 bg-brand-gold animate-[bounce_1.2s_infinite] h-2/3"></div>
-                  <div className="w-1 bg-brand-gold animate-[bounce_0.9s_infinite] h-full"></div>
-                </div>
-              ) : (
-                <Music className="w-3.5 h-3.5 text-brand-gold" />
-              )}
-            </div>
-
-            <div className="flex-1 overflow-hidden">
-              <p className="text-[10px] text-brand-gold font-bold uppercase tracking-wider mb-0.5">Now Playing</p>
-              <div className="relative w-full whitespace-nowrap">
-                <p className={`text-xs text-white font-medium ${isPlaying ? 'animate-marquee' : 'truncate'}`}>
-                  {songs[playingIdx].title}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button onClick={prevSong} className="p-1.5 text-gray-400 hover:text-white transition-colors">
-                <SkipBack className="w-4 h-4 fill-current" />
-              </button>
-              
-              <button onClick={togglePlay} className="h-9 w-9 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center hover:scale-105 hover:bg-yellow-400 transition-all shadow-[0_0_10px_rgba(212,175,55,0.3)]">
-                {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-              </button>
-              
-              <button onClick={nextSong} className="p-1.5 text-gray-400 hover:text-white transition-colors">
-                <SkipForward className="w-4 h-4 fill-current" />
-              </button>
-            </div>
-          </div>
-          
-          {isPlaying && (
-            <div className="absolute inset-0 bg-brand-gold/5 blur-xl z-0 animate-pulse"></div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
-
