@@ -225,20 +225,40 @@ export default function FriendsClient({
 
   return (
     <div className="min-h-screen bg-brand-dark pb-32">
-      {/* Tabs */}
-      <div className="sticky top-0 z-10 mb-6 border-b border-brand-border bg-brand-dark/90 px-4 pb-0 pt-4 backdrop-blur-md">
-        <div className="mx-auto flex max-w-md items-center justify-between">
+      {/* Header Section */}
+      <div className="bg-brand-surface pt-8 pb-6 px-4 mb-6 shadow-sm border-b border-brand-border/50 relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
+        <div className="mx-auto max-w-5xl relative z-10">
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-brand-gold mb-1 drop-shadow-sm">
+            {isEn ? "Connect & Grow" : "Koneksi & Bertumbuh"}
+          </h1>
+          <p className="text-brand-muted text-sm max-w-md">
+            {isEn ? "Find friends, join communities, and grow your faith together." : "Temukan teman, bergabung dengan komunitas, dan bertumbuh dalam iman bersama."}
+          </p>
+        </div>
+      </div>
+
+      {/* Modern Pill Tabs */}
+      <div className="sticky top-0 z-20 mb-8 px-4 py-3 bg-brand-dark/95 backdrop-blur-md shadow-sm">
+        <div className="mx-auto max-w-md bg-brand-surface border border-brand-border/50 p-1 rounded-xl flex items-center justify-between">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 border-b-2 pb-3 text-sm font-semibold capitalize transition-all ${
+              className={`flex-1 py-2 px-3 text-xs sm:text-sm font-semibold capitalize rounded-lg transition-all duration-300 ${
                 activeTab === tab.id
-                  ? "border-brand-gold text-brand-gold"
-                  : "border-transparent text-brand-muted hover:text-white"
+                  ? "bg-brand-gold text-brand-dark shadow-sm"
+                  : "text-brand-muted hover:text-white hover:bg-white/5"
               }`}
             >
               {tab.label}
+              {tab.id === "friends" && localIncoming.length > 0 && (
+                <span className={`ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[9px] font-bold ${
+                  activeTab === tab.id ? "bg-brand-dark text-brand-gold" : "bg-brand-gold text-brand-dark"
+                }`}>
+                  {localIncoming.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -270,11 +290,19 @@ export default function FriendsClient({
                 ))}
               </div>
             ) : (
-              <p className="rounded-2xl border border-brand-border bg-brand-bg py-10 text-center text-brand-muted">
-                {isEn
-                  ? "No recommendations right now."
-                  : "Belum ada rekomendasi saat ini."}
-              </p>
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-brand-border bg-brand-surface py-16 px-4 text-center shadow-sm">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10">
+                  <Search className="h-8 w-8 text-brand-gold" />
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-white">
+                  {isEn ? "No recommendations yet" : "Belum ada rekomendasi"}
+                </h3>
+                <p className="text-sm text-brand-muted max-w-xs">
+                  {isEn
+                    ? "We'll suggest people here once you start connecting and joining communities."
+                    : "Kami akan menyarankan teman di sini setelah Anda mulai bergabung dengan komunitas."}
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -304,11 +332,19 @@ export default function FriendsClient({
                 ))}
               </div>
             ) : (
-              <p className="rounded-2xl border border-brand-border bg-brand-bg py-10 text-center text-brand-muted">
-                {isEn
-                  ? "You don't have any mutual friends yet. Connect with more people first!"
-                  : "Anda belum memiliki teman mutual. Berteman dengan lebih banyak orang dulu!"}
-              </p>
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-brand-border bg-brand-surface py-16 px-4 text-center shadow-sm">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10">
+                  <Users className="h-8 w-8 text-brand-gold" />
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-white">
+                  {isEn ? "No mutual connections" : "Belum ada koneksi mutual"}
+                </h3>
+                <p className="text-sm text-brand-muted max-w-xs">
+                  {isEn
+                    ? "Connect with more people to discover friends you might have in common."
+                    : "Berteman dengan lebih banyak orang untuk menemukan teman yang mungkin Anda kenal."}
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -345,11 +381,19 @@ export default function FriendsClient({
                 {isEn ? "My Connections" : "Koneksi Saya"}
               </h2>
               {localFriends.length === 0 ? (
-                <p className="rounded-2xl border border-brand-border bg-brand-bg py-10 text-center text-brand-muted">
-                  {isEn
-                    ? "You haven't added any friends yet."
-                    : "Anda belum menambahkan teman satupun."}
-                </p>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-brand-border bg-brand-surface py-16 px-4 text-center shadow-sm">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10">
+                    <UserCheck className="h-8 w-8 text-brand-gold" />
+                  </div>
+                  <h3 className="mb-2 text-lg font-bold text-white">
+                    {isEn ? "No connections yet" : "Belum ada koneksi"}
+                  </h3>
+                  <p className="text-sm text-brand-muted max-w-xs">
+                    {isEn
+                      ? "Check the Browsing tab to find and add new friends to your network."
+                      : "Cek tab Jelajah untuk menemukan dan menambahkan teman baru."}
+                  </p>
+                </div>
               ) : (
                 <div className={grid}>
                   {localFriends.map((f) => (
