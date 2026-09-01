@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
 import { z } from "zod";
 
 const eventSchema = z.object({
@@ -74,6 +75,82 @@ export async function updateEvent(id: string, formData: FormData) {
   revalidatePath(`/events/${id}`);
   revalidatePath("/");
   redirect("/admin/events");
+}
+
+/* ---- Community Center "Promotion": one event, optional News push --- */
+
+const promoSchema = z.object({
+  title: z.string().min(3),
+  description: z.string().min(10),
+  event_date: z.string().min(1),
+  end_date: z.string().optional(),
+  location: z.string().min(1),
+  maps_url: z.string().url().optional().or(z.literal("")),
+  banner_image_url: z.string().optional(),
+  push_to_news: z.string().optional(), // checkbox -> "on" | undefined
+});
+
+export async function promoteEvent(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: { _form: "Not signed in" } };
+
+  const parsed = promoSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: parsed.error.flatten().fieldErrors };
+  const d = parsed.data;
+
+  const { data: ev, error } = await supabase
+    .from("events" as any)
+    .insert({
+      author_id: user.id,
+      title: d.title,
+      description: d.description,
+      event_date: d.event_date,
+      end_date: d.end_date || null,
+      location: d.location,
+      maps_url: d.maps_url || null,
+      banner_image_url: d.banner_image_url || null,
+      status: "published",
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: { _form: error.message } };
+
+  let newsSlug: string | null = null;
+  if (d.push_to_news === "on") {
+    const slug = slugify(d.title) + "-" + Date.now().toString(36);
+    const when = new Date(d.event_date).toLocaleString("en-GB", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+    const body =
+      `${d.description}\n\n**When:** ${when}\n**Where:** ${d.location}` +
+      (d.maps_url ? `\n**Map:** ${d.maps_url}` : "");
+    const { error: nErr } = await supabase.from("news_posts" as any).insert({
+      author_id: user.id,
+      title: d.title,
+      slug,
+      body,
+      category: "Event",
+      cover_image_url: d.banner_image_url || null,
+      status: "published",
+      published_at: new Date().toISOString(),
+    });
+    if (!nErr) newsSlug = slug;
+  }
+
+  revalidatePath("/events");
+  revalidatePath("/news");
+  revalidatePath("/admin/communities");
+  revalidatePath("/");
+  return {
+    ok: true as const,
+    eventId: (ev as { id?: string } | null)?.id ?? null,
+    newsSlug,
+  };
 }
 
 export async function deleteEvent(id: string) {

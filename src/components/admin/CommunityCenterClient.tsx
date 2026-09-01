@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import { createCommunity, updateCommunity, deleteCommunity, addCommunityAdmin, removeCommunityAdmin } from "@/app/actions/community";
-import { Plus, Trash2, Edit2, UserPlus, Shield } from "lucide-react";
+import { Plus, Trash2, Edit2, UserPlus, Shield, Network, CalendarDays } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
+import CommunityEventsPanel from "@/components/admin/CommunityEventsPanel";
 
-export default function CommunityCenterClient({ initialCommunities, initialAdmins, allUsers }: { initialCommunities: any[], initialAdmins: any[], allUsers: any[] }) {
+export default function CommunityCenterClient({ initialCommunities, initialAdmins, allUsers, initialEvents = [] }: { initialCommunities: any[], initialAdmins: any[], allUsers: any[], initialEvents?: any[] }) {
+  const [tab, setTab] = useState<"communities" | "events">("communities");
   const [isAdding, setIsAdding] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -117,6 +119,29 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
 
   return (
     <div className="space-y-8">
+      <div className="flex gap-1 border-b border-[#333]">
+        {([
+          { id: "communities", label: "Communities", icon: Network },
+          { id: "events", label: "Events", icon: CalendarDays },
+        ] as const).map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+              tab === id
+                ? "border-brand-gold text-brand-gold"
+                : "border-transparent text-brand-muted hover:text-white"
+            }`}
+          >
+            <Icon className="h-4 w-4" /> {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "events" ? (
+        <CommunityEventsPanel initialEvents={initialEvents} />
+      ) : (
+      <>
       <div className="flex justify-end">
         <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Community
@@ -238,6 +263,8 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
           <Button type="submit" className="w-full">Assign</Button>
         </form>
       </Modal>
+      </>
+      )}
     </div>
   );
 }

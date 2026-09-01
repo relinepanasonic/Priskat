@@ -199,6 +199,7 @@ export interface Event {
   event_date: string;
   end_date: string | null;
   location: string;
+  maps_url: string | null;
   capacity: number | null;
   status: EventStatus;
   created_at: string;
