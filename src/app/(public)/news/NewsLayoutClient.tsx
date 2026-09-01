@@ -14,7 +14,7 @@ export default function NewsLayoutClient({ children }: { children: React.ReactNo
   ];
 
   return (
-    <div className="w-full h-full p-4 md:p-8 space-y-6">
+    <div className="w-full h-full px-4 pt-4 pb-28 md:p-8 space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">CFM News & Updates</h1>
       </div>
