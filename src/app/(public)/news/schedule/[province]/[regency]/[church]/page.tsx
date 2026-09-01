@@ -5,7 +5,6 @@ import {
   MapPin,
   Clock,
   CalendarDays,
-  ExternalLink,
   Church,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -178,25 +177,12 @@ export default async function ChurchDetailPage({
           </section>
         )}
 
-        {/* Attribution */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-border pt-4 text-[10px] text-brand-muted">
-          <span>
-            {isId ? "Terakhir disinkron " : "Last synced "}
-            {new Date(church.synced_at as any).toLocaleDateString(
-              isId ? "id-ID" : "en-US",
-              { day: "numeric", month: "short", year: "numeric" }
-            )}
-          </span>
-          {church.source_url && (
-            <a
-              href={church.source_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-brand-gold/70 underline transition-colors hover:text-brand-gold"
-            >
-              {isId ? "Sumber: jadwalmisa.id" : "Source: jadwalmisa.id"}
-              <ExternalLink className="h-3 w-3" />
-            </a>
+        {/* Last synced */}
+        <div className="border-t border-brand-border pt-4 text-[10px] text-brand-muted">
+          {isId ? "Terakhir disinkron " : "Last synced "}
+          {new Date(church.synced_at as any).toLocaleDateString(
+            isId ? "id-ID" : "en-US",
+            { day: "numeric", month: "short", year: "numeric" }
           )}
         </div>
       </div>

@@ -197,17 +197,6 @@ export default function MassScheduleLanding({
           </div>
         </div>
 
-        <p className="mt-8 text-center text-[10px] text-brand-muted">
-          {isId ? "Sumber data: " : "Data source: "}
-          <a
-            href="https://jadwalmisa.id"
-            target="_blank"
-            rel="noreferrer"
-            className="text-brand-gold/70 underline transition-colors hover:text-brand-gold"
-          >
-            jadwalmisa.id
-          </a>
-        </p>
       </div>
     </div>
   );
