@@ -6,6 +6,12 @@ import { getLanguage } from "@/lib/lang";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Friends" };
 
+// Full field set for scoring + card; card only needs the last four.
+const PCOLS =
+  "id, full_name, nama_panggilan, avatar_url, angkatan, kota, favorite_verse, interests, skills, services_history, camp_history, community:communities(name)";
+const PCARD =
+  "id, full_name, nama_panggilan, avatar_url, angkatan, kota, favorite_verse, community:communities(name)";
+
 export default async function FriendsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,14 +30,14 @@ export default async function FriendsPage() {
   // Get my friendships
   const { data: friendships } = await supabase
     .from("friendships")
-    .select("id, requester_id, receiver_id, status, receiver:profiles!friendships_receiver_id_fkey(id, full_name, avatar_url, angkatan, kota, interests, skills, services_history, camp_history), requester:profiles!friendships_requester_id_fkey(id, full_name, avatar_url, angkatan, kota, interests, skills, services_history, camp_history)")
+    .select(`id, requester_id, receiver_id, status, receiver:profiles!friendships_receiver_id_fkey(${PCOLS}), requester:profiles!friendships_requester_id_fkey(${PCOLS})`)
     .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
     .eq("status", "accepted");
 
   // Get pending requests TO me (I need to accept/decline)
   const { data: pendingIncoming } = await supabase
     .from("friendships")
-    .select("id, requester_id, profiles!friendships_requester_id_fkey(id, full_name, avatar_url, angkatan, kota)")
+    .select(`id, requester_id, profiles!friendships_requester_id_fkey(${PCARD})`)
     .eq("receiver_id", user.id)
     .eq("status", "pending");
 
@@ -52,7 +58,7 @@ export default async function FriendsPage() {
 
   const { data: allUsers } = await supabase
     .from("profiles")
-    .select("id, full_name, avatar_url, angkatan, kota, interests, skills, services_history, camp_history")
+    .select(PCOLS)
     .not("id", "in", `(${Array.from(friendIds).join(",")})`)
     .limit(100);
 
@@ -101,7 +107,7 @@ export default async function FriendsPage() {
     // Fetch profiles for these mutual friends
     const { data: mutualProfiles } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, angkatan, kota")
+      .select(PCARD)
       .in("id", mutualIds);
       
     if (mutualProfiles) {

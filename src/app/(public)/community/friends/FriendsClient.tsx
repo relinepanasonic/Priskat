@@ -3,77 +3,189 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { UserPlus, Clock, Search, Users, UserCheck, MessageCircle } from "lucide-react";
+import {
+  Clock,
+  Loader2,
+  MessageCircle,
+  Search,
+  Tent,
+  UserCheck,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import MemberProfileModal, { type MemberSeed } from "@/components/community/MemberProfileModal";
+import MemberProfileModal, {
+  type MemberSeed,
+} from "@/components/community/MemberProfileModal";
 
-function Avatar({ url, name, size = 40 }: { url?: string | null; name?: string | null; size?: number }) {
-  return url ? (
-    <Image src={url} alt={name || "User"} width={size} height={size} className={`rounded-full object-cover`} style={{ width: size, height: size }} />
-  ) : (
-    <div className={`rounded-full bg-brand-bg border border-brand-border flex items-center justify-center text-brand-gold font-bold`} style={{ width: size, height: size, fontSize: size * 0.38 }}>
-      {(name || "?")[0].toUpperCase()}
-    </div>
-  );
-}
+type CardUser = MemberSeed & {
+  nama_panggilan?: string | null;
+  favorite_verse?: string | null;
+  community?: { name: string | null } | null;
+  friendshipId?: string;
+};
 
-function FriendCard({ user, userId, isPending, onAction, onOpen, subtitle, lang = "id" }: { user: any; userId: string; isPending?: boolean; onAction: () => void, onOpen: () => void, subtitle?: string, lang?: "id" | "en" }) {
+const nickOf = (u: CardUser) => u.nama_panggilan || u.full_name || "—";
+
+/* ------------------------------------------------------------------- card --- */
+
+function FriendCard({
+  user,
+  userId,
+  variant,
+  isPending,
+  onAction,
+  onOpen,
+  onAccept,
+  onDecline,
+  lang = "id",
+}: {
+  user: CardUser;
+  userId: string;
+  variant: "connect" | "message" | "request";
+  isPending?: boolean;
+  onAction?: () => void;
+  onOpen: () => void;
+  onAccept?: (friendshipId: string, requester: CardUser) => void;
+  onDecline?: (friendshipId: string) => void;
+  lang?: "id" | "en";
+}) {
   const [loading, startTransition] = useTransition();
   const supabase = createClient();
   const router = useRouter();
   const isEn = lang === "en";
 
-  const sendRequest = () => {
+  const nick = nickOf(user);
+  const community = user.community?.name || "Ruang Iman";
+  const tagline = user.favorite_verse;
+
+  const sendRequest = () =>
     startTransition(async () => {
-      await supabase.from("friendships").insert({ requester_id: userId, receiver_id: user.id });
-      onAction();
+      await supabase
+        .from("friendships")
+        .insert({ requester_id: userId, receiver_id: user.id });
+      onAction?.();
       router.refresh();
     });
-  };
 
   return (
-    <div className="bg-brand-bg border border-brand-border rounded-2xl p-4 flex flex-col gap-3 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-      <button type="button" onClick={onOpen} className="flex items-center gap-3 text-left -m-1 p-1 rounded-xl hover:bg-white/[0.03] transition-colors">
-        <Avatar url={user.avatar_url} name={user.full_name} size={48} />
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-white truncate text-base">{user.full_name}</p>
-          <p className="text-xs text-brand-muted truncate">
-            {subtitle || [user.angkatan ? `Angkatan ${user.angkatan}` : null, user.kota].filter(Boolean).join(" • ")}
+    <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl border border-brand-border bg-brand-bg shadow-[0_0_15px_rgba(0,0,0,0.4)]">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="absolute inset-0 block text-left"
+      >
+        {user.avatar_url ? (
+          <Image
+            src={user.avatar_url}
+            alt={nick}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-[#1a1d24] to-[#0d0f14] text-5xl font-bold text-brand-gold/40">
+            {nick[0]?.toUpperCase()}
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+        <div
+          className={`absolute inset-x-0 bottom-0 px-3 pt-3 ${
+            variant === "request" ? "pb-11" : "pb-3"
+          }`}
+        >
+          <p className="truncate text-[15px] font-bold leading-tight text-white drop-shadow">
+            {nick}
           </p>
+          <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-brand-light/90 drop-shadow">
+            <Tent className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{community}</span>
+          </p>
+          {tagline && (
+            <p className="mt-1 line-clamp-2 text-[10px] italic leading-snug text-brand-gold/90 drop-shadow">
+              &ldquo;{tagline}&rdquo;
+            </p>
+          )}
         </div>
       </button>
-      {user.badges && user.badges.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-1">
-          {user.badges.slice(0, 2).map((b: string) => (
-            <span key={b} className="text-[10px] px-2 py-0.5 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/30">{b}</span>
-          ))}
+
+      {variant === "connect" && (
+        <button
+          onClick={sendRequest}
+          disabled={loading || isPending}
+          aria-label={
+            isPending
+              ? isEn
+                ? "Requested"
+                : "Terkirim"
+              : isEn
+              ? "Connect"
+              : "Berteman"
+          }
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-brand-gold text-brand-dark shadow-lg transition hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isPending ? (
+            <Clock className="h-4 w-4" />
+          ) : (
+            <UserPlus className="h-4 w-4" />
+          )}
+        </button>
+      )}
+
+      {variant === "message" && (
+        <Link
+          href={`/community/messages?u=${user.id}`}
+          aria-label={isEn ? "Message" : "Pesan"}
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
+        >
+          <MessageCircle className="h-4 w-4" />
+        </Link>
+      )}
+
+      {variant === "request" && user.friendshipId && (
+        <div className="absolute inset-x-0 bottom-0 flex text-xs font-bold">
+          <button
+            onClick={() => onAccept?.(user.friendshipId!, user)}
+            className="flex-1 bg-brand-gold py-2 text-brand-dark transition-colors hover:bg-yellow-500"
+          >
+            {isEn ? "Accept" : "Terima"}
+          </button>
+          <button
+            onClick={() => onDecline?.(user.friendshipId!)}
+            className="flex-1 bg-black/70 py-2 text-white transition-colors hover:bg-black/85"
+          >
+            {isEn ? "Decline" : "Tolak"}
+          </button>
         </div>
       )}
-      <div className="mt-1 pt-3 border-t border-brand-border">
-        {isPending ? (
-          <button disabled className="w-full py-2 rounded-xl text-xs font-bold bg-brand-surface text-brand-muted flex items-center justify-center gap-2">
-            <Clock className="h-4 w-4" /> {isEn ? "Request Sent" : "Terkirim"}
-          </button>
-        ) : (
-          <button onClick={sendRequest} disabled={loading} className="w-full py-2 rounded-xl text-xs font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/30 hover:bg-brand-gold hover:text-brand-dark transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-[0_0_10px_rgba(212,175,55,0.1)]">
-            <UserPlus className="h-4 w-4" /> {loading ? (isEn ? "Sending..." : "Mengirim...") : (isEn ? "Connect" : "Berteman")}
-          </button>
-        )}
-      </div>
     </div>
   );
 }
 
-export default function FriendsClient({ userId, friends, pendingIncoming, recommendations, mutuals = [], lang = "id" }: {
+/* -------------------------------------------------------------- component --- */
+
+export default function FriendsClient({
+  userId,
+  friends,
+  pendingIncoming,
+  recommendations,
+  mutuals = [],
+  lang = "id",
+}: {
   userId: string;
-  friends: any[];
-  pendingIncoming: any[];
-  recommendations: any[];
-  mutuals?: any[];
+  friends: CardUser[];
+  pendingIncoming: CardUser[];
+  recommendations: CardUser[];
+  mutuals?: CardUser[];
   lang?: "id" | "en";
 }) {
-  const [activeTab, setActiveTab] = useState<"browsing" | "mutual" | "friends">("browsing");
+  const [activeTab, setActiveTab] = useState<"browsing" | "mutual" | "friends">(
+    "browsing"
+  );
   const [localPending, setLocalPending] = useState<Set<string>>(new Set());
   const [localFriends, setLocalFriends] = useState(friends);
   const [localIncoming, setLocalIncoming] = useState(pendingIncoming);
@@ -82,35 +194,45 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
   const router = useRouter();
   const isEn = lang === "en";
 
-  const handleAccept = async (friendshipId: string, requester: any) => {
-    await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
-    setLocalIncoming(prev => prev.filter(p => p.friendshipId !== friendshipId));
-    setLocalFriends(prev => [...prev, requester]);
+  const handleAccept = async (friendshipId: string, requester: CardUser) => {
+    await supabase
+      .from("friendships")
+      .update({ status: "accepted" })
+      .eq("id", friendshipId);
+    setLocalIncoming((prev) =>
+      prev.filter((p) => p.friendshipId !== friendshipId)
+    );
+    setLocalFriends((prev) => [...prev, requester]);
     router.refresh();
   };
 
   const handleDecline = async (friendshipId: string) => {
     await supabase.from("friendships").delete().eq("id", friendshipId);
-    setLocalIncoming(prev => prev.filter(p => p.friendshipId !== friendshipId));
+    setLocalIncoming((prev) =>
+      prev.filter((p) => p.friendshipId !== friendshipId)
+    );
     router.refresh();
   };
 
   const tabs = [
     { id: "browsing", label: isEn ? "Browsing" : "Jelajah" },
     { id: "mutual", label: isEn ? "Mutual" : "Mutual" },
-    { id: "friends", label: isEn ? "Friends" : "Teman" }
+    { id: "friends", label: isEn ? "Friends" : "Teman" },
   ] as const;
 
+  const grid =
+    "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3";
+
   return (
-    <div className="pb-32 min-h-screen bg-brand-dark">
-      {/* Sleek Tab Navigation */}
-      <div className="sticky top-0 z-10 bg-brand-dark/90 backdrop-blur-md border-b border-brand-border px-4 pt-4 pb-0 mb-6">
-        <div className="flex justify-between items-center max-w-lg mx-auto">
+    <div className="min-h-screen bg-brand-dark pb-32">
+      {/* Tabs */}
+      <div className="sticky top-0 z-10 mb-6 border-b border-brand-border bg-brand-dark/90 px-4 pb-0 pt-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-md items-center justify-between">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 pb-3 text-sm font-semibold capitalize transition-all border-b-2 ${
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 border-b-2 pb-3 text-sm font-semibold capitalize transition-all ${
                 activeTab === tab.id
                   ? "border-brand-gold text-brand-gold"
                   : "border-transparent text-brand-muted hover:text-white"
@@ -122,132 +244,129 @@ export default function FriendsClient({ userId, friends, pendingIncoming, recomm
         </div>
       </div>
 
-      <div className="px-4 max-w-lg mx-auto space-y-8">
-        
-        {/* BROWSING TAB */}
+      <div className="mx-auto max-w-5xl space-y-8 px-3 sm:px-4">
+        {/* BROWSING */}
         {activeTab === "browsing" && (
           <div className="animate-in fade-in duration-300">
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Search className="h-5 w-5 text-brand-gold" /> {isEn ? "Recommended for You" : "Rekomendasi untuk Anda"}
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
+              <Search className="h-5 w-5 text-brand-gold" />
+              {isEn ? "Recommended for You" : "Rekomendasi untuk Anda"}
             </h2>
             {recommendations.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {recommendations.map((user) => (
+              <div className={grid}>
+                {recommendations.map((u) => (
                   <FriendCard
-                    key={user.id}
-                    user={user}
+                    key={u.id}
+                    user={u}
                     userId={userId}
-                    isPending={localPending.has(user.id)}
-                    onAction={() => setLocalPending(prev => new Set(prev).add(user.id))}
-                    onOpen={() => setViewMember(user)}
+                    variant="connect"
+                    isPending={localPending.has(u.id)}
+                    onAction={() =>
+                      setLocalPending((prev) => new Set(prev).add(u.id))
+                    }
+                    onOpen={() => setViewMember(u)}
                     lang={lang}
                   />
                 ))}
               </div>
             ) : (
-              <p className="text-brand-muted text-center py-10 bg-brand-bg rounded-2xl border border-brand-border">
-                {isEn ? "No recommendations right now." : "Belum ada rekomendasi saat ini."}
+              <p className="rounded-2xl border border-brand-border bg-brand-bg py-10 text-center text-brand-muted">
+                {isEn
+                  ? "No recommendations right now."
+                  : "Belum ada rekomendasi saat ini."}
               </p>
             )}
           </div>
         )}
 
-        {/* MUTUAL TAB */}
+        {/* MUTUAL */}
         {activeTab === "mutual" && (
           <div className="animate-in fade-in duration-300">
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Users className="h-5 w-5 text-brand-gold" /> {isEn ? "Mutual Connections" : "Koneksi Mutual"}
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
+              <Users className="h-5 w-5 text-brand-gold" />
+              {isEn ? "Mutual Connections" : "Koneksi Mutual"}
             </h2>
             {mutuals.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mutuals.map((user) => (
+              <div className={grid}>
+                {mutuals.map((u) => (
                   <FriendCard
-                    key={user.id}
-                    user={user}
+                    key={u.id}
+                    user={u}
                     userId={userId}
-                    isPending={localPending.has(user.id)}
-                    onAction={() => setLocalPending(prev => new Set(prev).add(user.id))}
-                    onOpen={() => setViewMember(user)}
+                    variant="connect"
+                    isPending={localPending.has(u.id)}
+                    onAction={() =>
+                      setLocalPending((prev) => new Set(prev).add(u.id))
+                    }
+                    onOpen={() => setViewMember(u)}
                     lang={lang}
                   />
                 ))}
               </div>
             ) : (
-              <p className="text-brand-muted text-center py-10 bg-brand-bg rounded-2xl border border-brand-border">
-                {isEn ? "You don't have any mutual friends yet. Connect with more people first!" : "Anda belum memiliki teman mutual. Berteman dengan lebih banyak orang dulu!"}
+              <p className="rounded-2xl border border-brand-border bg-brand-bg py-10 text-center text-brand-muted">
+                {isEn
+                  ? "You don't have any mutual friends yet. Connect with more people first!"
+                  : "Anda belum memiliki teman mutual. Berteman dengan lebih banyak orang dulu!"}
               </p>
             )}
           </div>
         )}
 
-        {/* FRIENDS TAB */}
+        {/* FRIENDS */}
         {activeTab === "friends" && (
-          <div className="animate-in fade-in duration-300 space-y-8">
-            
-            {/* Friend Requests (Incoming) */}
+          <div className="animate-in space-y-8 fade-in duration-300">
             {localIncoming.length > 0 && (
               <section>
-                <h2 className="text-sm font-bold text-brand-gold uppercase tracking-wider mb-3">{isEn ? "Friend Requests" : "Permintaan Pertemanan"} ({localIncoming.length})</h2>
-                <div className="space-y-3">
-                  {localIncoming.map((req: any) => (
-                    <div key={req.friendshipId} className="bg-brand-bg border border-brand-gold/30 rounded-2xl p-4 flex items-center gap-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
-                      <button type="button" onClick={() => setViewMember(req)} className="flex-shrink-0">
-                        <Avatar url={req.avatar_url} name={req.full_name} size={48} />
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <button type="button" onClick={() => setViewMember(req)} className="font-bold text-white truncate block max-w-full hover:text-brand-gold transition-colors">{req.full_name}</button>
-                        <div className="flex gap-2 mt-2">
-                          <button onClick={() => handleAccept(req.friendshipId, req)} className="flex-1 py-1.5 bg-brand-gold text-brand-dark text-xs font-bold rounded-lg hover:bg-yellow-500 transition-colors">
-                            {isEn ? "Accept" : "Terima"}
-                          </button>
-                          <button onClick={() => handleDecline(req.friendshipId)} className="flex-1 py-1.5 bg-brand-surface text-brand-muted text-xs font-bold rounded-lg hover:bg-[#333] hover:text-white transition-colors">
-                            {isEn ? "Decline" : "Tolak"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-brand-gold">
+                  {isEn ? "Friend Requests" : "Permintaan Pertemanan"} (
+                  {localIncoming.length})
+                </h2>
+                <div className={grid}>
+                  {localIncoming.map((req) => (
+                    <FriendCard
+                      key={req.friendshipId}
+                      user={req}
+                      userId={userId}
+                      variant="request"
+                      onOpen={() => setViewMember(req)}
+                      onAccept={handleAccept}
+                      onDecline={handleDecline}
+                      lang={lang}
+                    />
                   ))}
                 </div>
               </section>
             )}
 
-            {/* My Friends */}
             <section>
-              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-brand-gold" /> {isEn ? "My Connections" : "Koneksi Saya"}
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
+                <UserCheck className="h-5 w-5 text-brand-gold" />
+                {isEn ? "My Connections" : "Koneksi Saya"}
               </h2>
               {localFriends.length === 0 ? (
-                <p className="text-brand-muted text-center py-10 bg-brand-bg rounded-2xl border border-brand-border">
-                  {isEn ? "You haven't added any friends yet." : "Anda belum menambahkan teman satupun."}
+                <p className="rounded-2xl border border-brand-border bg-brand-bg py-10 text-center text-brand-muted">
+                  {isEn
+                    ? "You haven't added any friends yet."
+                    : "Anda belum menambahkan teman satupun."}
                 </p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {localFriends.map((f: any) => (
-                    <div key={f.id} className="bg-brand-bg border border-brand-border rounded-xl p-3 flex items-center gap-3">
-                      <button type="button" onClick={() => setViewMember(f)} className="flex items-center gap-3 flex-1 min-w-0 text-left -m-1 p-1 rounded-lg hover:bg-white/[0.03] transition-colors">
-                        <Avatar url={f.avatar_url} name={f.full_name} size={40} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-white truncate text-sm">{f.full_name}</p>
-                          <p className="text-[10px] text-brand-muted truncate">
-                            {[f.angkatan ? `Angkatan ${f.angkatan}` : null, f.kota].filter(Boolean).join(" • ")}
-                          </p>
-                        </div>
-                      </button>
-                      <Link
-                        href={`/community/messages?u=${f.id}`}
-                        aria-label={isEn ? "Message" : "Pesan"}
-                        className="flex-shrink-0 rounded-full p-2 text-brand-muted hover:bg-brand-gold/10 hover:text-brand-gold transition-colors"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Link>
-                    </div>
+                <div className={grid}>
+                  {localFriends.map((f) => (
+                    <FriendCard
+                      key={f.id}
+                      user={f}
+                      userId={userId}
+                      variant="message"
+                      onOpen={() => setViewMember(f)}
+                      lang={lang}
+                    />
                   ))}
                 </div>
               )}
             </section>
           </div>
         )}
-
       </div>
 
       {viewMember && (
