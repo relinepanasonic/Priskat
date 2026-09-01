@@ -28,7 +28,10 @@ export default function DayClient({
   const isOnTrack = true; // Mock for now
 
   const isDayCompleted = progress?.completed_days?.includes(dayNum);
-  
+
+  const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
+  const filteredVerses = dayData?.verses || [];
+
   // Create an array of days to render the horizontal day selector
   const daysArray = Array.from({ length: plan.duration_days }, (_, i) => i + 1);
 
@@ -153,10 +156,11 @@ export default function DayClient({
 
       {/* Begin Action */}
       <div className="fixed bottom-24 left-0 right-0 px-8 max-w-md mx-auto z-10">
-        <Link 
+        <Link
           href={`/faith/devotions/plans/${plan.id}/read/${dayNum}?page=0&lang=${language}`}
           className="w-full mx-auto flex justify-center py-4 bg-brand-gold text-brand-dark rounded-full font-bold text-lg hover:bg-brand-gold/80 transition-colors shadow-lg"
         >
+          {isDayCompleted ? (language === "id" ? "Baca Lagi" : "Read Again") : (language === "id" ? "Mulai" : "Begin")}
         </Link>
       </div>
 
