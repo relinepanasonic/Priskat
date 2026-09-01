@@ -5,9 +5,9 @@ import { resolveCommunity } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrgStructurePage({ params }: { params: { slug: string } }) {
+export default async function OrgStructurePage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
-  const slug = params.slug;
+  const { slug } = await params;
 
   const { data: session } = await supabase.auth.getSession();
   const user = session?.session?.user;
@@ -61,7 +61,7 @@ export default async function OrgStructurePage({ params }: { params: { slug: str
   return (
     <OrgStructureClient 
       communityId={community.id}
-      communityName={community.name}
+      communityName={community.name ?? ""}
       initialStructure={structure || []}
       isAdmin={isAdmin}
       profiles={profiles || []}

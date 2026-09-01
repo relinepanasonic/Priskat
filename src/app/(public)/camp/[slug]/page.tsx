@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function CommunitySlugPage({ params }: { params: { slug: string } }) {
-  redirect(`/camp/${params.slug}/crew`);
+export default async function CommunitySlugPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  redirect(`/camp/${slug}/crew`);
 }

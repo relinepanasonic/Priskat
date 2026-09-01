@@ -19,7 +19,8 @@ export async function resolveCommunity(
   supabase: SupabaseClient,
   slugOrId: string | null | undefined
 ): Promise<ResolvedCommunity | null> {
-  const key = (slugOrId ?? "").trim();
+  const raw = (slugOrId ?? "").trim();
+  const key = raw.toLowerCase();
 
   if (key && key !== "undefined" && key !== "null") {
     const bySlug = await supabase
