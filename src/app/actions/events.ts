@@ -144,7 +144,7 @@ export async function promoteEvent(formData: FormData) {
 
   revalidatePath("/events");
   revalidatePath("/news");
-  revalidatePath("/admin/communities");
+  revalidatePath("/camp", "layout");
   revalidatePath("/");
   return {
     ok: true as const,

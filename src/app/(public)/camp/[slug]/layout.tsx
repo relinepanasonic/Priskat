@@ -4,30 +4,96 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
-import { Map, Calendar, LayoutDashboard, Tent, Users, ChevronLeft, Network } from "lucide-react";
+import {
+  Map,
+  Calendar,
+  LayoutDashboard,
+  Tent,
+  Users,
+  ChevronLeft,
+  Network,
+  Megaphone,
+} from "lucide-react";
 
-export default function CommunitySlugLayout({ children }: { children: React.ReactNode }) {
+const titleCase = (s: string) =>
+  s
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+
+export default function CommunitySlugLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const params = useParams();
-  const slug = params.slug as string;
-  const [communityName, setCommunityName] = useState(slug.toUpperCase());
+  const slug = (params.slug as string) || "";
+  const validSlug = slug && slug !== "undefined" && slug !== "null";
+
+  const [communityName, setCommunityName] = useState<string | null>(null);
+  const [canPromote, setCanPromote] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
-    async function fetchName() {
-      const { data } = await supabase.from("communities").select("name").eq("slug", slug).single();
-      if (data) setCommunityName(data.name);
-    }
-    fetchName();
-  }, [slug, supabase]);
+    let alive = true;
+    (async () => {
+      if (validSlug) {
+        const { data } = await supabase
+          .from("communities")
+          .select("id, name")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (alive && data?.name) setCommunityName(data.name);
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const [{ data: prof }, { data: ca }] = await Promise.all([
+            supabase.from("profiles").select("role").eq("id", user.id).single(),
+            supabase
+              .from("community_admins")
+              .select("id")
+              .eq("user_id", user.id)
+              .limit(1)
+              .maybeSingle(),
+          ]);
+          const role = String(prof?.role ?? "").toLowerCase();
+          if (alive)
+            setCanPromote(
+              ["founder", "superadmin", "admin"].includes(role) || !!ca
+            );
+        }
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [slug, validSlug, supabase]);
+
+  const heading = communityName || (validSlug ? titleCase(slug) : "Community");
 
   const tabs = [
-    { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
-    { name: "Org Structure", href: `/camp/${slug}/org-structure`, icon: Network },
+    { name: "Camp Event", href: `/camp/${slug}/crew`, icon: Users },
     { name: "My Ongoing Camp", href: `/camp/${slug}/ongoing`, icon: Tent },
-    { name: "Camp Crew", href: `/camp/${slug}/crew`, icon: Users },
     { name: "Schedule", href: `/camp/${slug}/schedule`, icon: Calendar },
-    { name: "Dashboard", href: `/camp/${slug}/dashboard`, icon: LayoutDashboard },
+    ...(canPromote
+      ? [
+          {
+            name: "Promotion",
+            href: `/camp/${slug}/promotion`,
+            icon: Megaphone,
+          },
+        ]
+      : []),
+    { name: "Org Structure", href: `/camp/${slug}/org-structure`, icon: Network },
+    { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
+    {
+      name: "Dashboard",
+      href: `/camp/${slug}/dashboard`,
+      icon: LayoutDashboard,
+    },
   ];
 
   return (
@@ -42,7 +108,7 @@ export default function CommunitySlugLayout({ children }: { children: React.Reac
           Back
         </Link>
         <span className="text-[#333]">|</span>
-        <h1 className="text-lg font-bold text-white tracking-wider">{communityName}</h1>
+        <h1 className="text-lg font-bold text-white tracking-wider">{heading}</h1>
       </div>
 
       {/* Tabs Navigation */}
@@ -57,13 +123,19 @@ export default function CommunitySlugLayout({ children }: { children: React.Reac
                 href={tab.href}
                 className={`
                   flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all
-                  ${isActive 
-                    ? "bg-brand-gold text-brand-dark shadow-md" 
-                    : "text-brand-muted hover:text-white hover:bg-[#1a1d24] border border-transparent hover:border-[#333]"}
+                  ${
+                    isActive
+                      ? "bg-brand-gold text-brand-dark shadow-md"
+                      : "text-brand-muted hover:text-white hover:bg-[#1a1d24] border border-transparent hover:border-[#333]"
+                  }
                 `}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon className={`h-4 w-4 ${isActive ? "text-brand-dark" : "text-brand-muted"}`} />
+                <Icon
+                  className={`h-4 w-4 ${
+                    isActive ? "text-brand-dark" : "text-brand-muted"
+                  }`}
+                />
                 {tab.name}
               </Link>
             );
