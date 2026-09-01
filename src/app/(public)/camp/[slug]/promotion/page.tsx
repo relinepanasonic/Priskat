@@ -16,11 +16,41 @@ export default async function CampPromotionPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: community } = await supabase
-    .from("communities")
-    .select("id, name")
-    .eq("slug", slug)
-    .maybeSingle();
+  let community:
+    | { id: string; name: string | null }
+    | null = null;
+  {
+    const bySlug = await supabase
+      .from("communities")
+      .select("id, name")
+      .eq("slug", slug)
+      .maybeSingle();
+    community = bySlug.data;
+    if (!community) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("community_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (prof?.community_id) {
+        const { data } = await supabase
+          .from("communities")
+          .select("id, name")
+          .eq("id", prof.community_id)
+          .maybeSingle();
+        community = data;
+      }
+    }
+    if (!community) {
+      const { data } = await supabase
+        .from("communities")
+        .select("id, name")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      community = data;
+    }
+  }
 
   const [{ data: prof }, { data: ca }] = await Promise.all([
     supabase.from("profiles").select("role").eq("id", user.id).single(),
@@ -57,7 +87,7 @@ export default async function CampPromotionPage({
   return (
     <div className="p-4 md:p-6">
       <h2 className="mb-4 text-lg font-bold text-white">
-        Promotion{community?.name ? ` · ${community.name}` : ""}
+        Promotional{community?.name ? ` · ${community.name}` : ""}
       </h2>
       <CommunityEventsPanel initialEvents={events || []} />
     </div>

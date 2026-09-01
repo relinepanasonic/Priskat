@@ -38,33 +38,68 @@ export default function CommunitySlugLayout({
   useEffect(() => {
     let alive = true;
     (async () => {
+      // Resolve the community: by slug, else the signed-in user's own
+      // community, else the first one — so the heading is never just
+      // "Community" when the URL slug is missing/wrong.
+      let community: { id: string; name: string | null } | null = null;
+
       if (validSlug) {
         const { data } = await supabase
           .from("communities")
           .select("id, name")
           .eq("slug", slug)
           .maybeSingle();
-        if (alive && data?.name) setCommunityName(data.name);
+        if (data) community = data;
+      }
 
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          const [{ data: prof }, { data: ca }] = await Promise.all([
-            supabase.from("profiles").select("role").eq("id", user.id).single(),
-            supabase
-              .from("community_admins")
-              .select("id")
-              .eq("user_id", user.id)
-              .limit(1)
-              .maybeSingle(),
-          ]);
-          const role = String(prof?.role ?? "").toLowerCase();
-          if (alive)
-            setCanPromote(
-              ["founder", "superadmin", "admin"].includes(role) || !!ca
-            );
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!community && user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("community_id")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (prof?.community_id) {
+          const { data } = await supabase
+            .from("communities")
+            .select("id, name")
+            .eq("id", prof.community_id)
+            .maybeSingle();
+          if (data) community = data;
         }
+      }
+      if (!community) {
+        const { data } = await supabase
+          .from("communities")
+          .select("id, name")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (data) community = data;
+      }
+      if (alive && community?.name) setCommunityName(community.name);
+
+      if (user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        const role = String(prof?.role ?? "").toLowerCase();
+        let ok = ["founder", "superadmin", "admin"].includes(role);
+        if (!ok && community) {
+          const { data: ca } = await supabase
+            .from("community_admins")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("community_id", community.id)
+            .maybeSingle();
+          ok = !!ca;
+        }
+        if (alive) setCanPromote(ok);
       }
     })();
     return () => {
@@ -72,7 +107,8 @@ export default function CommunitySlugLayout({
     };
   }, [slug, validSlug, supabase]);
 
-  const heading = communityName || (validSlug ? titleCase(slug) : "Community");
+  const heading =
+    communityName || (validSlug ? titleCase(slug) : "Community");
 
   const tabs = [
     { name: "Camp Event", href: `/camp/${slug}/crew`, icon: Users },
@@ -81,7 +117,7 @@ export default function CommunitySlugLayout({
     ...(canPromote
       ? [
           {
-            name: "Promotion",
+            name: "Promotional",
             href: `/camp/${slug}/promotion`,
             icon: Megaphone,
           },
