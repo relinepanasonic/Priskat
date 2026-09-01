@@ -1,6 +1,4 @@
--- Add new categories to the ENUM type
-ALTER TYPE public.prayer_category ADD VALUE IF NOT EXISTS 'basic_prayer';
-ALTER TYPE public.prayer_category ADD VALUE IF NOT EXISTS 'doa_ekaristi';
+-- Run this file SECOND! (After running 062a_alter_prayer_enum.sql)
 
 -- 1. Insert or Update Basic Prayers
 INSERT INTO public.prayers (slug, title_id, title_en, body_id, body_en, category, sort_order, is_published)
