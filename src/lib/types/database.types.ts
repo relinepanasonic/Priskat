@@ -119,29 +119,29 @@ export interface DailyDevotion {
   updated_at: string;
 }
 
-export type PrayerCategory =
+export type PrayerCategory = 
+  | 'basic_prayer'
+  | 'doa_harian' 
+  | 'doa_ekaristi'
+  | 'hati_kudus_yesus' 
+  | 'bunda_maria' 
+  | 'para_kudus' 
+  | 'jalan_salib' 
   | 'rosario'
-  | 'bunda_maria'
-  | 'hati_kudus_yesus'
-  | 'roh_kudus'
-  | 'malaikat'
-  | 'jalan_salib'
-  | 'para_kudus'
-  | 'keluarga'
-  | 'doa_harian'
+  | 'roh_kudus' 
+  | 'malaikat' 
+  | 'keluarga' 
   | 'tobat_syukur';
 
 export const PRAYER_CATEGORIES: { value: PrayerCategory; label_id: string; label_en: string }[] = [
+  { value: 'basic_prayer', label_id: 'Basic Prayer', label_en: 'Basic Prayer' },
   { value: 'doa_harian', label_id: 'Doa Harian', label_en: 'Daily Prayers' },
-  { value: 'rosario', label_id: 'Rosario', label_en: 'Rosary' },
-  { value: 'bunda_maria', label_id: 'Bunda Maria', label_en: 'Virgin Mary' },
+  { value: 'doa_ekaristi', label_id: 'Doa Ekaristi', label_en: 'Eucharistic Prayer' },
   { value: 'hati_kudus_yesus', label_id: 'Hati Kudus Yesus', label_en: 'Sacred Heart' },
-  { value: 'roh_kudus', label_id: 'Roh Kudus', label_en: 'Holy Spirit' },
-  { value: 'malaikat', label_id: 'Malaikat', label_en: 'Angels' },
-  { value: 'jalan_salib', label_id: 'Jalan Salib', label_en: 'Stations of the Cross' },
+  { value: 'bunda_maria', label_id: 'Bunda Maria', label_en: 'Virgin Mary' },
   { value: 'para_kudus', label_id: 'Para Kudus', label_en: 'Saints' },
-  { value: 'keluarga', label_id: 'Keluarga', label_en: 'Family' },
-  { value: 'tobat_syukur', label_id: 'Tobat & Syukur', label_en: 'Repentance & Gratitude' },
+  { value: 'jalan_salib', label_id: 'Jalan Salib', label_en: 'Stations of the Cross' },
+  { value: 'rosario', label_id: 'Rosario', label_en: 'Rosary' },
 ];
 
 export interface Prayer {
