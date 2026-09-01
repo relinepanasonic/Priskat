@@ -146,58 +146,75 @@ export default function HomeTabsClient({
       <VinylPlayer initialSongs={profile.favorite_songs || []} userId={userId} />
 
       {/* Stats: My Services + Ongoing Devotion */}
-      <div className="px-6 mt-6 grid grid-cols-2 gap-3">
-        {/* My Services card */}
-        <div className="bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-4 flex flex-col gap-2 hover:border-brand-gold/30 transition-colors">
-          <div className="flex items-center justify-between">
-            <div className="h-9 w-9 rounded-xl bg-brand-gold/10 flex items-center justify-center">
-              <Tent className="h-4.5 w-4.5 text-brand-gold" style={{width:"18px",height:"18px"}} />
-            </div>
-            <span className="text-2xl font-bold text-white">{myServices.length}</span>
+      <div className="px-4 mt-6 flex flex-col gap-3">
+        {/* Ongoing Devotion Premium Card */}
+        <Link href="/faith/devotions/plans" className="relative overflow-hidden bg-gradient-to-br from-[#2a2415] to-[#14120b] border border-brand-gold/20 rounded-2xl p-4 flex flex-col hover:border-brand-gold/50 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Heart className="w-16 h-16 text-brand-gold" />
           </div>
-          <div>
-            <p className="text-xs font-semibold text-white">{isEn ? "My Services" : "Pelayanan Saya"}</p>
-            <p className="text-[10px] text-brand-muted mt-0.5">
-              {myServices.length > 0 ? `${isEn ? "Last:" : "Terakhir:"} ${myServices[myServices.length - 1]?.position || "—"}` : (isEn ? "None yet" : "Belum ada")}
-            </p>
-          </div>
-        </div>
-
-        {/* Ongoing Devotion card */}
-        <Link href="/faith/devotions/plans" className="bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-4 flex flex-col gap-2 hover:border-brand-gold/30 transition-colors">
-          <div className="flex items-center justify-between">
-            <div className="h-9 w-9 rounded-xl bg-brand-gold/10 flex items-center justify-center">
-              <Heart className="h-4.5 w-4.5 text-brand-gold" style={{width:"18px",height:"18px"}} />
+          <div className="relative z-10 flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20">
+                <Heart className="h-4 w-4 text-brand-gold" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-gold/90">{isEn ? "Ongoing Devotion" : "Renungan Berjalan"}</span>
             </div>
             {activeDevotion ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30">{isEn ? "Active" : "Aktif"}</span>
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]">{isEn ? "Active" : "Aktif"}</span>
             ) : (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#333] text-brand-muted">{isEn ? "None" : "Tidak ada"}</span>
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/40 text-brand-muted border border-[#333]">{isEn ? "None" : "Tidak ada"}</span>
             )}
           </div>
-          {activeDevotion ? (
-            <div>
-              <p className="text-xs font-semibold text-white truncate">{activeDevotion.plan?.[isEn ? "title_en" : "title_id"] || (isEn ? "Devotional" : "Renungan")}</p>
-              <div className="mt-1.5">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] text-brand-muted">{isEn ? "Day" : "Hari"} {activeDevotion.current_day}</span>
-                  <span className="text-[10px] text-brand-muted">{activeDevotion.plan?.total_days || "—"} {isEn ? "days" : "hari"}</span>
+          
+          <div className="relative z-10">
+            {activeDevotion ? (
+              <>
+                <h3 className="text-sm font-serif font-bold text-white mb-2 leading-tight pr-8">{activeDevotion.plan?.[isEn ? "title_en" : "title_id"] || (isEn ? "Devotional" : "Renungan")}</h3>
+                <div className="mt-2 bg-black/40 rounded-xl p-3 border border-white/5">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-xs font-semibold text-brand-light">{isEn ? "Day" : "Hari"} {activeDevotion.current_day} <span className="text-brand-muted font-normal">/ {activeDevotion.plan?.total_days || "?"}</span></span>
+                    <span className="text-[10px] text-brand-gold font-bold">{Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.total_days || 1)) * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[#222] overflow-hidden shadow-inner">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#d4af37] to-[#f3e5ab] rounded-full transition-all duration-1000 relative"
+                      style={{width: `${Math.min(100, Math.max(2, Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.total_days || 1)) * 100)))}%`}}
+                    >
+                      <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                  </div>
                 </div>
-                <div className="h-1 rounded-full bg-[#333] overflow-hidden">
-                  <div
-                    className="h-full bg-brand-gold rounded-full transition-all"
-                    style={{width: `${Math.min(100, Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.total_days || 1)) * 100))}%`}}
-                  />
-                </div>
+              </>
+            ) : (
+              <div className="py-2">
+                <h3 className="text-sm font-serif font-bold text-white/80">{isEn ? "Start a New Devotional" : "Mulai Renungan Baru"}</h3>
+                <p className="text-xs text-brand-muted mt-1">{isEn ? "Tap to browse our collection of reading plans." : "Ketuk untuk melihat koleksi rencana bacaan kami."}</p>
               </div>
-            </div>
-          ) : (
-            <div>
-              <p className="text-xs font-semibold text-white">{isEn ? "Devotional" : "Renungan"}</p>
-              <p className="text-[10px] text-brand-muted mt-0.5">{isEn ? "Tap to start one" : "Ketuk untuk memulai"}</p>
-            </div>
-          )}
+            )}
+          </div>
         </Link>
+
+        {/* My Services Card */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#1a1d24] to-[#0f1115] border border-[#2a2d35] rounded-2xl p-4 flex items-center justify-between hover:border-[#3a3d45] transition-colors group">
+          <div className="absolute left-0 bottom-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Tent className="w-20 h-20 text-white" />
+          </div>
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-brand-surface border border-[#333] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <Tent className="h-5 w-5 text-brand-light" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">{isEn ? "My Services" : "Pelayanan Saya"}</p>
+              <p className="text-xs text-brand-muted mt-0.5 max-w-[180px] truncate">
+                {myServices.length > 0 ? `${isEn ? "Latest:" : "Terakhir:"} ${myServices[myServices.length - 1]?.position || "?"}` : (isEn ? "No service records yet" : "Belum ada catatan pelayanan")}
+              </p>
+            </div>
+          </div>
+          <div className="relative z-10 flex flex-col items-end">
+            <span className="text-2xl font-serif font-bold text-brand-gold leading-none">{myServices.length}</span>
+            <span className="text-[9px] uppercase tracking-wider text-brand-muted mt-1">{isEn ? "Records" : "Catatan"}</span>
+          </div>
+        </div>
       </div>
 
       <div className="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur-md pt-6 pb-4 px-4 mt-2 border-b border-[#333]">
