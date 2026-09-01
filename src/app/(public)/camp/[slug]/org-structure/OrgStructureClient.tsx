@@ -11,6 +11,7 @@ type OrgMember = {
   role_title: string;
   order_index: number;
   user_id: string | null;
+  member_name: string | null;
   profiles: {
     id: string;
     full_name: string;
@@ -48,6 +49,7 @@ export default function OrgStructureClient({
   const [formLevel, setFormLevel] = useState(1);
   const [formRole, setFormRole] = useState("");
   const [formUserId, setFormUserId] = useState<string>("");
+  const [formMemberName, setFormMemberName] = useState("");
   const [searchProfile, setSearchProfile] = useState("");
 
   const supabase = createClient();
@@ -56,6 +58,7 @@ export default function OrgStructureClient({
     setFormLevel(1);
     setFormRole("");
     setFormUserId("");
+    setFormMemberName("");
     setSearchProfile("");
     setShowAddForm(false);
     setIsEditing(null);
@@ -72,6 +75,7 @@ export default function OrgStructureClient({
         level: formLevel,
         role_title: formRole,
         user_id: formUserId || null,
+        member_name: formMemberName || null,
       })
       .select('*, profiles(id, full_name, username, avatar_url)')
       .single();
@@ -93,6 +97,7 @@ export default function OrgStructureClient({
         level: formLevel,
         role_title: formRole,
         user_id: formUserId || null,
+        member_name: formMemberName || null,
       })
       .eq("id", id)
       .select('*, profiles(id, full_name, username, avatar_url)')
@@ -120,6 +125,7 @@ export default function OrgStructureClient({
     setFormLevel(item.level);
     setFormRole(item.role_title);
     setFormUserId(item.user_id || "");
+    setFormMemberName(item.member_name || "");
     setSearchProfile("");
     setShowAddForm(false);
   };
@@ -178,6 +184,17 @@ export default function OrgStructureClient({
                 placeholder="e.g. Lead Pastor, Division Head..."
                 value={formRole} 
                 onChange={(e) => setFormRole(e.target.value)}
+                className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-brand-light mb-1">Manual Name (if not a member yet)</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Mgr. Ignatius Kardinal Suharyo"
+                value={formMemberName} 
+                onChange={(e) => setFormMemberName(e.target.value)}
                 className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
               />
             </div>
@@ -299,7 +316,7 @@ export default function OrgStructureClient({
                         )}
                       </div>
                       <h4 className="font-bold text-white text-base leading-tight mb-1">
-                        {member.profiles ? member.profiles.full_name : "Unassigned"}
+                        {member.member_name ? member.member_name : (member.profiles ? member.profiles.full_name : "Unassigned")}
                       </h4>
                       <p className="text-xs text-brand-gold font-medium px-3 py-1 bg-brand-gold/10 rounded-full inline-block">
                         {member.role_title}
@@ -330,3 +347,4 @@ export default function OrgStructureClient({
     </div>
   );
 }
+
