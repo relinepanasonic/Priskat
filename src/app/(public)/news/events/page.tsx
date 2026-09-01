@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import EventsExplore, { type ExploreEvent } from "./EventsExplore";
+import EventsExplore, {
+  type ExploreEvent,
+  type PremiumBanner,
+} from "./EventsExplore";
 
 export const dynamic = "force-dynamic";
 
@@ -39,9 +42,18 @@ export default async function NewsEventsPage() {
 
   const events = (rows ?? []) as ExploreEvent[];
 
+  const { data: bannerRows } = await supabase
+    .from("premium_banners")
+    .select("id, image_url, link_url, title")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  const banners = (bannerRows ?? []) as PremiumBanner[];
+
   return (
     <EventsExplore
       events={events}
+      banners={banners}
       myCity={myCity}
       myCommunityId={myCommunityId}
       myCommunityName={myCommunityName}

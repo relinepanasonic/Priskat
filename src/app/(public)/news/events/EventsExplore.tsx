@@ -25,6 +25,13 @@ export type ExploreEvent = {
   news_slug: string | null;
 };
 
+export type PremiumBanner = {
+  id: string;
+  image_url: string;
+  link_url: string | null;
+  title: string | null;
+};
+
 /* ---------------------------------------------------------------- helpers --- */
 
 const MONTHS = [
@@ -164,11 +171,13 @@ function Row({
 
 export default function EventsExplore({
   events,
+  banners = [],
   myCity,
   myCommunityId,
   myCommunityName,
 }: {
   events: ExploreEvent[];
+  banners?: PremiumBanner[];
   myCity: string | null;
   myCommunityId: string | null;
   myCommunityName: string | null;
@@ -204,30 +213,68 @@ export default function EventsExplore({
     return { sameCity: sc, sameCommunity: scom, others: ot };
   }, [events, myCity, myCommunityId]);
 
+  // one repeating unit, then rendered twice so translateX(-50%) loops seamlessly
+  const unit: (PremiumBanner | null)[] = banners.length
+    ? Array.from(
+        { length: Math.max(banners.length, 4) },
+        (_, i) => banners[i % banners.length]
+      )
+    : Array.from({ length: 5 }, () => null);
+  const slides = [...unit, ...unit];
+
+  const slideCls =
+    "relative aspect-[16/9] w-[78vw] flex-shrink-0 overflow-hidden rounded-2xl sm:w-[44vw] lg:w-[30vw] xl:w-[23vw]";
+
   return (
     <div className="p-4 pb-[calc(7rem+env(safe-area-inset-bottom))] md:p-6 md:pb-12">
       {/* premium ad banner — infinite slow marquee, ~3 visible on desktop */}
       <div className="premium-marquee -mx-4 overflow-hidden sm:mx-0">
         <div className="premium-track flex gap-3 px-4 sm:px-0">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div
-              key={i}
-              className="relative flex aspect-[16/9] w-[78vw] flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-brand-gold/25 bg-gradient-to-br from-[#15181e] to-[#1a1d24] sm:w-[44vw] lg:w-[30vw] xl:w-[23vw]"
-            >
-              <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-muted">
-                Sponsored
-              </span>
-              <div className="flex flex-col items-center gap-1 text-center">
-                <Megaphone className="h-6 w-6 text-brand-gold/60" />
-                <p className="text-sm font-bold text-brand-light">
-                  Premium ad space
-                </p>
-                <p className="text-[11px] text-brand-muted">
-                  Featured event placement — coming soon
-                </p>
+          {slides.map((b, i) =>
+            b ? (
+              <a
+                key={i}
+                href={b.link_url || undefined}
+                target={b.link_url ? "_blank" : undefined}
+                rel={b.link_url ? "noreferrer" : undefined}
+                className={`${slideCls} border border-[#2a2d35] bg-[#111]`}
+              >
+                <Image
+                  src={b.image_url}
+                  alt={b.title || "Sponsored"}
+                  fill
+                  sizes="30vw"
+                  className="object-cover"
+                />
+                <span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/80">
+                  Sponsored
+                </span>
+                {b.title && (
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-2 pt-6 text-[12px] font-semibold text-white">
+                    {b.title}
+                  </span>
+                )}
+              </a>
+            ) : (
+              <div
+                key={i}
+                className={`${slideCls} flex items-center justify-center border-2 border-dashed border-brand-gold/25 bg-gradient-to-br from-[#15181e] to-[#1a1d24]`}
+              >
+                <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-muted">
+                  Sponsored
+                </span>
+                <div className="flex flex-col items-center gap-1 text-center">
+                  <Megaphone className="h-6 w-6 text-brand-gold/60" />
+                  <p className="text-sm font-bold text-brand-light">
+                    Premium ad space
+                  </p>
+                  <p className="text-[11px] text-brand-muted">
+                    Featured event placement — coming soon
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
       <style>{`

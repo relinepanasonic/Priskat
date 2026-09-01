@@ -217,6 +217,17 @@ export interface EventRSVP {
   created_at: string;
 }
 
+export interface PremiumBanner {
+  id: string;
+  image_url: string;
+  link_url: string | null;
+  title: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_by: string | null;
+  created_at: string;
+}
+
 // Supabase Database type for the typed client
 export type Database = {
   public: {
@@ -261,6 +272,12 @@ export type Database = {
         Row: DailyDevotion;
         Insert: Partial<DailyDevotion> & { publish_date: string; verse_reference: string; verse_text: string; prayer_title: string; prayer_text: string };
         Update: Partial<Omit<DailyDevotion, "id">>;
+        Relationships: [];
+      };
+      premium_banners: {
+        Row: PremiumBanner;
+        Insert: Partial<PremiumBanner> & { image_url: string };
+        Update: Partial<Omit<PremiumBanner, "id">>;
         Relationships: [];
       };
     };
