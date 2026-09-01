@@ -41,7 +41,7 @@ export async function createPremiumBanner(input: {
   if (error) return { error: error.message };
 
   revalidatePath("/news/events");
-  revalidatePath("/admin/premium-banners");
+  revalidatePath("/admin/upload/premium-banner");
   return { ok: true };
 }
 
@@ -54,7 +54,7 @@ export async function togglePremiumBanner(id: string, isActive: boolean) {
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/news/events");
-  revalidatePath("/admin/premium-banners");
+  revalidatePath("/admin/upload/premium-banner");
   return { ok: true };
 }
 
@@ -67,6 +67,6 @@ export async function deletePremiumBanner(id: string) {
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/news/events");
-  revalidatePath("/admin/premium-banners");
+  revalidatePath("/admin/upload/premium-banner");
   return { ok: true };
 }

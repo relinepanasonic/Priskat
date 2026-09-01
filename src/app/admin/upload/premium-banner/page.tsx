@@ -4,7 +4,7 @@ import PremiumBannersClient, { type Banner } from "./PremiumBannersClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function PremiumBannersPage() {
+export default async function PremiumBannerUploadPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,7 +16,8 @@ export default async function PremiumBannersPage() {
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
-  if (String(prof?.role ?? "").toLowerCase() !== "founder") redirect("/admin");
+  if (String(prof?.role ?? "").toLowerCase() !== "founder")
+    redirect("/admin/upload/devotions");
 
   const { data: banners } = await supabase
     .from("premium_banners")
@@ -27,8 +28,8 @@ export default async function PremiumBannersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Premium Banner</h1>
-        <p className="mt-1 text-brand-muted">
+        <h2 className="text-lg font-bold text-white">Premium Banner</h2>
+        <p className="mt-1 text-sm text-brand-muted">
           Sponsored slides in the News &rsaquo; Events marquee. 16:9, ~1600×900.
         </p>
       </div>

@@ -1,14 +1,38 @@
 ﻿"use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Upload } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function UploadAdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isFounder, setIsFounder] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let alive = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (alive) setIsFounder(String(data?.role ?? "").toLowerCase() === "founder");
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const tabs = [
     { name: "Devotion Plans", href: "/admin/upload/devotions" },
     { name: "Prayers", href: "/admin/upload/prayers" },
+    ...(isFounder
+      ? [{ name: "Premium Banner", href: "/admin/upload/premium-banner" }]
+      : []),
   ];
 
   return (
