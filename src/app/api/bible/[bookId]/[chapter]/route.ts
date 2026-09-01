@@ -7,14 +7,7 @@ export async function GET(request: Request, context: any) {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { searchParams } = new URL(request.url);
-  const lang = searchParams.get('lang');
-  const debug = searchParams.get('debug');
-
-  if (debug) {
-    const { data } = await supabase.from('bible_verses').select('translation').limit(100);
-    const unique = [...new Set(data?.map(d => d.translation))];
-    return NextResponse.json({ unique });
-  }
+  const lang = searchParams.get('lang') === 'en' ? 'en' : 'id';
 
   const resolvedParams = await context.params;
   const bookId = parseInt(resolvedParams.bookId);
@@ -26,21 +19,12 @@ export async function GET(request: Request, context: any) {
 
   let query = supabase
     .from('bible_verses')
-    .select('verse, text, translation')
-    .eq('book_id', bookId)
+    .select('verse, content, translation, title, book_name')
+    .eq('book_no', bookId)
     .eq('chapter', chapter)
     .order('verse', { ascending: true });
 
-  if (lang === 'en') {
-    // Attempt to fetch an English translation like WEB or KJV. 
-    // Since we don't know the exact code, we can filter for anything not TB and sort by translation to group them,
-    // but the best way is to pick a known one, or just the first non-TB one per verse if there are multiple.
-    // For now, let's filter specifically for WEB if it exists, or just not TB.
-    query = query.neq('translation', 'TB');
-  } else {
-    // id default
-    query = query.eq('translation', 'TB');
-  }
+  query = lang === 'en' ? query.neq('translation', 'TB') : query.eq('translation', 'TB');
 
   const { data, error } = await query;
 
@@ -48,31 +32,40 @@ export async function GET(request: Request, context: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Deduplicate verses if multiple non-TB translations are returned
-  let finalData = data;
-  if (lang === 'en' && data && data.length > 0) {
-    const verseMap = new Map();
-    data.forEach((row: any) => {
-      // Keep the first translation encountered for each verse
-      if (!verseMap.has(row.verse)) {
-        verseMap.set(row.verse, row);
-      }
-    });
-    finalData = Array.from(verseMap.values());
+  // If several non-TB translations exist, keep the first row per verse number.
+  let rows = data || [];
+  if (lang === 'en' && rows.length > 0) {
+    const seen = new Map<number, any>();
+    for (const row of rows) {
+      if (!seen.has(row.verse)) seen.set(row.verse, row);
+    }
+    rows = Array.from(seen.values());
   }
 
-  // Fallback: If we tried to fetch English but got nothing, let's fetch TB
-  if (lang === 'en' && (!finalData || finalData.length === 0)) {
-    const { data: fallbackData } = await supabase
+  // Fall back to TB when an English request finds nothing.
+  if (lang === 'en' && rows.length === 0) {
+    const { data: fallback } = await supabase
       .from('bible_verses')
-      .select('verse, text, translation')
-      .eq('book_id', bookId)
+      .select('verse, content, translation, title, book_name')
+      .eq('book_no', bookId)
       .eq('chapter', chapter)
       .eq('translation', 'TB')
       .order('verse', { ascending: true });
-    
-    finalData = fallbackData || [];
+    rows = fallback || [];
   }
 
-  return NextResponse.json(finalData || []);
+  // Shape it the same way the reader / fetchBibleVerse expect:
+  // { data: { book, verses: [{ verse, type: 'title' | 'content', content }] } }
+  const verses: { verse: number; type: 'title' | 'content'; content: string }[] = [];
+  for (const row of rows) {
+    if (row.title) verses.push({ verse: row.verse, type: 'title', content: row.title });
+    verses.push({ verse: row.verse, type: 'content', content: row.content });
+  }
+
+  return NextResponse.json({
+    data: {
+      book: { no: bookId, name: rows[0]?.book_name ?? '', chapter },
+      verses,
+    },
+  });
 }

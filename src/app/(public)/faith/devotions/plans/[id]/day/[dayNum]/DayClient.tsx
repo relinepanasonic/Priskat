@@ -30,7 +30,13 @@ export default function DayClient({
   const isDayCompleted = progress?.completed_days?.includes(dayNum);
 
   const hasDevotional = !!(dayData?.devotional_title || dayData?.devotional_content || dayData?.devotional_content_id);
-  const filteredVerses = dayData?.verses || [];
+  // Each day stores the verse twice — once in Indonesian (translation "TB")
+  // and once in English (e.g. "WEB"). Show only the one matching the UI language.
+  const allVerses = dayData?.verses || [];
+  const langVerses = allVerses.filter((v: any) =>
+    language === "id" ? v.translation === "TB" : v.translation !== "TB"
+  );
+  const filteredVerses = langVerses.length > 0 ? langVerses : allVerses;
 
   // Create an array of days to render the horizontal day selector
   const daysArray = Array.from({ length: plan.duration_days }, (_, i) => i + 1);

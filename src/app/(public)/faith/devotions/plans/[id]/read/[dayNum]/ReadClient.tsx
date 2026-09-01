@@ -36,7 +36,15 @@ export default function ReadClient({
     });
   }
 
-  pages.push(...(dayData.verses || []).map((v: any) => ({
+  // Each day stores the verse twice — Indonesian ("TB") and English ("WEB").
+  // Only page through the one matching the current UI language.
+  const allVerses = dayData.verses || [];
+  const langVerses = allVerses.filter((v: any) =>
+    language === "id" ? v.translation === "TB" : v.translation !== "TB"
+  );
+  const shownVerses = langVerses.length > 0 ? langVerses : allVerses;
+
+  pages.push(...shownVerses.map((v: any) => ({
     type: "verse",
     title: `${v.verse_reference} ${v.translation}`,
     content: <BibleVerseDisplay reference={`${v.verse_reference} ${v.translation || "TB"}`} language={language} />

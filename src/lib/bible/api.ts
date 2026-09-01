@@ -39,7 +39,8 @@
 };
 
 export async function fetchBibleVerse(reference: string, language: "en" | "id"): Promise<string> {
-  const cleanRef = reference.replace(/\s*TB\s*$/, "").trim();
+  // Strip a trailing translation code: "TB", "WEB", "NKJV", "NRSV-CE", …
+  const cleanRef = reference.replace(/\s+[A-Z]{2,}(?:-[A-Z]{2,})?\s*$/, "").trim();
   const match = cleanRef.match(/^(.+?)\s+(\d+):(\d+)(?:-(\d+))?$/);
   
   if (!match) {
