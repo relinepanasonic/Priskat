@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ruangiman.app"),
   title: {
     default: "Ruang Iman",
     template: "%s | Ruang Iman",

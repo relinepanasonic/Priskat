@@ -63,7 +63,7 @@ export default function BibleIndexClient({
             value={version}
             onChange={(e) => setVersion(e.target.value)}
             disabled={isId}
-            className="block w-full py-3 pl-3 pr-8 border border-[#333] rounded-xl bg-[#1a1d24] text-brand-gold font-medium focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold sm:text-sm appearance-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+            className="block w-full py-3 pl-3 pr-8 border border-[#333] rounded-xl bg-[#1a1d24] text-brand-gold font-medium focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold text-xs appearance-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isId ? (
               <option value="TB">TB</option>

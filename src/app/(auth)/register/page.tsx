@@ -32,7 +32,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [communities, setCommunities] = useState<{id: string, name: string}[]>([]);
   const supabase = createClient();
 
@@ -94,14 +93,13 @@ export default function RegisterPage() {
       email: data.email,
       password: data.password,
       options: {
-        data: { 
+        data: {
           full_name: data.full_name,
           username: data.username.toLowerCase(),
           phone: data.phone,
           community_id: data.community_id,
           role: data.role || "member",
         },
-        emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
 
@@ -115,23 +113,9 @@ export default function RegisterPage() {
       return;
     }
 
-    setSuccess(true);
-  }
-
-  if (success) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#1a1d24] px-4 py-12 text-center sm:px-6 lg:px-8">
-        <h2 className="mt-6 text-3xl font-bold tracking-tight text-white font-serif">Check your email</h2>
-        <p className="mt-2 text-sm text-gray-400">
-          We sent a confirmation link to your email. Please verify your account to continue.
-        </p>
-        <div className="mt-6">
-          <Link href="/login" className="text-brand-gold hover:text-white font-semibold">
-            Return to Login
-          </Link>
-        </div>
-      </div>
-    );
+    // No email confirmation step — go straight into the app.
+    router.push("/");
+    router.refresh();
   }
 
   return (
