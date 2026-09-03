@@ -68,6 +68,7 @@ export async function GET(request: Request) {
   try {
     return await runDailyGeneration();
   } catch (err: any) {
+    console.error("BLOG GENERATION ERROR:", err);
     return NextResponse.json({ error: err.message ?? "Unknown error" }, { status: 500 });
   }
 }

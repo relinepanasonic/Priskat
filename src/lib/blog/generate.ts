@@ -55,13 +55,9 @@ export async function generateDailyBlogPost(
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   
-  // Use Gemini 2.5 Pro as it's the most capable model
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: "gemini-1.5-flash",
     systemInstruction: BLOG_CONTENT_POLICY,
-    tools: [
-      { googleSearchRetrieval: { dynamicRetrievalConfig: { mode: "MODE_DYNAMIC", dynamicThreshold: 0.3 } } }
-    ]
   });
 
   const prompt = `Today's date is ${dateStr}. Write today's blog post for category "${category.label}".
