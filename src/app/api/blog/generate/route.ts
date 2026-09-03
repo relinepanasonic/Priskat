@@ -11,7 +11,7 @@ export const maxDuration = 120;
 async function runDailyGeneration() {
   // Step 1: Check env vars first — this is the most common failure
   const missingEnvs = [];
-  if (!process.env.GEMINI_API_KEY) missingEnvs.push("GEMINI_API_KEY");
+  if (!process.env.GROQ_API_KEY) missingEnvs.push("GROQ_API_KEY");
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingEnvs.push("NEXT_PUBLIC_SUPABASE_URL");
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missingEnvs.push("SUPABASE_SERVICE_ROLE_KEY");
   if (missingEnvs.length > 0) {
