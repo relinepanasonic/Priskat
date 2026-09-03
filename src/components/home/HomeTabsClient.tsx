@@ -9,7 +9,6 @@ import { formatDistanceToNow } from "date-fns";
 import { uploadImage, storagePath } from "@/lib/upload";
 import VinylPlayer from "./VinylPlayer";
 import { createClient } from "@/lib/supabase/client";
-import DailyVerseCard from "@/components/faith/DailyVerseCard";
 
 export default function HomeTabsClient({
   profile,
@@ -312,7 +311,6 @@ export default function HomeTabsClient({
 
         {activeTab === "Thought" && (
           <div className="px-6 animate-in fade-in duration-300 pb-12">
-            <DailyVerseCard />
             <FeedClient userAvatar={profile.avatar_url} userName={profile.full_name} userId={userId} posts={posts} lang={lang} />
           </div>
         )}

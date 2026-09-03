@@ -19,6 +19,8 @@ interface BibleIndexClientProps {
   deuterocanonica: Book[];
 }
 
+import VerseMarquee from "./VerseMarquee";
+
 export default function BibleIndexClient({
   isId,
   oldTestament,
@@ -82,6 +84,8 @@ export default function BibleIndexClient({
       </div>
 
       <div className="space-y-12 pb-12">
+        <VerseMarquee />
+
         {/* New Testament */}
         {filteredNT.length > 0 && (
           <div className="relative">

@@ -30,11 +30,11 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-interface Props {
-  profile: Profile;
-}
-
-export default function ProfileEditForm({ profile }: Props) {
+export default function ProfileEditForm({
+  profile,
+}: {
+  profile: Profile & { instagram?: string };
+}) {
   const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
   const [uploading, setUploading] = useState(false);

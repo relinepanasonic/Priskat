@@ -46,6 +46,8 @@ export default async function HomePage() {
   const angkatan = alumniData?.angkatan || "44";
   const city = alumniData?.city || "Surabaya";
   const instagram = profile.instagram || "";
+  const mobile = profile.mobile || profile.phone || profile.phone_number || "";
+  const waLink = mobile ? `https://wa.me/${mobile.replace(/\D/g, "")}` : "#";
   const modules = profile.completed_modules?.length ? profile.completed_modules : ["Pria Sejati", "Patriot 19"];
 
   return (

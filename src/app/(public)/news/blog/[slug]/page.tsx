@@ -41,7 +41,10 @@ async function getPost(slug: string): Promise<BlogPostRow | null> {
 // Minimal Markdown -> HTML for our own generated content (## headings, paragraphs).
 // The generator only ever produces headings + plain paragraphs, so this stays deliberately small.
 function renderMarkdown(md: string): string {
-  return md
+  // Strip bold/italic markdown syntaxes like **, __, *, _
+  const cleanMd = md.replace(/(\*\*|__|\*|_)(.*?)\1/g, "$2");
+  
+  return cleanMd
     .split(/\n{2,}/)
     .map((block) => {
       const trimmed = block.trim();
@@ -155,7 +158,7 @@ export default async function BlogPostPage({
       )}
 
       <div
-        className="mt-6 space-y-4 leading-relaxed text-gray-200 [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-brand-gold [&_p]:text-gray-200"
+        className="mt-6 space-y-4 leading-relaxed text-gray-300 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-normal [&_h2]:text-gray-200 [&_p]:text-gray-300"
         dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
       />
 

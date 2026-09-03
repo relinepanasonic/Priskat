@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import * as htmlToImage from "html-to-image";
 import { Share2, Download, Check, Loader2 } from "lucide-react";
 
-const DAILY_VERSES = [
+export const DAILY_VERSES = [
   { text: "For I know the plans I have for you... plans to prosper you and not to harm you, plans to give you hope and a future.", ref: "Jeremiah 29:11" },
   { text: "I can do all this through him who gives me strength.", ref: "Philippians 4:13" },
   { text: "The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures.", ref: "Psalm 23:1-2" },
@@ -22,7 +22,7 @@ const DAILY_VERSES = [
   { text: "Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled.", ref: "John 14:27" }
 ];
 
-const BACKGROUNDS = [
+export const BACKGROUNDS = [
   "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&q=80&w=800", // Leaves & warm light
   "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&q=80&w=800", // Rain on glass
   "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&q=80&w=800", // Field sunset
