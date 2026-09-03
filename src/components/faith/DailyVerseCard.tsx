@@ -23,11 +23,13 @@ export const DAILY_VERSES = [
 ];
 
 export const BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&q=80&w=800", // Leaves & warm light
-  "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&q=80&w=800", // Rain on glass
-  "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&q=80&w=800", // Field sunset
-  "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=800", // Mountains starry
-  "https://images.unsplash.com/photo-1436397543931-53064e26bfc6?auto=format&fit=crop&q=80&w=800", // Minimalist desk/clock
+  "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800", // Dark abstract
+  "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&q=80&w=800", // Dark stone/marble
+  "https://images.unsplash.com/photo-1572949645841-094f3a9c4c94?auto=format&fit=crop&q=80&w=800", // Dramatic dark
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800", // Dark luxury texture
+  "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&q=80&w=800", // Dark gradient
+  "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=800", // Dark fluid
+  "https://images.unsplash.com/photo-1554034483-04fda0d3507b?auto=format&fit=crop&q=80&w=800", // Dark dramatic shadow
 ];
 
 export default function DailyVerseCard() {
