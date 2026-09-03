@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import {
   CalendarDays,
@@ -183,6 +183,18 @@ export default function EventsExplore({
   myCommunityName: string | null;
 }) {
   const [active, setActive] = useState<ExploreEvent | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => setIsPaused(false);
+  const handleTouchStart = () => {
+    setIsPaused(true);
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+    touchTimer.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 1000);
+  };
 
   useEffect(() => {
     if (!active) return;
@@ -228,8 +240,16 @@ export default function EventsExplore({
   return (
     <div className="p-4 pb-[calc(7rem+env(safe-area-inset-bottom))] md:p-6 md:pb-12">
       {/* premium ad banner — infinite slow marquee, ~3 visible on desktop */}
-      <div className="premium-marquee -mx-4 overflow-hidden sm:mx-0">
-        <div className="premium-track flex gap-3 px-4 sm:px-0">
+      <div 
+        className="premium-marquee -mx-4 overflow-hidden sm:mx-0"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+      >
+        <div 
+          className="premium-track flex gap-3 px-4 sm:px-0"
+          style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
+        >
           {slides.map((b, i) =>
             b ? (
               <a
@@ -277,14 +297,13 @@ export default function EventsExplore({
           )}
         </div>
       </div>
-      <style>{`
-        .premium-track {
-          width: max-content;
-          animation: premiumScroll 60s linear infinite;
-        }
-        .premium-marquee:hover .premium-track { animation-play-state: paused; }
-        @keyframes premiumScroll { to { transform: translateX(-50%); } }
-      `}</style>
+        <style>{`
+          .premium-track {
+            width: max-content;
+            animation: premiumScroll 60s linear infinite;
+          }
+          @keyframes premiumScroll { to { transform: translateX(-50%); } }
+        `}</style>
 
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">

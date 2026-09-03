@@ -6,3 +6,4 @@ VALUES
 (1, 'Kej', 'Genesis', 1, 3, 'Then God said, "Let there be light"; and there was light.', 'en', 'NRSV-CE', NULL),
 (1, 'Kej', 'Genesis', 1, 4, 'And God saw that the light was good; and God separated the light from the darkness.', 'en', 'NRSV-CE', NULL),
 (1, 'Kej', 'Genesis', 1, 5, 'God called the light Day, and the darkness he called Night. And there was evening and there was morning, the first day.', 'en', 'NRSV-CE', NULL);
+
