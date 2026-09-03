@@ -308,6 +308,8 @@ export default function HomeTabsClient({
             </div>
 
           </div>
+        )}
+
         {activeTab === "Thought" && (
           <div className="px-6 animate-in fade-in duration-300 pb-12">
             <DailyVerseCard />

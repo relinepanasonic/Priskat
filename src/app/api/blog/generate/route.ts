@@ -9,10 +9,29 @@ import { generateDailyBlogPost } from "@/lib/blog/generate";
 export const maxDuration = 120;
 
 async function runDailyGeneration() {
-  const { post, flaggedReason } = await generateDailyBlogPost();
+  // Step 1: Check env vars first — this is the most common failure
+  const missingEnvs = [];
+  if (!process.env.GEMINI_API_KEY) missingEnvs.push("GEMINI_API_KEY");
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingEnvs.push("NEXT_PUBLIC_SUPABASE_URL");
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missingEnvs.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (missingEnvs.length > 0) {
+    return NextResponse.json({ error: `Missing environment variables: ${missingEnvs.join(", ")}` }, { status: 500 });
+  }
+
+  // Step 2: Generate the post
+  let post: any, flaggedReason: any;
+  try {
+    const result = await generateDailyBlogPost();
+    post = result.post;
+    flaggedReason = result.flaggedReason;
+  } catch (genErr: any) {
+    console.error("Gemini generation failed:", genErr);
+    return NextResponse.json({ error: `Gemini error: ${genErr.message}`, step: "generate" }, { status: 500 });
+  }
+
+  // Step 3: Save to Supabase
   const supabase = createAdminClient();
 
-  // Avoid a duplicate slug (e.g. if the job is triggered twice in one day).
   const { data: existing } = await supabase
     .from("blog_posts")
     .select("id")
@@ -44,11 +63,10 @@ async function runDailyGeneration() {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: `Supabase error: ${error.message}`, step: "insert" }, { status: 500 });
   }
 
   if (flaggedReason) {
-    // Held back for manual review instead of going live — visible only to admins.
     return NextResponse.json({ flagged: true, reason: flaggedReason, post: data });
   }
 
@@ -68,7 +86,6 @@ export async function GET(request: Request) {
   try {
     return await runDailyGeneration();
   } catch (err: any) {
-    console.error("BLOG GENERATION ERROR:", err);
     return NextResponse.json({ error: err.message ?? "Unknown error" }, { status: 500 });
   }
 }
