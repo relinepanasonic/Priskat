@@ -208,6 +208,21 @@ export default function FeedClient({ userAvatar, userName, userId, posts, lang =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBible, setShowBible] = useState(false);
   const [showPrayer, setShowPrayer] = useState(false);
+
+  // Read postText from URL to pre-fill the composer (e.g. from sharing a verse)
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const text = url.searchParams.get("postText");
+      if (text) {
+        setContent(text);
+        url.searchParams.delete("postText");
+        window.history.replaceState({}, "", url.toString());
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createClient();
   const isEn = lang === "en";
