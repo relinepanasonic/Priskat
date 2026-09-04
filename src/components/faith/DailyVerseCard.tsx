@@ -86,47 +86,55 @@ export default function DailyVerseCard() {
     <div className="w-full flex flex-col items-center mb-6">
       <div
         ref={cardRef}
-        className="relative w-full aspect-[9/16] sm:aspect-[4/5] overflow-hidden rounded-2xl shadow-2xl"
-        style={{ backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="relative w-full aspect-[16/9] overflow-hidden rounded-2xl shadow-2xl bg-black"
       >
-        {/* Cinematic overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/85" />
-        {/* Vignette: radial dark edges */}
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.75) 100%)" }} />
-        {/* Warm golden glow at bottom horizon */}
-        <div className="absolute inset-x-0 bottom-0 h-1/3" style={{ background: "linear-gradient(to top, rgba(180,120,30,0.18) 0%, transparent 100%)" }} />
+        {/* Background photo — crushed blacks, desaturated like the reference posters */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${bg})`,
+            filter: "brightness(0.3) saturate(0.5) contrast(1.2)",
+          }}
+        />
+        {/* Cinematic vignette — heavy dark edges */}
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 60%, transparent 10%, rgba(0,0,0,0.78) 75%)" }} />
+        {/* Warm amber glow at bottom center — subtle */}
+        <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(160,100,20,0.20) 0%, transparent 65%)" }} />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center h-full px-8 py-10 text-center gap-5">
-          {/* Book/Source tag */}
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-[1px] w-8 bg-amber-400/60" />
-            <span className="text-[10px] uppercase tracking-[0.3em] text-amber-300/80 font-sans">Sacred Scripture</span>
-            <div className="h-[1px] w-8 bg-amber-400/60" />
+        <div className="relative z-10 flex flex-col items-center justify-center h-full px-8 sm:px-14 py-6 text-center gap-4">
+          {/* Label */}
+          <div className="flex items-center gap-3">
+            <div className="h-[1px] w-8 bg-amber-500/40" />
+            <span className="text-[8px] uppercase tracking-[0.35em] font-sans" style={{ color: "#b8903a" }}>Sacred Scripture</span>
+            <div className="h-[1px] w-8 bg-amber-500/40" />
           </div>
 
-          {/* Verse text — large, bold hero */}
-          <p className="text-xl sm:text-2xl font-bold text-white leading-tight tracking-wide uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style={{ textShadow: "0 2px 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.7)" }}>
+          {/* Verse text — cinematic hero */}
+          <p
+            className="text-lg sm:text-2xl font-black text-white uppercase leading-snug tracking-wide"
+            style={{ textShadow: "0 2px 20px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,0.8)" }}
+          >
             {verse.text}
           </p>
 
-          {/* Divider */}
+          {/* Ornament divider */}
           <div className="flex items-center gap-3">
-            <div className="h-[1px] w-10 bg-amber-400/50" />
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="opacity-60">
-              <circle cx="6" cy="6" r="2" fill="#D6B072" />
-              <circle cx="6" cy="6" r="5" stroke="#D6B072" strokeWidth="0.5" />
-            </svg>
-            <div className="h-[1px] w-10 bg-amber-400/50" />
+            <div className="h-[1px] w-10 bg-amber-500/40" />
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#c9952e" }} />
+            <div className="h-[1px] w-10 bg-amber-500/40" />
           </div>
 
-          {/* Reference — gold, spaced */}
-          <p className="text-sm font-bold tracking-[0.25em] uppercase text-amber-400 drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
+          {/* Reference — muted gold */}
+          <p
+            className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase"
+            style={{ color: "#c9952e", textShadow: "0 1px 8px rgba(0,0,0,1)" }}
+          >
             {verse.ref}
           </p>
 
           {/* Watermark */}
-          <p className="absolute bottom-5 text-[9px] uppercase tracking-[0.3em] text-white/30 font-sans">
+          <p className="absolute bottom-3 text-[8px] uppercase tracking-[0.35em] text-white/20 font-sans">
             Priskat CFM
           </p>
         </div>

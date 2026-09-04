@@ -105,46 +105,48 @@ export default function VerseMarquee() {
               <button
                 key={idx}
                 onClick={() => setSelectedVerse(item)}
-                className="relative flex-shrink-0 snap-center overflow-hidden rounded-xl border border-white/5 bg-black group"
-                style={{ width: "68vw", aspectRatio: "9/14", maxWidth: "200px", minWidth: "160px" }}
+                className="relative flex-shrink-0 snap-center overflow-hidden rounded-xl bg-black group"
+                style={{ width: "78vw", aspectRatio: "16/9", maxWidth: "340px", minWidth: "260px" }}
               >
-                {/* Background photo */}
+                {/* Background photo — darkened & desaturated via CSS filter */}
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: `url(${item.bg})` }}
+                  style={{
+                    backgroundImage: `url(${item.bg})`,
+                    filter: "brightness(0.35) saturate(0.6) contrast(1.15)",
+                  }}
                 />
-                {/* Heavy cinematic overlays */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90" />
-                <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.65) 100%)" }} />
-                {/* Warm horizon glow */}
-                <div className="absolute inset-x-0 bottom-0 h-2/5" style={{ background: "linear-gradient(to top, rgba(160,100,20,0.22) 0%, transparent 100%)" }} />
+                {/* Heavy black vignette from all edges */}
+                <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 65%, transparent 15%, rgba(0,0,0,0.80) 80%)" }} />
+                {/* Warm amber glow at bottom center — very subtle */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(180,120,30,0.15) 0%, transparent 70%)" }} />
 
                 {/* Today badge */}
                 {item.dateOffset === 0 && (
-                  <span className="absolute left-2.5 top-2.5 rounded-sm bg-amber-400/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-black">
+                  <span className="absolute right-3 top-3 rounded-sm bg-amber-500 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-black z-20">
                     Today
                   </span>
                 )}
 
                 {/* Text content */}
-                <div className="relative z-10 flex h-full flex-col items-center justify-center px-3 py-4 text-center gap-2.5">
-                  {/* Thin gold line top */}
-                  <div className="h-[1px] w-6 bg-amber-400/50 mb-1" />
-
-                  <p className="text-[11px] font-bold text-white uppercase leading-tight tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,1)] line-clamp-4" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.95)" }}>
+                <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 py-3 text-center gap-2">
+                  <p
+                    className="text-xs sm:text-sm font-bold text-white/95 uppercase leading-snug tracking-wide line-clamp-3"
+                    style={{ textShadow: "0 2px 12px rgba(0,0,0,1), 0 0 30px rgba(0,0,0,0.8)" }}
+                  >
                     {item.verse.text}
                   </p>
 
-                  <div className="h-[1px] w-5 bg-amber-400/40 mt-1" />
-
-                  <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-amber-400 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-                    {item.verse.ref}
-                  </p>
-
-                  {/* Crown watermark */}
-                  <p className="absolute bottom-2 text-[7px] uppercase tracking-[0.25em] text-white/25 font-sans">
-                    Priskat
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-[1px] w-5 bg-amber-500/50" />
+                    <p
+                      className="text-[9px] font-bold tracking-[0.2em] uppercase"
+                      style={{ color: "#c9952e", textShadow: "0 1px 6px rgba(0,0,0,1)" }}
+                    >
+                      {item.verse.ref}
+                    </p>
+                    <div className="h-[1px] w-5 bg-amber-500/50" />
+                  </div>
                 </div>
               </button>
             ))}
@@ -159,7 +161,7 @@ export default function VerseMarquee() {
           onClick={() => setSelectedVerse(null)}
         >
           <div
-            className="relative w-full max-w-sm flex flex-col items-center animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-lg flex flex-col items-center animate-in zoom-in-95 duration-200"
             onClick={e => e.stopPropagation()}
           >
             {/* Close */}
@@ -170,59 +172,59 @@ export default function VerseMarquee() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Magnified cinematic card */}
+            {/* Magnified cinematic card — 16:9 landscape */}
             <div
               ref={cardRef}
-              className="relative w-full overflow-hidden rounded-2xl shadow-2xl"
-              style={{
-                aspectRatio: "9/16",
-                backgroundImage: `url(${selectedVerse.bg})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
+              className="relative w-full overflow-hidden rounded-2xl shadow-2xl bg-black"
+              style={{ aspectRatio: "16/9" }}
             >
-              {/* Cinematic overlays */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90" />
-              <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.72) 100%)" }} />
-              <div className="absolute inset-x-0 bottom-0 h-2/5" style={{ background: "linear-gradient(to top, rgba(160,100,20,0.25) 0%, transparent 100%)" }} />
+              {/* Background photo — darkened + desaturated */}
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{
+                  backgroundImage: `url(${selectedVerse.bg})`,
+                  filter: "brightness(0.3) saturate(0.5) contrast(1.2)",
+                }}
+              />
+              {/* Cinematic vignette */}
+              <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 60%, transparent 10%, rgba(0,0,0,0.78) 75%)" }} />
+              {/* Warm amber bottom glow */}
+              <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(160,100,20,0.20) 0%, transparent 65%)" }} />
 
               {/* Content */}
-              <div className="relative z-10 flex h-full flex-col items-center justify-center px-8 py-12 text-center gap-5">
+              <div className="relative z-10 flex h-full flex-col items-center justify-center px-8 sm:px-14 py-6 text-center gap-4">
                 {/* Label */}
                 <div className="flex items-center gap-3">
-                  <div className="h-[1px] w-8 bg-amber-400/50" />
-                  <span className="text-[9px] uppercase tracking-[0.35em] text-amber-300/70 font-sans">Sacred Scripture</span>
-                  <div className="h-[1px] w-8 bg-amber-400/50" />
+                  <div className="h-[1px] w-8 bg-amber-500/40" />
+                  <span className="text-[8px] uppercase tracking-[0.35em] font-sans" style={{ color: "#b8903a" }}>Sacred Scripture</span>
+                  <div className="h-[1px] w-8 bg-amber-500/40" />
                 </div>
 
                 {/* Main verse — cinematic headline style */}
                 <p
-                  className="text-2xl font-black text-white uppercase leading-tight tracking-wide"
-                  style={{ textShadow: "0 2px 24px rgba(0,0,0,0.95), 0 0 60px rgba(0,0,0,0.7)" }}
+                  className="text-lg sm:text-2xl font-black text-white uppercase leading-snug tracking-wide"
+                  style={{ textShadow: "0 2px 20px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,0.8)" }}
                 >
                   {selectedVerse.verse.text}
                 </p>
 
                 {/* Ornament divider */}
                 <div className="flex items-center gap-3">
-                  <div className="h-[1px] w-10 bg-amber-400/50" />
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="opacity-70">
-                    <circle cx="5" cy="5" r="2" fill="#D6B072" />
-                    <circle cx="5" cy="5" r="4.5" stroke="#D6B072" strokeWidth="0.5" />
-                  </svg>
-                  <div className="h-[1px] w-10 bg-amber-400/50" />
+                  <div className="h-[1px] w-10 bg-amber-500/40" />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#c9952e" }} />
+                  <div className="h-[1px] w-10 bg-amber-500/40" />
                 </div>
 
                 {/* Reference */}
                 <p
-                  className="text-sm font-bold tracking-[0.3em] uppercase text-amber-400"
-                  style={{ textShadow: "0 1px 8px rgba(0,0,0,0.95)" }}
+                  className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase"
+                  style={{ color: "#c9952e", textShadow: "0 1px 8px rgba(0,0,0,1)" }}
                 >
                   {selectedVerse.verse.ref}
                 </p>
 
                 {/* Watermark */}
-                <p className="absolute bottom-6 text-[9px] uppercase tracking-[0.35em] text-white/25 font-sans">
+                <p className="absolute bottom-3 text-[8px] uppercase tracking-[0.35em] text-white/20 font-sans">
                   Priskat CFM
                 </p>
               </div>
@@ -241,7 +243,8 @@ export default function VerseMarquee() {
               <button
                 onClick={handleShareToMessenger}
                 disabled={isSharing}
-                className="flex items-center gap-2 bg-amber-400 text-black px-5 py-2.5 rounded-full font-black hover:scale-105 transition-transform disabled:opacity-50 text-sm shadow-[0_0_20px_rgba(214,176,114,0.35)]"
+                className="flex items-center gap-2 text-black px-5 py-2.5 rounded-full font-black hover:scale-105 transition-transform disabled:opacity-50 text-sm shadow-[0_0_20px_rgba(180,120,30,0.35)]"
+                style={{ backgroundColor: "#c9952e" }}
               >
                 {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : (isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />)}
                 {isSharing ? "Exporting..." : (isCopied ? "Saved!" : "Share Image")}
