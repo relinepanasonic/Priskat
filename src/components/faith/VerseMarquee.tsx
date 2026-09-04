@@ -85,25 +85,6 @@ export default function VerseMarquee() {
     <>
       {/* Marquee strip */}
       <div className="mb-6 relative">
-        <style>{`
-          .glass-scrollbar::-webkit-scrollbar {
-            height: 6px;
-          }
-          .glass-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .glass-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-          }
-          .glass-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.25);
-          }
-          .glass-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-          }
-        `}</style>
         {/* Edge fade masks */}
         <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-brand-dark to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-brand-dark to-transparent z-10 pointer-events-none" />

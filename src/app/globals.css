@@ -84,3 +84,25 @@ html {
 .news-body a:hover { color: var(--color-brand-gold-hover); }
 .news-body img { border-radius: 0.5rem; margin: 1rem 0; width: 100%; object-fit: cover; }
 .news-body li { margin-bottom: 0.25rem; }
+
+/* =====================================================
+   Global Scrollbar (Glassy Effect)
+   ===================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
