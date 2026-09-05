@@ -13,6 +13,23 @@ export default async function CommunityListingPage() {
     .select("*")
     .order("created_at", { ascending: true });
 
+  const { data: { user } } = await supabase.auth.getUser();
+  let myCommunityId = null;
+  let isSuperAdmin = false;
+  let myAdminCommunityIds: string[] = [];
+
+  if (user) {
+    const { data: prof } = await supabase.from("profiles").select("community_id, role").eq("id", user.id).single();
+    if (prof) {
+      myCommunityId = prof.community_id;
+      isSuperAdmin = ["founder", "superadmin"].includes(prof.role || "");
+    }
+    const { data: admins } = await supabase.from("community_admins").select("community_id").eq("user_id", user.id);
+    if (admins) {
+      myAdminCommunityIds = admins.map((a: any) => a.community_id);
+    }
+  }
+
   return (
     <div className="p-4 md:p-8 space-y-6">
       <div>
@@ -21,11 +38,18 @@ export default async function CommunityListingPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {(communities || []).map((c: any) => (
-          <Link
+        {(communities || []).map((c: any) => {
+          const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || myAdminCommunityIds.includes(c.id);
+          const Container = hasAccess ? Link : "div";
+          const hrefProps = hasAccess ? { href: `/camp/${c.slug || c.id}` } : {};
+
+          return (
+          <Container
             key={c.id}
-            href={`/camp/${c.slug || c.id}`}
-            className="group bg-[#1a1d24] border border-[#2a2d35] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#1e2129] shadow-lg hover:shadow-brand-gold/10"
+            {...hrefProps}
+            className={`group bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-6 transition-all shadow-lg ${
+              hasAccess ? 'hover:border-brand-gold/50 hover:bg-[#1e2129] hover:shadow-brand-gold/10 cursor-pointer' : 'opacity-80 cursor-not-allowed'
+            }`}
           >
             <div className="flex items-start justify-between mb-4">
               {c.logo_url ? (
@@ -45,7 +69,7 @@ export default async function CommunityListingPage() {
               </span>
             </div>
 
-            <h3 className="text-xl font-bold text-white group-hover:text-brand-gold transition-colors mb-1">
+            <h3 className={`text-xl font-bold text-white mb-1 transition-colors ${hasAccess ? 'group-hover:text-brand-gold' : ''}`}>
               {c.name}
             </h3>
             {c.description && (
@@ -57,12 +81,16 @@ export default async function CommunityListingPage() {
                 <Users className="w-4 h-4" />
                 <span>{c.member_count} members</span>
               </div>
-              <span className="text-brand-gold text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                Enter <ArrowRight className="w-4 h-4" />
+              <span className={`text-sm font-bold flex items-center gap-1 transition-all ${hasAccess ? 'text-brand-gold group-hover:gap-2' : 'text-gray-500'}`}>
+                {hasAccess ? (
+                  <>Enter <ArrowRight className="w-4 h-4" /></>
+                ) : (
+                  <><Lock className="w-3 h-3" /> No Access</>
+                )}
               </span>
             </div>
-          </Link>
-        ))}
+          </Container>
+        )})}
       </div>
 
       {(!communities || communities.length === 0) && (

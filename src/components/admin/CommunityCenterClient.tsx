@@ -228,7 +228,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
 
           <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 mt-4">
             <div className="pr-4">
-              <label className="block text-sm font-bold text-brand-light">Visibility</label>
+              <label className="block text-sm font-bold text-brand-light">Community Access</label>
               <p className="text-[11px] text-brand-muted mt-1 leading-tight">
                 {isPublic 
                   ? "Public: All members in ecosystem can enter."
