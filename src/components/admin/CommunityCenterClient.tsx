@@ -22,6 +22,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
   const [mission, setMission] = useState("");
   const [motto, setMotto] = useState("");
   const [tagline, setTagline] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
 
   const [adminCommunityId, setAdminCommunityId] = useState<string | null>(null);
   const [adminUserId, setAdminUserId] = useState("");
@@ -37,11 +38,12 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
     setMission(community.mission || "");
     setMotto(community.motto || "");
     setTagline(community.tagline || "");
+    setIsPublic(community.is_public !== false);
   }
 
   function openAdd() {
     setIsAdding(true);
-    setName(""); setSlug(""); setDescription(""); setLogoUrl(""); setVision(""); setMission(""); setMotto(""); setTagline("");
+    setName(""); setSlug(""); setDescription(""); setLogoUrl(""); setVision(""); setMission(""); setMotto(""); setTagline(""); setIsPublic(true);
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -79,6 +81,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
     formData.append("mission", mission);
     formData.append("motto", motto);
     formData.append("tagline", tagline);
+    formData.append("is_public", isPublic.toString());
     
     if (editingCommunity) {
       const res = await updateCommunity(editingCommunity.id, formData);
@@ -135,7 +138,16 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
               </button>
             </div>
             <h2 className="text-xl font-bold text-brand-gold">{community.name}</h2>
-            <p className="text-xs text-brand-muted font-mono mb-4">/{community.slug}</p>
+            <div className="flex items-center gap-2 mb-4">
+              <p className="text-xs text-brand-muted font-mono">/{community.slug}</p>
+              <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold ${
+                community.is_public !== false 
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
+              }`}>
+                {community.is_public !== false ? 'Public' : 'Private'}
+              </span>
+            </div>
             <p className="text-sm text-gray-300 mb-6 flex-grow">{community.description}</p>
             
             <div className="border-t border-[#333] pt-4 mt-auto">
@@ -213,7 +225,32 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
             <label className="block text-sm text-brand-light mb-1">Misi</label>
             <textarea value={mission} onChange={e => setMission(e.target.value)} className="w-full input-3d text-sm h-20" />
           </div>
-          <Button type="submit" className="w-full">{editingCommunity ? "Save Changes" : "Create"}</Button>
+
+          <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 mt-4">
+            <div className="pr-4">
+              <label className="block text-sm font-bold text-brand-light">Visibility</label>
+              <p className="text-[11px] text-brand-muted mt-1 leading-tight">
+                {isPublic 
+                  ? "Public: All members in ecosystem can enter."
+                  : "Private: Just member admin adds who can enter."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPublic(!isPublic)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+                isPublic ? 'bg-brand-gold' : 'bg-gray-600'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                  isPublic ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          <Button type="submit" className="w-full mt-6">{editingCommunity ? "Save Changes" : "Create"}</Button>
         </form>
       </Modal>
 
