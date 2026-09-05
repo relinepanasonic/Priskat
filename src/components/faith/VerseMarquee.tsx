@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 type VerseItem = { verse: { text: string; ref: string }; bg: string; dateOffset: number };
 
-export default function VerseMarquee() {
+export default function VerseMarquee({ isId = false }: { isId?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<VerseItem | null>(null);
@@ -24,7 +24,16 @@ export default function VerseMarquee() {
     const targetDay = dayOfYear - i;
     const index = ((targetDay % DAILY_VERSES.length) + DAILY_VERSES.length) % DAILY_VERSES.length;
     const bgIndex = ((targetDay % BACKGROUNDS.length) + BACKGROUNDS.length) % BACKGROUNDS.length;
-    recentVerses.push({ verse: DAILY_VERSES[index], bg: BACKGROUNDS[bgIndex], dateOffset: i });
+    
+    const rawVerse = DAILY_VERSES[index];
+    recentVerses.push({ 
+      verse: {
+        text: isId ? rawVerse.text_id : rawVerse.text_en,
+        ref: isId ? rawVerse.ref_id : rawVerse.ref_en
+      }, 
+      bg: BACKGROUNDS[bgIndex], 
+      dateOffset: i 
+    });
   }
 
   const slides = [...recentVerses, ...recentVerses, ...recentVerses, ...recentVerses];

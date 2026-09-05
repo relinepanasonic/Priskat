@@ -84,7 +84,7 @@ export default function BibleIndexClient({
       </div>
 
       <div className="space-y-12 pb-12">
-        <VerseMarquee />
+        <VerseMarquee isId={isId} />
 
         {/* New Testament */}
         {filteredNT.length > 0 && (

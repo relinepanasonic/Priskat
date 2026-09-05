@@ -5,21 +5,96 @@ import * as htmlToImage from "html-to-image";
 import { Share2, Check, Loader2 } from "lucide-react";
 
 export const DAILY_VERSES = [
-  { text: "For I know the plans I have for you... plans to prosper you and not to harm you, plans to give you hope and a future.", ref: "Jeremiah 29:11" },
-  { text: "I can do all this through him who gives me strength.", ref: "Philippians 4:13" },
-  { text: "The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures.", ref: "Psalm 23:1-2" },
-  { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", ref: "Joshua 1:9" },
-  { text: "When the time is right, I, the Lord, will make it happen.", ref: "Isaiah 60:22" },
-  { text: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles.", ref: "Isaiah 40:31" },
-  { text: "Trust in the Lord with all your heart and lean not on your own understanding.", ref: "Proverbs 3:5" },
-  { text: "Cast all your anxiety on him because he cares for you.", ref: "1 Peter 5:7" },
-  { text: "The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning.", ref: "Lamentations 3:22-23" },
-  { text: "And we know that in all things God works for the good of those who love him.", ref: "Romans 8:28" },
-  { text: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.", ref: "Philippians 4:6" },
-  { text: "Come to me, all you who are weary and burdened, and I will give you rest.", ref: "Matthew 11:28" },
-  { text: "The Lord is my light and my salvation — whom shall I fear?", ref: "Psalm 27:1" },
-  { text: "Let all that you do be done in love.", ref: "1 Corinthians 16:14" },
-  { text: "Peace I leave with you; my peace I give you. Do not let your hearts be troubled.", ref: "John 14:27" },
+  { 
+    text_en: "For I know the plans I have for you... plans to prosper you and not to harm you, plans to give you hope and a future.", 
+    ref_en: "Jeremiah 29:11",
+    text_id: "Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu... rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.",
+    ref_id: "Yeremia 29:11"
+  },
+  { 
+    text_en: "I can do all this through him who gives me strength.", 
+    ref_en: "Philippians 4:13",
+    text_id: "Segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku.",
+    ref_id: "Filipi 4:13"
+  },
+  { 
+    text_en: "The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures.", 
+    ref_en: "Psalm 23:1-2",
+    text_id: "Tuhan adalah gembalaku, takkan kekurangan aku. Ia membaringkan aku di padang yang berumput hijau.",
+    ref_id: "Mazmur 23:1-2"
+  },
+  { 
+    text_en: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", 
+    ref_en: "Joshua 1:9",
+    text_id: "Kuatkan dan teguhkanlah hatimu! Janganlah kecut dan tawar hati, sebab TUHAN, Allahmu, menyertai engkau, ke mana pun engkau pergi.",
+    ref_id: "Yosua 1:9"
+  },
+  { 
+    text_en: "When the time is right, I, the Lord, will make it happen.", 
+    ref_en: "Isaiah 60:22",
+    text_id: "Aku, TUHAN, akan melaksanakannya dengan segera pada waktunya.",
+    ref_id: "Yesaya 60:22"
+  },
+  { 
+    text_en: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles.", 
+    ref_en: "Isaiah 40:31",
+    text_id: "Tetapi orang-orang yang menanti-nantikan TUHAN mendapat kekuatan baru: mereka seumpama rajawali yang naik terbang dengan kekuatan sayapnya.",
+    ref_id: "Yesaya 40:31"
+  },
+  { 
+    text_en: "Trust in the Lord with all your heart and lean not on your own understanding.", 
+    ref_en: "Proverbs 3:5",
+    text_id: "Percayalah kepada TUHAN dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri.",
+    ref_id: "Amsal 3:5"
+  },
+  { 
+    text_en: "Cast all your anxiety on him because he cares for you.", 
+    ref_en: "1 Peter 5:7",
+    text_id: "Serahkanlah segala kekuatiranmu kepada-Nya, sebab Ia yang memelihara kamu.",
+    ref_id: "1 Petrus 5:7"
+  },
+  { 
+    text_en: "The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning.", 
+    ref_en: "Lamentations 3:22-23",
+    text_id: "Tak berkesudahan kasih setia TUHAN, tak habis-habisnya rahmat-Nya, selalu baru tiap pagi.",
+    ref_id: "Ratapan 3:22-23"
+  },
+  { 
+    text_en: "And we know that in all things God works for the good of those who love him.", 
+    ref_en: "Romans 8:28",
+    text_id: "Kita tahu sekarang, bahwa Allah turut bekerja dalam segala sesuatu untuk mendatangkan kebaikan bagi mereka yang mengasihi Dia.",
+    ref_id: "Roma 8:28"
+  },
+  { 
+    text_en: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.", 
+    ref_en: "Philippians 4:6",
+    text_id: "Janganlah hendaknya kamu kuatir tentang apa pun juga, tetapi nyatakanlah dalam segala hal keinginanmu kepada Allah dalam doa dan permohonan dengan ucapan syukur.",
+    ref_id: "Filipi 4:6"
+  },
+  { 
+    text_en: "Come to me, all you who are weary and burdened, and I will give you rest.", 
+    ref_en: "Matthew 11:28",
+    text_id: "Marilah kepada-Ku, semua yang letih lesu dan berbeban berat, Aku akan memberi kelegaan kepadamu.",
+    ref_id: "Matius 11:28"
+  },
+  { 
+    text_en: "The Lord is my light and my salvation — whom shall I fear?", 
+    ref_en: "Psalm 27:1",
+    text_id: "TUHAN adalah terangku dan keselamatanku, kepada siapakah aku harus takut?",
+    ref_id: "Mazmur 27:1"
+  },
+  { 
+    text_en: "Let all that you do be done in love.", 
+    ref_en: "1 Corinthians 16:14",
+    text_id: "Lakukanlah segala pekerjaanmu dalam kasih!",
+    ref_id: "1 Korintus 16:14"
+  },
+  { 
+    text_en: "Peace I leave with you; my peace I give you. Do not let your hearts be troubled.", 
+    ref_en: "John 14:27",
+    text_id: "Damai sejahtera Kutinggalkan bagimu. Damai sejahtera-Ku Kuberikan kepadamu, dan apa yang Kuberikan tidak seperti yang diberikan oleh dunia kepadamu. Janganlah gelisah dan gentar hatimu.",
+    ref_id: "Yohanes 14:27"
+  }
 ];
 
 // Cinematic landscape photos — dramatic sky, golden horizon, epic atmosphere
@@ -41,9 +116,12 @@ export const BACKGROUNDS = [
   "https://images.unsplash.com/photo-1485470733090-0aae1788d5af?auto=format&fit=crop&q=85&w=900", // foggy dark forest road
 ];
 
-export default function DailyVerseCard() {
+export default function DailyVerseCard({ isId = false }: { isId?: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [verse, setVerse] = useState(DAILY_VERSES[0]);
+  
+  // Use a typed state
+  type VerseType = { text_en: string; text_id: string; ref_en: string; ref_id: string };
+  const [verse, setVerse] = useState<VerseType>(DAILY_VERSES[0]);
   const [bg, setBg] = useState(BACKGROUNDS[0]);
   const [isSharing, setIsSharing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -66,7 +144,7 @@ export default function DailyVerseCard() {
       const blob = await res.blob();
       const file = new File([blob], "verse.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Daily Verse", text: verse.ref });
+        await navigator.share({ files: [file], title: "Daily Verse", text: isId ? verse.ref_id : verse.ref_en });
       } else {
         const link = document.createElement("a");
         link.download = "verse.png";
@@ -115,7 +193,7 @@ export default function DailyVerseCard() {
             className="text-lg sm:text-2xl font-black text-white uppercase leading-snug tracking-wide"
             style={{ textShadow: "0 2px 20px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,0.8)" }}
           >
-            {verse.text}
+            {isId ? verse.text_id : verse.text_en}
           </p>
 
           {/* Ornament divider */}
@@ -130,7 +208,7 @@ export default function DailyVerseCard() {
             className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase"
             style={{ color: "#c9952e", textShadow: "0 1px 8px rgba(0,0,0,1)" }}
           >
-            {verse.ref}
+            {isId ? verse.ref_id : verse.ref_en}
           </p>
 
           {/* Watermark */}
