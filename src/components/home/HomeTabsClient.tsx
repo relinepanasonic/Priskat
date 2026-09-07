@@ -148,71 +148,69 @@ export default function HomeTabsClient({
       {/* Stats: My Services + Ongoing Devotion */}
       <div className="px-4 mt-6 flex flex-col gap-3">
         {/* Ongoing Devotion Premium Card */}
-        <Link href="/faith/devotions/plans" className="relative overflow-hidden bg-gradient-to-br from-[#2a2415] to-[#14120b] border border-brand-gold/20 rounded-2xl p-4 flex flex-col hover:border-brand-gold/50 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Heart className="w-16 h-16 text-brand-gold" />
-          </div>
-          <div className="relative z-10 flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20">
-                <Heart className="h-4 w-4 text-brand-gold" />
+        <Link href="/faith/devotions/plans" className="relative overflow-hidden bg-brand-surface/60 backdrop-blur-md border border-brand-gold/20 rounded-[20px] p-5 flex flex-col hover:border-brand-gold/50 hover:bg-brand-surface/80 hover:shadow-[0_8px_30px_rgba(212,175,55,0.12)] transition-all duration-300 group shadow-lg">
+          {/* Subtle gold glow behind */}
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand-gold/10 rounded-full blur-3xl group-hover:bg-brand-gold/20 transition-colors"></div>
+          
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 flex items-center justify-center border border-brand-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                <Heart className="h-4 w-4 text-brand-gold fill-brand-gold/20" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-gold/90">{isEn ? "Ongoing Devotion" : "Renungan Berjalan"}</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-brand-gold/90">{isEn ? "Ongoing Devotion" : "Renungan Berjalan"}</span>
             </div>
             {activeDevotion ? (
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]">{isEn ? "Active" : "Aktif"}</span>
+              <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] backdrop-blur-sm">{isEn ? "Active" : "Aktif"}</span>
             ) : (
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/40 text-brand-muted border border-[#333]">{isEn ? "None" : "Tidak ada"}</span>
+              <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-white/5 text-brand-muted border border-white/10 backdrop-blur-sm">{isEn ? "None" : "Tidak ada"}</span>
             )}
           </div>
           
           <div className="relative z-10">
             {activeDevotion ? (
               <>
-                <h3 className="text-sm font-serif font-bold text-white mb-2 leading-tight pr-8">{activeDevotion.plan?.[isEn ? "title_en" : "title_id"] || (isEn ? "Devotional" : "Renungan")}</h3>
-                <div className="mt-2 bg-black/40 rounded-xl p-3 border border-white/5">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-xs font-semibold text-brand-light">{isEn ? "Day" : "Hari"} {activeDevotion.current_day} <span className="text-brand-muted font-normal">/ {activeDevotion.plan?.total_days || "?"}</span></span>
-                    <span className="text-[10px] text-brand-gold font-bold">{Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.total_days || 1)) * 100)}%</span>
+                <h3 className="text-base font-serif font-bold text-white mb-3 leading-tight pr-2">{activeDevotion.plan?.[isEn ? "title_en" : "title_id"] || (isEn ? "Devotional" : "Renungan")}</h3>
+                <div className="mt-1 bg-black/30 rounded-xl p-3 border border-white/5 backdrop-blur-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-semibold text-brand-light">{isEn ? "Day" : "Hari"} <span className="text-white">{activeDevotion.current_day}</span> <span className="text-brand-muted/70 font-normal">/ {activeDevotion.plan?.duration_days || "?"}</span></span>
+                    <span className="text-[10px] text-brand-gold font-bold bg-brand-gold/10 px-2 py-0.5 rounded-md">{Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.duration_days || 1)) * 100)}%</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-[#222] overflow-hidden shadow-inner">
+                  <div className="h-1.5 rounded-full bg-black/50 overflow-hidden shadow-inner border border-white/5">
                     <div
-                      className="h-full bg-gradient-to-r from-[#d4af37] to-[#f3e5ab] rounded-full transition-all duration-1000 relative"
-                      style={{width: `${Math.min(100, Math.max(2, Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.total_days || 1)) * 100)))}%`}}
+                      className="h-full bg-gradient-to-r from-brand-gold to-[#f3e5ab] rounded-full transition-all duration-1000 relative shadow-[0_0_8px_rgba(212,175,55,0.6)]"
+                      style={{width: `${Math.min(100, Math.max(2, Math.round(((activeDevotion.current_day - 1) / (activeDevotion.plan?.duration_days || 1)) * 100)))}%`}}
                     >
-                      <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                      <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
                     </div>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="py-2">
-                <h3 className="text-sm font-serif font-bold text-white/80">{isEn ? "Start a New Devotional" : "Mulai Renungan Baru"}</h3>
-                <p className="text-xs text-brand-muted mt-1">{isEn ? "Tap to browse our collection of reading plans." : "Ketuk untuk melihat koleksi rencana bacaan kami."}</p>
+              <div className="py-1">
+                <h3 className="text-base font-serif font-bold text-white/90 group-hover:text-white transition-colors">{isEn ? "Start a New Devotional" : "Mulai Renungan Baru"}</h3>
+                <p className="text-xs text-brand-muted/80 mt-1.5 leading-relaxed">{isEn ? "Tap to browse our collection of reading plans and strengthen your faith." : "Ketuk untuk melihat koleksi rencana bacaan dan menguatkan iman."}</p>
               </div>
             )}
           </div>
         </Link>
 
         {/* My Services Card */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#1a1d24] to-[#0f1115] border border-[#2a2d35] rounded-2xl p-4 flex items-center justify-between hover:border-[#3a3d45] transition-colors group">
-          <div className="absolute left-0 bottom-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Tent className="w-20 h-20 text-white" />
-          </div>
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-brand-surface border border-[#333] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <Tent className="h-5 w-5 text-brand-light" />
+        <div className="relative overflow-hidden bg-brand-surface/40 backdrop-blur-md border border-white/5 rounded-[20px] p-4 flex items-center justify-between hover:bg-brand-surface/60 hover:border-white/10 transition-all duration-300 group shadow-lg cursor-pointer" onClick={() => setActiveTab("Service")}>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors"></div>
+          <div className="relative z-10 flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent flex items-center justify-center border border-blue-500/20 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+              <Tent className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">{isEn ? "My Services" : "Pelayanan Saya"}</p>
-              <p className="text-xs text-brand-muted mt-0.5 max-w-[180px] truncate">
-                {myServices.length > 0 ? `${isEn ? "Latest:" : "Terakhir:"} ${myServices[myServices.length - 1]?.position || "?"}` : (isEn ? "No service records yet" : "Belum ada catatan pelayanan")}
+              <p className="text-[13px] font-bold text-white/90 tracking-wide uppercase">{isEn ? "My Services" : "Pelayanan Saya"}</p>
+              <p className="text-xs text-brand-muted mt-1 max-w-[180px] truncate">
+                {myServices.length > 0 ? <><span className="text-brand-light/60">{isEn ? "Latest:" : "Terakhir:"}</span> <span className="text-white/80">{myServices[myServices.length - 1]?.position || "?"}</span></> : (isEn ? "No service records yet" : "Belum ada catatan pelayanan")}
               </p>
             </div>
           </div>
-          <div className="relative z-10 flex flex-col items-end">
-            <span className="text-2xl font-serif font-bold text-brand-gold leading-none">{myServices.length}</span>
-            <span className="text-[9px] uppercase tracking-wider text-brand-muted mt-1">{isEn ? "Records" : "Catatan"}</span>
+          <div className="relative z-10 flex flex-col items-end justify-center h-full pl-4 border-l border-white/5">
+            <span className="text-2xl font-serif font-bold text-blue-400 leading-none group-hover:text-blue-300 transition-colors">{myServices.length}</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-brand-muted/70 mt-1">{isEn ? "Records" : "Catatan"}</span>
           </div>
         </div>
       </div>

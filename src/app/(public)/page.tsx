@@ -59,10 +59,10 @@ export default async function HomePage() {
   let activeDevotion = null;
   const { data: devotionData } = await supabase
     .from("user_devotion_progress")
-    .select("*, plan:devotion_plans(id, title_id, title_en, total_days)")
+    .select("*, plan:devotion_plans(id, title_id, title_en, duration_days)")
     .eq("user_id", user.id)
     .eq("is_finished", false)
-    .single();
+    .maybeSingle();
   
   if (devotionData) {
     activeDevotion = devotionData;
