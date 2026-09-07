@@ -122,7 +122,7 @@ export default function VinylPlayer({
     <div className="w-full">
       {/* Vinyl Records Row */}
       <div className="flex justify-center items-center gap-2 py-4 px-6 overflow-x-auto hide-scrollbar min-h-[100px]">
-        {Array.from({ length: 5 }).map((_, idx) => {
+        {Array.from({ length: 7 }).map((_, idx) => {
           const song = songs[idx];
           const isThisPlaying = !!song && currentSong?.url === song.url && isPlaying;
           const isUploading = uploadingIdx === idx;
