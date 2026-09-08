@@ -303,28 +303,63 @@ export default function FriendsClient({
         {activeTab === "browsing" && (
           <div className="animate-in fade-in duration-300 space-y-8">
 
-            {/* Pending Sent Requests — shown only if there are any */}
+            {/* Pending Sent Requests — compact list */}
             {localPendingOut.length > 0 && (
               <section>
-                <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-gold">
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-gold">
                   <Clock className="h-4 w-4" />
                   {isEn ? "Pending Requests" : "Permintaan Menunggu"}
                   <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-brand-gold/20 text-brand-gold text-[10px] font-bold border border-brand-gold/30">
                     {localPendingOut.length}
                   </span>
                 </h2>
-                <div className={grid}>
-                  {localPendingOut.map((u) => (
-                    <FriendCard
-                      key={u.friendshipId}
-                      user={u}
-                      userId={userId}
-                      variant="pending-out"
-                      onOpen={() => setViewMember(u)}
-                      onCancel={handleCancel}
-                      lang={lang}
-                    />
-                  ))}
+                <div className="flex flex-col gap-2">
+                  {localPendingOut.map((u) => {
+                    const nick = nickOf(u);
+                    const community = u.community?.name || "Ruang Iman";
+                    return (
+                      <div
+                        key={u.friendshipId}
+                        className="flex items-center gap-3 bg-brand-surface/60 border border-brand-gold/15 rounded-xl px-4 py-3 hover:border-brand-gold/30 transition-all"
+                      >
+                        {/* Avatar */}
+                        <button type="button" onClick={() => setViewMember(u)} className="flex-shrink-0">
+                          {u.avatar_url ? (
+                            <img src={u.avatar_url} alt={nick} className="w-10 h-10 rounded-full object-cover ring-2 ring-brand-gold/20" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold font-bold text-sm ring-2 ring-brand-gold/20">
+                              {nick[0]?.toUpperCase()}
+                            </div>
+                          )}
+                        </button>
+
+                        {/* Info */}
+                        <button type="button" onClick={() => setViewMember(u)} className="flex-1 text-left min-w-0">
+                          <p className="font-semibold text-sm text-white truncate">{nick}</p>
+                          <p className="text-[11px] text-brand-muted flex items-center gap-1 mt-0.5">
+                            <Tent className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{community}</span>
+                          </p>
+                        </button>
+
+                        {/* Status + Cancel */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="hidden sm:flex items-center gap-1 text-[10px] font-bold text-brand-gold/70 bg-brand-gold/10 border border-brand-gold/20 px-2.5 py-1 rounded-full">
+                            <Clock className="h-3 w-3" />
+                            {isEn ? "Pending" : "Menunggu"}
+                          </span>
+                          <button
+                            onClick={() => handleCancel(u.friendshipId!)}
+                            aria-label={isEn ? "Cancel Request" : "Batalkan"}
+                            className="flex items-center gap-1 text-[11px] font-bold text-red-400/70 hover:text-red-400 bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/40 px-2.5 py-1 rounded-full transition-all"
+                          >
+                            <X className="h-3 w-3" />
+                            {isEn ? "Cancel" : "Batal"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
