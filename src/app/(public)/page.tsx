@@ -62,10 +62,11 @@ export default async function HomePage() {
     .select("*, plan:devotion_plans(id, title_id, title_en, duration_days)")
     .eq("user_id", user.id)
     .eq("is_finished", false)
-    .maybeSingle();
+    .order('started_at', { ascending: false })
+    .limit(1);
   
-  if (devotionData) {
-    activeDevotion = devotionData;
+  if (devotionData && devotionData.length > 0) {
+    activeDevotion = devotionData[0];
   }
 
   // Fetch the user's crew/service assignments across ALL communities for
