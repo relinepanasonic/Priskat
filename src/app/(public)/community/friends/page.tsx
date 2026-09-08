@@ -63,7 +63,7 @@ export default async function FriendsPage() {
     friendIds.add(f.requester_id);
     friendIds.add(f.receiver_id);
   });
-  const pendingOutIds = new Set((pendingOutgoing || []).map((p: any) => p.receiver_id));
+
 
   const { data: allUsers } = await supabase
     .from("profiles")
