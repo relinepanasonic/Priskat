@@ -59,7 +59,7 @@ export default async function HomePage() {
   let activeDevotion = null;
   const { data: devotionData } = await supabase
     .from("user_devotion_progress")
-    .select("*, plan:devotion_plans(id, title_id, title_en, duration_days)")
+    .select("*, plan:devotion_plans(id, title, title_id, duration_days)")
     .eq("user_id", user.id)
     .eq("is_finished", false)
     .order('started_at', { ascending: false })

@@ -169,7 +169,7 @@ export default function HomeTabsClient({
           <div className="relative z-10">
             {activeDevotion ? (
               <>
-                <h3 className="text-base font-serif font-bold text-white mb-3 leading-tight pr-2">{activeDevotion.plan?.[isEn ? "title_en" : "title_id"] || (isEn ? "Devotional" : "Renungan")}</h3>
+                <h3 className="text-base font-serif font-bold text-white mb-3 leading-tight pr-2">{activeDevotion.plan?.[isEn ? "title" : "title_id"] || activeDevotion.plan?.title || (isEn ? "Devotional" : "Renungan")}</h3>
                 <div className="mt-1 bg-black/30 rounded-xl p-3 border border-white/5 backdrop-blur-sm">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-semibold text-brand-light">{isEn ? "Day" : "Hari"} <span className="text-white">{activeDevotion.current_day}</span> <span className="text-brand-muted/70 font-normal">/ {activeDevotion.plan?.duration_days || "?"}</span></span>
