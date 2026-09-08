@@ -40,16 +40,15 @@ export default async function CommunityListingPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {(communities || []).map((c: any) => {
           const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || myAdminCommunityIds.includes(c.id);
-          const Container = hasAccess ? Link : "div";
-          const hrefProps = hasAccess ? { href: `/camp/${c.slug || c.id}` } : {};
+          const cardClass = `group bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-6 transition-all shadow-lg ${
+            hasAccess ? 'hover:border-brand-gold/50 hover:bg-[#1e2129] hover:shadow-brand-gold/10 cursor-pointer' : 'opacity-80 cursor-not-allowed'
+          }`;
 
-          return (
-          <Container
+          return hasAccess ? (
+          <Link
             key={c.id}
-            {...hrefProps}
-            className={`group bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-6 transition-all shadow-lg ${
-              hasAccess ? 'hover:border-brand-gold/50 hover:bg-[#1e2129] hover:shadow-brand-gold/10 cursor-pointer' : 'opacity-80 cursor-not-allowed'
-            }`}
+            href={`/camp/${c.slug || c.id}`}
+            className={cardClass}
           >
             <div className="flex items-start justify-between mb-4">
               {c.logo_url ? (
@@ -89,8 +88,38 @@ export default async function CommunityListingPage() {
                 )}
               </span>
             </div>
-          </Container>
-        )})}
+          </Link>
+          ) : (
+          <div key={c.id} className={cardClass}>
+            <div className="flex items-start justify-between mb-4">
+              {c.logo_url ? (
+                <img src={c.logo_url} alt={c.name} className="w-14 h-14 rounded-xl object-cover" />
+              ) : (
+                <div className="w-14 h-14 rounded-xl bg-brand-gold/10 flex items-center justify-center">
+                  <Users className="w-7 h-7 text-brand-gold" />
+                </div>
+              )}
+              <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border text-orange-400 bg-orange-500/10 border-orange-500/30">
+                <Lock className="w-3 h-3" />
+                Private
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-1">{c.name}</h3>
+            {c.description && (
+              <p className="text-sm text-brand-muted mb-4 line-clamp-2">{c.description}</p>
+            )}
+            <div className="pt-4 border-t border-[#2a2d35] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Users className="w-4 h-4" />
+                <span>{c.member_count} members</span>
+              </div>
+              <span className="text-sm font-bold flex items-center gap-1 text-gray-500">
+                <Lock className="w-3 h-3" /> No Access
+              </span>
+            </div>
+          </div>
+          )
+        })}
       </div>
 
       {(!communities || communities.length === 0) && (
