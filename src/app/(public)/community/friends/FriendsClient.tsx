@@ -12,6 +12,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -39,16 +40,18 @@ function FriendCard({
   onOpen,
   onAccept,
   onDecline,
+  onCancel,
   lang = "id",
 }: {
   user: CardUser;
   userId: string;
-  variant: "connect" | "message" | "request";
+  variant: "connect" | "message" | "request" | "pending-out";
   isPending?: boolean;
   onAction?: () => void;
   onOpen: () => void;
   onAccept?: (friendshipId: string, requester: CardUser) => void;
   onDecline?: (friendshipId: string) => void;
+  onCancel?: (friendshipId: string) => void;
   lang?: "id" | "en";
 }) {
   const [loading, startTransition] = useTransition();
@@ -162,6 +165,26 @@ function FriendCard({
           </button>
         </div>
       )}
+
+      {variant === "pending-out" && (
+        <>
+          {/* Clock badge — top left */}
+          <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-brand-gold/90 px-2.5 py-1 text-[10px] font-bold text-brand-dark shadow-lg">
+            <Clock className="h-3 w-3" />
+            {isEn ? "Pending" : "Menunggu"}
+          </div>
+          {/* Cancel button — top right */}
+          {user.friendshipId && (
+            <button
+              onClick={() => onCancel?.(user.friendshipId!)}
+              aria-label={isEn ? "Cancel Request" : "Batalkan"}
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white/80 backdrop-blur-sm transition hover:bg-red-500/80 hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -172,6 +195,7 @@ export default function FriendsClient({
   userId,
   friends,
   pendingIncoming,
+  pendingOutgoing = [],
   recommendations,
   mutuals = [],
   lang = "id",
@@ -179,6 +203,7 @@ export default function FriendsClient({
   userId: string;
   friends: CardUser[];
   pendingIncoming: CardUser[];
+  pendingOutgoing?: CardUser[];
   recommendations: CardUser[];
   mutuals?: CardUser[];
   lang?: "id" | "en";
@@ -189,6 +214,7 @@ export default function FriendsClient({
   const [localPending, setLocalPending] = useState<Set<string>>(new Set());
   const [localFriends, setLocalFriends] = useState(friends);
   const [localIncoming, setLocalIncoming] = useState(pendingIncoming);
+  const [localPendingOut, setLocalPendingOut] = useState(pendingOutgoing);
   const [viewMember, setViewMember] = useState<MemberSeed | null>(null);
   const supabase = createClient();
   const router = useRouter();
@@ -209,6 +235,14 @@ export default function FriendsClient({
   const handleDecline = async (friendshipId: string) => {
     await supabase.from("friendships").delete().eq("id", friendshipId);
     setLocalIncoming((prev) =>
+      prev.filter((p) => p.friendshipId !== friendshipId)
+    );
+    router.refresh();
+  };
+
+  const handleCancel = async (friendshipId: string) => {
+    await supabase.from("friendships").delete().eq("id", friendshipId);
+    setLocalPendingOut((prev) =>
       prev.filter((p) => p.friendshipId !== friendshipId)
     );
     router.refresh();
@@ -267,11 +301,40 @@ export default function FriendsClient({
       <div className="mx-auto max-w-5xl space-y-8 px-3 sm:px-4">
         {/* BROWSING */}
         {activeTab === "browsing" && (
-          <div className="animate-in fade-in duration-300">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-              <Search className="h-5 w-5 text-brand-gold" />
-              {isEn ? "Recommended for You" : "Rekomendasi untuk Anda"}
-            </h2>
+          <div className="animate-in fade-in duration-300 space-y-8">
+
+            {/* Pending Sent Requests — shown only if there are any */}
+            {localPendingOut.length > 0 && (
+              <section>
+                <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-gold">
+                  <Clock className="h-4 w-4" />
+                  {isEn ? "Pending Requests" : "Permintaan Menunggu"}
+                  <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-brand-gold/20 text-brand-gold text-[10px] font-bold border border-brand-gold/30">
+                    {localPendingOut.length}
+                  </span>
+                </h2>
+                <div className={grid}>
+                  {localPendingOut.map((u) => (
+                    <FriendCard
+                      key={u.friendshipId}
+                      user={u}
+                      userId={userId}
+                      variant="pending-out"
+                      onOpen={() => setViewMember(u)}
+                      onCancel={handleCancel}
+                      lang={lang}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Recommendations */}
+            <section>
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
+                <Search className="h-5 w-5 text-brand-gold" />
+                {isEn ? "Recommended for You" : "Rekomendasi untuk Anda"}
+              </h2>
             {recommendations.length > 0 ? (
               <div className={grid}>
                 {recommendations.map((u) => (
@@ -304,6 +367,7 @@ export default function FriendsClient({
                 </p>
               </div>
             )}
+            </section>
           </div>
         )}
 

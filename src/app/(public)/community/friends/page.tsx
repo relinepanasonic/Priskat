@@ -41,12 +41,21 @@ export default async function FriendsPage() {
     .eq("receiver_id", user.id)
     .eq("status", "pending");
 
-  // Get pending requests I sent (waiting for response)
+  // Get pending requests I sent (waiting for response) — now with full profiles
   const { data: pendingOutgoing } = await supabase
     .from("friendships")
-    .select("id, receiver_id")
+    .select(`id, receiver_id, receiver:profiles!friendships_receiver_id_fkey(${PCARD})`)
     .eq("requester_id", user.id)
     .eq("status", "pending");
+
+  // IDs of people I already sent a request to
+  const pendingOutIds = new Set((pendingOutgoing || []).map((p: any) => p.receiver_id));
+
+  // Format pending outgoing for display
+  const formattedPendingOut = (pendingOutgoing || []).map((p: any) => ({
+    ...p.receiver,
+    friendshipId: p.id,
+  }));
 
   // Get recommendations: all users not yet friends, scored by common attributes
   const friendIds = new Set<string>([user.id]);
@@ -145,6 +154,7 @@ export default async function FriendsPage() {
       userId={user.id}
       friends={formattedFriends}
       pendingIncoming={formattedPending}
+      pendingOutgoing={formattedPendingOut}
       recommendations={cleanRecommendations}
       mutuals={formattedMutuals}
       lang={lang}
