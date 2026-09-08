@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/utils";
 "use client";
 
 import { useEffect, useState, use } from "react";
@@ -422,7 +423,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                 <div key={task.id} className="bg-[#1a1d24] border border-[#333] p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
                   <div>
                     <h3 className="font-bold text-white text-base">{task.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No deadline"} • Assigned to: {crewMembers.find(c => c.user_id === task.assigned_to)?.name || "Unassigned"}</p>
+                    <p className="text-sm text-gray-400 mt-1">Due: {task.due_date ? formatDate(task.due_date) : "No deadline"} • Assigned to: {crewMembers.find(c => c.user_id === task.assigned_to)?.name || "Unassigned"}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${task.status === 'done' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-[#222] text-gray-300 border border-[#444]'}`}>
                     {task.status.toUpperCase()}

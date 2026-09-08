@@ -8,6 +8,7 @@ import {
   Church,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/utils";
 import { getLanguage } from "@/lib/lang";
 import { kindLabel, type MassChurch } from "../../../ChurchCard";
 
@@ -180,10 +181,7 @@ export default async function ChurchDetailPage({
         {/* Last synced */}
         <div className="border-t border-brand-border pt-4 text-[10px] text-brand-muted">
           {isId ? "Terakhir disinkron " : "Last synced "}
-          {new Date(church.synced_at as any).toLocaleDateString(
-            isId ? "id-ID" : "en-US",
-            { day: "numeric", month: "short", year: "numeric" }
-          )}
+          {formatDate(church.synced_at as string)}
         </div>
       </div>
     </div>

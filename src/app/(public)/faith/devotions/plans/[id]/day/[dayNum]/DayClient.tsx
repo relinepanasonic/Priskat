@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, MoreVertical, CheckCircle2, Circle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { format, addDays } from "date-fns";
+import { addDays } from "date-fns";
+import { formatDate } from "@/lib/utils";
 
 
 export default function DayClient({ 
@@ -90,7 +91,7 @@ export default function DayClient({
               >
                 <span className={`text-xl font-bold ${isCurrent ? "text-white" : "text-brand-muted"}`}>{d}</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 mt-1 rounded-full ${isCurrent ? "bg-brand-gold text-brand-dark" : "text-brand-muted"}`}>
-                  {format(date, "MMM d")}
+                  {formatDate(date)}
                 </span>
               </Link>
             )

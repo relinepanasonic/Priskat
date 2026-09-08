@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Image as ImageIcon, BookOpen, HeartHandshake, X, BookMarked, Loader2, ChevronLeft } from "lucide-react";
 import Image from "next/image";
+import { formatDate } from "@/lib/utils";
 
 // ─── Bible Book list (ID → name) ────────────────────────────────────────────
 const BIBLE_BOOKS = [
@@ -380,7 +381,7 @@ export default function FeedClient({ userAvatar, userName, userId, posts, lang =
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-bold text-white text-sm">{userName}</span>
                     <span className="text-brand-muted text-xs">
-                      {new Date(post.created_at).toLocaleDateString()}
+                      {formatDate(post.created_at)}
                     </span>
                   </div>
                   <p className="text-[15px] text-brand-light leading-relaxed whitespace-pre-wrap">{post.content}</p>

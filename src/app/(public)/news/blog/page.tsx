@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Newspaper, ArrowRight } from "lucide-react";
@@ -82,11 +83,7 @@ export default async function BlogPage() {
               <p className="line-clamp-2 text-sm text-brand-muted">{post.excerpt}</p>
               <div className="mt-auto flex items-center justify-between pt-2 text-xs text-brand-muted">
                 <time dateTime={post.published_at}>
-                  {new Date(post.published_at).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {formatDate(post.published_at)}
                 </time>
                 <ArrowRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
               </div>

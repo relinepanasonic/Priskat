@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -140,11 +141,7 @@ export default async function BlogPostPage({
         <span>{post.author_name}</span>
         <span>&middot;</span>
         <time dateTime={post.published_at}>
-          {new Date(post.published_at).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
+          {formatDate(post.published_at)}
         </time>
       </div>
 

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Heart, MessageCircle, MoreHorizontal, Send, X, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/lib/utils";
 
 function Avatar({ url, name, size = 36 }: { url?: string | null; name?: string | null; size?: number }) {
   return url ? (
@@ -24,7 +24,7 @@ function CommentItem({ comment }: { comment: any }) {
       <div className="flex-1 bg-brand-surface rounded-2xl px-3 py-2">
         <span className="font-bold text-white text-[13px] mr-2">{comment.author?.full_name}</span>
         <span className="text-[13px] text-brand-light">{comment.content}</span>
-        <p className="text-[10px] text-brand-muted mt-1">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</p>
+        <p className="text-[10px] text-brand-muted mt-1">{formatDate(new Date(comment.created_at))}</p>
       </div>
     </div>
   );
@@ -120,7 +120,7 @@ function ThoughtCard({ post, userId, isLiked: initialLiked, lang = "id" }: { pos
     });
   };
 
-  const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
+  const timeAgo = formatDate(new Date(post.created_at));
   const author = post.author;
 
   return (

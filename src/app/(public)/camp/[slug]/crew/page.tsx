@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/utils";
 "use client";
 
 import { useEffect, useState } from "react";
@@ -144,7 +145,7 @@ export default function CampCrewPage() {
                   {camp.camp_name !== "Other Event" ? `Angkatan ${camp.angkatan}` : "Custom Event"}
                 </p>
                 <p className="text-xs text-gray-500 mb-6 flex items-center gap-1">
-                  Start Date: {camp.start_date ? new Date(camp.start_date).toLocaleDateString() : "Not set"}
+                  Start Date: {camp.start_date ? formatDate(camp.start_date) : "Not set"}
                 </p>
                 
                 <div className="mt-auto pt-4 border-t border-[#222] flex items-center justify-between">

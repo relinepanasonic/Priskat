@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -167,7 +168,7 @@ export default async function HomePage() {
               <h3 className="text-sm font-semibold text-brand-gold mb-2 uppercase tracking-wider">Birthdate</h3>
               <div className="bg-[#111] border border-[#333] rounded-xl p-4">
                 <span className="text-white font-medium">
-                  {new Date(profile.birthdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {formatDate(profile.birthdate)}
                 </span>
               </div>
             </div>

@@ -103,7 +103,7 @@ export default function CommentSection({
                     {comment.profiles?.full_name ?? "Member"}
                   </span>
                   <span className="text-xs text-brand-muted">
-                    {formatDate(comment.created_at, { month: "short", day: "numeric" })}
+                    {formatDate(comment.created_at)}
                   </span>
                 </div>
                 {currentUserId === comment.author_id && (

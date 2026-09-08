@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram, Users, ArrowRight } from "lucide-react";
 import FeedClient from "@/components/social/FeedClient";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { uploadImage, storagePath } from "@/lib/upload";
 import VinylPlayer from "./VinylPlayer";
 import { createClient } from "@/lib/supabase/client";
