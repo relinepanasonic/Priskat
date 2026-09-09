@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { storagePath, uploadAudio } from "@/lib/upload";
 import { usePlayer } from "@/components/audio/PlayerProvider";
@@ -167,6 +167,18 @@ export default function VinylPlayer({
               </button>
 
               {/* Delete Button */}
+              {song && (
+                <a
+                  href={song.url}
+                  download={song.title + ".mp3"}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute -bottom-1 -left-1 bg-brand-gold text-brand-dark rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-20"
+                >
+                  <Download className="w-3 h-3" />
+                </a>
+              )}
               {song && !readOnly && (
                 <button
                   onClick={(e) => deleteSong(idx, e)}
