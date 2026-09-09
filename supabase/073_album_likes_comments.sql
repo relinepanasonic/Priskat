@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS public.album_likes (
+CREATE TABLE IF NOT EXISTS public.album_likes (
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     album_owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -18,7 +18,7 @@ ALTER TABLE public.album_likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.album_comments ENABLE ROW LEVEL SECURITY;
 
 -- Policies for album_likes
-DO $ $
+DO $
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_policies WHERE policyname = 'Anyone can view album likes') THEN
     CREATE POLICY "Anyone can view album likes" ON public.album_likes FOR SELECT USING (true);
@@ -30,10 +30,10 @@ BEGIN
     CREATE POLICY "Users can delete their own likes" ON public.album_likes FOR DELETE USING (auth.uid() = user_id);
   END IF;
 END
-$ $;
+$;
 
 -- Policies for album_comments
-DO $ $
+DO $
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_policies WHERE policyname = 'Anyone can view album comments') THEN
     CREATE POLICY "Anyone can view album comments" ON public.album_comments FOR SELECT USING (true);
@@ -45,4 +45,4 @@ BEGIN
     CREATE POLICY "Users can delete their own comments" ON public.album_comments FOR DELETE USING (auth.uid() = author_id);
   END IF;
 END
-$ $;
+$;
