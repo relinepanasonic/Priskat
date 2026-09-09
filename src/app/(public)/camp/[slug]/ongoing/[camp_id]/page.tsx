@@ -1,10 +1,10 @@
-import { formatDate } from "@/lib/utils";
 "use client";
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { formatDate } from "@/lib/utils";
 
 export default function ProductivityDashboard({ params }: { params: Promise<{ slug: string; camp_id: string }> }) {
   const unwrappedParams = use(params);

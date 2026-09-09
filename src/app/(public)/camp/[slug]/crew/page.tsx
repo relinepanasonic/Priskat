@@ -1,4 +1,3 @@
-import { formatDate } from "@/lib/utils";
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,6 +7,7 @@ import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { resolveCommunity } from "@/lib/community";
+import { formatDate } from "@/lib/utils";
 
 export default function CampCrewPage() {
   const params = useParams();
