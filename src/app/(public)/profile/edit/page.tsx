@@ -1,8 +1,6 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
-import JourneyEditClient from "@/components/profile/JourneyEditClient";
-import ServicesEditClient from "@/components/profile/ServicesEditClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Edit Profile" };
@@ -33,11 +31,10 @@ export default async function ProfileEditPage() {
           </div>
         </section>
 
-        {/* MY JOURNEY (Camp History) */}
-        <JourneyEditClient userId={user.id} initialHistory={profile.camp_history || []} />
-
-        {/* MY SERVICES (Volunteer History) */}
-        <ServicesEditClient userId={user.id} initialServices={profile.services_history || []} />
+        {/* 
+          My Journey and My Services will be moved to Community later. 
+          Components: <JourneyEditClient /> and <ServicesEditClient />
+        */}
     </main>
   );
 }

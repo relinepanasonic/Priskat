@@ -169,25 +169,25 @@ export default function ProfileEditForm({
       </div>
 
             <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Full Name *</label>
+        <label className="mb-1 block text-sm font-medium text-gray-500">Full Name *</label>
         <input {...register("full_name")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Nama Baptis</label>
+          <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Nama Baptis</label>
           <input {...register("nama_baptis")} placeholder="e.g. Yohanes" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Nama Panggilan</label>
+          <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Nama Panggilan</label>
           <input {...register("nama_panggilan")} placeholder="e.g. John" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
         </div>
       </div>
 
       <div className="space-y-4 border border-brand-border/50 rounded-xl p-4 bg-[#111]">
         <div>
-          <label className="mb-1 block text-sm font-medium text-brand-light">Relationship</label>
+          <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Relationship</label>
           <select {...register("relationship_status")} className="w-full input-3d text-sm">
             <option value="Single">Single</option>
             <option value="Couple">Couple</option>
@@ -197,7 +197,7 @@ export default function ProfileEditForm({
 
         {(relStatus === "Couple" || relStatus === "Marriage") && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-brand-light">Partner (Member)</label>
+            <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Partner (Member)</label>
             <select {...register("partner_id")} className="w-full input-3d text-sm">
               <option value="">-- Select Partner --</option>
               {allUsers.map(u => (
@@ -209,17 +209,17 @@ export default function ProfileEditForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Favourite Verse (Ayat Favorit)</label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Favourite Verse (Ayat Favorit)</label>
         <input {...register("favorite_verse")} placeholder="e.g. Yohanes 3:16" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Birthdate</label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Birthdate</label>
         <input type="date" {...register("birthdate")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none bg-[#1a1d24] text-white [color-scheme:dark]" />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Instagram Username</label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Instagram Username</label>
         <div className="flex items-center rounded-lg border border-brand-border bg-[#1a1d24] overflow-hidden focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-brand-blue transition-all">
           <span className="pl-4 text-gray-500">@</span>
           <input
@@ -231,13 +231,13 @@ export default function ProfileEditForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Bio <span className="text-brand-muted font-normal">(max 300 chars)</span></label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Bio <span className="text-brand-muted font-normal">(max 300 chars)</span></label>
         <textarea {...register("bio")} rows={3} placeholder="Tell the community about yourselfâ€¦" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none resize-none" />
         {errors.bio && <p className="mt-1 text-xs text-red-600">{errors.bio.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Gender</label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Gender</label>
         <select {...register("gender")} className="w-full input-3d text-sm">
           <option value="">Select Gender</option>
           <option value="male">Male</option>
@@ -247,12 +247,12 @@ export default function ProfileEditForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Skills <span className="text-brand-muted font-normal">(comma-separated)</span></label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Skills <span className="text-brand-muted font-normal">(comma-separated)</span></label>
         <input {...register("skills")} placeholder="e.g. Music, Teaching, Design" className="w-full input-3d text-sm" />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-brand-light">Interests <span className="text-brand-muted font-normal">(comma-separated)</span></label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Interests <span className="text-brand-muted font-normal">(comma-separated)</span></label>
         <input {...register("interests")} placeholder="e.g. Prayer, Worship, Youth Ministry" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
       </div>
 

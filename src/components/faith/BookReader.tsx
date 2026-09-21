@@ -81,7 +81,7 @@ function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse
         {verses.map((v, i) => {
           if (v.type === "title") {
             return (
-              <h3 key={i} className="text-sm lg:text-base font-bold italic mt-5 mb-2 text-black block font-serif">
+              <h3 key={i} className="text-base lg:text-lg font-extrabold mt-6 mb-3 text-black block font-sans tracking-wide">
                 {v.content}
               </h3>
             );
@@ -104,12 +104,19 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
   const router = useRouter();
   const pages = splitIntoPages(verses);
 
-  // Each "spread" shows 2 pages: left and right
   const totalSpreads = Math.ceil(pages.length / 2);
-  const [spread, setSpread] = useState(0);
+  const totalPages = pages.length;
+  
+  const [pageIndex, setPageIndex] = useState(0); // Unified state
+  const spread = Math.floor(pageIndex / 2);
+  
   const [animDir, setAnimDir] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showBookPicker, setShowBookPicker] = useState(false);
+  
+  // Touch state for swipe
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const isId = lang === "id";
   const bookLabel = (b: BibleBook) => (isId ? b.name : b.name_en);
@@ -118,36 +125,59 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
     if (b.no !== bookId) router.push(`/faith/bible/${b.no}/1`);
   };
 
-  const goNext = () => {
+  const goNextDesktop = () => {
     if (spread >= totalSpreads - 1 || isAnimating) return;
     setAnimDir("right");
     setIsAnimating(true);
     setTimeout(() => {
-      setSpread(s => s + 1);
+      setPageIndex(p => Math.min(totalPages - 1, (Math.floor(p / 2) + 1) * 2));
       setIsAnimating(false);
       setAnimDir(null);
     }, 300);
   };
 
-  const goPrev = () => {
+  const goPrevDesktop = () => {
     if (spread <= 0 || isAnimating) return;
     setAnimDir("left");
     setIsAnimating(true);
     setTimeout(() => {
-      setSpread(s => s - 1);
+      setPageIndex(p => Math.max(0, (Math.floor(p / 2) - 1) * 2));
       setIsAnimating(false);
       setAnimDir(null);
     }, 300);
   };
 
+  const goNextMobile = () => {
+    if (pageIndex >= totalPages - 1 || isAnimating) return;
+    setAnimDir("right");
+    setIsAnimating(true);
+    setTimeout(() => {
+      setPageIndex(p => p + 1);
+      setIsAnimating(false);
+      setAnimDir(null);
+    }, 250);
+  };
+
+  const goPrevMobile = () => {
+    if (pageIndex <= 0 || isAnimating) return;
+    setAnimDir("left");
+    setIsAnimating(true);
+    setTimeout(() => {
+      setPageIndex(p => p - 1);
+      setIsAnimating(false);
+      setAnimDir(null);
+    }, 250);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") goNext();
-      if (e.key === "ArrowLeft") goPrev();
+      const isDesktop = window.innerWidth >= 768;
+      if (e.key === "ArrowRight") isDesktop ? goNextDesktop() : goNextMobile();
+      if (e.key === "ArrowLeft") isDesktop ? goPrevDesktop() : goPrevMobile();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [spread, isAnimating]);
+  }, [spread, pageIndex, isAnimating]);
 
   const leftPageIndex = spread * 2;
   const rightPageIndex = spread * 2 + 1;
@@ -164,15 +194,59 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
       </div>
 
       {/* Mobile view: single page */}
-      <div className="md:hidden flex-1 w-full max-w-sm bg-[#fbfbf6] rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
-        {pages[leftPageIndex] && (
-          <PageContent
-            verses={pages[leftPageIndex]}
-            bookName={bookName}
-            chapter={chapter}
-            isFirstPage={leftPageIndex === 0}
+      <div 
+        className="md:hidden flex-1 w-full max-w-sm bg-[#fbfbf6] rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden relative"
+        onTouchStart={e => setTouchStart(e.targetTouches[0].clientX)}
+        onTouchMove={e => setTouchEnd(e.targetTouches[0].clientX)}
+        onTouchEnd={() => {
+          if (!touchStart || !touchEnd) return;
+          const distance = touchStart - touchEnd;
+          const isLeftSwipe = distance > 50;
+          const isRightSwipe = distance < -50;
+          if (isLeftSwipe) goNextMobile();
+          if (isRightSwipe) goPrevMobile();
+          setTouchStart(null);
+          setTouchEnd(null);
+        }}
+      >
+        {isAnimating && (
+          <div 
+            className={`absolute inset-0 bg-[#fbfbf6] z-50 transition-transform duration-200 origin-${animDir === "right" ? "left" : "right"}`}
+            style={{
+              transform: animDir === "right" ? "translateX(-100%)" : "translateX(100%)",
+              opacity: 0,
+            }}
           />
         )}
+        {pages[pageIndex] && (
+          <PageContent
+            verses={pages[pageIndex]}
+            bookName={bookName}
+            chapter={chapter}
+            isFirstPage={pageIndex === 0}
+          />
+        )}
+        
+        {/* Mobile Page Controls / Number */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-between px-6 text-gray-400">
+          <button 
+            onClick={goPrevMobile} 
+            className={`p-2 rounded-full active:bg-black/5 ${pageIndex === 0 ? "opacity-30" : ""}`}
+            disabled={pageIndex === 0}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="text-xs font-sans self-center">
+            {pageIndex + 1} / {totalPages}
+          </span>
+          <button 
+            onClick={goNextMobile} 
+            className={`p-2 rounded-full active:bg-black/5 ${pageIndex === totalPages - 1 ? "opacity-30" : ""}`}
+            disabled={pageIndex === totalPages - 1}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Desktop: two-page spread (book) */}
@@ -194,7 +268,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         {/* Left Page */}
         <div 
           className="w-1/2 h-full bg-[#fbfbf6] relative cursor-pointer group"
-          onClick={goPrev}
+          onClick={goPrevDesktop}
           style={{
             boxShadow: "inset -8px 0 20px rgba(0,0,0,0.08)",
             transform: isAnimating && animDir === "left" ? "translateX(-4px)" : "translateX(0)",
@@ -228,7 +302,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         {/* Right Page */}
         <div 
           className="w-1/2 h-full bg-[#f9f8f3] relative cursor-pointer group"
-          onClick={goNext}
+          onClick={goNextDesktop}
           style={{
             boxShadow: "inset 8px 0 20px rgba(0,0,0,0.06)",
             transform: isAnimating && animDir === "right" ? "translateX(4px)" : "translateX(0)",
@@ -296,7 +370,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
           </Link>
         </div>
 
-        <div className="text-white/40 text-xs font-sans">
+        <div className="hidden md:block text-white/40 text-xs font-sans">
           {spread + 1} / {totalSpreads}
         </div>
       </div>

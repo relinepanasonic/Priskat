@@ -136,12 +136,14 @@ export type PrayerCategory =
 export const PRAYER_CATEGORIES: { value: PrayerCategory; label_id: string; label_en: string }[] = [
   { value: 'basic_prayer', label_id: 'Doa Dasar', label_en: 'Basic Prayer' },
   { value: 'doa_harian', label_id: 'Doa Harian', label_en: 'Daily Prayers' },
-  { value: 'doa_ekaristi', label_id: 'Doa Ekaristi', label_en: 'Eucharistic Prayer' },
+  { value: 'doa_ekaristi', label_id: 'Doa Ekaristi', label_en: 'Eucharistic' },
   { value: 'hati_kudus_yesus', label_id: 'Hati Kudus Yesus', label_en: 'Sacred Heart' },
   { value: 'bunda_maria', label_id: 'Bunda Maria', label_en: 'Virgin Mary' },
   { value: 'para_kudus', label_id: 'Para Kudus', label_en: 'Saints' },
-  { value: 'jalan_salib', label_id: 'Jalan Salib', label_en: 'Stations of the Cross' },
-  { value: 'rosario', label_id: 'Rosario', label_en: 'Rosary' },
+  { value: 'roh_kudus', label_id: 'Roh Kudus', label_en: 'Holy Spirit' },
+  { value: 'malaikat', label_id: 'Malaikat', label_en: 'Angels' },
+  { value: 'keluarga', label_id: 'Keluarga', label_en: 'Family' },
+  { value: 'tobat_syukur', label_id: 'Tobat & Syukur', label_en: 'Contrition & Gratitude' },
 ];
 
 export interface Prayer {

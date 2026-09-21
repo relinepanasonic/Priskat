@@ -62,8 +62,18 @@ export default function RegisterPage() {
   // Extract invite data if present
   useEffect(() => {
     async function fetchData() {
-      const { data: cData } = await supabase.from("communities").select("id, name").order("name");
-      if (cData) setCommunities(cData);
+      const { data: cData } = await supabase.from("communities").select("id, name").eq("access", "public").order("name");
+      if (cData) {
+        setCommunities(cData);
+        
+        // Default to Catholic Indonesia if no community is selected
+        const catholicIndo = cData.find(c => c.name === "Catholic Indonesia");
+        if (catholicIndo) {
+          setTimeout(() => { // ensure it runs after render or form mount
+            setValue("community_id", catholicIndo.id, { shouldValidate: true });
+          }, 0);
+        }
+      }
     }
     fetchData();
     
@@ -71,6 +81,11 @@ export default function RegisterPage() {
       const searchParams = new URLSearchParams(window.location.search);
       const email = searchParams.get("email");
       if (email) setValue("email", email);
+      
+      const paramCommunityId = searchParams.get("community_id");
+      if (paramCommunityId) {
+        setTimeout(() => setValue("community_id", paramCommunityId, { shouldValidate: true }), 10);
+      }
     }
   }, [setValue, supabase]);
 
