@@ -304,44 +304,46 @@ export default function RosarioClient() {
           <BeadDots current={stepIdx + 1} total={steps.length} accent={accent} />
         </div>
 
-        {/* ── PRAYER TEXT — fades in/out, sits in the upper empty space ── */}
+        {/* ── PRAYER TEXT — fades in/out, scrollable, right-aligned on PC ── */}
         <div
-          className="flex-1 flex flex-col justify-start px-6 pt-4"
+          className="flex-1 overflow-y-auto scrollbar-hide px-6 pt-2 pb-4 flex flex-col lg:w-[55%] lg:ml-auto lg:pr-20 lg:pl-10 lg:justify-end lg:pb-12"
           style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "translateY(0)" : "translateY(10px)",
             transition: "opacity 0.3s ease, transform 0.3s ease",
           }}
         >
-          {/* Phase label */}
-          <p className="text-white/30 text-[10px] uppercase tracking-widest mb-2">{current.phase}</p>
+          <div className="w-full max-w-2xl mr-auto lg:ml-auto lg:mr-0">
+            {/* Phase label */}
+            <p className="text-white/40 text-[10px] lg:text-xs uppercase tracking-widest mb-2 lg:mb-3 font-semibold">{current.phase}</p>
 
-          {/* Prayer title */}
-          <h2 className="text-white font-bold text-xl mb-0.5">{current.title}</h2>
+            {/* Prayer title */}
+            <h2 className="text-white font-bold text-xl lg:text-4xl mb-2 lg:mb-4 drop-shadow-md">{current.title}</h2>
 
-          {/* Counter pill */}
-          {current.counter && (
-            <div
-              className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold mb-3 w-fit"
-              style={{ background: `${accent}25`, color: accent, border: `1px solid ${accent}40` }}
-            >
-              📿 {current.counter}
-            </div>
-          )}
+            {/* Counter pill */}
+            {current.counter && (
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold mb-3 lg:mb-5 w-fit shadow-lg"
+                style={{ background: `${accent}30`, color: accent, border: `1px solid ${accent}50` }}
+              >
+                📿 {current.counter}
+              </div>
+            )}
 
-          {/* Sub label */}
-          {current.sub && (
-            <p className="text-white/40 text-xs mb-3 leading-relaxed">{current.sub}</p>
-          )}
+            {/* Sub label */}
+            {current.sub && (
+              <p className="text-white/60 text-xs lg:text-base mb-3 lg:mb-5 leading-relaxed italic">{current.sub}</p>
+            )}
 
-          {/* Prayer body */}
-          <p className="text-white/85 text-sm leading-[1.9] font-light whitespace-pre-wrap">
-            {current.text}
-          </p>
+            {/* Prayer body */}
+            <p className="text-white/90 text-sm lg:text-[22px] leading-[1.9] lg:leading-[1.8] font-light whitespace-pre-wrap drop-shadow-lg">
+              {current.text}
+            </p>
+          </div>
         </div>
 
         {/* ── BOTTOM: Round Press Button ── */}
-        <div className="flex flex-col items-center pb-12 pt-6">
+        <div className="flex flex-col items-center pb-12 pt-6 flex-shrink-0">
           {/* Phase dots mini nav */}
           <p className="text-white/20 text-[10px] mb-6 uppercase tracking-wider">{current.phase}</p>
 
