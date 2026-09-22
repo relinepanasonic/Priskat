@@ -222,7 +222,7 @@ export default function JalanSalibClient() {
 
   if (done) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-center p-8 gap-6">
+      <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center text-center p-8 gap-6">
         <div className="text-6xl">✝️</div>
         <h2 className="text-2xl font-bold text-white">Jalan Salib Selesai</h2>
         <p className="text-gray-400 text-sm max-w-xs">
@@ -243,7 +243,7 @@ export default function JalanSalibClient() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black flex overflow-hidden">
+    <div className="fixed inset-0 z-[9999] bg-black flex overflow-hidden">
       {/* LEFT: Image panel */}
       <div className="relative w-[45%] h-full flex-shrink-0">
         {/* Gradient background as placeholder until images are added */}

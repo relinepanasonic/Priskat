@@ -188,7 +188,7 @@ export default function RosarioClient() {
   // ── PICKER ──────────────────────────────────────────────────────────────────
   if (!chosen) {
     return (
-      <div className="relative min-h-screen flex flex-col">
+      <div className="fixed inset-0 z-[9999] flex flex-col">
         <Image
           src="/images/prayers/rosario-bg.jpg"
           alt="Rosario"
@@ -242,7 +242,7 @@ export default function RosarioClient() {
   // ── DONE ────────────────────────────────────────────────────────────────────
   if (done) {
     return (
-      <div className="relative min-h-screen flex flex-col items-center justify-end pb-20 px-6 text-center">
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-end pb-20 px-6 text-center">
         <Image src="/images/prayers/rosario-bg.jpg" alt="Rosario" fill className="object-cover" />
         <div className="absolute inset-0 bg-black/70" />
         <div className="relative z-10">
@@ -266,7 +266,7 @@ export default function RosarioClient() {
   const peristiwa = PERISTIWA[chosen];
 
   return (
-    <div className="relative min-h-screen flex flex-col select-none overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex flex-col select-none overflow-hidden">
       {/* Background - fully visible */}
       <Image
         src="/images/prayers/rosario-bg.jpg"
