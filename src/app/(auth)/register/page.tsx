@@ -18,7 +18,7 @@ const schema = z
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirm_password: z.string(),
-    community_id: z.string().min(1, "Please select a community"),
+    community_id: z.string().optional(),
     role: z.string().optional(),
   })
   .refine((d) => d.password === d.confirm_password, {
@@ -92,6 +92,13 @@ export default function RegisterPage() {
   async function onSubmit(data: FormValues) {
     setError(null);
     
+    // Ensure community_id is set to Catholic Indonesia if somehow missed
+    let finalCommunityId = data.community_id;
+    if (!finalCommunityId && communities.length > 0) {
+      const catholicIndo = communities.find(c => c.name === "Catholic Indonesia");
+      if (catholicIndo) finalCommunityId = catholicIndo.id;
+    }
+
     // Check if username is taken
     const { data: existingUser } = await supabase
       .from("profiles")
@@ -112,7 +119,7 @@ export default function RegisterPage() {
           full_name: data.full_name,
           username: data.username.toLowerCase(),
           phone: data.phone,
-          community_id: data.community_id,
+          community_id: finalCommunityId,
           role: data.role || "member",
         },
       },
@@ -189,23 +196,8 @@ export default function RegisterPage() {
               </div>
               </div>
 
-              {/* Community Information */}
-              <div className="mt-4 pt-4 border-t border-brand-border/50">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Community Details</label>
-                <div>
-                  <select
-                    {...register("community_id")}
-                    className="w-full rounded-lg border border-brand-border py-2.5 px-3 text-sm bg-[#1a1d24] text-white focus:border-brand-gold focus:outline-none"
-                  >
-                    <option value="">Select Main Community...</option>
-                    {communities.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                  {errors.community_id && <p className="text-[10px] text-red-500 mt-1">{errors.community_id.message}</p>}
-                </div>
-              </div>
-              
+              {/* Hidden Community Input (Auto-selected to Catholic Indonesia via useEffect) */}
+              <input type="hidden" {...register("community_id")} />
               {/* Email */}
               <div className="pt-4 border-t border-brand-border/50">
               <div className="relative">
