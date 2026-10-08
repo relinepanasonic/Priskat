@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, Bookmark } from "lucide-react";
+import Link from "next/link";
 import BookListClient from "./BookListClient";
 
 interface Book {
@@ -44,28 +45,28 @@ export default function BibleIndexClient({
 
   return (
     <div className="w-full">
-      {/* Search Bar & Version Dropdown */}
-      <div className="flex items-center gap-3 mb-8 max-w-2xl">
-        <div className="relative flex-1">
+      {/* Search Bar & Version Dropdown & Fav Verses */}
+      <div className="flex items-center gap-2 sm:gap-3 mb-8 max-w-2xl">
+        <div className="relative flex-1 min-w-0">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-3 border border-[#333] rounded-xl leading-5 bg-[#1a1d24] text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold sm:text-sm transition-colors shadow-inner-dark"
+            className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-[#333] rounded-xl leading-5 bg-[#1a1d24] text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold text-xs sm:text-sm transition-colors shadow-inner-dark"
             placeholder={isId ? "Cari nama kitab..." : "Search book names..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
-        {/* Version Dropdown */}
-        <div className="relative w-28 sm:w-36">
+        {/* Version Dropdown (compact) */}
+        <div className="relative w-16 sm:w-24 shrink-0">
           <select
             value={version}
             onChange={(e) => setVersion(e.target.value)}
             disabled={isId}
-            className="block w-full py-3 pl-3 pr-8 border border-[#333] rounded-xl bg-[#1a1d24] text-brand-gold font-medium focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold text-xs appearance-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+            className="block w-full py-2.5 sm:py-3 pl-2.5 pr-6 border border-[#333] rounded-xl bg-[#1a1d24] text-brand-gold font-semibold focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold text-xs appearance-none cursor-pointer disabled:opacity-80 disabled:cursor-not-allowed text-center"
           >
             {isId ? (
               <option value="TB">TB</option>
@@ -77,10 +78,21 @@ export default function BibleIndexClient({
               </>
             )}
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-gold">
-            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1.5 text-brand-gold">
+            <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
           </div>
         </div>
+
+        {/* Ayat Fav ku Button */}
+        <Link
+          href="/profile/favorites"
+          className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 sm:py-3 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-400 rounded-xl text-xs font-semibold transition-all shadow-sm"
+          title={isId ? "Ayat Fav ku" : "My Fav Verses"}
+        >
+          <Bookmark className="h-4 w-4" fill="currentColor" />
+          <span className="hidden sm:inline">{isId ? "Ayat Fav ku" : "My Fav Verses"}</span>
+          <span className="sm:hidden">{isId ? "Fav ku" : "Fav"}</span>
+        </Link>
       </div>
 
       <div className="space-y-12 pb-12">
