@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Play, X, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X, ChevronDown, Bookmark, BookmarkCheck, Heart } from "lucide-react";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA, type BibleBook } from "@/lib/bibleBooks";
+import { createClient } from "@/lib/supabase/client";
 
 interface Verse {
   verse: number;
@@ -18,6 +19,7 @@ interface Props {
   bookId: number;
   chapter: number;
   lang?: "id" | "en";
+  userId?: string | null;
 }
 
 const WORDS_PER_PAGE = 220;
@@ -29,8 +31,6 @@ function splitIntoPages(verses: Verse[]): Verse[][] {
 
   for (const verse of verses) {
     const words = verse.content.split(" ").length;
-    
-    // Titles always stay with the next verse, reset page at half-way
     if (verse.type === "title") {
       if (wordCount > WORDS_PER_PAGE / 2) {
         pages.push(currentPage);
@@ -40,39 +40,45 @@ function splitIntoPages(verses: Verse[]): Verse[][] {
       currentPage.push(verse);
       continue;
     }
-
-    // If adding this verse would overflow, start a new page
     if (wordCount + words > WORDS_PER_PAGE && currentPage.length > 0) {
       pages.push(currentPage);
       currentPage = [];
       wordCount = 0;
     }
-
     currentPage.push(verse);
     wordCount += words;
   }
-
-  if (currentPage.length > 0) {
-    pages.push(currentPage);
-  }
-
+  if (currentPage.length > 0) pages.push(currentPage);
   return pages;
 }
 
-function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse[], bookName: string, chapter: number, isFirstPage: boolean }) {
+// ─── PAGE CONTENT ─────────────────────────────────────────────────────────────
+function PageContent({
+  verses,
+  bookName,
+  chapter,
+  isFirstPage,
+  favorites,
+  selectedVerse,
+  onVerseClick,
+}: {
+  verses: Verse[];
+  bookName: string;
+  chapter: number;
+  isFirstPage: boolean;
+  favorites: Set<number>;
+  selectedVerse: number | null;
+  onVerseClick: (v: Verse) => void;
+}) {
   return (
     <div className="h-full overflow-y-auto hide-scrollbar p-8 lg:p-12 pb-16 lg:pb-20 flex flex-col relative">
       {isFirstPage && (
         <div className="hidden">
-          <h2 className="text-gray-400 font-bold text-xs uppercase tracking-[0.3em] font-sans">
-            {bookName}
-          </h2>
-          <h1 className="text-6xl lg:text-7xl font-bold mt-1 text-black font-serif">
-            {chapter}
-          </h1>
+          <h2 className="text-gray-400 font-bold text-xs uppercase tracking-[0.3em] font-sans">{bookName}</h2>
+          <h1 className="text-6xl lg:text-7xl font-bold mt-1 text-black font-serif">{chapter}</h1>
         </div>
       )}
-            <div className="absolute top-4 left-0 right-0 text-center pointer-events-none">
+      <div className="absolute top-4 left-0 right-0 text-center pointer-events-none">
         <span className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] font-sans">
           {bookName} {chapter}
         </span>
@@ -81,14 +87,30 @@ function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse
         {verses.map((v, i) => {
           if (v.type === "title") {
             return (
-              <h3 key={i} className="text-base lg:text-lg font-extrabold mt-6 mb-3 text-black block font-sans tracking-wide">
+              // ① Bold chapter title, clearly different from body
+              <h3 key={i} className="text-base lg:text-lg font-black mt-6 mb-3 text-black block font-sans tracking-wide uppercase text-center border-b border-gray-200 pb-2">
                 {v.content}
               </h3>
             );
           }
+
+          const isSelected = selectedVerse === v.verse;
+          const isFav = favorites.has(v.verse);
+
           return (
-            <span key={i} className="inline">
-              <sup className="text-gray-400 font-sans font-bold text-[10px] mr-0.5 ml-1 align-super">
+            // ② Tap a verse to select/highlight it
+            <span
+              key={i}
+              onClick={() => onVerseClick(v)}
+              className={`inline cursor-pointer rounded transition-colors duration-150 ${
+                isSelected
+                  ? "bg-yellow-200 text-yellow-900"
+                  : isFav
+                  ? "bg-amber-100 text-amber-900"
+                  : "hover:bg-yellow-50"
+              }`}
+            >
+              <sup className={`font-sans font-bold text-[10px] mr-0.5 ml-1 align-super ${isSelected || isFav ? "text-amber-600" : "text-gray-400"}`}>
                 {v.verse}
               </sup>
               {v.content}{" "}
@@ -100,23 +122,31 @@ function PageContent({ verses, bookName, chapter, isFirstPage }: { verses: Verse
   );
 }
 
-export default function BookReader({ verses, bookName, bookId, chapter, lang = "en" }: Props) {
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+export default function BookReader({ verses, bookName, bookId, chapter, lang = "en", userId }: Props) {
   const router = useRouter();
+  const supabase = createClient();
   const pages = splitIntoPages(verses);
 
   const totalSpreads = Math.ceil(pages.length / 2);
   const totalPages = pages.length;
-  
-  const [pageIndex, setPageIndex] = useState(0); // Unified state
+
+  const [pageIndex, setPageIndex] = useState(0);
   const spread = Math.floor(pageIndex / 2);
-  
+
   const [animDir, setAnimDir] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showBookPicker, setShowBookPicker] = useState(false);
-  
+
   // Touch state for swipe
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // ── Verse highlight / favourite state ─────────────────────────────────────
+  const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [savingVerse, setSavingVerse] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const isId = lang === "id";
   const bookLabel = (b: BibleBook) => (isId ? b.name : b.name_en);
@@ -125,6 +155,65 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
     if (b.no !== bookId) router.push(`/faith/bible/${b.no}/1`);
   };
 
+  // Load existing favorites for this chapter
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("favorite_verses")
+      .select("verse_number")
+      .eq("user_id", userId)
+      .eq("book_id", bookId)
+      .eq("chapter", chapter)
+      .eq("lang", lang)
+      .then(({ data }) => {
+        if (data) setFavorites(new Set(data.map((r) => r.verse_number)));
+      });
+  }, [userId, bookId, chapter, lang]);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleVerseClick = useCallback((v: Verse) => {
+    setSelectedVerse((prev) => (prev?.verse === v.verse ? null : v));
+  }, []);
+
+  const saveToFavorites = async () => {
+    if (!selectedVerse || !userId) return;
+    setSavingVerse(true);
+    const isAlreadySaved = favorites.has(selectedVerse.verse);
+
+    if (isAlreadySaved) {
+      await supabase
+        .from("favorite_verses")
+        .delete()
+        .eq("user_id", userId)
+        .eq("book_id", bookId)
+        .eq("chapter", chapter)
+        .eq("verse_number", selectedVerse.verse)
+        .eq("lang", lang);
+      setFavorites((prev) => { const next = new Set(prev); next.delete(selectedVerse.verse); return next; });
+      showToast("Dihapus dari Ayat Fav ku");
+    } else {
+      await supabase.from("favorite_verses").insert({
+        user_id: userId,
+        book_id: bookId,
+        book_name: bookName,
+        chapter,
+        verse_number: selectedVerse.verse,
+        verse_content: selectedVerse.content,
+        lang,
+      });
+      setFavorites((prev) => new Set(prev).add(selectedVerse.verse));
+      showToast("✨ Disimpan ke Ayat Fav ku!");
+    }
+
+    setSavingVerse(false);
+    setSelectedVerse(null);
+  };
+
+  // ── Navigation ────────────────────────────────────────────────────────────
   const goNextDesktop = () => {
     if (spread >= totalSpreads - 1 || isAnimating) return;
     setAnimDir("right");
@@ -151,22 +240,14 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
     if (pageIndex >= totalPages - 1 || isAnimating) return;
     setAnimDir("right");
     setIsAnimating(true);
-    setTimeout(() => {
-      setPageIndex(p => p + 1);
-      setIsAnimating(false);
-      setAnimDir(null);
-    }, 250);
+    setTimeout(() => { setPageIndex(p => p + 1); setIsAnimating(false); setAnimDir(null); }, 250);
   };
 
   const goPrevMobile = () => {
     if (pageIndex <= 0 || isAnimating) return;
     setAnimDir("left");
     setIsAnimating(true);
-    setTimeout(() => {
-      setPageIndex(p => p - 1);
-      setIsAnimating(false);
-      setAnimDir(null);
-    }, 250);
+    setTimeout(() => { setPageIndex(p => p - 1); setIsAnimating(false); setAnimDir(null); }, 250);
   };
 
   useEffect(() => {
@@ -174,6 +255,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
       const isDesktop = window.innerWidth >= 768;
       if (e.key === "ArrowRight") isDesktop ? goNextDesktop() : goNextMobile();
       if (e.key === "ArrowLeft") isDesktop ? goPrevDesktop() : goPrevMobile();
+      if (e.key === "Escape") setSelectedVerse(null);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -182,9 +264,11 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
   const leftPageIndex = spread * 2;
   const rightPageIndex = spread * 2 + 1;
 
+  const isFavSelected = selectedVerse ? favorites.has(selectedVerse.verse) : false;
+
   return (
     <div className="min-h-[100dvh] pb-32 bg-[#2a2520] flex flex-col items-center justify-start py-4 md:py-8 px-4 relative select-none">
-      
+
       {/* Back Button */}
       <div className="w-full max-w-5xl flex items-center mb-4">
         <Link href="/faith/bible" className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm">
@@ -193,29 +277,24 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         </Link>
       </div>
 
-      {/* Mobile view: single page */}
-      <div 
+      {/* ── MOBILE: Single page ── */}
+      <div
         className="md:hidden flex-1 w-full max-w-sm bg-[#fbfbf6] rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden relative"
         onTouchStart={e => setTouchStart(e.targetTouches[0].clientX)}
         onTouchMove={e => setTouchEnd(e.targetTouches[0].clientX)}
         onTouchEnd={() => {
           if (!touchStart || !touchEnd) return;
           const distance = touchStart - touchEnd;
-          const isLeftSwipe = distance > 50;
-          const isRightSwipe = distance < -50;
-          if (isLeftSwipe) goNextMobile();
-          if (isRightSwipe) goPrevMobile();
+          if (distance > 50) goNextMobile();
+          if (distance < -50) goPrevMobile();
           setTouchStart(null);
           setTouchEnd(null);
         }}
       >
         {isAnimating && (
-          <div 
+          <div
             className={`absolute inset-0 bg-[#fbfbf6] z-50 transition-transform duration-200 origin-${animDir === "right" ? "left" : "right"}`}
-            style={{
-              transform: animDir === "right" ? "translateX(-100%)" : "translateX(100%)",
-              opacity: 0,
-            }}
+            style={{ transform: animDir === "right" ? "translateX(-100%)" : "translateX(100%)", opacity: 0 }}
           />
         )}
         {pages[pageIndex] && (
@@ -224,56 +303,41 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
             bookName={bookName}
             chapter={chapter}
             isFirstPage={pageIndex === 0}
+            favorites={favorites}
+            selectedVerse={selectedVerse?.verse ?? null}
+            onVerseClick={handleVerseClick}
           />
         )}
-        
-        {/* Mobile Page Controls / Number */}
+
+        {/* Mobile Page Controls */}
         <div className="absolute bottom-4 left-0 right-0 flex justify-between px-6 text-gray-400">
-          <button 
-            onClick={goPrevMobile} 
-            className={`p-2 rounded-full active:bg-black/5 ${pageIndex === 0 ? "opacity-30" : ""}`}
-            disabled={pageIndex === 0}
-          >
+          <button onClick={goPrevMobile} className={`p-2 rounded-full active:bg-black/5 ${pageIndex === 0 ? "opacity-30" : ""}`} disabled={pageIndex === 0}>
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <span className="text-xs font-sans self-center">
-            {pageIndex + 1} / {totalPages}
-          </span>
-          <button 
-            onClick={goNextMobile} 
-            className={`p-2 rounded-full active:bg-black/5 ${pageIndex === totalPages - 1 ? "opacity-30" : ""}`}
-            disabled={pageIndex === totalPages - 1}
-          >
+          <span className="text-xs font-sans self-center">{pageIndex + 1} / {totalPages}</span>
+          <button onClick={goNextMobile} className={`p-2 rounded-full active:bg-black/5 ${pageIndex === totalPages - 1 ? "opacity-30" : ""}`} disabled={pageIndex === totalPages - 1}>
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* Desktop: two-page spread (book) */}
-      <div 
+      {/* ── DESKTOP: Two-page spread ── */}
+      <div
         className="hidden md:flex w-full max-w-5xl shadow-[0_30px_80px_rgba(0,0,0,0.7)] rounded-lg overflow-hidden relative"
         style={{ height: "72vh" }}
       >
-        {/* Page Turn Animation Overlay */}
         {isAnimating && (
-          <div 
+          <div
             className={`absolute inset-0 bg-[#f0ead6] z-50 transition-transform duration-300 origin-${animDir === "right" ? "left" : "right"}`}
-            style={{
-              transform: animDir === "right" ? "rotateY(-5deg) scaleX(0.98)" : "rotateY(5deg) scaleX(0.98)",
-              opacity: 0.4,
-            }}
+            style={{ transform: animDir === "right" ? "rotateY(-5deg) scaleX(0.98)" : "rotateY(5deg) scaleX(0.98)", opacity: 0.4 }}
           />
         )}
 
         {/* Left Page */}
-        <div 
+        <div
           className="w-1/2 h-full bg-[#fbfbf6] relative cursor-pointer group"
           onClick={goPrevDesktop}
-          style={{
-            boxShadow: "inset -8px 0 20px rgba(0,0,0,0.08)",
-            transform: isAnimating && animDir === "left" ? "translateX(-4px)" : "translateX(0)",
-            transition: "transform 0.3s ease",
-          }}
+          style={{ boxShadow: "inset -8px 0 20px rgba(0,0,0,0.08)", transform: isAnimating && animDir === "left" ? "translateX(-4px)" : "translateX(0)", transition: "transform 0.3s ease" }}
         >
           {pages[leftPageIndex] ? (
             <PageContent
@@ -281,33 +345,27 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
               bookName={bookName}
               chapter={chapter}
               isFirstPage={leftPageIndex === 0}
+              favorites={favorites}
+              selectedVerse={selectedVerse?.verse ?? null}
+              onVerseClick={handleVerseClick}
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-300 text-sm font-serif italic">
-              â€” end â€”
-            </div>
+            <div className="h-full flex items-center justify-center text-gray-300 text-sm font-serif italic">— end —</div>
           )}
-          {/* Page number */}
-          <div className="absolute bottom-4 left-10 text-gray-400 text-xs font-sans">
-            {leftPageIndex + 1}
-          </div>
+          <div className="absolute bottom-4 left-10 text-gray-400 text-xs font-sans">{leftPageIndex + 1}</div>
         </div>
 
         {/* Book Spine */}
         <div className="w-8 h-full bg-gradient-to-r from-[#ddd8cc] via-[#efe9d8] to-[#ddd8cc] flex-shrink-0 z-10 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-transparent"></div>
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-black/10"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-transparent" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-black/10" />
         </div>
 
         {/* Right Page */}
-        <div 
+        <div
           className="w-1/2 h-full bg-[#f9f8f3] relative cursor-pointer group"
           onClick={goNextDesktop}
-          style={{
-            boxShadow: "inset 8px 0 20px rgba(0,0,0,0.06)",
-            transform: isAnimating && animDir === "right" ? "translateX(4px)" : "translateX(0)",
-            transition: "transform 0.3s ease",
-          }}
+          style={{ boxShadow: "inset 8px 0 20px rgba(0,0,0,0.06)", transform: isAnimating && animDir === "right" ? "translateX(4px)" : "translateX(0)", transition: "transform 0.3s ease" }}
         >
           {pages[rightPageIndex] ? (
             <PageContent
@@ -315,29 +373,26 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
               bookName={bookName}
               chapter={chapter}
               isFirstPage={rightPageIndex === 0}
+              favorites={favorites}
+              selectedVerse={selectedVerse?.verse ?? null}
+              onVerseClick={handleVerseClick}
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-300 text-sm font-serif italic">
-              â€” end â€”
-            </div>
+            <div className="h-full flex items-center justify-center text-gray-300 text-sm font-serif italic">— end —</div>
           )}
-          {/* Page number */}
-          <div className="absolute bottom-4 right-10 text-gray-400 text-xs font-sans">
-            {rightPageIndex < pages.length ? rightPageIndex + 1 : ""}
-          </div>
+          <div className="absolute bottom-4 right-10 text-gray-400 text-xs font-sans">{rightPageIndex < pages.length ? rightPageIndex + 1 : ""}</div>
         </div>
 
-        {/* Click Zone indicators */}
         {spread > 0 && (
           <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none flex items-center pl-6 z-20">
-            <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center opacity-0 opacity-100 transition-opacity">
+            <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center">
               <ChevronLeft className="h-8 w-8 text-black/40" />
             </div>
           </div>
         )}
         {spread < totalSpreads - 1 && (
           <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none flex items-center justify-end pr-6 z-20">
-            <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center opacity-0 opacity-100 transition-opacity">
+            <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center">
               <ChevronRight className="h-8 w-8 text-black/40" />
             </div>
           </div>
@@ -356,7 +411,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
               <ChevronLeft className="h-4 w-4" />
             </Link>
           ) : <div className="h-8 w-8" />}
-          
+
           <button
             onClick={() => setShowBookPicker(true)}
             className="flex items-center gap-1 text-white font-sans text-sm font-semibold px-3 py-1 rounded-full hover:bg-white/15 transition-colors"
@@ -370,17 +425,67 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
           </Link>
         </div>
 
+        {/* Fav button shortcut */}
+        <Link href="/profile/favorites" className="h-10 w-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all text-white" title="Ayat Fav ku">
+          <Heart className="h-4 w-4" />
+        </Link>
+
         <div className="hidden md:block text-white/40 text-xs font-sans">
           {spread + 1} / {totalSpreads}
         </div>
       </div>
 
-      {/* Mobile scroll nav */}
-      <div className="md:hidden fixed bottom-24 left-0 right-0 px-4 flex justify-center gap-3">
-        {/* same nav pill but for mobile, sticky */}
-      </div>
+      {/* ── VERSE ACTION POPUP ─────────────────────────────────────────────── */}
+      {selectedVerse && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md">
+          <div className="bg-[#1c1a17] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Verse preview */}
+            <div className="px-5 pt-4 pb-3">
+              <p className="text-white/40 text-[10px] uppercase tracking-widest font-sans mb-1">
+                {bookName} {chapter}:{selectedVerse.verse}
+              </p>
+              <p className="text-white/90 text-sm leading-relaxed font-serif line-clamp-3">
+                {selectedVerse.content}
+              </p>
+            </div>
 
-      {/* Book Picker */}
+            {/* Actions */}
+            <div className="flex border-t border-white/10">
+              <button
+                onClick={saveToFavorites}
+                disabled={savingVerse || !userId}
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
+                  isFavSelected
+                    ? "text-amber-400 hover:bg-amber-900/20"
+                    : "text-white hover:bg-white/5"
+                }`}
+              >
+                {isFavSelected ? (
+                  <><BookmarkCheck className="h-4 w-4" /> Hapus dari Fav</>
+                ) : (
+                  <><Bookmark className="h-4 w-4" /> Simpan ke Ayat Fav ku</>
+                )}
+              </button>
+              <div className="w-px bg-white/10" />
+              <button
+                onClick={() => setSelectedVerse(null)}
+                className="px-4 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TOAST ─────────────────────────────────────────────────────────── */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] bg-black/80 text-white text-sm px-5 py-3 rounded-full shadow-xl backdrop-blur-sm border border-white/10 transition-all">
+          {toast}
+        </div>
+      )}
+
+      {/* ── BOOK PICKER ───────────────────────────────────────────────────── */}
       {showBookPicker && (
         <div
           className="fixed inset-0 z-[60] flex flex-col bg-black/60 backdrop-blur-sm"
@@ -390,18 +495,12 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
             className="mt-auto md:mt-0 md:mx-auto md:my-auto w-full md:max-w-md bg-white md:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <h2 className="text-lg font-bold text-gray-900">{isId ? "Kitab" : "Books"}</h2>
-              <button
-                onClick={() => setShowBookPicker(false)}
-                className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
-              >
+              <button onClick={() => setShowBookPicker(false)} className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            {/* List */}
             <div className="overflow-y-auto flex-1 py-1">
               {([
                 { label: isId ? "Perjanjian Lama" : "Old Testament", books: OLD_TESTAMENT },
@@ -409,20 +508,14 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
                 { label: isId ? "Deuterokanonika" : "Deuterocanonicals", books: DEUTEROCANONICA },
               ]).map((section) => (
                 <div key={section.label}>
-                  <p className="px-5 pt-4 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                    {section.label}
-                  </p>
+                  <p className="px-5 pt-4 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">{section.label}</p>
                   {section.books.map((b) => {
                     const active = b.no === bookId;
                     return (
                       <button
                         key={b.no}
                         onClick={() => pickBook(b)}
-                        className={`w-full text-left px-5 py-3 text-[17px] transition-colors ${
-                          active
-                            ? "bg-brand-gold/15 text-brand-dark font-semibold"
-                            : "text-gray-800 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-left px-5 py-3 text-[17px] transition-colors ${active ? "bg-brand-gold/15 text-brand-dark font-semibold" : "text-gray-800 hover:bg-gray-50"}`}
                       >
                         {bookLabel(b)}
                       </button>
@@ -437,7 +530,3 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
     </div>
   );
 }
-
-
-
-

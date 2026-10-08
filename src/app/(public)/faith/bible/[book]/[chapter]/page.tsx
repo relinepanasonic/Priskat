@@ -1,5 +1,6 @@
 import { getLanguage } from "@/lib/lang";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BookReader from "@/components/faith/BookReader";
@@ -21,8 +22,13 @@ export default async function BibleChapterPage({
   const lang = await getLanguage();
   const isId = lang === 'id';
   
+  // Get logged-in user for favorite verse saving
+  const serverSupabase = await createServerClient();
+  const { data: { session } } = await serverSupabase.auth.getSession();
+  const userId = session?.user?.id ?? null;
+
   // Default to TB for ID, NRSV-CE for EN
-  let version = isId ? 'TB' : (typeof resolvedSearchParams.version === 'string' ? resolvedSearchParams.version : 'NRSV-CE');
+  const version = isId ? 'TB' : (typeof resolvedSearchParams.version === 'string' ? resolvedSearchParams.version : 'NRSV-CE');
 
   let apiData = null;
   try {
@@ -31,7 +37,6 @@ export default async function BibleChapterPage({
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     
-    // Check our custom DB first
     const { data: verses, error } = await supabase
       .from('bible_verses')
       .select('*')
@@ -54,13 +59,7 @@ export default async function BibleChapterPage({
       };
     } 
     
-    // Fallback to external API (for English, or if Indonesian is missing in our DB)
     if (!apiData) {
-      // For english we can use bible-api or just beeble depending on what they want.
-      // Beeble doesn't support English properly, so wait, how did it work for EN before?
-      // Previously, the English logic in page.tsx was just hitting Beeble (which returns Indonesian).
-      // Oh wait, Beeble (alkitab.sabda.org) is ONLY Indonesian TB. So English wasn't actually working for the Bible reader anyway!
-      // Let's just keep hitting Beeble as fallback for now, as that's what the old code did.
       const res = await fetch(`https://beeble.vercel.app/api/v1/passage/${bookId}/${chapter}`, {
         next: { revalidate: 86400 }
       });
@@ -92,6 +91,7 @@ export default async function BibleChapterPage({
       bookId={bookId}
       chapter={chapter}
       lang={lang}
+      userId={userId}
     />
   );
 }

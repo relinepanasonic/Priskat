@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ruang Iman</string>
+    <string name="title_activity_main">Ruang Iman</string>
+    <string name="package_name">com.ruangiman.app</string>
+    <string name="custom_url_scheme">com.ruangiman.app</string>
+</resources>
