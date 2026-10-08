@@ -83,7 +83,10 @@ function PageContent({
           {bookName} {chapter}
         </span>
       </div>
-      <div className="text-[15px] lg:text-[16px] leading-[1.8] text-[#222] font-serif flex-1 mt-4 text-left">
+      <div
+        className="text-[15px] lg:text-[16px] leading-[2] text-[#222] flex-1 mt-4 text-left"
+        style={{ fontFamily: "'Lora', Georgia, serif" }}
+      >
         {verses.map((v, i) => {
           if (v.type === "title") {
             return (

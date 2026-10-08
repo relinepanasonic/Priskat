@@ -81,7 +81,7 @@ export default function FavoriteVersesList({
                     <p className="text-white/40 text-[11px] font-sans font-bold uppercase tracking-wider mb-1">
                       {fav.book_name} {fav.chapter}:{fav.verse_number}
                     </p>
-                    <p className="text-white/85 text-[15px] leading-relaxed font-serif">
+                    <p className="text-white/85 text-[15px] leading-relaxed" style={{ fontFamily: "'Lora', Georgia, serif" }}>
                       {fav.verse_content}
                     </p>
                   </div>
