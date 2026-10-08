@@ -87,8 +87,7 @@ function PageContent({
         {verses.map((v, i) => {
           if (v.type === "title") {
             return (
-              // ① Bold chapter title, clearly different from body
-              <h3 key={i} className="text-base lg:text-lg font-black mt-6 mb-3 text-black block font-sans tracking-wide uppercase text-center border-b border-gray-200 pb-2">
+              <h3 key={i} className="font-extrabold mt-6 mb-3 text-black block font-sans">
                 {v.content}
               </h3>
             );
