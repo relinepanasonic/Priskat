@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Book, Heart, Sunrise } from "lucide-react";
+import { Book, Heart, Sunrise, Disc, CalendarCheck } from "lucide-react";
 
 export default function FaithLayoutClient({ children, lang }: { children: React.ReactNode, lang: "id" | "en" }) {
   const pathname = usePathname();
@@ -13,6 +13,8 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
     { name: lang === "id" ? "Alkitab" : "Bible", href: "/faith/bible", icon: Book },
     { name: lang === "id" ? "Doa" : "Prayer", href: "/faith/prayers", icon: Heart },
     { name: lang === "id" ? "Renungan" : "Devotion", href: "/faith/devotions", icon: Sunrise },
+    { name: lang === "id" ? "Soaking Audio" : "Soaking", href: "/faith/soaking", icon: Disc },
+    { name: lang === "id" ? "Rencana Baca" : "Plans", href: "/faith/plans", icon: CalendarCheck },
   ];
 
   return (

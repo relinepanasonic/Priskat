@@ -126,10 +126,27 @@ export default function DailyVerseCard({ isId = false }: { isId?: boolean }) {
   const [isSharing, setIsSharing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  const [timeLeft, setTimeLeft] = useState("");
+
   useEffect(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     setVerse(DAILY_VERSES[dayOfYear % DAILY_VERSES.length]);
     setBg(BACKGROUNDS[dayOfYear % BACKGROUNDS.length]);
+
+    // Calculate time until midnight
+    const updateCountdown = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const diffMs = midnight.getTime() - now.getTime();
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft(`${hours}j ${minutes}m`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleShare = async () => {
@@ -162,6 +179,19 @@ export default function DailyVerseCard({ isId = false }: { isId?: boolean }) {
 
   return (
     <div className="w-full flex flex-col items-center mb-6">
+      {/* 24-Hour Timer Bar */}
+      <div className="w-full flex items-center justify-between px-2 mb-2 text-xs">
+        <span className="font-semibold text-gray-300 flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          {isId ? "Ayat Hari Ini Exclusif" : "Exclusive Daily Verse"}
+        </span>
+        {timeLeft && (
+          <span className="text-[11px] font-medium text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+            ⏳ {isId ? `Berganti dalam ${timeLeft}` : `Resets in ${timeLeft}`}
+          </span>
+        )}
+      </div>
+
       <div
         ref={cardRef}
         className="relative w-full aspect-[16/9] overflow-hidden rounded-2xl shadow-2xl bg-black"
@@ -212,8 +242,8 @@ export default function DailyVerseCard({ isId = false }: { isId?: boolean }) {
           </p>
 
           {/* Watermark */}
-          <p className="absolute bottom-3 text-[8px] uppercase tracking-[0.35em] text-white/20 font-sans">
-            Priskat CFM
+          <p className="absolute bottom-3 text-[8px] uppercase tracking-[0.35em] text-white/30 font-sans font-bold">
+            Ruang Iman
           </p>
         </div>
       </div>
