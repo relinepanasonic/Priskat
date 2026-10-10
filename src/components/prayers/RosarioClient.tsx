@@ -4,6 +4,12 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import RosaryBeads3D, { stepToBeadPos } from "./RosaryBeads3D";
+import SwipeDial from "./SwipeDial";
+
+type ViewMode = "2d" | "3d";
+const VIEW_KEY = "rosario-view";
+const ROMAN = ["", "I", "II", "III", "IV", "V"];
 
 // ─── PRAYER TEXTS ─────────────────────────────────────────────────────────────
 const AKU_PERCAYA = `Aku percaya akan Allah, Bapa yang mahakuasa,\npencipta langit dan bumi.\nDan akan Yesus Kristus, Putra-Nya yang tunggal, Tuhan kita,\nyang dikandung dari Roh Kudus, dilahirkan oleh Perawan Maria;\nyang menderita sengsara dalam pemerintahan Pontius Pilatus,\ndisalibkan, wafat, dan dimakamkan;\nyang turun ke tempat penantian;\npada hari ketiga bangkit dari antara orang mati;\nyang naik ke surga, duduk di sebelah kanan Allah Bapa;\ndari situ Ia akan datang mengadili orang yang hidup dan yang mati.\nAku percaya akan Roh Kudus, Gereja Katolik yang kudus,\npersekutuan para kudus, pengampunan dosa,\nkebangkitan badan, kehidupan kekal. Amin.`;
@@ -329,14 +335,38 @@ export default function RosarioClient() {
       transitionTo(() => setDone(true));
       return;
     }
-    transitionTo(() => setStepIdx(s => s + 1));
-  }, [isLast, transitionTo]);
+    transitionTo(() => setStepIdx(s => Math.min(s + 1, steps.length - 1)));
+  }, [isLast, transitionTo, steps.length]);
 
   const handlePrev = useCallback(() => {
     if (stepIdx > 0) {
-      transitionTo(() => setStepIdx(s => s - 1));
+      transitionTo(() => setStepIdx(s => Math.max(s - 1, 0)));
     }
   }, [stepIdx, transitionTo]);
+
+  // 2D / 3D view, remembered per device
+  const [view, setView] = useState<ViewMode>("2d");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      if (saved === "2d" || saved === "3d") setView(saved);
+    } catch { /* storage unavailable */ }
+  }, []);
+  const changeView = (v: ViewMode) => {
+    setView(v);
+    try { localStorage.setItem(VIEW_KEY, v); } catch { /* storage unavailable */ }
+  };
+
+  // Keyboard: → / Space / Enter = lanjut, ← = kembali
+  useEffect(() => {
+    if (!chosen || done) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") { e.preventDefault(); handleNext(); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); handlePrev(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [chosen, done, handleNext, handlePrev]);
 
   const restart = () => {
     setChosen(null);
@@ -424,6 +454,20 @@ export default function RosarioClient() {
 
   // ── PRAYER STEP ─────────────────────────────────────────────────────────────
   const peristiwa = PERISTIWA[chosen];
+  const beadPos = stepToBeadPos(current.beadType, current.decade, current.beadIndex);
+
+  // Dial readout
+  const dial = (() => {
+    if (isLast) return { big: "Amin", small: "selesai" };
+    switch (current.beadType) {
+      case "cross": return { big: "✝", small: "aku percaya" };
+      case "hail-mary": return { big: String(current.beadIndex), small: `manik / ${current.decade ? 10 : 3}` };
+      case "our-father": return { big: "✦", small: "bapa kami" };
+      case "mystery": return { big: ROMAN[current.decade ?? 0], small: "peristiwa" };
+      case "glory": return { big: "✧", small: current.title === "Terpujilah" ? "fatima" : "kemuliaan" };
+      default: return { big: String(stepIdx + 1), small: "langkah" };
+    }
+  })();
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col select-none overflow-hidden">
@@ -439,19 +483,46 @@ export default function RosarioClient() {
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/90" />
 
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="relative z-10 flex flex-col h-[100dvh]">
 
         {/* ── TOP BAR ── */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+        <div className="relative z-20 flex items-start justify-between px-5 pt-5 pb-2">
           <button
             onClick={stepIdx === 0 ? restart : handlePrev}
+            aria-label="Kembali"
             className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all active:scale-90"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div className="text-center">
+          <div className="flex flex-col items-center gap-2">
             <p className="text-white/40 text-[10px] uppercase tracking-widest">{peristiwa.emoji} {peristiwa.label}</p>
+
+            {/* 2D / 3D toggle */}
+            <div
+              role="tablist"
+              aria-label="Tampilan rosario"
+              className="inline-flex p-0.5 rounded-full backdrop-blur-md"
+              style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${accent}40` }}
+            >
+              {(["2d", "3d"] as ViewMode[]).map((m) => {
+                const on = view === m;
+                return (
+                  <button
+                    key={m}
+                    role="tab"
+                    aria-selected={on}
+                    onClick={() => changeView(m)}
+                    className="px-3.5 py-1 rounded-full text-[10px] font-semibold tracking-[0.2em] transition-all duration-300"
+                    style={on
+                      ? { background: `linear-gradient(135deg, ${accent}55, ${accent}25)`, color: "#fff", boxShadow: `0 0 12px ${accent}55, inset 0 1px 0 rgba(255,255,255,0.15)` }
+                      : { color: "rgba(255,255,255,0.45)" }}
+                  >
+                    {m.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="w-9 h-9 flex items-center justify-center">
@@ -459,21 +530,29 @@ export default function RosarioClient() {
           </div>
         </div>
 
-        {/* ── ROSARY VISUAL (replaces bead dots) ── */}
-        <div className="px-6 py-1">
-          <RosaryVisual steps={steps} stepIdx={stepIdx} accent={accent} />
-        </div>
+        {/* ── ROSARY VISUAL ── */}
+        {view === "2d" ? (
+          <div className="px-6 py-1">
+            <RosaryVisual steps={steps} stepIdx={stepIdx} accent={accent} />
+          </div>
+        ) : (
+          <div
+            className="relative flex-shrink-0 h-[40dvh] min-h-[230px] -mt-14 lg:mt-0 lg:absolute lg:inset-y-0 lg:left-0 lg:h-full lg:w-[45%] [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_72%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_18%,black_72%,transparent)] lg:[mask-image:linear-gradient(to_right,black_65%,transparent)] lg:[-webkit-mask-image:linear-gradient(to_right,black_65%,transparent)]"
+          >
+            <RosaryBeads3D pos={beadPos} accent={accent} />
+          </div>
+        )}
 
         {/* ── PRAYER TEXT — fades in/out ── */}
         <div
-          className="flex-1 overflow-y-auto scrollbar-hide px-6 pt-2 pb-4 flex flex-col lg:w-[55%] lg:ml-auto lg:pr-20 lg:pl-10 lg:justify-end lg:pb-12"
+          className="relative flex-1 overflow-y-auto scrollbar-hide px-6 pt-2 pb-48 md:pb-4 flex flex-col lg:w-[55%] lg:ml-auto lg:pr-20 lg:pl-10 lg:pb-12"
           style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "translateY(0)" : "translateY(10px)",
             transition: "opacity 0.3s ease, transform 0.3s ease",
           }}
         >
-          <div className="w-full max-w-2xl mr-auto lg:ml-auto lg:mr-0">
+          <div className="w-full max-w-2xl mr-auto lg:ml-auto lg:mr-0 lg:mt-auto">
             {/* Phase label */}
             <p className="text-white/40 text-[10px] lg:text-xs uppercase tracking-widest mb-2 lg:mb-3 font-semibold">{current.phase}</p>
 
@@ -502,8 +581,11 @@ export default function RosarioClient() {
           </div>
         </div>
 
-        {/* ── BOTTOM: Round Press Button ── */}
-        <div className="flex flex-col items-center pb-12 pt-6 flex-shrink-0">
+        {/* ── PHONE: Swipe dial (bottom right) ── */}
+        <SwipeDial accent={accent} big={dial.big} small={dial.small} onNext={handleNext} onPrev={handlePrev} />
+
+        {/* ── TABLET / DESKTOP: Round Press Button ── */}
+        <div className="relative hidden md:flex flex-col items-center pb-12 pt-6 flex-shrink-0">
           <p className="text-white/20 text-[10px] mb-6 uppercase tracking-wider">{current.phase}</p>
 
           {/* THE BIG ROUND BUTTON */}
