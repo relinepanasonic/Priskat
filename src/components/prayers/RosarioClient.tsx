@@ -82,59 +82,219 @@ interface Step {
   sub?: string;
   text: string;
   counter?: string;
+  beadType?: "cross" | "our-father" | "hail-mary" | "glory" | "mystery" | "closing";
+  beadIndex?: number; // which bead position in the decade (1-10 for hail marys)
+  decade?: number;    // 0 = opening, 1-5 = decade
 }
 
 function buildSteps(pk: PeristiwaKey): Step[] {
   const p = PERISTIWA[pk];
   const steps: Step[] = [];
 
-  steps.push({ phase: "Pembukaan", title: "Aku Percaya", text: AKU_PERCAYA });
-  steps.push({ phase: "Pembukaan", title: "Bapa Kami", text: BAPA_KAMI });
-  steps.push({ phase: "Pembukaan", title: "Salam Maria", sub: "untuk iman", text: SALAM_MARIA, counter: "1 / 3" });
-  steps.push({ phase: "Pembukaan", title: "Salam Maria", sub: "untuk pengharapan", text: SALAM_MARIA, counter: "2 / 3" });
-  steps.push({ phase: "Pembukaan", title: "Salam Maria", sub: "untuk kasih", text: SALAM_MARIA, counter: "3 / 3" });
-  steps.push({ phase: "Pembukaan", title: "Kemuliaan", text: KEMULIAAN });
+  // Opening
+  steps.push({ phase: "Pembukaan", title: "Aku Percaya", text: AKU_PERCAYA, beadType: "cross" });
+  steps.push({ phase: "Pembukaan", title: "Bapa Kami", text: BAPA_KAMI, beadType: "our-father", decade: 0 });
+  steps.push({ phase: "Pembukaan", title: "Salam Putri Allah Bapa", sub: "Salam Maria pertama — untuk iman", text: SALAM_MARIA, counter: "1 / 3", beadType: "hail-mary", beadIndex: 1, decade: 0 });
+  steps.push({ phase: "Pembukaan", title: "Salam Bunda Allah Putra", sub: "Salam Maria kedua — untuk pengharapan", text: SALAM_MARIA, counter: "2 / 3", beadType: "hail-mary", beadIndex: 2, decade: 0 });
+  steps.push({ phase: "Pembukaan", title: "Salam Mempelai Allah Roh Kudus", sub: "Salam Maria ketiga — untuk kasih", text: SALAM_MARIA, counter: "3 / 3", beadType: "hail-mary", beadIndex: 3, decade: 0 });
+  steps.push({ phase: "Pembukaan", title: "Kemuliaan", text: KEMULIAAN, beadType: "glory", decade: 0 });
 
+  // 5 Decades
   p.mysteries.forEach((m, i) => {
+    const dec = i + 1;
     steps.push({
-      phase: `Dekade ${i + 1}`,
+      phase: `Dekade ${dec}`,
       title: m.title,
       sub: `${m.ref}  ·  Intensi: ${m.intention}`,
       text: `Renungkanlah peristiwa ini dalam hati...\n\n"${m.ref}"`,
+      beadType: "mystery",
+      decade: dec,
     });
-    steps.push({ phase: `Dekade ${i + 1}`, title: "Bapa Kami", text: BAPA_KAMI });
+    steps.push({ phase: `Dekade ${dec}`, title: "Bapa Kami", text: BAPA_KAMI, beadType: "our-father", decade: dec });
     for (let j = 1; j <= 10; j++) {
-      steps.push({ phase: `Dekade ${i + 1}`, title: "Salam Maria", sub: `Manik ke-${j}`, text: SALAM_MARIA, counter: `${j} / 10` });
+      steps.push({ phase: `Dekade ${dec}`, title: "Salam Maria", sub: `Manik ke-${j}`, text: SALAM_MARIA, counter: `${j} / 10`, beadType: "hail-mary", beadIndex: j, decade: dec });
     }
-    steps.push({ phase: `Dekade ${i + 1}`, title: "Kemuliaan", text: KEMULIAAN });
-    steps.push({ phase: `Dekade ${i + 1}`, title: "Terpujilah", sub: "Doa Fatima", text: TERPUJILAH });
+    steps.push({ phase: `Dekade ${dec}`, title: "Kemuliaan", text: KEMULIAAN, beadType: "glory", decade: dec });
+    steps.push({ phase: `Dekade ${dec}`, title: "Terpujilah", sub: "Doa Fatima", text: TERPUJILAH, beadType: "glory", decade: dec });
   });
 
-  steps.push({ phase: "Penutup", title: "Salam Ya Ratu", text: SALAM_YA_RATU });
+  steps.push({ phase: "Penutup", title: "Salam Ya Ratu", text: SALAM_YA_RATU, beadType: "closing" });
   return steps;
 }
 
-// ─── BEAD DOTS ────────────────────────────────────────────────────────────────
-function BeadDots({ current, total, accent }: { current: number; total: number; accent: string }) {
-  const MAX = 22;
-  const step = Math.max(1, Math.ceil(total / MAX));
-  const dots = Math.ceil(total / step);
-  const filled = Math.round((current / total) * dots);
+// ─── ANIMATED ROSARY VISUAL ────────────────────────────────────────────────────
+function RosaryVisual({ steps, stepIdx, accent }: { steps: Step[]; stepIdx: number; accent: string }) {
+  const current = steps[stepIdx];
+  const decade = current?.decade ?? 0;
+  const beadIndex = current?.beadIndex ?? 0;
+  const beadType = current?.beadType ?? "hail-mary";
+
+  // Compute how many hail marys done in the current decade
+  const hailMarysDone = beadType === "hail-mary" ? beadIndex : beadType === "glory" ? 10 : 0;
+
   return (
-    <div className="flex items-center gap-1 flex-wrap justify-center">
-      {Array.from({ length: dots }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-500"
-          style={{
-            width: i < filled ? "10px" : "7px",
-            height: i < filled ? "10px" : "7px",
-            background: i < filled ? accent : "rgba(255,255,255,0.15)",
-            boxShadow: i < filled ? `0 0 8px ${accent}99` : "none",
-          }}
-        />
-      ))}
+    <div className="flex flex-col items-center py-4 select-none">
+      {/* Rosary chain visualisation */}
+      <div className="flex flex-col items-center gap-1.5">
+
+        {/* Cross bead */}
+        <div className="flex flex-col items-center gap-0.5">
+          <div
+            className="w-5 h-7 rounded-sm flex items-center justify-center text-[11px] shadow-lg transition-all duration-500"
+            style={{
+              background: beadType === "cross"
+                ? `radial-gradient(circle at 35% 30%, #fff, ${accent})`
+                : "rgba(255,255,255,0.12)",
+              boxShadow: beadType === "cross"
+                ? `0 0 18px 6px ${accent}99, 0 0 40px ${accent}55`
+                : "none",
+              border: `1px solid ${beadType === "cross" ? accent : "rgba(255,255,255,0.18)"}`,
+            }}
+          >
+            ✝
+          </div>
+          <div className="w-px h-2 bg-white/20" />
+        </div>
+
+        {/* Opening 3 hail-mary beads */}
+        <div className="flex items-center gap-1">
+          {[1, 2, 3].map((n) => {
+            const isActive = decade === 0 && beadType === "hail-mary" && beadIndex === n;
+            const isPast = decade > 0 || (decade === 0 && beadType === "glory") || (decade === 0 && beadType === "hail-mary" && beadIndex > n);
+            return (
+              <div key={n} className="flex items-center">
+                {n > 1 && <div className="w-2 h-px bg-white/20" />}
+                <div
+                  className="rounded-full transition-all duration-500"
+                  style={{
+                    width: isActive ? "14px" : "10px",
+                    height: isActive ? "14px" : "10px",
+                    background: isActive
+                      ? `radial-gradient(circle at 35% 30%, #fff, ${accent})`
+                      : isPast
+                        ? `${accent}88`
+                        : "rgba(255,255,255,0.15)",
+                    boxShadow: isActive
+                      ? `0 0 14px 5px ${accent}bb, 0 0 30px ${accent}66`
+                      : isPast
+                        ? `0 0 6px ${accent}55`
+                        : "none",
+                    border: `1px solid ${isActive ? accent : isPast ? `${accent}60` : "rgba(255,255,255,0.2)"}`,
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Opening Our Father */}
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="w-px h-2 bg-white/20" />
+          <OurFatherBead
+            isActive={beadType === "our-father" && decade === 0}
+            isPast={decade > 0}
+            accent={accent}
+          />
+          <div className="w-px h-2 bg-white/20" />
+        </div>
+
+        {/* 5 Decades in a circle-like chain */}
+        <div className="flex flex-col items-center gap-2">
+          {[1, 2, 3, 4, 5].map((dec) => {
+            const isCurrentDec = decade === dec;
+            const isPastDec = decade > dec;
+            return (
+              <div key={dec} className="flex items-center gap-1">
+                {/* Our Father bead */}
+                {dec > 1 && (
+                  <div className="flex flex-col items-center">
+                    <div className="w-px h-2 bg-white/20" />
+                    <OurFatherBead
+                      isActive={isCurrentDec && beadType === "our-father"}
+                      isPast={isPastDec}
+                      accent={accent}
+                    />
+                    <div className="w-px h-2 bg-white/20" />
+                  </div>
+                )}
+
+                {/* 10 hail-mary beads */}
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 10 }).map((_, idx) => {
+                    const beadN = idx + 1;
+                    const isActive = isCurrentDec && beadType === "hail-mary" && beadIndex === beadN;
+                    const isPast = isPastDec || (isCurrentDec && hailMarysDone >= beadN);
+                    return (
+                      <div key={idx} className="flex items-center">
+                        {idx > 0 && <div className="w-0.5 h-px bg-white/15" />}
+                        <div
+                          className="rounded-full transition-all duration-500"
+                          style={{
+                            width: isActive ? "13px" : "8px",
+                            height: isActive ? "13px" : "8px",
+                            background: isActive
+                              ? `radial-gradient(circle at 35% 30%, #fff, ${accent})`
+                              : isPast
+                                ? `${accent}88`
+                                : "rgba(255,255,255,0.12)",
+                            boxShadow: isActive
+                              ? `0 0 12px 4px ${accent}cc, 0 0 28px ${accent}66`
+                              : isPast
+                                ? `0 0 4px ${accent}44`
+                                : "none",
+                            border: `1px solid ${isActive ? accent : isPast ? `${accent}55` : "rgba(255,255,255,0.18)"}`,
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Closing */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-px h-2 bg-white/20" />
+          <div
+            className="w-3 h-3 rounded-full transition-all duration-500"
+            style={{
+              background: beadType === "closing"
+                ? `radial-gradient(circle at 35% 30%, #fff, ${accent})`
+                : "rgba(255,255,255,0.12)",
+              boxShadow: beadType === "closing"
+                ? `0 0 14px 5px ${accent}cc, 0 0 30px ${accent}66`
+                : "none",
+              border: `1px solid ${beadType === "closing" ? accent : "rgba(255,255,255,0.2)"}`,
+            }}
+          />
+        </div>
+      </div>
     </div>
+  );
+}
+
+function OurFatherBead({ isActive, isPast, accent }: { isActive: boolean; isPast: boolean; accent: string }) {
+  return (
+    <div
+      className="rounded-full transition-all duration-500 flex items-center justify-center"
+      style={{
+        width: isActive ? "18px" : "13px",
+        height: isActive ? "18px" : "13px",
+        background: isActive
+          ? `radial-gradient(circle at 35% 30%, #fff, ${accent})`
+          : isPast
+            ? `${accent}aa`
+            : "rgba(255,255,255,0.18)",
+        boxShadow: isActive
+          ? `0 0 20px 8px ${accent}cc, 0 0 40px ${accent}77`
+          : isPast
+            ? `0 0 8px ${accent}66`
+            : "none",
+        border: `1.5px solid ${isActive ? accent : isPast ? `${accent}70` : "rgba(255,255,255,0.22)"}`,
+      }}
+    />
   );
 }
 
@@ -276,8 +436,8 @@ export default function RosarioClient() {
         priority
       />
 
-      {/* Gradient: dark at very top for readability, lighter in middle, dark at bottom */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/10 to-black/90" />
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/90" />
 
       <div className="relative z-10 flex flex-col min-h-screen">
 
@@ -299,12 +459,12 @@ export default function RosarioClient() {
           </div>
         </div>
 
-        {/* ── BEAD PROGRESS ── */}
-        <div className="px-6 py-3">
-          <BeadDots current={stepIdx + 1} total={steps.length} accent={accent} />
+        {/* ── ROSARY VISUAL (replaces bead dots) ── */}
+        <div className="px-6 py-1">
+          <RosaryVisual steps={steps} stepIdx={stepIdx} accent={accent} />
         </div>
 
-        {/* ── PRAYER TEXT — fades in/out, scrollable, right-aligned on PC ── */}
+        {/* ── PRAYER TEXT — fades in/out ── */}
         <div
           className="flex-1 overflow-y-auto scrollbar-hide px-6 pt-2 pb-4 flex flex-col lg:w-[55%] lg:ml-auto lg:pr-20 lg:pl-10 lg:justify-end lg:pb-12"
           style={{
@@ -344,7 +504,6 @@ export default function RosarioClient() {
 
         {/* ── BOTTOM: Round Press Button ── */}
         <div className="flex flex-col items-center pb-12 pt-6 flex-shrink-0">
-          {/* Phase dots mini nav */}
           <p className="text-white/20 text-[10px] mb-6 uppercase tracking-wider">{current.phase}</p>
 
           {/* THE BIG ROUND BUTTON */}
