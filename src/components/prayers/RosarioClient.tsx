@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, List, RotateCcw, X } from "lucide-react";
 import RosaryBeads3D, { stepToBeadPos } from "./RosaryBeads3D";
 import SwipeDial from "./SwipeDial";
 import { fetchBibleVerse } from "@/lib/bible/api";
@@ -333,6 +333,13 @@ export default function RosarioClient() {
   const isLast = stepIdx === steps.length - 1;
   const accent = chosen ? PERISTIWA[chosen].accentColor : "#d4a017";
 
+  // Section menu (jump to Pembukaan / Dekade 1-5 / Penutup)
+  const [menuOpen, setMenuOpen] = useState(false);
+  const jumpTo = (idx: number) => {
+    setMenuOpen(false);
+    if (idx !== stepIdx) transitionTo(() => setStepIdx(idx));
+  };
+
   // Fade out → change → fade in
   const transitionTo = useCallback((fn: () => void) => {
     setVisible(false);
@@ -389,12 +396,19 @@ export default function RosarioClient() {
   useEffect(() => {
     if (!chosen || done) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") { e.preventDefault(); handleNext(); }
+      if (menuOpen) {
+        if (e.key === "Escape") setMenuOpen(false);
+        return;
+      }
+      // Don't steal Space/Enter from a focused button or link
+      const onControl = (e.target as HTMLElement | null)?.closest("button, a");
+      if (!onControl && (e.key === "ArrowRight" || e.key === " " || e.key === "Enter")) { e.preventDefault(); handleNext(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); handleNext(); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); handlePrev(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [chosen, done, handleNext, handlePrev]);
+  }, [chosen, done, menuOpen, handleNext, handlePrev]);
 
   const restart = () => {
     setChosen(null);
@@ -515,13 +529,13 @@ export default function RosarioClient() {
 
         {/* ── TOP BAR ── */}
         <div className="relative z-20 flex items-start justify-between px-5 pt-5 pb-2">
-          <button
-            onClick={stepIdx === 0 ? restart : handlePrev}
-            aria-label="Kembali"
+          <Link
+            href="/faith/prayers"
+            aria-label="Kembali ke Doa"
             className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all active:scale-90"
           >
             <ChevronLeft className="h-5 w-5" />
-          </button>
+          </Link>
 
           <div className="flex flex-col items-center gap-2">
             <p className="text-white/40 text-[10px] uppercase tracking-widest">{peristiwa.emoji} {peristiwa.label}</p>
@@ -553,10 +567,58 @@ export default function RosarioClient() {
             </div>
           </div>
 
-          <div className="w-9 h-9 flex items-center justify-center">
-            <span className="text-white/30 text-xs font-mono">{stepIdx + 1}/{steps.length}</span>
-          </div>
+          <button
+            onClick={() => setMenuOpen(true)}
+            aria-label="Pilih bagian doa"
+            className="h-9 px-3 rounded-full bg-white/10 flex items-center gap-1.5 text-white/70 hover:text-white hover:bg-white/20 transition-all active:scale-95"
+            style={{ border: `1px solid ${accent}40` }}
+          >
+            <List className="h-4 w-4" style={{ color: accent }} />
+            <span className="text-[11px] font-mono">{stepIdx + 1}/{steps.length}</span>
+          </button>
         </div>
+
+        {/* ── SECTION MENU ── */}
+        {menuOpen && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true" aria-label="Pilih bagian doa">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
+            <div
+              className="relative w-full sm:max-w-md max-h-[78dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 pb-8"
+              style={{ background: "linear-gradient(170deg, #2A2D34, #17181C)", border: `1px solid ${accent}40`, boxShadow: `0 -10px 50px ${accent}22` }}
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-semibold" style={{ fontFamily: "'Lora', Georgia, serif" }}>Lompat ke bagian</h3>
+                <button onClick={() => setMenuOpen(false)} aria-label="Tutup" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <ul className="space-y-1.5">
+                {steps
+                  .map((s, i) => ({ s, i }))
+                  .filter(({ s, i }) => i === 0 || s.phase !== steps[i - 1].phase)
+                  .map(({ s, i }) => {
+                    const on = s.phase === current.phase;
+                    const sub = s.beadType === "mystery" ? s.title : s.phase === "Penutup" ? "Salam Ya Ratu" : "Aku Percaya · Bapa Kami · 3 Salam Maria";
+                    return (
+                      <li key={s.phase}>
+                        <button
+                          onClick={() => jumpTo(i)}
+                          className="w-full text-left px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
+                          style={on
+                            ? { background: `${accent}22`, border: `1px solid ${accent}70` }
+                            : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                        >
+                          <div className="text-[10px] uppercase tracking-widest" style={{ color: on ? accent : "rgba(255,255,255,0.4)" }}>{s.phase}</div>
+                          <div className="text-white/90 text-sm mt-0.5">{sub}</div>
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* ── ROSARY VISUAL ── */}
         {view === "2d" ? (
