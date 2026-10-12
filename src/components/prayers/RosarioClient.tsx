@@ -6,10 +6,17 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import RosaryBeads3D, { stepToBeadPos } from "./RosaryBeads3D";
 import SwipeDial from "./SwipeDial";
+import { fetchBibleVerse } from "@/lib/bible/api";
 
 type ViewMode = "2d" | "3d";
 const VIEW_KEY = "rosario-view";
 const ROMAN = ["", "I", "II", "III", "IV", "V"];
+
+// Short refs used in PERISTIWA -> book names the Bible API understands
+const BOOK_FULL: Record<string, string> = {
+  Mat: "Matius", Mrk: "Markus", Luk: "Lukas", Yoh: "Yohanes", Kis: "Kisah Para Rasul", Why: "Wahyu",
+};
+const fullRef = (ref: string) => ref.replace(/^(\S+)/, (b) => BOOK_FULL[b] ?? b);
 
 // ─── PRAYER TEXTS ─────────────────────────────────────────────────────────────
 const AKU_PERCAYA = `Aku percaya akan Allah, Bapa yang mahakuasa,\npencipta langit dan bumi.\nDan akan Yesus Kristus, Putra-Nya yang tunggal, Tuhan kita,\nyang dikandung dari Roh Kudus, dilahirkan oleh Perawan Maria;\nyang menderita sengsara dalam pemerintahan Pontius Pilatus,\ndisalibkan, wafat, dan dimakamkan;\nyang turun ke tempat penantian;\npada hari ketiga bangkit dari antara orang mati;\nyang naik ke surga, duduk di sebelah kanan Allah Bapa;\ndari situ Ia akan datang mengadili orang yang hidup dan yang mati.\nAku percaya akan Roh Kudus, Gereja Katolik yang kudus,\npersekutuan para kudus, pengampunan dosa,\nkebangkitan badan, kehidupan kekal. Amin.`;
@@ -91,6 +98,7 @@ interface Step {
   beadType?: "cross" | "our-father" | "hail-mary" | "glory" | "mystery" | "closing";
   beadIndex?: number; // which bead position in the decade (1-10 for hail marys)
   decade?: number;    // 0 = opening, 1-5 = decade
+  ref?: string;       // Bible reference for mystery steps
 }
 
 function buildSteps(pk: PeristiwaKey): Step[] {
@@ -114,6 +122,7 @@ function buildSteps(pk: PeristiwaKey): Step[] {
       sub: `${m.ref}  ·  Intensi: ${m.intention}`,
       text: `Renungkanlah peristiwa ini dalam hati...\n\n"${m.ref}"`,
       beadType: "mystery",
+      ref: m.ref,
       decade: dec,
     });
     steps.push({ phase: `Dekade ${dec}`, title: "Bapa Kami", text: BAPA_KAMI, beadType: "our-father", decade: dec });
@@ -310,6 +319,10 @@ export default function RosarioClient() {
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
 
+  // Scripture for each mystery, loaded from the app's own Bible (TB)
+  const [verses, setVerses] = useState<Record<string, string>>({});
+  const textRef = useRef<HTMLDivElement>(null);
+
   // Fade state
   const [visible, setVisible] = useState(true);
   const [pressing, setPressing] = useState(false);
@@ -356,6 +369,21 @@ export default function RosarioClient() {
     setView(v);
     try { localStorage.setItem(VIEW_KEY, v); } catch { /* storage unavailable */ }
   };
+
+  // Load the five mysteries' verses as soon as a peristiwa is chosen
+  useEffect(() => {
+    if (!chosen) return;
+    let cancelled = false;
+    PERISTIWA[chosen].mysteries.forEach((m) => {
+      fetchBibleVerse(fullRef(m.ref), "id").then((text) => {
+        if (!cancelled) setVerses((v) => ({ ...v, [m.ref]: text }));
+      });
+    });
+    return () => { cancelled = true; };
+  }, [chosen]);
+
+  // Each new prayer starts at the top of the text
+  useEffect(() => { textRef.current?.scrollTo({ top: 0 }); }, [stepIdx]);
 
   // Keyboard: → / Space / Enter = lanjut, ← = kembali
   useEffect(() => {
@@ -532,7 +560,8 @@ export default function RosarioClient() {
 
         {/* ── ROSARY VISUAL ── */}
         {view === "2d" ? (
-          <div className="px-6 py-1">
+          // Pinned to the left so the prayer text gets the rest of the screen
+          <div className="absolute left-1 top-[92px] z-10 origin-top-left scale-[0.74] pointer-events-none lg:left-12 lg:scale-90">
             <RosaryVisual steps={steps} stepIdx={stepIdx} accent={accent} />
           </div>
         ) : (
@@ -545,7 +574,8 @@ export default function RosarioClient() {
 
         {/* ── PRAYER TEXT — fades in/out ── */}
         <div
-          className="relative flex-1 overflow-y-auto scrollbar-hide px-6 pt-2 pb-48 md:pb-4 flex flex-col lg:w-[55%] lg:ml-auto lg:pr-20 lg:pl-10 lg:pb-12"
+          ref={textRef}
+          className={`relative flex-1 overflow-y-auto scrollbar-hide pt-2 pb-48 md:pb-4 flex flex-col lg:w-[55%] lg:ml-auto lg:pr-20 lg:pl-10 lg:pb-12 ${view === "2d" ? "pl-[108px] pr-4 md:pl-[140px]" : "px-6"}`}
           style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "translateY(0)" : "translateY(10px)",
@@ -576,8 +606,13 @@ export default function RosarioClient() {
 
             {/* Prayer body */}
             <p className="text-white/90 text-sm lg:text-[22px] leading-[1.9] lg:leading-[1.8] font-light whitespace-pre-wrap drop-shadow-lg">
-              {current.text}
+              {current.ref
+                ? `Renungkanlah peristiwa ini dalam hati…\n\n${verses[current.ref] ?? "Memuat ayat…"}`
+                : current.text}
             </p>
+            {current.ref && (
+              <p className="mt-3 text-xs lg:text-base italic" style={{ color: accent }}>— {fullRef(current.ref)}</p>
+            )}
           </div>
         </div>
 
