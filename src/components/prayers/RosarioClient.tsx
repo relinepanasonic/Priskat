@@ -532,7 +532,7 @@ export default function RosarioClient() {
           <Link
             href="/faith/prayers"
             aria-label="Kembali ke Doa"
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all active:scale-90"
+            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all active:scale-90"
           >
             <ChevronLeft className="h-5 w-5" />
           </Link>
@@ -628,7 +628,7 @@ export default function RosarioClient() {
           </div>
         ) : (
           <div
-            className="relative flex-shrink-0 h-[40dvh] min-h-[230px] -mt-14 lg:mt-0 lg:absolute lg:inset-y-0 lg:left-0 lg:h-full lg:w-[45%] [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_72%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_18%,black_72%,transparent)] lg:[mask-image:linear-gradient(to_right,black_65%,transparent)] lg:[-webkit-mask-image:linear-gradient(to_right,black_65%,transparent)]"
+            className="relative flex-shrink-0 h-[40dvh] min-h-[230px] lg:mt-0 lg:absolute lg:inset-y-0 lg:left-0 lg:h-full lg:w-[45%] [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_72%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_18%,black_72%,transparent)] lg:[mask-image:linear-gradient(to_right,black_65%,transparent)] lg:[-webkit-mask-image:linear-gradient(to_right,black_65%,transparent)]"
           >
             <RosaryBeads3D pos={beadPos} accent={accent} />
           </div>
