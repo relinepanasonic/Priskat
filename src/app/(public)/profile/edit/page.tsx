@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
 import type { Metadata } from "next";
 
@@ -31,7 +32,12 @@ export default async function ProfileEditPage() {
           </div>
         </section>
 
-        {/* 
+        <section className="mb-8 flex flex-col gap-2 text-sm">
+          <Link href="/privacy" className="text-brand-muted hover:text-white underline underline-offset-4">Kebijakan Privasi</Link>
+          <Link href="/hapus-akun" className="text-red-400/80 hover:text-red-400 underline underline-offset-4">Hapus Akun</Link>
+        </section>
+
+        {/*
           My Journey and My Services will be moved to Community later. 
           Components: <JourneyEditClient /> and <ServicesEditClient />
         */}

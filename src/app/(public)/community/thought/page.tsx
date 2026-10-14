@@ -35,9 +35,21 @@ export default async function ThoughtPage() {
     likedPostIds = (likes || []).map((l: any) => l.post_id);
   }
 
+  // Users this person has blocked — hidden from their feed
+  let blockedIds: string[] = [];
+  if (user) {
+    const { data: blocks } = await supabase
+      .from("user_blocks" as any)
+      .select("blocked_id")
+      .eq("blocker_id", user.id);
+    blockedIds = ((blocks as any[]) || []).map((b) => b.blocked_id);
+  }
+  const visiblePosts = (posts || []).filter((p: any) => !blockedIds.includes(p.author?.id));
+
   return (
     <ThoughtClient
-      posts={posts || []}
+      blockedIds={blockedIds}
+      posts={visiblePosts}
       myProfile={myProfile}
       userId={user?.id}
       likedPostIds={likedPostIds}

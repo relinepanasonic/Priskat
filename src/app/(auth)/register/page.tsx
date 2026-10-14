@@ -262,6 +262,11 @@ export default function RegisterPage() {
             Create Account
           </Button>
 
+          <p className="text-center text-xs text-gray-500">
+            Dengan mendaftar, Anda menyetujui{" "}
+            <Link href="/privacy" className="underline hover:text-white">Kebijakan Privasi</Link>.
+          </p>
+
           <p className="text-center text-sm text-gray-400">
             Already have an account?{" "}
             <Link href="/login" className="font-semibold text-brand-gold hover:text-white">
