@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Prayer, PrayerCategory } from "@/lib/types/database.types";
 import { PRAYER_CATEGORIES } from "@/lib/types/database.types";
-import { ChevronDown, ChevronUp, BookOpen, Search, X, Share2, MessageSquarePlus, Sparkles, Heart } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { ChevronDown, Search, X, Share2, MessageSquarePlus, Sparkles, Heart, Loader2 } from "lucide-react";
+
+/** The list only carries titles; each prayer's text is fetched when it's opened. */
+export type PrayerSummary = Pick<Prayer, "id" | "slug" | "title_id" | "title_en" | "category" | "sort_order">;
+type PrayerBody = Pick<Prayer, "body_id" | "body_en">;
 
 interface Props {
-  prayers: Prayer[];
+  prayers: PrayerSummary[];
   lang: "id" | "en";
 }
 
@@ -16,6 +21,21 @@ export default function PrayerList({ prayers, lang }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<PrayerCategory | "all">("all");
   const [search, setSearch] = useState("");
+  const [bodies, setBodies] = useState<Record<string, PrayerBody | "error">>({});
+  const requested = useRef(new Set<string>());
+
+  // Fetch a prayer's text once (on hover/press, so it's usually ready by the time it opens)
+  const loadBody = async (id: string) => {
+    if (requested.current.has(id)) return;
+    requested.current.add(id);
+    const { data, error } = await createClient()
+      .from("prayers" as any)
+      .select("body_id, body_en")
+      .eq("id", id)
+      .single();
+    if (error || !data) requested.current.delete(id);
+    setBodies((b) => ({ ...b, [id]: error || !data ? "error" : (data as unknown as PrayerBody) }));
+  };
 
   const filtered = prayers.filter((p) => {
     const matchCat = selectedCategory === "all" || p.category === selectedCategory;
@@ -25,6 +45,7 @@ export default function PrayerList({ prayers, lang }: Props) {
   });
 
   function toggle(id: string) {
+    if (openId !== id) loadBody(id);
     setOpenId(openId === id ? null : id);
   }
 
@@ -119,7 +140,8 @@ export default function PrayerList({ prayers, lang }: Props) {
 
         {filtered.map((prayer) => {
           const title = lang === "id" && prayer.title_id ? prayer.title_id : prayer.title_en;
-          const body = lang === "id" && prayer.body_id ? prayer.body_id : prayer.body_en;
+          const loaded = bodies[prayer.id];
+          const body = loaded && loaded !== "error" ? (lang === "id" && loaded.body_id ? loaded.body_id : loaded.body_en) : "";
           const catLabel = PRAYER_CATEGORIES.find((c) => c.value === prayer.category);
           const isOpen = openId === prayer.id;
 
@@ -140,6 +162,8 @@ export default function PrayerList({ prayers, lang }: Props) {
               {/* Header */}
               <button
                 onClick={() => toggle(prayer.id)}
+                onPointerEnter={() => loadBody(prayer.id)}
+                onPointerDown={() => loadBody(prayer.id)}
                 className="w-full flex items-center justify-between p-5 text-left focus:outline-none"
               >
                 <div className="flex-1 min-w-0 pr-4">
@@ -159,22 +183,30 @@ export default function PrayerList({ prayers, lang }: Props) {
                 </div>
               </button>
 
-              {/* Collapsible Body */}
-              <div
-                className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                  isOpen ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0"
-                }`}
-              >
+              {/* Collapsible Body — only rendered while open */}
+              {isOpen && (
+                <div>
                 <div className="px-5 pb-6 pt-2">
                   <div className="relative bg-[#111] rounded-xl p-4 sm:p-5 border border-[#222]">
                     <div className="absolute top-3 left-3 text-4xl text-brand-gold/10 font-serif leading-none">"</div>
-                    <pre className="whitespace-pre-wrap text-[#d1d5db] text-sm sm:text-[15px] leading-relaxed font-serif relative z-10 pl-2">
-                      {body}
-                    </pre>
+                    {!loaded ? (
+                      <div className="flex items-center gap-2 py-4 pl-2 text-sm text-brand-muted">
+                        <Loader2 className="h-4 w-4 animate-spin text-brand-gold" />
+                        {lang === "id" ? "Memuat doa…" : "Loading prayer…"}
+                      </div>
+                    ) : loaded === "error" ? (
+                      <button onClick={() => loadBody(prayer.id)} className="py-4 pl-2 text-sm text-brand-gold underline">
+                        {lang === "id" ? "Gagal memuat. Ketuk untuk mencoba lagi." : "Couldn't load. Tap to retry."}
+                      </button>
+                    ) : (
+                      <pre className="whitespace-pre-wrap text-[#d1d5db] text-sm sm:text-[15px] leading-relaxed font-serif relative z-10 pl-2">
+                        {body}
+                      </pre>
+                    )}
                   </div>
 
                   {/* Actions */}
-                  <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                  {body && <div className="mt-5 flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleShareToThought(title, body)}
                       className="flex-1 flex items-center justify-center gap-2 bg-[#222] hover:bg-[#2a2d35] text-brand-light hover:text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all border border-[#333] hover:border-brand-gold/50"
@@ -190,9 +222,10 @@ export default function PrayerList({ prayers, lang }: Props) {
                       <Share2 className="h-4.5 w-4.5" />
                       {lang === "id" ? "Bagikan (WA, IG, dll)" : "Share (WA, IG, etc)"}
                     </button>
-                  </div>
+                  </div>}
                 </div>
-              </div>
+                </div>
+              )}
             </div>
           );
         })}

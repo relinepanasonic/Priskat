@@ -365,7 +365,7 @@ export default function RosarioClient() {
   }, [stepIdx, transitionTo]);
 
   // 2D / 3D view, remembered per device
-  const [view, setView] = useState<ViewMode>("2d");
+  const [view, setView] = useState<ViewMode>("3d"); // 3D by default; a saved choice wins
   useEffect(() => {
     try {
       const saved = localStorage.getItem(VIEW_KEY);

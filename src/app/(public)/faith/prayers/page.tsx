@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import PrayerList from "@/components/prayers/PrayerList";
+import PrayerList, { type PrayerSummary } from "@/components/prayers/PrayerList";
 import { getLanguage } from "@/lib/lang";
-import type { Prayer } from "@/lib/types/database.types";
 import type { Metadata } from "next";
 import PrayerPortals from "@/components/prayers/PrayerPortals";
 
@@ -12,13 +11,14 @@ export default async function PrayerPage() {
   const lang = await getLanguage();
   const supabase = await createClient();
 
+  // Titles only — each prayer's text is loaded when it is opened, keeping this page light
   const { data: prayersData } = await supabase
     .from("prayers" as any)
-    .select("*")
+    .select("id, slug, title_id, title_en, category, sort_order")
     .eq("is_published", true)
     .order("sort_order", { ascending: true });
 
-  const prayers = (prayersData ?? []) as unknown as Prayer[];
+  const prayers = (prayersData ?? []) as unknown as PrayerSummary[];
 
   return (
     <main className="w-full h-full p-4 md:p-6 pb-32">
