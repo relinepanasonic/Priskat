@@ -281,7 +281,7 @@ export default function MemberProfileModal({
             </h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-brand-light drop-shadow-md">
               <Tent className="h-4 w-4" />
-              {p.community?.name || "Ruang Iman"}
+              {p.community?.name || "Catholic Indonesia"}
             </p>
             {p.favorite_verse && (
               <p className="mt-1 text-xs italic text-brand-gold drop-shadow-md">

@@ -62,7 +62,8 @@ export default function RegisterPage() {
   // Extract invite data if present
   useEffect(() => {
     async function fetchData() {
-      const { data: cData } = await supabase.from("communities").select("id, name").eq("access", "public").order("name");
+      // Only public communities can be joined at sign-up; the Ruang Iman team community is assigned by admins
+      const { data: cData } = await supabase.from("communities").select("id, name").eq("is_public", true).order("name");
       if (cData) {
         setCommunities(cData);
         

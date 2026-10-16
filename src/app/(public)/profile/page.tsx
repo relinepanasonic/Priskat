@@ -83,7 +83,7 @@ export default async function HomePage() {
           
           <p className="text-sm text-brand-gold mt-1 font-semibold text-center flex items-center gap-1.5">
             <Tent className="w-4 h-4" />
-            {profile.community?.name || "Ruang Iman"}
+            {profile.community?.name || "Catholic Indonesia"}
           </p>
 
           {profile.favorite_verse && (

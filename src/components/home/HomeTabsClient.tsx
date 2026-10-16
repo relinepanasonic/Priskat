@@ -98,7 +98,7 @@ export default function HomeTabsClient({
           <h1 className="text-3xl font-bold leading-tight drop-shadow-md">{profile.nama_panggilan || profile.full_name}</h1>
           <p className="text-sm text-brand-light mt-1 font-medium drop-shadow-md flex items-center gap-1.5">
             <Tent className="w-4 h-4" />
-            {profile.community?.name || "Ruang Iman"}
+            {profile.community?.name || "Catholic Indonesia"}
           </p>
           {profile.favorite_verse && (
             <p className="text-xs text-brand-gold mt-1 italic drop-shadow-md">

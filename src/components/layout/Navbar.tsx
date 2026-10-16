@@ -48,7 +48,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
       <Link href="/" className="flex items-center gap-2">
         <Image src={profile?.community?.logo_url || "/logo.png"} alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
         <div className="flex flex-col">
-          <span className="font-bold text-brand-gold text-xs truncate max-w-[120px]">{profile?.community?.name || "Ruang Iman"}</span>
+          <span className="font-bold text-brand-gold text-xs truncate max-w-[120px]">{profile?.community?.name || "Catholic Indonesia"}</span>
           {profile?.community?.name && (
             <span className="text-[9px] text-gray-400 leading-none mt-0.5">by Ruang Iman</span>
           )}
@@ -69,7 +69,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
           <Link href="/" className="flex items-center gap-2">
             <Image src={profile?.community?.logo_url || "/logo.png"} alt="Logo" width={32} height={32} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
             <div className="flex flex-col">
-              <span className="font-bold text-white text-[14px] leading-tight tracking-wide truncate max-w-[90px]">{profile?.community?.name || "Ruang Iman"}</span>
+              <span className="font-bold text-white text-[14px] leading-tight tracking-wide truncate max-w-[90px]">{profile?.community?.name || "Catholic Indonesia"}</span>
               {profile?.community?.name && (
                 <span className="text-[9px] text-gray-400 leading-none mt-0.5">by Ruang Iman</span>
               )}

@@ -60,7 +60,7 @@ function FriendCard({
   const isEn = lang === "en";
 
   const nick = nickOf(user);
-  const community = user.community?.name || "Ruang Iman";
+  const community = user.community?.name || "Catholic Indonesia";
   const tagline = user.favorite_verse;
 
   const sendRequest = () =>
@@ -316,7 +316,7 @@ export default function FriendsClient({
                 <div className="flex flex-col gap-2">
                   {localPendingOut.map((u) => {
                     const nick = nickOf(u);
-                    const community = u.community?.name || "Ruang Iman";
+                    const community = u.community?.name || "Catholic Indonesia";
                     return (
                       <div
                         key={u.friendshipId}
