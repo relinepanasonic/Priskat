@@ -7,7 +7,7 @@ const serif = { fontFamily: "'Lora', Georgia, serif" };
 
 export default function HistoryPage() {
   return (
-    <div className="pb-24">
+    <div className="p-4 md:p-6">
       <header className="mb-8 max-w-2xl">
         <p className="text-xs uppercase tracking-[0.25em]" style={{ color: GOLD }}>Sejarah</p>
         <h2 className="mt-1 text-3xl font-semibold text-white" style={serif}>Gereja Katolik di Indonesia</h2>

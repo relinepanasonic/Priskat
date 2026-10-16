@@ -20,7 +20,7 @@ export default async function BishopsPage({
   const count = dioceses.filter((d) => d.kind !== "ordinariat").length;
 
   return (
-    <div className="pb-24">
+    <div className="p-4 md:p-6">
       <header className="mb-6 max-w-2xl">
         <p className="text-xs uppercase tracking-[0.25em] text-[#D6B072]">Para Gembala</p>
         <h2 className="mt-1 text-3xl font-semibold text-white" style={serif}>Uskup di Indonesia</h2>

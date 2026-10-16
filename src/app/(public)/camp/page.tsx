@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Users, Lock, Globe, ArrowRight } from "lucide-react";
+import { Users, Lock, Globe, ArrowRight, Settings } from "lucide-react";
 import { sortCommunities } from "@/lib/community";
+import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
+import { MemberCountSafe } from "@/lib/memberCounts";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Community" };
@@ -14,6 +16,8 @@ export default async function CommunityListingPage() {
     .select("*")
     .order("created_at", { ascending: true });
   const communities = sortCommunities(communityRows);
+  // Everyone in Ruang Iman is a Catholic Indonesia member; other communities count their own members
+  const memberCounts = await MemberCountSafe(supabase, communities);
 
   const { data: { user } } = await supabase.auth.getUser();
   let myCommunityId = null;
@@ -34,9 +38,21 @@ export default async function CommunityListingPage() {
 
   return (
     <div className="p-4 md:p-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Community</h1>
-        <p className="text-brand-muted mt-1 text-sm">Pilih komunitas yang ingin kamu masuki</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Community</h1>
+          <p className="text-brand-muted mt-1 text-sm">Pilih komunitas yang ingin kamu masuki</p>
+        </div>
+        {/* Phones have no sidebar, so admins get the Community Center here */}
+        {(isSuperAdmin || myAdminCommunityIds.length > 0) && (
+          <Link
+            href="/admin/communities"
+            className="md:hidden flex shrink-0 items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold active:scale-95"
+          >
+            <Settings className="h-4 w-4" />
+            Community Center
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -80,7 +96,7 @@ export default async function CommunityListingPage() {
             <div className="pt-4 border-t border-[#2a2d35] flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <Users className="w-4 h-4" />
-                <span>{c.member_count} members</span>
+                <span>{memberCounts[c.id] ?? c.member_count} members</span>
               </div>
               <span className={`text-sm font-bold flex items-center gap-1 transition-all ${hasAccess ? 'text-brand-gold group-hover:gap-2' : 'text-gray-500'}`}>
                 {hasAccess ? (

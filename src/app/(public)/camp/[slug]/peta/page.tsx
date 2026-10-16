@@ -12,7 +12,7 @@ export default async function DioceseMapPage({ params }: { params: Promise<{ slu
   const { dioceses } = await loadDioceses(await createClient());
 
   return (
-    <div className="pb-24">
+    <div className="p-4 md:p-6">
       <header className="mb-5 max-w-2xl">
         <p className="text-xs uppercase tracking-[0.25em] text-[#D6B072]">Peta</p>
         <h2 className="mt-1 text-3xl font-semibold text-white" style={serif}>Keuskupan di Indonesia</h2>

@@ -96,7 +96,7 @@ export default function CommunitySlugLayout({
     { name: "Romo", href: `/camp/${slug}/romo`, icon: BadgeCheck },
     { name: "Galeri", href: `/camp/${slug}/galeri`, icon: Images },
     { name: "Peta Keuskupan", href: `/camp/${slug}/peta`, icon: Map },
-    { name: "Jadwal Misa", href: `/news/schedule`, icon: Calendar },
+    { name: "Jadwal Misa", href: `/news/schedule?cm=${slug}`, icon: Calendar },
     ...(canPromote ? [{ name: "Promotional", href: `/camp/${slug}/promotion`, icon: Megaphone }] : []),
   ];
 

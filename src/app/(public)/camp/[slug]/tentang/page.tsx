@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, HandHeart, Church, Users, MapPin, BadgeCheck, CalendarDays } from "lucide-react";
 import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
-import { ABOUT_FALLBACK } from "@/lib/catholicIndonesia";
+import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tentang" };
@@ -16,9 +16,13 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const { supabase, community } = await getCommunityPageContext(slug);
   if (!community) redirect("/camp");
 
+  // Catholic Indonesia is everyone's community: count every Ruang Iman member
+  const everyone = isCatholicIndonesia(community.name, community.slug);
   const [{ data: info }, { count: members }, { count: romo }, { dioceses }] = await Promise.all([
     supabase.from("communities").select("*").eq("id", community.id).maybeSingle(),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("community_id", community.id),
+    everyone
+      ? supabase.from("profiles").select("id", { count: "exact", head: true })
+      : supabase.from("profiles").select("id", { count: "exact", head: true }).eq("community_id", community.id),
     supabase.from("clergy" as any).select("user_id", { count: "exact", head: true }),
     loadDioceses(supabase),
   ]);
@@ -37,7 +41,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   ];
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 p-4 md:p-6">
       {/* Hero */}
       <section
         className="relative overflow-hidden rounded-3xl p-6 md:p-10"
@@ -112,7 +116,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         {[
           { href: `/camp/${slug}/uskup`, title: "Para Uskup", text: "Gembala keuskupan di Indonesia", icon: Church },
           { href: `/camp/${slug}/peta`, title: "Peta Keuskupan", text: "Keuskupan dari Sabang sampai Merauke", icon: MapPin },
-          { href: `/news/schedule`, title: "Jadwal Misa", text: "Cari gereja dan jadwal misa terdekat", icon: CalendarDays },
+          { href: `/news/schedule?cm=${slug}`, title: "Jadwal Misa", text: "Cari gereja dan jadwal misa terdekat", icon: CalendarDays },
         ].map((l) => (
           <Link key={l.title} href={l.href} className="group rounded-2xl bg-[#1a1d24] p-4 transition-colors hover:bg-[#20242c]" style={{ border: `1px solid ${GOLD}22` }}>
             <l.icon className="h-5 w-5" style={{ color: GOLD }} />

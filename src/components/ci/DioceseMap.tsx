@@ -134,7 +134,7 @@ export default function DioceseMap({ dioceses, slug }: { dioceses: Diocese[]; sl
           </div>
           <div className="mt-3 flex gap-2">
             <Link href={`/camp/${slug}/uskup?d=${encodeURIComponent(selected.name)}`} className="flex-1 rounded-full py-1.5 text-center text-xs font-semibold text-[#121417]" style={{ background: GOLD }}>Profil Uskup</Link>
-            <Link href="/news/schedule" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-white/15 py-1.5 text-xs text-white">
+            <Link href={`/news/schedule?cm=${slug}`} className="flex flex-1 items-center justify-center gap-1 rounded-full border border-white/15 py-1.5 text-xs text-white">
               <CalendarDays className="h-3.5 w-3.5" />Jadwal Misa
             </Link>
           </div>

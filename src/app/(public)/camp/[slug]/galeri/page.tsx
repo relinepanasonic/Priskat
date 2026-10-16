@@ -20,7 +20,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     .limit(200);
 
   return (
-    <div className="pb-24">
+    <div className="p-4 md:p-6">
       <header className="mb-6 max-w-2xl">
         <p className="text-xs uppercase tracking-[0.25em] text-[#D6B072]">Galeri</p>
         <h2 className="mt-1 text-3xl font-semibold text-white" style={serif}>Momen Bersama</h2>
