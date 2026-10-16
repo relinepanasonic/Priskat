@@ -21,19 +21,20 @@ export default async function PublicLayout({
   let isCommunityAdmin = false;
   
   if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*, community:communities(*)")
-      .eq("id", user.id)
-      .single();
+    const [{ data }, { data: commAdmin }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("*, community:communities(*)")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("community_admins")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle(),
+    ]);
     profile = data;
-
-    const { data: commAdmin } = await supabase
-      .from("community_admins")
-      .select("id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle();
     if (commAdmin) isCommunityAdmin = true;
   }
 

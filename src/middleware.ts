@@ -27,12 +27,20 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — IMPORTANT: do not remove
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const pathname = request.nextUrl.pathname;
+  const isProtected = pathname.startsWith("/admin") || pathname.startsWith("/profile");
+
+  // Refresh session — IMPORTANT: do not remove.
+  // Protected routes verify the user with the auth server; everywhere else we only
+  // refresh the session cookie (no network call unless the token has expired),
+  // because pages and layouts verify the user themselves. This keeps every
+  // navigation and prefetch from paying for an extra auth round trip.
+  let user = null;
+  if (isProtected) {
+    ({ data: { user } } = await supabase.auth.getUser());
+  } else {
+    await supabase.auth.getSession();
+  }
 
   // Protect /admin routes
   if (pathname.startsWith("/admin")) {
@@ -78,6 +86,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|mp3|m4a|woff2?|txt|xml)$).*)",
   ],
 };
