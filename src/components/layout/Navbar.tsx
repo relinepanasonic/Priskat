@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Profile } from "@/lib/types/database.types";
 import LanguageToggle from "@/components/ui/LanguageToggle";
+import { forgetPushToken } from "@/components/native/PushRegistrar";
 import ConnectUnreadDot from "@/components/community/ConnectUnreadDot";
 import StreakBadge from "@/components/layout/StreakBadge";
 
@@ -36,6 +37,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
 
   async function handleSignOut() {
     const supabase = createClient();
+    await forgetPushToken();
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
