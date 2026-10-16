@@ -3,6 +3,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Display order for community lists; anything not listed follows alphabetically.
+const COMMUNITY_ORDER = ["catholic indonesia", "ruang iman", "catholic family ministry"];
+
+export function sortCommunities<T extends { name?: string | null }>(list: T[] | null | undefined): T[] {
+  const rank = (c: T) => {
+    const i = COMMUNITY_ORDER.indexOf((c.name ?? "").trim().toLowerCase());
+    return i === -1 ? COMMUNITY_ORDER.length : i;
+  };
+  return [...(list ?? [])].sort((a, b) => rank(a) - rank(b) || (a.name ?? "").localeCompare(b.name ?? ""));
+}
+
 export type ResolvedCommunity = {
   id: string;
   name: string | null;

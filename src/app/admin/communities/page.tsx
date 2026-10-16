@@ -1,13 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import CommunityCenterClient from "@/components/admin/CommunityCenterClient";
+import { sortCommunities } from "@/lib/community";
 
 export default async function CommunityCenterPage() {
   const supabase = await createClient();
 
-  const { data: communities } = await supabase
+  const { data: communityRows } = await supabase
     .from("communities")
     .select("*")
     .order("name");
+  const communities = sortCommunities(communityRows);
 
   const { data: admins } = await supabase
     .from("community_admins")

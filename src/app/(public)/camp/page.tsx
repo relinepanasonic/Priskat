@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Users, Lock, Globe, ArrowRight } from "lucide-react";
+import { sortCommunities } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Community" };
@@ -8,10 +9,11 @@ export const metadata = { title: "Community" };
 export default async function CommunityListingPage() {
   const supabase = await createClient();
 
-  const { data: communities } = await supabase
+  const { data: communityRows } = await supabase
     .from("communities")
     .select("*")
     .order("created_at", { ascending: true });
+  const communities = sortCommunities(communityRows);
 
   const { data: { user } } = await supabase.auth.getUser();
   let myCommunityId = null;

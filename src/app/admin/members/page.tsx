@@ -6,6 +6,7 @@ import AdminMemberEditDialog from "@/components/admin/AdminMemberEditDialog";
 import AdminMemberDeleteButton from "@/components/admin/AdminMemberDeleteButton";
 import InviteUserButton from "@/components/admin/InviteUserButton";
 import type { UserRole, Profile, UserGender } from "@/lib/types/database.types";
+import { sortCommunities } from "@/lib/community";
 
 export default async function AdminMembersPage() {
   const supabase = await createClient();
@@ -16,7 +17,8 @@ export default async function AdminMembersPage() {
   const callerRole = (callerProfile?.role ?? "admin") as UserRole;
   const isGlobalAdmin = ["founder", "superadmin", "admin", "moderator"].includes(callerRole);
 
-  const { data: communities } = await supabase.from("communities").select("id, name").order("name");
+  const { data: communityRows } = await supabase.from("communities").select("id, name").order("name");
+  const communities = sortCommunities(communityRows);
 
   let query = supabase
     .from("profiles")

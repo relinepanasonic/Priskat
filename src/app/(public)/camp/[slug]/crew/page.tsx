@@ -6,7 +6,7 @@ import { Plus, Tent, Users, ArrowRight, Trash2, FolderInput, X } from "lucide-re
 import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { resolveCommunity } from "@/lib/community";
+import { resolveCommunity, sortCommunities } from "@/lib/community";
 import { formatDate } from "@/lib/utils";
 
 export default function CampCrewPage() {
@@ -62,7 +62,7 @@ export default function CampCrewPage() {
       .from("communities")
       .select("id, name")
       .order("created_at", { ascending: true });
-    if (comms) setCommunities(comms);
+    if (comms) setCommunities(sortCommunities(comms));
 
     setIsLoading(false);
   };
