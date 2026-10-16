@@ -6,8 +6,15 @@ export const metadata = { title: "Para Uskup" };
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
-export default async function BishopsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BishopsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ d?: string }>;
+}) {
   const { slug } = await params;
+  const { d: open } = await searchParams;
   const { supabase, canEdit } = await getCommunityPageContext(slug);
   const { dioceses, fromDb } = await loadDioceses(supabase);
   const count = dioceses.filter((d) => d.kind !== "ordinariat").length;
@@ -26,7 +33,7 @@ export default async function BishopsPage({ params }: { params: Promise<{ slug: 
           </p>
         )}
       </header>
-      <DioceseDirectory dioceses={dioceses} canEdit={canEdit && fromDb} />
+      <DioceseDirectory dioceses={dioceses} canEdit={canEdit && fromDb} initialOpen={open} />
     </div>
   );
 }

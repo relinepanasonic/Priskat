@@ -5,13 +5,18 @@ import { useRouter } from "next/navigation";
 import { Search, Pencil, X, Church, MapPin, Globe, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { KIND_LABEL, PROVINCE_COLORS, PROVINCE_ORDER, type Diocese } from "@/lib/catholicIndonesia";
+import { findBishopProfile } from "@/lib/bishops";
+import BishopProfileSheet from "./BishopProfileSheet";
 
 const GOLD = "#D6B072";
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
-export default function DioceseDirectory({ dioceses, canEdit }: { dioceses: Diocese[]; canEdit: boolean }) {
+export default function DioceseDirectory({ dioceses, canEdit, initialOpen }: { dioceses: Diocese[]; canEdit: boolean; initialOpen?: string }) {
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Diocese | null>(null);
+  const [viewing, setViewing] = useState<Diocese | null>(
+    () => (initialOpen ? dioceses.find((d) => d.name.toLowerCase() === initialOpen.toLowerCase()) ?? null : null)
+  );
 
   const groups = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -43,14 +48,19 @@ export default function DioceseDirectory({ dioceses, canEdit }: { dioceses: Dioc
             {g.items.map((d) => (
               <article
                 key={d.name}
-                className="relative rounded-2xl bg-[#1a1d24] p-4"
+                role="button"
+                tabIndex={0}
+                onClick={() => setViewing(d)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setViewing(d); } }}
+                aria-label={`Profil ${d.bishop_name ?? d.name}`}
+                className="relative cursor-pointer rounded-2xl bg-[#1a1d24] p-4 transition-colors hover:bg-[#20242c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6B072]/60"
                 style={{ border: `1px solid ${d.kind === "keuskupan_agung" ? `${GOLD}55` : "rgba(255,255,255,0.07)"}` }}
               >
                 <div className="flex gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ background: `${GOLD}14`, border: `1px solid ${GOLD}40` }}>
-                    {d.bishop_photo_url ? (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ background: `${GOLD}14`, border: `1px solid ${GOLD}40` }}>
+                    {(d.bishop_photo_url || findBishopProfile(d.bishop_name)?.photo?.url) ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.bishop_photo_url} alt={d.bishop_name ?? ""} className="h-full w-full object-cover" />
+                      <img src={d.bishop_photo_url || findBishopProfile(d.bishop_name)!.photo!.url} alt={d.bishop_name ?? ""} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover object-top" />
                     ) : (
                       <Church className="h-5 w-5" style={{ color: GOLD }} />
                     )}
@@ -77,7 +87,7 @@ export default function DioceseDirectory({ dioceses, canEdit }: { dioceses: Dioc
                 </div>
                 {canEdit && d.id && (
                   <button
-                    onClick={() => setEditing(d)}
+                    onClick={(e) => { e.stopPropagation(); setEditing(d); }}
                     aria-label={`Ubah ${d.name}`}
                     className="absolute right-3 top-3 rounded-full p-1.5 text-brand-muted hover:bg-white/5 hover:text-white"
                   >
@@ -92,6 +102,7 @@ export default function DioceseDirectory({ dioceses, canEdit }: { dioceses: Dioc
 
       {groups.length === 0 && <p className="py-10 text-center text-brand-muted">Tidak ada hasil.</p>}
 
+      {viewing && <BishopProfileSheet diocese={viewing} onClose={() => setViewing(null)} />}
       {editing && <DioceseEditor diocese={editing} onClose={() => setEditing(null)} />}
     </div>
   );

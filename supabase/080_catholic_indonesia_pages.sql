@@ -48,12 +48,12 @@ INSERT INTO public.dioceses (name, kind, province, city, lat, lng, cathedral, bi
   ('Keuskupan Tanjungkarang', 'keuskupan', 'Palembang', 'Bandar Lampung', -5.4292, 105.261, NULL, 'Mgr. Vinsensius Setiawan Triatmojo', 'Uskup', 22),
   ('Keuskupan Agung Jakarta', 'keuskupan_agung', 'Jakarta', 'Jakarta', -6.1693, 106.8331, 'Katedral Santa Maria Diangkat ke Surga', 'Ignatius Kardinal Suharyo', 'Uskup Agung', 30),
   ('Keuskupan Bandung', 'keuskupan', 'Jakarta', 'Bandung', -6.9147, 107.6098, 'Katedral Santo Petrus', 'Mgr. Antonius Subianto Bunjamin, OSC', 'Uskup', 31),
-  ('Keuskupan Bogor', 'keuskupan', 'Jakarta', 'Bogor', -6.595, 106.797, 'Katedral Beatae Mariae Virginis', 'Mgr. Paskalis Bruno Syukur, OFM', 'Uskup', 32),
+  ('Keuskupan Bogor', 'keuskupan', 'Jakarta', 'Bogor', -6.595, 106.797, 'Katedral Beatae Mariae Virginis', 'Mgr. Christophorus Tri Harsono', 'Administrator Apostolik (takhta lowong)', 32),
   ('Keuskupan Agung Semarang', 'keuskupan_agung', 'Semarang', 'Semarang', -6.9824, 110.4093, 'Katedral Santa Perawan Maria Ratu Rosario Suci', 'Mgr. Robertus Rubiyatmoko', 'Uskup Agung', 40),
   ('Keuskupan Purwokerto', 'keuskupan', 'Semarang', 'Purwokerto', -7.4245, 109.2396, NULL, 'Mgr. Christophorus Tri Harsono', 'Uskup', 41),
   ('Keuskupan Malang', 'keuskupan', 'Semarang', 'Malang', -7.9666, 112.6326, 'Katedral Santa Perawan Maria dari Gunung Karmel', 'Mgr. Henricus Pidyarto Gunawan, O.Carm', 'Uskup', 42),
   ('Keuskupan Surabaya', 'keuskupan', 'Semarang', 'Surabaya', -7.2575, 112.7521, 'Katedral Hati Kudus Yesus', 'Mgr. Agustinus Tri Budi Utomo', 'Uskup', 43),
-  ('Keuskupan Agung Pontianak', 'keuskupan_agung', 'Pontianak', 'Pontianak', -0.0263, 109.3425, 'Katedral Santo Yosef', 'Mgr. Agustinus Agus', 'Uskup Agung', 50),
+  ('Keuskupan Agung Pontianak', 'keuskupan_agung', 'Pontianak', 'Pontianak', -0.0263, 109.3425, 'Katedral Santo Yosef', 'Mgr. Samuel Oton Sidin, OFMCap', 'Administrator Apostolik (takhta lowong)', 50),
   ('Keuskupan Ketapang', 'keuskupan', 'Pontianak', 'Ketapang', -1.85, 109.9833, NULL, 'Mgr. Pius Riana Prapdi', 'Uskup', 51),
   ('Keuskupan Sanggau', 'keuskupan', 'Pontianak', 'Sanggau', 0.124, 110.597, NULL, 'Mgr. Valentinus Saeng, CP', 'Uskup', 52),
   ('Keuskupan Sintang', 'keuskupan', 'Pontianak', 'Sintang', 0.07, 111.5, NULL, 'Mgr. Samuel Oton Sidin, OFMCap', 'Uskup', 53),
@@ -66,7 +66,7 @@ INSERT INTO public.dioceses (name, kind, province, city, lat, lng, cathedral, bi
   ('Keuskupan Manado', 'keuskupan', 'Makassar', 'Manado', 1.4748, 124.8421, NULL, 'Mgr. Benedictus Estephanus Rolly Untu, MSC', 'Uskup', 72),
   ('Keuskupan Agung Ende', 'keuskupan_agung', 'Ende', 'Ende', -8.8432, 121.6623, NULL, 'Mgr. Paulus Budi Kleden, SVD', 'Uskup Agung', 80),
   ('Keuskupan Denpasar', 'keuskupan', 'Ende', 'Denpasar', -8.6705, 115.2126, 'Katedral Roh Kudus', 'Mgr. Silvester San', 'Uskup', 81),
-  ('Keuskupan Larantuka', 'keuskupan', 'Ende', 'Larantuka', -8.35, 122.9833, 'Katedral Reinha Rosari', 'Mgr. Fransiskus Kopong Kung', 'Uskup', 82),
+  ('Keuskupan Larantuka', 'keuskupan', 'Ende', 'Larantuka', -8.35, 122.9833, 'Katedral Reinha Rosari', 'Mgr. Yohanes Hans Monteiro', 'Uskup', 82),
   ('Keuskupan Maumere', 'keuskupan', 'Ende', 'Maumere', -8.6199, 122.2111, NULL, 'Mgr. Ewaldus Martinus Sedu', 'Uskup', 83),
   ('Keuskupan Ruteng', 'keuskupan', 'Ende', 'Ruteng', -8.6118, 120.4655, NULL, 'Mgr. Siprianus Hormat', 'Uskup', 84),
   ('Keuskupan Labuan Bajo', 'keuskupan', 'Ende', 'Labuan Bajo', -8.4964, 119.8877, NULL, 'Mgr. Maksimus Regus', 'Uskup', 85),
@@ -74,11 +74,11 @@ INSERT INTO public.dioceses (name, kind, province, city, lat, lng, cathedral, bi
   ('Keuskupan Atambua', 'keuskupan', 'Kupang', 'Atambua', -9.1061, 124.8923, NULL, 'Mgr. Dominikus Saku', 'Uskup', 91),
   ('Keuskupan Weetebula', 'keuskupan', 'Kupang', 'Weetebula', -9.43, 119.25, NULL, 'Mgr. Edmund Woga, CSsR', 'Uskup', 92),
   ('Keuskupan Agung Merauke', 'keuskupan_agung', 'Merauke', 'Merauke', -8.4932, 140.4018, NULL, 'Mgr. Petrus Canisius Mandagi, MSC', 'Uskup Agung', 100),
-  ('Keuskupan Agats', 'keuskupan', 'Merauke', 'Agats', -5.5432, 138.1346, NULL, NULL, 'Uskup', 101),
+  ('Keuskupan Agats', 'keuskupan', 'Merauke', 'Agats', -5.5432, 138.1346, NULL, 'Mgr. Aloysius Murwito, OFM', 'Uskup', 101),
   ('Keuskupan Jayapura', 'keuskupan', 'Merauke', 'Jayapura', -2.5337, 140.7181, NULL, 'Mgr. Yanuarius Teofilus Matopai You', 'Uskup', 102),
   ('Keuskupan Manokwari-Sorong', 'keuskupan', 'Merauke', 'Manokwari', -0.8615, 134.064, NULL, 'Mgr. Hilarion Datus Lega', 'Uskup', 103),
   ('Keuskupan Timika', 'keuskupan', 'Merauke', 'Timika', -4.55, 136.8833, NULL, 'Mgr. Bernardus Bofitwos Baru, OSA', 'Uskup', 104),
-  ('Ordinariat Militer Indonesia', 'ordinariat', '—', 'Jakarta', NULL, NULL, NULL, NULL, 'Uskup Ordinariat', 200)
+  ('Ordinariat Militer Indonesia', 'ordinariat', '—', 'Jakarta', NULL, NULL, 'Katedral Santa Maria Diangkat ke Surga (Jakarta)', 'Ignatius Kardinal Suharyo', 'Ordinaris Militer', 200)
 ON CONFLICT (name) DO NOTHING;
 
 -- ── Clergy (Romo badge) ──────────────────────────────────────────────────────

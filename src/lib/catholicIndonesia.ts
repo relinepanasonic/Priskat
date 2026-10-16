@@ -1,7 +1,8 @@
 // Catholic Indonesia community: identity, dioceses and history content.
 // DIOCESE_SEED is the starting data for the `dioceses` table (supabase/080).
 // Admins keep bishop details current from the Uskup page; pages fall back to
-// this seed if the table hasn't been created yet.
+// this seed if the table hasn't been created yet. Bishops verified against
+// Wikipedia (Daftar keuskupan di Indonesia) and news, October 2026.
 
 export const CATHOLIC_INDONESIA = "catholic indonesia";
 
@@ -53,14 +54,14 @@ export const DIOCESE_SEED: Diocese[] = [
   // Provinsi Gerejawi Jakarta
   d(30, "Keuskupan Agung Jakarta", "keuskupan_agung", "Jakarta", "Jakarta", -6.1693, 106.8331, "Katedral Santa Maria Diangkat ke Surga", "Ignatius Kardinal Suharyo"),
   d(31, "Keuskupan Bandung", "keuskupan", "Jakarta", "Bandung", -6.9147, 107.6098, "Katedral Santo Petrus", "Mgr. Antonius Subianto Bunjamin, OSC"),
-  d(32, "Keuskupan Bogor", "keuskupan", "Jakarta", "Bogor", -6.595, 106.797, "Katedral Beatae Mariae Virginis", "Mgr. Paskalis Bruno Syukur, OFM"),
+  d(32, "Keuskupan Bogor", "keuskupan", "Jakarta", "Bogor", -6.595, 106.797, "Katedral Beatae Mariae Virginis", "Mgr. Christophorus Tri Harsono", "Administrator Apostolik (takhta lowong)"),
   // Provinsi Gerejawi Semarang
   d(40, "Keuskupan Agung Semarang", "keuskupan_agung", "Semarang", "Semarang", -6.9824, 110.4093, "Katedral Santa Perawan Maria Ratu Rosario Suci", "Mgr. Robertus Rubiyatmoko"),
   d(41, "Keuskupan Purwokerto", "keuskupan", "Semarang", "Purwokerto", -7.4245, 109.2396, null, "Mgr. Christophorus Tri Harsono"),
   d(42, "Keuskupan Malang", "keuskupan", "Semarang", "Malang", -7.9666, 112.6326, "Katedral Santa Perawan Maria dari Gunung Karmel", "Mgr. Henricus Pidyarto Gunawan, O.Carm"),
   d(43, "Keuskupan Surabaya", "keuskupan", "Semarang", "Surabaya", -7.2575, 112.7521, "Katedral Hati Kudus Yesus", "Mgr. Agustinus Tri Budi Utomo"),
   // Provinsi Gerejawi Pontianak
-  d(50, "Keuskupan Agung Pontianak", "keuskupan_agung", "Pontianak", "Pontianak", -0.0263, 109.3425, "Katedral Santo Yosef", "Mgr. Agustinus Agus"),
+  d(50, "Keuskupan Agung Pontianak", "keuskupan_agung", "Pontianak", "Pontianak", -0.0263, 109.3425, "Katedral Santo Yosef", "Mgr. Samuel Oton Sidin, OFMCap", "Administrator Apostolik (takhta lowong)"),
   d(51, "Keuskupan Ketapang", "keuskupan", "Pontianak", "Ketapang", -1.85, 109.9833, null, "Mgr. Pius Riana Prapdi"),
   d(52, "Keuskupan Sanggau", "keuskupan", "Pontianak", "Sanggau", 0.124, 110.597, null, "Mgr. Valentinus Saeng, CP"),
   d(53, "Keuskupan Sintang", "keuskupan", "Pontianak", "Sintang", 0.07, 111.5, null, "Mgr. Samuel Oton Sidin, OFMCap"),
@@ -76,7 +77,7 @@ export const DIOCESE_SEED: Diocese[] = [
   // Provinsi Gerejawi Ende
   d(80, "Keuskupan Agung Ende", "keuskupan_agung", "Ende", "Ende", -8.8432, 121.6623, null, "Mgr. Paulus Budi Kleden, SVD"),
   d(81, "Keuskupan Denpasar", "keuskupan", "Ende", "Denpasar", -8.6705, 115.2126, "Katedral Roh Kudus", "Mgr. Silvester San"),
-  d(82, "Keuskupan Larantuka", "keuskupan", "Ende", "Larantuka", -8.35, 122.9833, "Katedral Reinha Rosari", "Mgr. Fransiskus Kopong Kung"),
+  d(82, "Keuskupan Larantuka", "keuskupan", "Ende", "Larantuka", -8.35, 122.9833, "Katedral Reinha Rosari", "Mgr. Yohanes Hans Monteiro"),
   d(83, "Keuskupan Maumere", "keuskupan", "Ende", "Maumere", -8.6199, 122.2111, null, "Mgr. Ewaldus Martinus Sedu"),
   d(84, "Keuskupan Ruteng", "keuskupan", "Ende", "Ruteng", -8.6118, 120.4655, null, "Mgr. Siprianus Hormat"),
   d(85, "Keuskupan Labuan Bajo", "keuskupan", "Ende", "Labuan Bajo", -8.4964, 119.8877, null, "Mgr. Maksimus Regus"),
@@ -86,12 +87,12 @@ export const DIOCESE_SEED: Diocese[] = [
   d(92, "Keuskupan Weetebula", "keuskupan", "Kupang", "Weetebula", -9.43, 119.25, null, "Mgr. Edmund Woga, CSsR"),
   // Provinsi Gerejawi Merauke
   d(100, "Keuskupan Agung Merauke", "keuskupan_agung", "Merauke", "Merauke", -8.4932, 140.4018, null, "Mgr. Petrus Canisius Mandagi, MSC"),
-  d(101, "Keuskupan Agats", "keuskupan", "Merauke", "Agats", -5.5432, 138.1346, null, null),
+  d(101, "Keuskupan Agats", "keuskupan", "Merauke", "Agats", -5.5432, 138.1346, null, "Mgr. Aloysius Murwito, OFM"),
   d(102, "Keuskupan Jayapura", "keuskupan", "Merauke", "Jayapura", -2.5337, 140.7181, null, "Mgr. Yanuarius Teofilus Matopai You"),
   d(103, "Keuskupan Manokwari-Sorong", "keuskupan", "Merauke", "Manokwari", -0.8615, 134.064, null, "Mgr. Hilarion Datus Lega"),
   d(104, "Keuskupan Timika", "keuskupan", "Merauke", "Timika", -4.55, 136.8833, null, "Mgr. Bernardus Bofitwos Baru, OSA"),
   // Ordinariat Militer (no territory of its own)
-  d(200, "Ordinariat Militer Indonesia", "ordinariat", "—", "Jakarta", null, null, null, null, "Uskup Ordinariat"),
+  d(200, "Ordinariat Militer Indonesia", "ordinariat", "—", "Jakarta", null, null, "Katedral Santa Maria Diangkat ke Surga (Jakarta)", "Ignatius Kardinal Suharyo", "Ordinaris Militer"),
 ];
 
 export const PROVINCE_ORDER = ["Medan", "Palembang", "Jakarta", "Semarang", "Pontianak", "Samarinda", "Makassar", "Ende", "Kupang", "Merauke", "—"];
