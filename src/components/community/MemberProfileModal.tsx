@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import VinylPlayer from "@/components/home/VinylPlayer";
+import { ClergyBadge } from "@/components/ci/ClergyDirectory";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -70,6 +71,7 @@ export default function MemberProfileModal({
 
   const [p, setP] = useState<Prof>(member);
   const [loading, setLoading] = useState(true);
+  const [clergyTitle, setClergyTitle] = useState<string | null>(null);
 
   const [friendship, setFriendship] = useState<Friendship>(
     member.id === viewerId ? "self" : "loading"
@@ -101,7 +103,7 @@ export default function MemberProfileModal({
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [{ data: prof }, { data: fr }] = await Promise.all([
+      const [{ data: prof }, { data: fr }, { data: cl }] = await Promise.all([
         supabase
           .from("profiles")
           .select(
@@ -118,8 +120,10 @@ export default function MemberProfileModal({
                 `and(requester_id.eq.${viewerId},receiver_id.eq.${member.id}),and(requester_id.eq.${member.id},receiver_id.eq.${viewerId})`
               )
               .maybeSingle(),
+        supabase.from("clergy" as any).select("title").eq("user_id", member.id).maybeSingle(),
       ]);
       if (!alive) return;
+      if (cl) setClergyTitle((cl as any).title);
 
       if (prof) {
         const full = prof as Prof;
@@ -276,6 +280,7 @@ export default function MemberProfileModal({
           </div>
 
           <div className="absolute bottom-[104px] left-6 z-10 max-w-[65%]">
+            {clergyTitle && <ClergyBadge title={clergyTitle} />}
             <h1 className="text-3xl font-bold leading-tight drop-shadow-md">
               {name}
             </h1>

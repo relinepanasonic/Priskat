@@ -13,8 +13,14 @@ import {
   ChevronLeft,
   Network,
   Megaphone,
+  Info,
+  ScrollText,
+  Church,
+  BadgeCheck,
+  Images,
 } from "lucide-react";
 import { resolveCommunity } from "@/lib/community";
+import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
 const titleCase = (s: string) =>
   s
@@ -33,6 +39,8 @@ export default function CommunitySlugLayout({
   const validSlug = slug && slug !== "undefined" && slug !== "null";
 
   const [communityName, setCommunityName] = useState<string | null>(null);
+  // Known from the URL immediately; confirmed by name once the community loads
+  const [isCI, setIsCI] = useState(isCatholicIndonesia(null, slug));
   const [canPromote, setCanPromote] = useState(false);
   const supabase = createClient();
 
@@ -43,7 +51,10 @@ export default function CommunitySlugLayout({
       // fallback to "a" community — a wrong link must not silently open
       // someone else's workspace.
       const community = await resolveCommunity(supabase, slug);
-      if (alive && community?.name) setCommunityName(community.name);
+      if (alive && community?.name) {
+        setCommunityName(community.name);
+        setIsCI(isCatholicIndonesia(community.name, community.slug));
+      }
 
       const {
         data: { user },
@@ -77,7 +88,19 @@ export default function CommunitySlugLayout({
   const heading =
     communityName || (validSlug ? titleCase(slug) : "Community");
 
-  const tabs = [
+  // Each community gets its own set of pages; Catholic Indonesia is the public "Catholic website".
+  const ciTabs = [
+    { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
+    { name: "Sejarah", href: `/camp/${slug}/sejarah`, icon: ScrollText },
+    { name: "Uskup", href: `/camp/${slug}/uskup`, icon: Church },
+    { name: "Romo", href: `/camp/${slug}/romo`, icon: BadgeCheck },
+    { name: "Galeri", href: `/camp/${slug}/galeri`, icon: Images },
+    { name: "Peta Keuskupan", href: `/camp/${slug}/peta`, icon: Map },
+    { name: "Jadwal Misa", href: `/news/schedule`, icon: Calendar },
+    ...(canPromote ? [{ name: "Promotional", href: `/camp/${slug}/promotion`, icon: Megaphone }] : []),
+  ];
+
+  const tabs = isCI ? ciTabs : [
     { name: "Camp Event", href: `/camp/${slug}/crew`, icon: Users },
     { name: "My Ongoing Services", href: `/camp/${slug}/ongoing`, icon: Tent },
     { name: "Schedule", href: `/camp/${slug}/schedule`, icon: Calendar },
