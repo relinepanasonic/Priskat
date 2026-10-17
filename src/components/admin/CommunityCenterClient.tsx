@@ -9,6 +9,7 @@ import Modal from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CommunityCenterClient({ initialCommunities, initialAdmins, allUsers }: { initialCommunities: any[], initialAdmins: any[], allUsers: any[] }) {
+  const [adminsOf, setAdminsOf] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -127,70 +128,77 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {initialCommunities.map(community => (
-          <div key={community.id} className="card-3d p-6 flex flex-col h-full relative group">
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-              <button onClick={() => openEdit(community)} className="p-2 text-brand-muted hover:text-brand-gold hover:bg-brand-gold/10 rounded-lg">
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button onClick={() => handleDelete(community.id)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-            <h2 className="text-xl font-bold text-brand-gold pr-24">{community.name}</h2>
-            <div className="flex items-center gap-2 mb-4">
-              <p className="text-xs text-brand-muted font-mono">/{community.slug}</p>
-              <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold ${
-                community.is_public !== false 
-                  ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
-                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
-              }`}>
-                {community.is_public !== false ? 'Public' : 'Private'}
-              </span>
-            </div>
-            <p className="text-sm text-gray-300 mb-4 flex-grow">{community.description}</p>
-
-            <Link
-              href={`/admin/communities/${community.slug || community.id}`}
-              className="mb-5 inline-flex w-fit items-center gap-2 rounded-lg bg-brand-gold px-4 py-2 text-sm font-bold text-brand-dark hover:opacity-90"
-            >
-              <Settings className="h-4 w-4" /> Kelola komunitas
-            </Link>
-            
-            <div className="border-t border-[#333] pt-4 mt-auto">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold text-white flex items-center gap-2 text-sm">
-                  <Shield className="w-4 h-4 text-brand-gold" /> Admins
-                </h3>
-                <button 
-                  onClick={() => setAdminCommunityId(community.id)}
-                  className="text-xs text-brand-gold hover:underline flex items-center gap-1"
-                >
-                  <UserPlus className="w-3 h-3" /> Add Admin
+      {/* Phone: 2 cards across, ~2.5 rows per screen */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
+        {initialCommunities.map(community => {
+          const admins = initialAdmins.filter(a => a.community_id === community.id);
+          return (
+            <div key={community.id} className="card-3d relative flex min-h-[200px] flex-col p-3 md:p-5" style={{ minHeight: "min(26vh, 230px)" }}>
+              <div className="mb-2 flex items-center justify-end gap-0.5">
+                <button onClick={() => openEdit(community)} aria-label="Edit" className="rounded-lg p-1.5 text-brand-muted hover:bg-brand-gold/10 hover:text-brand-gold">
+                  <Edit2 className="h-3.5 w-3.5" />
+                </button>
+                <button onClick={() => handleDelete(community.id)} aria-label="Delete" className="rounded-lg p-1.5 text-gray-500 hover:bg-red-500/10 hover:text-red-400">
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
-              
-              <div className="space-y-2">
-                {initialAdmins.filter(a => a.community_id === community.id).length === 0 && (
-                  <p className="text-xs text-gray-500 italic">No admins assigned.</p>
-                )}
-                {initialAdmins.filter(a => a.community_id === community.id).map(admin => (
-                  <div key={admin.id} className="flex justify-between items-center bg-[#15181e] p-2 rounded border border-[#222]">
-                    <div>
-                      <p className="text-sm font-medium text-white">{admin.profiles?.full_name}</p>
-                      <p className="text-xs text-gray-500">@{admin.profiles?.username} • {admin.role}</p>
-                    </div>
-                    <button onClick={() => handleRemoveAdmin(admin.id)} className="text-gray-500 hover:text-red-400 p-1">
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+              <h2 className="line-clamp-2 text-sm font-bold leading-tight text-brand-gold md:text-lg">{community.name}</h2>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <p className="truncate text-[10px] font-mono text-brand-muted">/{community.slug}</p>
+                <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${
+                  community.is_public !== false
+                    ? "border border-green-500/20 bg-green-500/10 text-green-400"
+                    : "border border-red-500/20 bg-red-500/10 text-red-400"
+                }`}>
+                  {community.is_public !== false ? "Public" : "Private"}
+                </span>
+              </div>
+              <p className="mt-2 hidden line-clamp-2 text-xs text-gray-400 md:block">{community.description}</p>
+
+              <div className="mt-auto space-y-2 pt-3">
+                <Link
+                  href={`/admin/communities/${community.slug || community.id}`}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-gold px-2 py-2 text-xs font-bold text-brand-dark hover:opacity-90"
+                >
+                  <Settings className="h-3.5 w-3.5" /> Kelola
+                </Link>
+                <button
+                  onClick={() => setAdminsOf(community.id)}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#333] px-2 py-1.5 text-[11px] text-gray-300 hover:border-brand-gold/40"
+                >
+                  <Shield className="h-3 w-3 text-brand-gold" /> Admin ({admins.length})
+                </button>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Admins of one community */}
+      <Modal open={!!adminsOf} onClose={() => setAdminsOf(null)} title="Admins">
+        <div className="space-y-2">
+          {initialAdmins.filter(a => a.community_id === adminsOf).length === 0 && (
+            <p className="text-xs italic text-gray-500">No admins assigned.</p>
+          )}
+          {initialAdmins.filter(a => a.community_id === adminsOf).map(admin => (
+            <div key={admin.id} className="flex items-center justify-between rounded border border-[#222] bg-[#15181e] p-2">
+              <div>
+                <p className="text-sm font-medium text-white">{admin.profiles?.full_name}</p>
+                <p className="text-xs text-gray-500">@{admin.profiles?.username} • {admin.role}</p>
+              </div>
+              <button onClick={() => handleRemoveAdmin(admin.id)} className="p-1 text-gray-500 hover:text-red-400">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => { setAdminCommunityId(adminsOf); setAdminsOf(null); }}
+            className="mt-2 flex items-center gap-1 text-xs text-brand-gold hover:underline"
+          >
+            <UserPlus className="h-3 w-3" /> Add Admin
+          </button>
+        </div>
+      </Modal>
 
       <Modal open={isAdding || !!editingCommunity} onClose={() => { setIsAdding(false); setEditingCommunity(null); }} title={editingCommunity ? "Edit Community" : "Create Community"}>
         <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">

@@ -15,18 +15,16 @@ export default async function CampPromotionPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
   const community = await resolveCommunity(supabase, slug);
   if (!community) redirect("/camp");
 
   const [{ data: prof }, { data: ca }] = await Promise.all([
-    supabase.from("profiles").select("role").eq("id", user.id).single(),
-    community
+    user ? supabase.from("profiles").select("role").eq("id", user.id).single() : Promise.resolve({ data: null }),
+    community && user
       ? supabase
           .from("community_admins")
           .select("id")
-          .eq("user_id", user.id)
+          .eq("user_id", user!.id)
           .eq("community_id", community.id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -36,14 +34,6 @@ export default async function CampPromotionPage({
   const canPromote =
     ["founder", "superadmin", "admin"].includes(role) || !!ca;
 
-  if (!canPromote) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-10 text-center text-sm text-brand-muted">
-        Only community organisers can create promotions.
-      </div>
-    );
-  }
-
   const { data: events } = await supabase
     .from("events")
     .select(
@@ -52,6 +42,35 @@ export default async function CampPromotionPage({
     .eq("community_id", community.id)
     .order("event_date", { ascending: false })
     .limit(50);
+
+  if (!canPromote) {
+    const list = (events as any[]) ?? [];
+    return (
+      <div className="p-4 md:p-6">
+        <h2 className="mb-4 text-lg font-bold text-white">Promotion</h2>
+        {list.length === 0 ? (
+          <p className="py-10 text-center text-sm text-brand-muted">Belum ada promosi.</p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {list.map((e) => (
+              <div key={e.id} className="overflow-hidden rounded-2xl border border-[#333] bg-[#15181e]">
+                {e.banner_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={e.banner_image_url} alt="" className="h-36 w-full object-cover" loading="lazy" />
+                )}
+                <div className="p-4">
+                  <h3 className="font-semibold text-white">{e.title}</h3>
+                  {e.event_date && <p className="mt-0.5 text-xs text-brand-gold">{new Date(e.event_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>}
+                  {e.location && <p className="text-xs text-brand-muted">{e.location}</p>}
+                  {e.description && <p className="mt-2 line-clamp-3 text-sm text-gray-300">{e.description}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6">

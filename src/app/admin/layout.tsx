@@ -42,7 +42,7 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
       <Navbar profile={profile} lang={lang} />
-      <main className="flex-1 overflow-x-hidden md:h-screen md:overflow-y-auto">
+      <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">
         <div className="p-6 lg:p-8 bg-[#1e2128] min-h-full">
           {children}
         </div>

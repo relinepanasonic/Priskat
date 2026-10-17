@@ -34,11 +34,13 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     .map((s) => s.replace(/^\s*\d+[.)]\s*/, "").trim())
     .filter(Boolean);
 
-  const stats = [
-    { label: "Anggota", value: members ?? 0, icon: Users },
-    { label: "Keuskupan", value: dioceseCount, icon: MapPin },
-    { label: "Romo", value: romo ?? 0, icon: BadgeCheck },
-  ];
+  const stats = everyone
+    ? [
+        { label: "Anggota", value: members ?? 0, icon: Users },
+        { label: "Keuskupan", value: dioceseCount, icon: MapPin },
+        { label: "Romo", value: romo ?? 0, icon: BadgeCheck },
+      ]
+    : [{ label: "Anggota", value: members ?? 0, icon: Users }];
 
   return (
     <div className="space-y-8 p-4 md:p-6">
@@ -59,7 +61,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             {c.motto && <p className="mt-2 italic text-[#EAE5D9]/80" style={serif}>&ldquo;{c.motto}&rdquo;</p>}
           </div>
         </div>
-        <p className="relative mt-6 max-w-3xl leading-relaxed text-[#EAE5D9]/90">{c.description || ABOUT_FALLBACK.description}</p>
+        <p className="relative mt-6 max-w-3xl leading-relaxed text-[#EAE5D9]/90">{c.description || (everyone ? ABOUT_FALLBACK.description : "Belum ada deskripsi komunitas.")}</p>
 
         <div className="relative mt-6 grid grid-cols-3 gap-3 max-w-md">
           {stats.map((s) => (
@@ -98,7 +100,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       )}
 
       {/* Pillars */}
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {everyone && <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {ABOUT_FALLBACK.pillars.map((p, i) => {
           const Icon = PILLAR_ICONS[i];
           return (
@@ -109,10 +111,10 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             </div>
           );
         })}
-      </section>
+      </section>}
 
       {/* Quick links */}
-      <section className="grid gap-3 sm:grid-cols-3">
+      {everyone ? <section className="grid gap-3 sm:grid-cols-3">
         {[
           { href: `/camp/${slug}/uskup`, title: "Para Uskup", text: "Gembala keuskupan di Indonesia", icon: Church },
           { href: `/camp/${slug}/peta`, title: "Peta Keuskupan", text: "Keuskupan dari Sabang sampai Merauke", icon: MapPin },
@@ -124,7 +126,20 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             <p className="text-xs text-brand-muted">{l.text}</p>
           </Link>
         ))}
-      </section>
+      </section> : (
+        <section className="grid gap-3 sm:grid-cols-2">
+          {[
+            { href: `/camp/${slug}/crew`, title: "Event", text: "Camp dan kegiatan komunitas", icon: CalendarDays },
+            { href: `/camp/${slug}/org-structure`, title: "Struktur Organisasi", text: "Pengurus dan penanggung jawab", icon: Users },
+          ].map((l) => (
+            <Link key={l.title} href={l.href} className="group rounded-2xl bg-[#1a1d24] p-4 transition-colors hover:bg-[#20242c]" style={{ border: `1px solid ${GOLD}22` }}>
+              <l.icon className="h-5 w-5" style={{ color: GOLD }} />
+              <div className="mt-2 font-semibold text-white group-hover:text-[#E8C98B]">{l.title}</div>
+              <p className="text-xs text-brand-muted">{l.text}</p>
+            </Link>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

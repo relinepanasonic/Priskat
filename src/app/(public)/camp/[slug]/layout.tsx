@@ -100,21 +100,13 @@ export default function CommunitySlugLayout({
     ...(canPromote ? [{ name: "Promotional", href: `/camp/${slug}/promotion`, icon: Megaphone }] : []),
   ];
 
+  // Default template for every new community
   const tabs = isCI ? ciTabs : [
-    { name: "Camp Event", href: `/camp/${slug}/crew`, icon: Users },
-    { name: "My Ongoing Services", href: `/camp/${slug}/ongoing`, icon: Tent },
-    { name: "Schedule", href: `/camp/${slug}/schedule`, icon: Calendar },
-    ...(canPromote
-      ? [
-          {
-            name: "Promotional",
-            href: `/camp/${slug}/promotion`,
-            icon: Megaphone,
-          },
-        ]
-      : []),
-    { name: "Org Structure", href: `/camp/${slug}/org-structure`, icon: Network },
+    { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
+    { name: "Event", href: `/camp/${slug}/crew`, icon: Calendar },
+    { name: "Promotion", href: `/camp/${slug}/promotion`, icon: Megaphone },
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
+    { name: "Struktur", href: `/camp/${slug}/org-structure`, icon: Network },
   ];
 
   return (
