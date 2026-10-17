@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Play, X, ChevronDown, Bookmark, BookmarkCheck, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Pause, X, ChevronDown, Bookmark, BookmarkCheck, Heart, Type } from "lucide-react";
+import { useReadAloud } from "@/lib/readAloud";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA, type BibleBook } from "@/lib/bibleBooks";
 import { createClient } from "@/lib/supabase/client";
 
@@ -174,6 +175,42 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
 
   const isId = lang === "id";
   const bookLabel = (b: BibleBook) => (isId ? b.name : b.name_en);
+
+  // ── Listen (read aloud) ───────────────────────────────────────────────────
+  const readItems = useMemo(
+    () => verses.filter((v) => v.type === "content" && v.verse > 0).map((v) => ({ verse: v.verse, text: v.content })),
+    [verses]
+  );
+  const tts = useReadAloud(readItems, lang, `${bookName} ${isId ? "pasal" : "chapter"} ${chapter}`);
+  const togglePlay = () => {
+    if (tts.playing) { tts.stop(); return; }
+    if (!tts.supported) { showToast(isId ? "Fitur dengar butuh versi aplikasi terbaru" : "Listening needs the latest app version"); return; }
+    void tts.play(selectedVerse?.verse);
+  };
+
+  // Follow the verse being read: scroll it into view (phone) / turn to its page (desktop)
+  useEffect(() => {
+    if (tts.current == null) return;
+    const el = Array.from(document.querySelectorAll<HTMLElement>(`[data-verse="${tts.current}"]`)).find((e) => e.offsetParent !== null);
+    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    const page = pages.findIndex((p) => p.some((v) => v.type === "content" && v.verse === tts.current));
+    if (page >= 0 && Math.floor(page / 2) !== Math.floor(pageIndex / 2) && window.innerWidth >= 768) setPageIndex(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tts.current]);
+
+  // ── Text size (phone), remembered per device ─────────────────────────────
+  const FONT_SIZES = [16, 18, 20, 23];
+  const [fontStep, setFontStep] = useState(1);
+  useEffect(() => {
+    try { const v = parseInt(localStorage.getItem("bible-font-step") ?? ""); if (v >= 0 && v < FONT_SIZES.length) setFontStep(v); } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const cycleFont = () => {
+    const next = (fontStep + 1) % FONT_SIZES.length;
+    setFontStep(next);
+    try { localStorage.setItem("bible-font-step", String(next)); } catch { /* ignore */ }
+  };
+  const highlightVerse = tts.current ?? flashVerse;
   const pickBook = (b: BibleBook) => {
     setShowBookPicker(false);
     if (b.no !== bookId) router.push(`/faith/bible/${b.no}/1`);
@@ -291,59 +328,95 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
   const isFavSelected = selectedVerse ? favorites.has(selectedVerse.verse) : false;
 
   return (
-    <div className="min-h-[100dvh] pb-32 bg-[#2a2520] flex flex-col items-center justify-start py-4 md:py-8 px-4 relative select-none">
+    <div className="min-h-[100dvh] bg-[#fbfbf6] md:bg-[#2a2520] flex flex-col items-center justify-start md:py-8 md:px-4 md:pb-32 relative select-none">
 
-      {/* Back Button */}
-      <div className="w-full max-w-5xl flex items-center mb-4">
+      {/* Back Button (desktop) */}
+      <div className="hidden md:flex w-full max-w-5xl items-center mb-4">
         <Link href="/faith/bible" className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm">
           <ChevronLeft className="h-4 w-4" />
           <span>{lang === "id" ? "Pustaka" : "Library"}</span>
         </Link>
       </div>
 
-      {/* ── MOBILE: Single page ── */}
-      <div
-        className="md:hidden flex-1 w-full max-w-sm bg-[#fbfbf6] rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden relative"
-        onTouchStart={e => setTouchStart(e.targetTouches[0].clientX)}
-        onTouchMove={e => setTouchEnd(e.targetTouches[0].clientX)}
-        onTouchEnd={() => {
-          if (!touchStart || !touchEnd) return;
-          const distance = touchStart - touchEnd;
-          if (distance > 50) goNextMobile();
-          if (distance < -50) goPrevMobile();
-          setTouchStart(null);
-          setTouchEnd(null);
-        }}
-      >
-        {isAnimating && (
-          <div
-            className={`absolute inset-0 bg-[#fbfbf6] z-50 transition-transform duration-200 origin-${animDir === "right" ? "left" : "right"}`}
-            style={{ transform: animDir === "right" ? "translateX(-100%)" : "translateX(100%)", opacity: 0 }}
-          />
-        )}
-        {pages[pageIndex] && (
-          <PageContent
-            flashVerse={flashVerse}
-            verses={pages[pageIndex]}
-            bookName={bookName}
-            chapter={chapter}
-            isFirstPage={pageIndex === 0}
-            favorites={favorites}
-            selectedVerse={selectedVerse?.verse ?? null}
-            onVerseClick={handleVerseClick}
-          />
-        )}
-
-        {/* Mobile Page Controls */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-between px-6 text-gray-400">
-          <button onClick={goPrevMobile} className={`p-2 rounded-full active:bg-black/5 ${pageIndex === 0 ? "opacity-30" : ""}`} disabled={pageIndex === 0}>
+      {/* ── MOBILE: full-width scrolling reader ── */}
+      <div className="md:hidden w-full">
+        {/* Sticky bar under the app header */}
+        <div style={{ top: 70 }} className="sticky z-30 flex items-center gap-1 border-b border-black/5 bg-[#fbfbf6]/95 px-2 py-1.5 backdrop-blur">
+          <Link href="/faith/bible" aria-label={isId ? "Pustaka" : "Library"} className="rounded-full p-2 text-gray-500 active:bg-black/5">
             <ChevronLeft className="h-5 w-5" />
+          </Link>
+          <button onClick={() => setShowBookPicker(true)} className="flex min-w-0 flex-1 items-center gap-1 rounded-full px-2 py-1.5 text-left active:bg-black/5">
+            <span className="truncate font-sans text-[15px] font-bold text-gray-900">{bookName} {chapter}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
           </button>
-          <span className="text-xs font-sans self-center">{pageIndex + 1} / {totalPages}</span>
-          <button onClick={goNextMobile} className={`p-2 rounded-full active:bg-black/5 ${pageIndex === totalPages - 1 ? "opacity-30" : ""}`} disabled={pageIndex === totalPages - 1}>
-            <ChevronRight className="h-5 w-5" />
+          <button onClick={cycleFont} aria-label={isId ? "Ukuran teks" : "Text size"} className="flex items-center rounded-full px-2.5 py-2 text-gray-600 active:bg-black/5">
+            <Type className="h-4 w-4" />
+            <span className="ml-0.5 font-sans text-[10px] font-bold">{FONT_SIZES[fontStep]}</span>
+          </button>
+          <button
+            onClick={togglePlay}
+            aria-label={tts.playing ? (isId ? "Berhenti" : "Stop") : (isId ? "Dengarkan" : "Listen")}
+            className={`flex h-9 w-9 items-center justify-center rounded-full ${tts.playing ? "bg-amber-500 text-white" : "bg-gray-900 text-white"}`}
+          >
+            {tts.playing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="ml-0.5 h-4 w-4" fill="currentColor" />}
           </button>
         </div>
+
+        {/* Listening bar */}
+        {tts.playing && (
+          <div style={{ top: 119 }} className="sticky z-20 flex items-center justify-between gap-2 bg-amber-50 px-4 py-1.5 font-sans text-xs text-amber-900">
+            <span>{isId ? "Sedang membacakan" : "Reading"}{tts.current ? ` · ${isId ? "ayat" : "verse"} ${tts.current}` : "…"}</span>
+            <div className="flex items-center gap-1">
+              {[0.8, 1, 1.2].map((r) => (
+                <button key={r} onClick={() => tts.setRate(r)} className={`rounded-full px-2 py-0.5 ${tts.rate === r ? "bg-amber-500 text-white" : ""}`}>{r}×</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <article
+          className="px-5 pb-40 pt-5 text-[#222]"
+          style={{ fontFamily: "'Lora', Georgia, serif", fontSize: FONT_SIZES[fontStep], lineHeight: 1.9 }}
+        >
+          <p className="font-sans text-[11px] font-bold uppercase tracking-[0.25em] text-gray-400">{bookName}</p>
+          <h1 className="mb-4 text-5xl font-bold text-gray-900">{chapter}</h1>
+          {verses.map((v, i) => {
+            if (v.type === "title") {
+              return <h3 key={i} className="mb-2 mt-6 font-sans text-[0.95em] font-extrabold text-black">{v.content}</h3>;
+            }
+            const isSelected = selectedVerse?.verse === v.verse;
+            const isFav = favorites.has(v.verse);
+            const isHi = highlightVerse === v.verse;
+            return (
+              <span
+                key={i}
+                data-verse={v.verse}
+                onClick={() => handleVerseClick(v)}
+                className={`cursor-pointer rounded transition-colors duration-500 ${
+                  isHi ? "bg-amber-200 text-amber-950" : isSelected ? "bg-yellow-200 text-yellow-900" : isFav ? "bg-amber-100 text-amber-900" : ""
+                }`}
+              >
+                <sup className={`ml-1 mr-0.5 font-sans text-[0.6em] font-bold ${isSelected || isFav || isHi ? "text-amber-600" : "text-gray-400"}`}>{v.verse}</sup>
+                {v.content}{" "}
+              </span>
+            );
+          })}
+        </article>
+
+        {/* Floating chapter navigation, above the app's bottom bar */}
+        {!selectedVerse && (
+          <div className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/80 px-1.5 py-1 font-sans text-white shadow-xl backdrop-blur">
+            {chapter > 1 ? (
+              <Link href={`/faith/bible/${bookId}/${chapter - 1}`} aria-label={isId ? "Pasal sebelumnya" : "Previous chapter"} className="flex h-9 w-9 items-center justify-center rounded-full active:bg-white/15">
+                <ChevronLeft className="h-5 w-5" />
+              </Link>
+            ) : <span className="h-9 w-9" />}
+            <button onClick={() => setShowBookPicker(true)} className="px-2 text-sm font-semibold">{isId ? "Pasal" : "Chapter"} {chapter}</button>
+            <Link href={`/faith/bible/${bookId}/${chapter + 1}`} aria-label={isId ? "Pasal berikutnya" : "Next chapter"} className="flex h-9 w-9 items-center justify-center rounded-full active:bg-white/15">
+              <ChevronRight className="h-5 w-5" />
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* ── DESKTOP: Two-page spread ── */}
@@ -366,7 +439,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         >
           {pages[leftPageIndex] ? (
             <PageContent
-              flashVerse={flashVerse}
+              flashVerse={highlightVerse}
               verses={pages[leftPageIndex]}
               bookName={bookName}
               chapter={chapter}
@@ -395,7 +468,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         >
           {pages[rightPageIndex] ? (
             <PageContent
-              flashVerse={flashVerse}
+              flashVerse={highlightVerse}
               verses={pages[rightPageIndex]}
               bookName={bookName}
               chapter={chapter}
@@ -426,10 +499,14 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         )}
       </div>
 
-      {/* Bottom Controls */}
-      <div className="mt-6 flex items-center gap-4">
-        <button className="h-10 w-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all text-white">
-          <Play className="h-4 w-4 ml-0.5" fill="currentColor" />
+      {/* Bottom Controls (desktop) */}
+      <div className="mt-6 hidden md:flex items-center gap-4">
+        <button
+          onClick={togglePlay}
+          title={tts.playing ? (isId ? "Berhenti" : "Stop") : (isId ? "Dengarkan pasal ini" : "Listen to this chapter")}
+          className={`h-10 w-10 rounded-full flex items-center justify-center transition-all text-white ${tts.playing ? "bg-amber-500" : "bg-white/10 hover:bg-white/20"}`}
+        >
+          {tts.playing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4 ml-0.5" fill="currentColor" />}
         </button>
 
         <div className="flex items-center gap-1 bg-white/10 rounded-full px-3 py-2">
@@ -464,7 +541,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
 
       {/* ── VERSE ACTION POPUP ─────────────────────────────────────────────── */}
       {selectedVerse && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md">
+        <div className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] md:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md">
           <div className="bg-[#1c1a17] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Verse preview */}
             <div className="px-5 pt-4 pb-3">
@@ -492,6 +569,14 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
                 ) : (
                   <><Bookmark className="h-4 w-4" /> Simpan ke Ayat Fav ku</>
                 )}
+              </button>
+              <div className="w-px bg-white/10" />
+              <button
+                onClick={() => { const v = selectedVerse.verse; setSelectedVerse(null); void tts.play(v); }}
+                className="flex items-center justify-center gap-1.5 px-4 text-sm font-semibold text-white hover:bg-white/5"
+                title={isId ? "Dengarkan dari ayat ini" : "Listen from here"}
+              >
+                <Play className="h-4 w-4" fill="currentColor" />
               </button>
               <div className="w-px bg-white/10" />
               <button

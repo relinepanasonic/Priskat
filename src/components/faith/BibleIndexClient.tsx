@@ -21,7 +21,7 @@ interface BibleIndexClientProps {
   deuterocanonica: Book[];
 }
 
-import VerseMarquee from "./VerseMarquee";
+import VerseOfDayCard from "./VerseOfDayCard";
 
 export default function BibleIndexClient({
   isId,
@@ -120,7 +120,7 @@ export default function BibleIndexClient({
       )}
 
       <div className="space-y-12 pb-12">
-        {!searchQuery && <VerseMarquee isId={isId} />}
+        {!searchQuery && <VerseOfDayCard isId={isId} />}
 
         {/* New Testament */}
         {filteredNT.length > 0 && (

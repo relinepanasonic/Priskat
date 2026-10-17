@@ -47,7 +47,7 @@ export default async function PublicLayout({
       {user && <PushRegistrar userId={user.id} />}
       <PlayerProvider initialQueue={(profile?.favorite_songs as any[]) || []}>
         {/* Phones: leave room for the fixed bottom navigation bar (+ the raised Beranda button and the safe area) */}
-        <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">{children}</main>
+        <main className="flex-1 overflow-x-clip pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">{children}</main>
         <GlobalMiniPlayer />
       </PlayerProvider>
     </div>

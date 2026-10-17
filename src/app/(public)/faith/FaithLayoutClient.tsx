@@ -18,7 +18,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
   ];
 
   return (
-    <div className="w-full h-full p-4 md:p-8 pb-32 space-y-6">
+    <div className={`w-full h-full space-y-6 ${isReadingChapter ? "md:p-8" : "p-4 md:p-8 pb-32"}`}>
       
       {!isReadingChapter && (
       <>
@@ -57,7 +57,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
       )}
 
       {/* Tab Content */}
-      <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-hidden min-h-[500px]">
+      <div className={isReadingChapter ? "md:bg-[#1a1d24] md:border md:border-[#333] md:rounded-2xl md:shadow-xl md:overflow-hidden" : "bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-hidden min-h-[500px]"}>
         {children}
       </div>
 
