@@ -55,88 +55,56 @@ export default async function CommunityListingPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Phone: 2 cards across, ~2.5 rows per screen */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
         {(communities || []).map((c: any) => {
           const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || myAdminCommunityIds.includes(c.id);
-          const cardClass = `group bg-[#1a1d24] border border-[#2a2d35] rounded-2xl p-6 transition-all shadow-lg ${
-            hasAccess ? 'hover:border-brand-gold/50 hover:bg-[#1e2129] hover:shadow-brand-gold/10 cursor-pointer' : 'opacity-80 cursor-not-allowed'
+          const cardClass = `group flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:p-5 ${
+            hasAccess ? "cursor-pointer hover:border-brand-gold/50 hover:bg-[#1e2129]" : "cursor-not-allowed opacity-80"
           }`;
-
-          return hasAccess ? (
-          <Link
-            key={c.id}
-            href={`/camp/${c.slug || c.id}`}
-            className={cardClass}
-          >
-            <div className="flex items-start justify-between mb-4">
-              {c.logo_url ? (
-                <img src={c.logo_url} alt={c.name} className="w-14 h-14 rounded-xl object-cover" />
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-brand-gold/10 flex items-center justify-center">
-                  <Users className="w-7 h-7 text-brand-gold" />
-                </div>
-              )}
-              <span className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
-                c.is_public 
-                  ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" 
-                  : "text-orange-400 bg-orange-500/10 border-orange-500/30"
-              }`}>
-                {c.is_public ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                {c.is_public ? "Public" : "Private"}
-              </span>
-            </div>
-
-            <h3 className={`text-xl font-bold text-white mb-1 transition-colors ${hasAccess ? 'group-hover:text-brand-gold' : ''}`}>
-              {c.name}
-            </h3>
-            {c.description && (
-              <p className="text-sm text-brand-muted mb-4 line-clamp-2">{c.description}</p>
-            )}
-
-            <div className="pt-4 border-t border-[#2a2d35] flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Users className="w-4 h-4" />
-                <span>{memberCounts[c.id] ?? c.member_count} members</span>
-              </div>
-              <span className={`text-sm font-bold flex items-center gap-1 transition-all ${hasAccess ? 'text-brand-gold group-hover:gap-2' : 'text-gray-500'}`}>
-                {hasAccess ? (
-                  <>Enter <ArrowRight className="w-4 h-4" /></>
+          const cardStyle = { minHeight: "min(26vh, 230px)" };
+          const body = (
+            <>
+              <div className="mb-2 flex items-start justify-between gap-1">
+                {c.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.logo_url} alt={c.name} className="h-10 w-10 rounded-xl object-cover md:h-14 md:w-14" loading="lazy" />
                 ) : (
-                  <><Lock className="w-3 h-3" /> No Access</>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold/10 md:h-14 md:w-14">
+                    <Users className="h-5 w-5 text-brand-gold md:h-7 md:w-7" />
+                  </div>
                 )}
-              </span>
-            </div>
-          </Link>
-          ) : (
-          <div key={c.id} className={cardClass}>
-            <div className="flex items-start justify-between mb-4">
-              {c.logo_url ? (
-                <img src={c.logo_url} alt={c.name} className="w-14 h-14 rounded-xl object-cover" />
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-brand-gold/10 flex items-center justify-center">
-                  <Users className="w-7 h-7 text-brand-gold" />
-                </div>
-              )}
-              <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border text-orange-400 bg-orange-500/10 border-orange-500/30">
-                <Lock className="w-3 h-3" />
-                Private
-              </span>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-1">{c.name}</h3>
-            {c.description && (
-              <p className="text-sm text-brand-muted mb-4 line-clamp-2">{c.description}</p>
-            )}
-            <div className="pt-4 border-t border-[#2a2d35] flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Users className="w-4 h-4" />
-                <span>{c.member_count} members</span>
+                <span className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold md:px-2.5 md:py-1 md:text-[11px] ${
+                  c.is_public
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                    : "border-orange-500/30 bg-orange-500/10 text-orange-400"
+                }`}>
+                  {c.is_public ? <Globe className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <Lock className="h-2.5 w-2.5 md:h-3 md:w-3" />}
+                  {c.is_public ? "Public" : "Private"}
+                </span>
               </div>
-              <span className="text-sm font-bold flex items-center gap-1 text-gray-500">
-                <Lock className="w-3 h-3" /> No Access
-              </span>
-            </div>
-          </div>
-          )
+
+              <h3 className={`line-clamp-2 text-sm font-bold leading-tight text-white transition-colors md:text-xl ${hasAccess ? "group-hover:text-brand-gold" : ""}`}>
+                {c.name}
+              </h3>
+              {c.description && <p className="mt-1 hidden line-clamp-2 text-sm text-brand-muted md:block">{c.description}</p>}
+
+              <div className="mt-auto flex items-center justify-between border-t border-[#2a2d35] pt-2 md:pt-4">
+                <span className="flex items-center gap-1 text-[11px] text-gray-400 md:text-sm">
+                  <Users className="h-3 w-3 md:h-4 md:w-4" />
+                  {memberCounts[c.id] ?? c.member_count}
+                </span>
+                <span className={`flex items-center gap-1 text-xs font-bold md:text-sm ${hasAccess ? "text-brand-gold" : "text-gray-500"}`}>
+                  {hasAccess ? (<>Enter <ArrowRight className="h-3.5 w-3.5" /></>) : (<><Lock className="h-3 w-3" /> No Access</>)}
+                </span>
+              </div>
+            </>
+          );
+          return hasAccess ? (
+            <Link key={c.id} href={`/camp/${c.slug || c.id}`} className={cardClass} style={cardStyle}>{body}</Link>
+          ) : (
+            <div key={c.id} className={cardClass} style={cardStyle}>{body}</div>
+          );
         })}
       </div>
 
