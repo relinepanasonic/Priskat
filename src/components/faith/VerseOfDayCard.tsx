@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookOpen, Pause, Play, Share2, Shuffle, CalendarDays } from "lucide-react";
 import { BACKGROUNDS } from "./DailyVerseCard";
 import { useReadAloud } from "@/lib/readAloud";
+import { spokenReference } from "@/lib/bibleRef";
 
 type Votd = { book: number; chapter: number; from: number; to: number; reference: string; text: string; day: number };
 
@@ -29,7 +30,7 @@ export default function VerseOfDayCard({ isId }: { isId: boolean }) {
   useEffect(() => { void load(false); }, [load]);
 
   const items = useMemo(() => (verse ? [{ verse: verse.from, text: verse.text }] : []), [verse]);
-  const tts = useReadAloud(items, isId ? "id" : "en", verse?.reference);
+  const tts = useReadAloud(items, isId ? "id" : "en", verse ? spokenReference(verse.reference, isId ? "id" : "en") : undefined);
   useEffect(() => { tts.stop(); }, [verse, tts.stop]);
 
   const bg = BACKGROUNDS[(verse?.day ?? 0) % BACKGROUNDS.length];

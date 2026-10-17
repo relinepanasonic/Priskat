@@ -5,6 +5,7 @@ import { Search, Bookmark, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BookListClient from "./BookListClient";
+import { parseBibleRef } from "@/lib/bibleRef";
 
 interface Book {
   no: number;
@@ -34,8 +35,14 @@ export default function BibleIndexClient({
   const [version, setVersion] = useState(isId ? "TB" : "NRSV-CE");
   const q = searchQuery.trim();
   // Enter = search the words in the whole Bible (typing alone still filters book names)
+  const allBooks = useMemo(() => [...oldTestament, ...newTestament, ...deuterocanonica], [oldTestament, newTestament, deuterocanonica]);
+  // "Yeremia 31:3" / "Yer 31:3-5" / "Yeremia pasal 31 ayat 3" jumps straight to that verse
+  const ref = useMemo(() => parseBibleRef(q, allBooks), [q, allBooks]);
+  const refHref = ref ? `/faith/bible/${ref.book.no}/${ref.chapter}?${new URLSearchParams({ version, ...(ref.verse ? { ayat: String(ref.verse) } : {}) })}` : null;
+  const refLabel = ref ? `${isId ? ref.book.name : ref.book.name_en} ${ref.chapter}${ref.verse ? `:${ref.verse}${ref.to ? `-${ref.to}` : ""}` : ""}` : "";
   const searchBible = (e?: React.FormEvent) => {
     e?.preventDefault();
+    if (refHref) { router.push(refHref); return; }
     if (q.length < 2) return;
     router.push(`/faith/bible/search?${new URLSearchParams({ q, v: version })}`);
   };
@@ -105,8 +112,20 @@ export default function BibleIndexClient({
         </Link>
       </div>
 
+      {/* Reference typed (book + chapter[:verse]) → open it directly */}
+      {refHref && (
+        <Link
+          href={refHref}
+          className="-mt-5 mb-3 flex w-full max-w-2xl items-center gap-3 rounded-xl bg-brand-gold px-4 py-3 text-left text-sm font-semibold text-[#121417] shadow-lg"
+        >
+          <Bookmark className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{isId ? "Buka" : "Open"} {refLabel}</span>
+          <ArrowRight className="h-4 w-4 shrink-0" />
+        </Link>
+      )}
+
       {/* Hint: search these words across the whole Bible */}
-      {q.length >= 2 && (
+      {q.length >= 2 && !refHref && (
         <button
           onClick={() => searchBible()}
           className="-mt-5 mb-8 flex w-full max-w-2xl items-center gap-3 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3 text-left text-sm text-brand-gold transition-colors hover:bg-brand-gold/20"
