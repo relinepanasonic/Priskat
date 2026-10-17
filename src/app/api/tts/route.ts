@@ -24,7 +24,8 @@ export async function GET(request: Request) {
   const region = process.env.AZURE_SPEECH_REGION;
   const geminiKey = process.env.GEMINI_API_KEY;
   const want = process.env.TTS_PROVIDER; // optional: "azure" | "gemini"
-  const provider = want === "gemini" && geminiKey ? "gemini" : want === "azure" && azureKey && region ? "azure" : azureKey && region ? "azure" : geminiKey ? "gemini" : null;
+  // Gemini stays off unless TTS_PROVIDER=gemini is set explicitly (a GEMINI_API_KEY alone does nothing)
+  const provider = want === "gemini" && geminiKey ? "gemini" : azureKey && region ? "azure" : null;
   if (!provider) return NextResponse.json({ error: "tts-disabled" }, { status: 501 });
 
   const p = new URL(request.url).searchParams;

@@ -129,9 +129,9 @@ export default function BibleIndexClient({
         <button onClick={randomVerse} disabled={rolling} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold disabled:opacity-60">
           {rolling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shuffle className="h-4 w-4" />} {isId ? "Acak" : "Random"}
         </button>
-        <a href="https://www.imankatolik.or.id/kalender.php" target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold">
+        <Link href="/faith/bible/bacaan" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold">
           <CalendarCheck className="h-4 w-4" /> {isId ? "Bacaan Hari Ini" : "Today's Reading"}
-        </a>
+        </Link>
       </div>
 
       {/* Reference typed (book + chapter[:verse]) → open it directly */}
