@@ -109,3 +109,18 @@ html {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* Paper texture for the Bible reader: fibre noise + soft warm vignette on cream */
+.paper, .paper-phone {
+  background-color: #f6f0e0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0 0.2 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.55), transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(150,110,50,0.12), transparent 65%);
+}
+@media (min-width: 768px) {
+  .paper-phone { background: #2a2520; }
+}
+.paper-bar {
+  background-color: rgba(246, 240, 224, 0.94);
+}

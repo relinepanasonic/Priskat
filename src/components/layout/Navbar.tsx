@@ -12,7 +12,6 @@ import type { Profile } from "@/lib/types/database.types";
 import LanguageToggle from "@/components/ui/LanguageToggle";
 import { forgetPushToken } from "@/components/native/PushRegistrar";
 import ConnectUnreadDot from "@/components/community/ConnectUnreadDot";
-import StreakBadge from "@/components/layout/StreakBadge";
 
 interface NavbarProps {
   profile?: Profile | null;
@@ -46,18 +45,14 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
   return (
     <>
     {/* Mobile Top Header (Settings & Lang & Streak) */}
-    <div className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
+    <div className="md:hidden sticky top-0 z-50 flex min-h-[70px] items-center justify-between px-4 py-3 bg-[#1a1d24] backdrop-blur-sm shadow-sm border-b border-[#333]">
       <Link href="/" className="flex items-center gap-2">
-        <Image src={profile?.community?.logo_url || "/logo.png"} alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
+        <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-lg object-contain bg-white" />
         <div className="flex flex-col">
-          <span className="font-bold text-brand-gold text-xs truncate max-w-[120px]">{profile?.community?.name || "Catholic Indonesia"}</span>
-          {profile?.community?.name && (
-            <span className="text-[9px] text-gray-400 leading-none mt-0.5">by Ruang Iman</span>
-          )}
+          <span className="font-bold text-brand-gold text-xs truncate max-w-[120px]">Ruang Iman</span>
         </div>
       </Link>
       <div className="flex items-center gap-2">
-        <StreakBadge />
         <LanguageToggle currentLang={lang} />
         <button onClick={handleSignOut} className="text-brand-light hover:text-red-500 transition"><LogOut className="h-5 w-5" /></button>
       </div>
@@ -69,15 +64,11 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
         {/* Logo & Streak */}
         <div className="flex items-center justify-between gap-2 mb-6 px-2">
           <Link href="/" className="flex items-center gap-2">
-            <Image src={profile?.community?.logo_url || "/logo.png"} alt="Logo" width={32} height={32} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
+            <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-xl object-contain bg-white shadow-md shadow-brand-gold/20" />
             <div className="flex flex-col">
-              <span className="font-bold text-white text-[14px] leading-tight tracking-wide truncate max-w-[90px]">{profile?.community?.name || "Catholic Indonesia"}</span>
-              {profile?.community?.name && (
-                <span className="text-[9px] text-gray-400 leading-none mt-0.5">by Ruang Iman</span>
-              )}
+              <span className="font-bold text-white text-[14px] leading-tight tracking-wide truncate max-w-[90px]">Ruang Iman</span>
             </div>
           </Link>
-          <StreakBadge />
         </div>
 
         {/* Desktop nav */}

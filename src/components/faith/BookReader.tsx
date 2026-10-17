@@ -328,7 +328,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
   const isFavSelected = selectedVerse ? favorites.has(selectedVerse.verse) : false;
 
   return (
-    <div className="min-h-[100dvh] bg-[#fbfbf6] md:bg-[#2a2520] flex flex-col items-center justify-start md:py-8 md:px-4 md:pb-32 relative select-none">
+    <div className="min-h-[100dvh] paper-phone flex flex-col items-center justify-start md:py-8 md:px-4 md:pb-32 relative select-none">
 
       {/* Back Button (desktop) */}
       <div className="hidden md:flex w-full max-w-5xl items-center mb-4">
@@ -341,7 +341,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
       {/* ── MOBILE: full-width scrolling reader ── */}
       <div className="md:hidden w-full">
         {/* Sticky bar under the app header */}
-        <div style={{ top: 70 }} className="sticky z-30 flex items-center gap-1 border-b border-black/5 bg-[#fbfbf6]/95 px-2 py-1.5 backdrop-blur">
+        <div style={{ top: 70 }} className="sticky z-30 flex items-center gap-1 border-b border-black/5 paper-bar px-2 py-1.5 backdrop-blur">
           <Link href="/faith/bible" aria-label={isId ? "Pustaka" : "Library"} className="rounded-full p-2 text-gray-500 active:bg-black/5">
             <ChevronLeft className="h-5 w-5" />
           </Link>
@@ -433,7 +433,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
 
         {/* Left Page */}
         <div
-          className="w-1/2 h-full bg-[#fbfbf6] relative cursor-pointer group"
+          className="w-1/2 h-full paper relative cursor-pointer group"
           onClick={goPrevDesktop}
           style={{ boxShadow: "inset -8px 0 20px rgba(0,0,0,0.08)", transform: isAnimating && animDir === "left" ? "translateX(-4px)" : "translateX(0)", transition: "transform 0.3s ease" }}
         >
@@ -462,7 +462,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
 
         {/* Right Page */}
         <div
-          className="w-1/2 h-full bg-[#f9f8f3] relative cursor-pointer group"
+          className="w-1/2 h-full paper relative cursor-pointer group"
           onClick={goNextDesktop}
           style={{ boxShadow: "inset 8px 0 20px rgba(0,0,0,0.06)", transform: isAnimating && animDir === "right" ? "translateX(4px)" : "translateX(0)", transition: "transform 0.3s ease" }}
         >
