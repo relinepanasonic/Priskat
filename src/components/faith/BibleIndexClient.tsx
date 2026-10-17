@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Bookmark } from "lucide-react";
+import { Search, Bookmark, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import BookListClient from "./BookListClient";
 
 interface Book {
@@ -28,8 +29,16 @@ export default function BibleIndexClient({
   newTestament,
   deuterocanonica
 }: BibleIndexClientProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [version, setVersion] = useState(isId ? "TB" : "NRSV-CE");
+  const q = searchQuery.trim();
+  // Enter = search the words in the whole Bible (typing alone still filters book names)
+  const searchBible = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (q.length < 2) return;
+    router.push(`/faith/bible/search?${new URLSearchParams({ q, v: version })}`);
+  };
 
   const filteredNT = useMemo(() => 
     newTestament.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.name_en.toLowerCase().includes(searchQuery.toLowerCase())),
@@ -47,18 +56,19 @@ export default function BibleIndexClient({
     <div className="w-full">
       {/* Search Bar & Version Dropdown & Fav Verses */}
       <div className="flex items-center gap-2 sm:gap-3 mb-8 max-w-2xl">
-        <div className="relative flex-1 min-w-0">
+        <form onSubmit={searchBible} className="relative flex-1 min-w-0" role="search">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
             className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-[#333] rounded-xl leading-5 bg-[#1a1d24] text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold text-xs sm:text-sm transition-colors shadow-inner-dark"
-            placeholder={isId ? "Cari nama kitab..." : "Search book names..."}
+            placeholder={isId ? "Cari kitab atau kata di Alkitab…" : "Search books or words in the Bible…"}
+            enterKeyHint="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
+        </form>
         
         {/* Version Dropdown (compact) */}
         <div className="relative w-16 sm:w-24 shrink-0">
@@ -95,6 +105,20 @@ export default function BibleIndexClient({
         </Link>
       </div>
 
+      {/* Hint: search these words across the whole Bible */}
+      {q.length >= 2 && (
+        <button
+          onClick={() => searchBible()}
+          className="-mt-5 mb-8 flex w-full max-w-2xl items-center gap-3 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3 text-left text-sm text-brand-gold transition-colors hover:bg-brand-gold/20"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">
+            {isId ? <>Cari &ldquo;<b>{q}</b>&rdquo; di seluruh Alkitab</> : <>Search &ldquo;<b>{q}</b>&rdquo; in the whole Bible</>}
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0" />
+        </button>
+      )}
+
       <div className="space-y-12 pb-12">
         {!searchQuery && <VerseMarquee isId={isId} />}
 
@@ -129,7 +153,7 @@ export default function BibleIndexClient({
         )}
 
         {/* No Results */}
-        {searchQuery && filteredOT.length === 0 && filteredNT.length === 0 && filteredDC.length === 0 && (
+        {searchQuery && q.length < 2 && filteredOT.length === 0 && filteredNT.length === 0 && filteredDC.length === 0 && (
           <div className="text-center py-10 bg-brand-surface/50 rounded-2xl border border-[#333] mt-4">
             <p className="text-brand-muted">
               {isId ? "Tidak ada kitab yang cocok dengan pencarian Anda." : "No books match your search."}

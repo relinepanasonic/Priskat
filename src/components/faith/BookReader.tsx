@@ -20,6 +20,7 @@ interface Props {
   chapter: number;
   lang?: "id" | "en";
   userId?: string | null;
+  initialVerse?: number | null;
 }
 
 const WORDS_PER_PAGE = 220;
@@ -61,6 +62,7 @@ function PageContent({
   favorites,
   selectedVerse,
   onVerseClick,
+  flashVerse,
 }: {
   verses: Verse[];
   bookName: string;
@@ -69,6 +71,7 @@ function PageContent({
   favorites: Set<number>;
   selectedVerse: number | null;
   onVerseClick: (v: Verse) => void;
+  flashVerse?: number | null;
 }) {
   return (
     <div className="h-full overflow-y-auto hide-scrollbar p-8 lg:p-12 pb-16 lg:pb-20 flex flex-col relative">
@@ -98,14 +101,18 @@ function PageContent({
 
           const isSelected = selectedVerse === v.verse;
           const isFav = favorites.has(v.verse);
+          const isFlash = flashVerse === v.verse;
 
           return (
             // ② Tap a verse to select/highlight it
             <span
               key={i}
+              data-verse={v.verse}
               onClick={() => onVerseClick(v)}
-              className={`inline cursor-pointer rounded transition-colors duration-150 ${
-                isSelected
+              className={`inline cursor-pointer rounded transition-colors duration-700 ${
+                isFlash
+                  ? "bg-amber-300/80 text-amber-950 ring-2 ring-amber-400"
+                  : isSelected
                   ? "bg-yellow-200 text-yellow-900"
                   : isFav
                   ? "bg-amber-100 text-amber-900"
@@ -125,7 +132,7 @@ function PageContent({
 }
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function BookReader({ verses, bookName, bookId, chapter, lang = "en", userId }: Props) {
+export default function BookReader({ verses, bookName, bookId, chapter, lang = "en", userId, initialVerse = null }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const pages = splitIntoPages(verses);
@@ -133,7 +140,22 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
   const totalSpreads = Math.ceil(pages.length / 2);
   const totalPages = pages.length;
 
-  const [pageIndex, setPageIndex] = useState(0);
+  // Opened from a search result: start on the page holding that verse and briefly highlight it
+  const [pageIndex, setPageIndex] = useState(() => {
+    if (initialVerse == null) return 0;
+    const i = pages.findIndex((p) => p.some((v) => v.type === "content" && v.verse === initialVerse));
+    return i < 0 ? 0 : i;
+  });
+  const [flashVerse, setFlashVerse] = useState<number | null>(initialVerse);
+  useEffect(() => {
+    if (initialVerse == null) return;
+    const t1 = setTimeout(() => {
+      const el = Array.from(document.querySelectorAll<HTMLElement>(`[data-verse="${initialVerse}"]`)).find((e) => e.offsetParent !== null);
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 150);
+    const t2 = setTimeout(() => setFlashVerse(null), 4000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [initialVerse]);
   const spread = Math.floor(pageIndex / 2);
 
   const [animDir, setAnimDir] = useState<"left" | "right" | null>(null);
@@ -301,6 +323,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         )}
         {pages[pageIndex] && (
           <PageContent
+            flashVerse={flashVerse}
             verses={pages[pageIndex]}
             bookName={bookName}
             chapter={chapter}
@@ -343,6 +366,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         >
           {pages[leftPageIndex] ? (
             <PageContent
+              flashVerse={flashVerse}
               verses={pages[leftPageIndex]}
               bookName={bookName}
               chapter={chapter}
@@ -371,6 +395,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         >
           {pages[rightPageIndex] ? (
             <PageContent
+              flashVerse={flashVerse}
               verses={pages[rightPageIndex]}
               bookName={bookName}
               chapter={chapter}

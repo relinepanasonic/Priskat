@@ -186,7 +186,7 @@ export default async function HomePage() {
 
         {/* Menu Links */}
         <div className="px-6 mt-8 mb-8 space-y-2">
-          <Link href="/faith" className="flex items-center justify-between p-4 bg-brand-surface/30 hover:bg-brand-surface rounded-xl border border-transparent hover:border-[#333] transition-colors group">
+          <Link href="/faith/bible" className="flex items-center justify-between p-4 bg-brand-surface/30 hover:bg-brand-surface rounded-xl border border-transparent hover:border-[#333] transition-colors group">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 bg-[#111] rounded-lg flex items-center justify-center text-brand-gold group-hover:scale-110 transition-transform">
                 <Book className="h-5 w-5" />

@@ -21,6 +21,8 @@ function BookCard({
 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const imagePath = `/images/bible/${categoryFolder}/${book.name_en}.jpeg`;
+  // Small WebP cover for the shelf (the full image is only loaded in the open-book view)
+  const thumbPath = `/images/bible/thumbs/${categoryFolder}/${book.name_en}.webp`;
   const isGospel = ["Matthew", "Mark", "Luke", "John"].includes(book.name_en);
 
   return (
@@ -43,8 +45,12 @@ function BookCard({
         >
           {/* We always render the img, just hide it if it fails. This is more reliable across browsers. */}
           <img 
-            src={imagePath} 
+            src={thumbPath} 
             alt={book.name_en} 
+            loading="lazy"
+            decoding="async"
+            width={130}
+            height={195}
             onError={(e) => {
               setImgFailed(true);
               e.currentTarget.style.display = 'none';
