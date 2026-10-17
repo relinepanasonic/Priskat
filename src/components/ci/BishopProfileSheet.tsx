@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { X, Church, MapPin, Globe, Cake, Cross, Quote, ExternalLink, UserRound } from "lucide-react";
-import { KIND_LABEL, PROVINCE_COLORS, type Diocese } from "@/lib/catholicIndonesia";
+import { KIND_LABEL, PROVINCE_COLORS, isCardinal, type Diocese } from "@/lib/catholicIndonesia";
 import { findBishopProfile } from "@/lib/bishops";
 
 const GOLD = "#D6B072";
@@ -57,7 +57,7 @@ export default function BishopProfileSheet({ diocese, onClose }: { diocese: Dioc
             </div>
             <div className="min-w-0 pb-1">
               <div className="text-[10px] uppercase tracking-[0.2em]" style={{ color }}>
-                {isAdministrator ? "Administrator Apostolik" : diocese.bishop_note || KIND_LABEL[diocese.kind]}
+                {isAdministrator ? "Administrator Apostolik" : `${isCardinal(diocese.bishop_name) ? "Kardinal · " : ""}${diocese.bishop_note || KIND_LABEL[diocese.kind]}`}
               </div>
               <h2 className="mt-1 text-xl font-semibold leading-snug text-white" style={serif}>
                 {diocese.bishop_name ?? "Uskup belum diisi"}

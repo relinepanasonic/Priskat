@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Pencil, X, Church, MapPin, Globe, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { KIND_LABEL, PROVINCE_COLORS, PROVINCE_ORDER, type Diocese } from "@/lib/catholicIndonesia";
+import { KIND_LABEL, PROVINCE_COLORS, PROVINCE_ORDER, PROVINCE_REGION, isCardinal, type Diocese } from "@/lib/catholicIndonesia";
 import { findBishopProfile } from "@/lib/bishops";
 import BishopProfileSheet from "./BishopProfileSheet";
 
@@ -42,7 +42,7 @@ export default function DioceseDirectory({ dioceses, canEdit, initialOpen }: { d
         <section key={g.province}>
           <h3 className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-brand-muted">
             <span className="h-2 w-2 rounded-full" style={{ background: PROVINCE_COLORS[g.province] }} />
-            {g.province === "—" ? "Ordinariat" : `Provinsi Gerejawi ${g.province}`}
+            {g.province === "—" ? "Ordinariat" : `Provinsi Gerejawi ${g.province} · ${PROVINCE_REGION[g.province] ?? ""}`}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {g.items.map((d) => (
@@ -54,7 +54,10 @@ export default function DioceseDirectory({ dioceses, canEdit, initialOpen }: { d
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setViewing(d); } }}
                 aria-label={`Profil ${d.bishop_name ?? d.name}`}
                 className="relative cursor-pointer rounded-2xl bg-[#1a1d24] p-4 transition-colors hover:bg-[#20242c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6B072]/60"
-                style={{ border: `1px solid ${d.kind === "keuskupan_agung" ? `${GOLD}55` : "rgba(255,255,255,0.07)"}` }}
+                style={{
+                  border: `1px solid ${isCardinal(d.bishop_name) ? GOLD : d.kind === "keuskupan_agung" ? `${GOLD}55` : "rgba(255,255,255,0.07)"}`,
+                  boxShadow: isCardinal(d.bishop_name) ? `0 0 22px ${GOLD}33` : undefined,
+                }}
               >
                 <div className="flex gap-3">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ background: `${GOLD}14`, border: `1px solid ${GOLD}40` }}>
@@ -67,7 +70,7 @@ export default function DioceseDirectory({ dioceses, canEdit, initialOpen }: { d
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[10px] uppercase tracking-widest" style={{ color: d.kind === "keuskupan_agung" ? GOLD : "#9CA3AF" }}>
-                      {KIND_LABEL[d.kind]}
+                      {isCardinal(d.bishop_name) ? "Kardinal · " : ""}{KIND_LABEL[d.kind]}
                     </div>
                     <h4 className="font-semibold leading-snug text-white" style={serif}>{d.name}</h4>
                     <p className="mt-1 text-sm text-[#EAE5D9]">

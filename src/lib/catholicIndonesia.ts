@@ -95,7 +95,16 @@ export const DIOCESE_SEED: Diocese[] = [
   d(200, "Ordinariat Militer Indonesia", "ordinariat", "—", "Jakarta", null, null, "Katedral Santa Maria Diangkat ke Surga (Jakarta)", "Ignatius Kardinal Suharyo", "Ordinaris Militer"),
 ];
 
-export const PROVINCE_ORDER = ["Medan", "Palembang", "Jakarta", "Semarang", "Pontianak", "Samarinda", "Makassar", "Ende", "Kupang", "Merauke", "—"];
+// Java first (Jakarta, Semarang), then west to east
+export const PROVINCE_ORDER = ["Jakarta", "Semarang", "Medan", "Palembang", "Pontianak", "Samarinda", "Makassar", "Ende", "Kupang", "Merauke", "—"];
+
+export const PROVINCE_REGION: Record<string, string> = {
+  Jakarta: "Jawa", Semarang: "Jawa", Medan: "Sumatra", Palembang: "Sumatra", Pontianak: "Kalimantan",
+  Samarinda: "Kalimantan", Makassar: "Sulawesi & Maluku", Ende: "Nusa Tenggara", Kupang: "Nusa Tenggara", Merauke: "Papua",
+};
+
+/** Cardinals are shown first and highlighted. */
+export const isCardinal = (bishopName?: string | null) => /kardinal/i.test(bishopName ?? "");
 
 // One colour per ecclesiastical province (map + cards)
 export const PROVINCE_COLORS: Record<string, string> = {
