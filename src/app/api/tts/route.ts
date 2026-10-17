@@ -20,9 +20,12 @@ const VOICES = {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export async function GET(request: Request) {
-  const key = process.env.AZURE_SPEECH_KEY;
+  const azureKey = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;
-  if (!key || !region) return NextResponse.json({ error: "tts-disabled" }, { status: 501 });
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const want = process.env.TTS_PROVIDER; // optional: "azure" | "gemini"
+  const provider = want === "gemini" && geminiKey ? "gemini" : want === "azure" && azureKey && region ? "azure" : azureKey && region ? "azure" : geminiKey ? "gemini" : null;
+  if (!provider) return NextResponse.json({ error: "tts-disabled" }, { status: 501 });
 
   const p = new URL(request.url).searchParams;
   const book = Number(p.get("b"));
@@ -61,6 +64,9 @@ export async function GET(request: Request) {
     text = rows.map((r) => cleanVerse(r.content)).join(" ").slice(0, 2500);
   }
 
+  if (provider === "gemini") return geminiSpeech(text, lang, gender, geminiKey!);
+
+  const key = azureKey!;
   const v = VOICES[lang];
   const ssml = `<speak version="1.0" xml:lang="${v.locale}"><voice name="${v[gender]}"><prosody rate="-4%">${esc(text)}</prosody></voice></speak>`;
   const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
@@ -80,5 +86,39 @@ export async function GET(request: Request) {
       "Content-Type": "audio/mpeg",
       "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
     },
+  });
+}
+
+/** Gemini speech: returns raw 24 kHz 16-bit mono PCM, wrapped here as a WAV file. */
+async function geminiSpeech(text: string, lang: "id" | "en", gender: "f" | "m", key: string) {
+  const model = process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts";
+  const voiceName = gender === "m" ? "Charon" : "Kore";
+  const style = lang === "id"
+    ? "Bacakan ayat Alkitab ini dalam bahasa Indonesia dengan suara tenang, hangat, dan khidmat, tidak terburu-buru: "
+    : "Read this Bible verse slowly in a calm, warm and reverent voice: ";
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: style + text }] }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
+      },
+    }),
+  });
+  if (!res.ok) return NextResponse.json({ error: "tts-failed" }, { status: 502 });
+  const json = await res.json();
+  const b64: string | undefined = json?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
+  if (!b64) return NextResponse.json({ error: "tts-failed" }, { status: 502 });
+
+  const pcm = Buffer.from(b64, "base64");
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0); header.writeUInt32LE(36 + pcm.length, 4); header.write("WAVEfmt ", 8);
+  header.writeUInt32LE(16, 16); header.writeUInt16LE(1, 20); header.writeUInt16LE(1, 22);
+  header.writeUInt32LE(24000, 24); header.writeUInt32LE(48000, 28); header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34);
+  header.write("data", 36); header.writeUInt32LE(pcm.length, 40);
+  return new Response(Buffer.concat([header, pcm]), {
+    headers: { "Content-Type": "audio/wav", "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable" },
   });
 }
