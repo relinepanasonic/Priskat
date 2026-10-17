@@ -87,6 +87,7 @@ export default async function CommunityListingPage() {
               <h3 className={`line-clamp-2 text-sm font-bold leading-tight text-white transition-colors md:text-xl ${hasAccess ? "group-hover:text-brand-gold" : ""}`}>
                 {c.name}
               </h3>
+              {(c.tagline || c.motto) && <p className="mt-0.5 line-clamp-2 text-[10px] italic leading-snug text-brand-gold/80 md:text-xs">{c.tagline || c.motto}</p>}
               {c.description && <p className="mt-1 hidden line-clamp-2 text-sm text-brand-muted md:block">{c.description}</p>}
 
               <div className="mt-auto flex items-center justify-between border-t border-[#2a2d35] pt-2 md:pt-4">

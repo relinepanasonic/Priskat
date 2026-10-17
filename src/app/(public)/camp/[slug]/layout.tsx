@@ -1,9 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname, useParams, useRouter } from "next/navigation";
 import {
   Map,
   Calendar,
@@ -34,6 +34,8 @@ export default function CommunitySlugLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const touch = useRef<{ x: number; y: number; ok: boolean } | null>(null);
   const params = useParams();
   const slug = (params.slug as string) || "";
   const validSlug = slug && slug !== "undefined" && slug !== "null";
@@ -109,6 +111,34 @@ export default function CommunitySlugLayout({
     { name: "Struktur", href: `/camp/${slug}/org-structure`, icon: Network },
   ];
 
+  // keep the active tab visible in the scrolling tab bar
+  useEffect(() => {
+    document.querySelector<HTMLElement>("[data-community-tabs] [aria-current=page]")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [pathname]);
+
+  // Phones: swipe left/right to move between the tabs (Uskup → Romo → Galeri ...)
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    const el = e.target as HTMLElement;
+    // don't hijack maps, inputs, tables or anything that scrolls sideways itself
+    const blocked = !!el.closest("input, textarea, select, svg, table, canvas, [data-noswipe]") ||
+      (() => { let n: HTMLElement | null = el; while (n && n !== e.currentTarget) { if (n.scrollWidth > n.clientWidth + 4 && /(auto|scroll)/.test(getComputedStyle(n).overflowX)) return true; n = n.parentElement; } return false; })();
+    touch.current = { x: t.clientX, y: t.clientY, ok: !blocked };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const st = touch.current;
+    touch.current = null;
+    if (!st || !st.ok) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - st.x;
+    const dy = t.clientY - st.y;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+    const i = tabs.findIndex((tab) => pathname.startsWith(tab.href.split("?")[0]));
+    if (i < 0) return;
+    const next = tabs[dx < 0 ? i + 1 : i - 1];
+    if (next) router.push(next.href);
+  };
+
   return (
     <div className="w-full h-full p-4 md:p-8 space-y-4 flex flex-col font-sans">
       {/* Back button + Community name */}
@@ -135,7 +165,7 @@ export default function CommunitySlugLayout({
 
       {/* Tabs Navigation */}
       <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-        <nav className="flex space-x-2 min-w-max" aria-label="Tabs">
+        <nav data-community-tabs className="flex space-x-2 min-w-max" aria-label="Tabs">
           {tabs.map((tab) => {
             const isActive = pathname.startsWith(tab.href);
             const Icon = tab.icon;
@@ -166,7 +196,7 @@ export default function CommunitySlugLayout({
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-x-hidden overflow-y-auto min-h-[500px] flex-1 flex flex-col relative">
+      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-x-hidden overflow-y-auto min-h-[500px] flex-1 flex flex-col relative">
         {children}
       </div>
     </div>

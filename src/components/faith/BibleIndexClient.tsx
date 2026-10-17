@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Bookmark, ArrowRight } from "lucide-react";
+import { Search, Bookmark, ArrowRight, Shuffle, CalendarCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BookListClient from "./BookListClient";
@@ -47,6 +47,22 @@ export default function BibleIndexClient({
     router.push(`/faith/bible/search?${new URLSearchParams({ q, v: version })}`);
   };
 
+  const [rolling, setRolling] = useState(false);
+  const randomVerse = async () => {
+    if (rolling) return;
+    setRolling(true);
+    try {
+      const r = await fetch(`/api/bible/votd?lang=${isId ? "id" : "en"}&random=1`, { cache: "no-store" });
+      if (r.ok) {
+        const v = await r.json();
+        router.push(`/faith/bible/${v.book}/${v.chapter}?ayat=${v.from}`);
+        return;
+      }
+    } finally {
+      setRolling(false);
+    }
+  };
+
   const filteredNT = useMemo(() => 
     newTestament.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.name_en.toLowerCase().includes(searchQuery.toLowerCase())),
   [newTestament, searchQuery]);
@@ -61,8 +77,11 @@ export default function BibleIndexClient({
 
   return (
     <div className="w-full">
-      {/* Search Bar & Version Dropdown & Fav Verses */}
-      <div className="flex items-center gap-2 sm:gap-3 mb-8 max-w-2xl">
+      {/* Verse of the day first, then search, then quick actions */}
+      {!searchQuery && <div className="mb-5 max-w-2xl"><VerseOfDayCard isId={isId} /></div>}
+
+      {/* Row 1: search + version */}
+      <div className="mb-3 flex max-w-2xl items-center gap-2 sm:gap-3">
         <form onSubmit={searchBible} className="relative flex-1 min-w-0" role="search">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-500" />
@@ -76,7 +95,7 @@ export default function BibleIndexClient({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </form>
-        
+
         {/* Version Dropdown (compact) */}
         <div className="relative w-16 sm:w-24 shrink-0">
           <select
@@ -100,16 +119,19 @@ export default function BibleIndexClient({
           </div>
         </div>
 
-        {/* Ayat Fav ku Button */}
-        <Link
-          href="/profile/favorites"
-          className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 sm:py-3 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-400 rounded-xl text-xs font-semibold transition-all shadow-sm"
-          title={isId ? "Ayat Fav ku" : "My Fav Verses"}
-        >
-          <Bookmark className="h-4 w-4" fill="currentColor" />
-          <span className="hidden sm:inline">{isId ? "Ayat Fav ku" : "My Fav Verses"}</span>
-          <span className="sm:hidden">{isId ? "Fav ku" : "Fav"}</span>
+      </div>
+
+      {/* Row 2: Fav, random verse, today's reading */}
+      <div className="mb-8 flex max-w-2xl items-center gap-2">
+        <Link href="/profile/favorites" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20">
+          <Bookmark className="h-4 w-4" fill="currentColor" /> {isId ? "Fav ku" : "My Fav"}
         </Link>
+        <button onClick={randomVerse} disabled={rolling} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold disabled:opacity-60">
+          {rolling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shuffle className="h-4 w-4" />} {isId ? "Acak" : "Random"}
+        </button>
+        <a href="https://www.imankatolik.or.id/kalender.php" target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold">
+          <CalendarCheck className="h-4 w-4" /> {isId ? "Bacaan Hari Ini" : "Today's Reading"}
+        </a>
       </div>
 
       {/* Reference typed (book + chapter[:verse]) → open it directly */}
@@ -139,8 +161,6 @@ export default function BibleIndexClient({
       )}
 
       <div className="space-y-12 pb-12">
-        {!searchQuery && <VerseOfDayCard isId={isId} />}
-
         {/* New Testament */}
         {filteredNT.length > 0 && (
           <div className="relative">
