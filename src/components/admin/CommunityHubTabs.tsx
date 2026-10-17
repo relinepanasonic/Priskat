@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, Tent, CalendarPlus, Network, Map, BadgeCheck } from "lucide-react";
+import { LayoutDashboard, Users, Tent, CalendarPlus, Network, Map, BadgeCheck } from "lucide-react";
 
 export default function CommunityHubTabs({ slug, showRomo }: { slug: string; showRomo: boolean }) {
   const pathname = usePathname();
   const base = `/admin/communities/${slug}`;
   const tabs = [
+    { name: "Dashboard", href: `${base}/dashboard`, icon: LayoutDashboard },
     { name: "Anggota", href: `${base}/anggota`, icon: Users },
     { name: "Camp", href: `${base}/camp`, icon: Tent },
     { name: "Event", href: `${base}/event`, icon: CalendarPlus },

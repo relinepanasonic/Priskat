@@ -7,7 +7,6 @@ import { usePathname, useParams } from "next/navigation";
 import {
   Map,
   Calendar,
-  LayoutDashboard,
   Tent,
   Users,
   ChevronLeft,
@@ -116,11 +115,6 @@ export default function CommunitySlugLayout({
       : []),
     { name: "Org Structure", href: `/camp/${slug}/org-structure`, icon: Network },
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
-    {
-      name: "Dashboard",
-      href: `/camp/${slug}/dashboard`,
-      icon: LayoutDashboard,
-    },
   ];
 
   return (
