@@ -28,8 +28,9 @@ export default function VerseOfDayCard({ isId }: { isId: boolean }) {
 
   useEffect(() => { void load(); }, [load]);
 
-  const items = useMemo(() => (verse ? [{ verse: verse.from, text: verse.text }] : []), [verse]);
-  const tts = useReadAloud(items, isId ? "id" : "en", verse ? spokenReference(verse.reference, isId ? "id" : "en") : undefined);
+  const items = useMemo(() => (verse ? [{ verse: verse.from, text: verse.text, v: verse.to > verse.from ? `${verse.from}-${verse.to}` : String(verse.from) }] : []), [verse]);
+  const cloud = useMemo(() => (verse ? { book: verse.book, chapter: verse.chapter } : undefined), [verse]);
+  const tts = useReadAloud(items, isId ? "id" : "en", verse ? spokenReference(verse.reference, isId ? "id" : "en") : undefined, cloud, verse ? items[0]?.v : undefined);
   useEffect(() => { tts.stop(); }, [verse, tts.stop]);
 
   const bg = BACKGROUNDS[(verse?.day ?? 0) % BACKGROUNDS.length];

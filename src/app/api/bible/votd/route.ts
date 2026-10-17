@@ -1,22 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { VOTD_POOL, jakartaDay, verseOfDayIndex, type VerseRef } from "@/lib/votd";
+import { cleanVerse as clean } from "@/lib/bibleText";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks";
 
 // Verse of the Day (same for everyone today) or a random verse (?random=1).
 //   GET /api/bible/votd?lang=id
 const BOOKS = new Map([...OLD_TESTAMENT, ...NEW_TESTAMENT, ...DEUTEROCANONICA].map((b) => [b.no, b]));
-
-/** TB text carries Hebrew verse markers "(34-9)" and Psalm headings; keep only the verse itself. */
-function clean(text: string) {
-  let t = text;
-  const markers = [...t.matchAll(/\(\d+-\d+\)\s*/g)];
-  if (markers.length) {
-    const last = markers[markers.length - 1];
-    t = t.slice((last.index ?? 0) + last[0].length);
-  }
-  return t.replace(/^(Mazmur|Nyanyian|Dari|Untuk|Doa|Pengajaran|Syair)\s[^.]*\.\s+(?=[A-Z])/, "").trim();
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

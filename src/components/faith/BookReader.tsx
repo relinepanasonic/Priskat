@@ -181,7 +181,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
     () => verses.filter((v) => v.type === "content" && v.verse > 0).map((v) => ({ verse: v.verse, text: v.content })),
     [verses]
   );
-  const tts = useReadAloud(readItems, lang, `${bookName} ${isId ? "pasal" : "chapter"} ${chapter}`);
+  const tts = useReadAloud(readItems, lang, `${bookName} ${isId ? "pasal" : "chapter"} ${chapter}`, { book: bookId, chapter });
   const togglePlay = () => {
     if (tts.playing) { tts.stop(); return; }
     if (!tts.supported) { showToast(isId ? "Fitur dengar butuh versi aplikasi terbaru" : "Listening needs the latest app version"); return; }
@@ -366,7 +366,12 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         {tts.playing && (
           <div style={{ top: 119 }} className="sticky z-20 flex items-center justify-between gap-2 bg-amber-50 px-4 py-1.5 font-sans text-xs text-amber-900">
             <span>{isId ? "Sedang membacakan" : "Reading"}{tts.current ? ` · ${isId ? "ayat" : "verse"} ${tts.current}` : "…"}</span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 rounded-full bg-white/60 p-0.5">
+                {(["f", "m"] as const).map((g) => (
+                  <button key={g} onClick={() => { const wasPlaying = tts.playing; tts.setVoice(g); if (wasPlaying) tts.stop(); }} className={`rounded-full px-2 py-0.5 ${tts.voice === g ? "bg-amber-500 text-white" : ""}`}>{g === "f" ? (isId ? "Wanita" : "Female") : (isId ? "Pria" : "Male")}</button>
+                ))}
+              </div>
               {[0.8, 1, 1.2].map((r) => (
                 <button key={r} onClick={() => tts.setRate(r)} className={`rounded-full px-2 py-0.5 ${tts.rate === r ? "bg-amber-500 text-white" : ""}`}>{r}×</button>
               ))}
@@ -508,6 +513,11 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         >
           {tts.playing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4 ml-0.5" fill="currentColor" />}
         </button>
+        <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-1 text-xs font-semibold text-white">
+          {(["f", "m"] as const).map((g) => (
+            <button key={g} onClick={() => { const was = tts.playing; tts.setVoice(g); if (was) tts.stop(); }} className={`rounded-full px-2.5 py-1 ${tts.voice === g ? "bg-amber-500" : "hover:bg-white/10"}`}>{g === "f" ? (isId ? "Wanita" : "Female") : (isId ? "Pria" : "Male")}</button>
+          ))}
+        </div>
 
         <div className="flex items-center gap-1 bg-white/10 rounded-full px-3 py-2">
           {chapter > 1 ? (
