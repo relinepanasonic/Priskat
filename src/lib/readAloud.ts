@@ -20,20 +20,59 @@ export function readAloudSupported() {
   return native() || web();
 }
 
+const CLOUD_ENABLED = process.env.NEXT_PUBLIC_TTS_CLOUD === "1";
+
 // null = not tried yet; false = server voice unavailable (no key / offline) → use the device voice
 let cloudOk: boolean | null = null;
 const VOICE_KEY = "tts-voice";
 
-function pickVoice(lang: string) {
+export type DeviceVoice = { id: string; name: string; lang: string; local: boolean; index: number };
+const langBase = (l: string) => (l.slice(0, 2) === "in" ? "id" : l.slice(0, 2).toLowerCase()); // old Android tags Indonesian "in"
+const chosenKey = (lang: string) => `tts-device-voice-${lang}`;
+
+export function getChosenVoice(lang: "id" | "en"): string | null {
+  try { return localStorage.getItem(chosenKey(lang)); } catch { return null; }
+}
+export function setChosenVoice(lang: "id" | "en", id: string | null) {
+  try { id ? localStorage.setItem(chosenKey(lang), id) : localStorage.removeItem(chosenKey(lang)); } catch { /* ignore */ }
+}
+
+let nativeAll: DeviceVoice[] | null = null;
+async function allNativeVoices() {
+  if (nativeAll) return nativeAll;
+  const { TextToSpeech } = await import("@capacitor-community/text-to-speech");
+  const { voices } = await TextToSpeech.getSupportedVoices();
+  nativeAll = voices.map((v, index) => ({ id: v.voiceURI || v.name, name: v.name, lang: v.lang, local: v.localService, index }));
+  return nativeAll;
+}
+
+/** Voices installed on this device for a language (Android app or browser). */
+export async function listDeviceVoices(lang: "id" | "en"): Promise<DeviceVoice[]> {
+  try {
+    if (native()) return (await allNativeVoices()).filter((v) => langBase(v.lang) === lang);
+    if (!web()) return [];
+    let vs = window.speechSynthesis.getVoices();
+    if (!vs.length) await new Promise<void>((r) => { window.speechSynthesis.onvoiceschanged = () => r(); setTimeout(r, 1200); });
+    vs = window.speechSynthesis.getVoices();
+    return vs.map((v, index) => ({ id: v.voiceURI || v.name, name: v.name, lang: v.lang, local: v.localService, index })).filter((v) => langBase(v.lang) === lang);
+  } catch {
+    return [];
+  }
+}
+
+function pickVoice(lang: string, chosen: string | null) {
   const voices = window.speechSynthesis.getVoices();
   const base = lang.slice(0, 2);
-  return voices.find((v) => v.lang === lang) ?? voices.find((v) => v.lang.startsWith(base)) ?? null;
+  return (chosen ? voices.find((v) => (v.voiceURI || v.name) === chosen) : undefined) ?? voices.find((v) => v.lang === lang) ?? voices.find((v) => langBase(v.lang) === base) ?? null;
 }
 
 async function speakDevice(text: string, lang: string, rate: number, cancelled: () => boolean) {
+  const chosen = getChosenVoice(lang.startsWith("id") ? "id" : "en");
   if (native()) {
     const { TextToSpeech } = await import("@capacitor-community/text-to-speech");
-    await TextToSpeech.speak({ text, lang, rate, pitch: 1, volume: 1, category: "playback" });
+    let voice: number | undefined;
+    if (chosen) voice = (await allNativeVoices().catch(() => [])).find((v) => v.id === chosen)?.index;
+    await TextToSpeech.speak({ text, lang, rate, pitch: 1, volume: 1, category: "playback", ...(voice != null ? { voice } : {}) });
     return;
   }
   if (!web()) return;
@@ -42,12 +81,18 @@ async function speakDevice(text: string, lang: string, rate: number, cancelled: 
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
     u.rate = rate;
-    const v = pickVoice(lang);
+    const v = pickVoice(lang, chosen);
     if (v) u.voice = v;
     u.onend = () => resolve();
     u.onerror = () => resolve();
     window.speechSynthesis.speak(u);
   });
+}
+
+/** Say a short sample with the currently chosen voice (used by the voice picker). */
+export async function previewVoice(lang: "id" | "en") {
+  await stopDevice();
+  await speakDevice(lang === "id" ? "Tuhan adalah gembalaku, takkan kekurangan aku." : "The Lord is my shepherd, I shall not want.", lang === "id" ? "id-ID" : "en-US", 1, () => false);
 }
 
 async function stopDevice() {
@@ -104,7 +149,7 @@ export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: strin
     });
 
   const speak = async (text: string, qs: string | null, cancelled: () => boolean) => {
-    if (cloud && qs && cloudOk !== false) {
+    if (CLOUD_ENABLED && cloud && qs && cloudOk !== false) {
       const ok = await speakCloud(qs, cancelled);
       if (cancelled()) return;
       if (ok) { cloudOk = true; return; }
@@ -130,7 +175,9 @@ export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: strin
       if (cancelled()) return;
       setCurrent(items[i].verse);
       const nx = items[i + 1];
-      if (cloud && nx && cloudOk !== false) fetch(`/api/tts?b=${cloud.book}&c=${cloud.chapter}&v=${nx.v ?? nx.verse}&lang=${lang}&voice=${voice}`).catch(() => {});
+      if (CLOUD_ENABLED && cloud && nx && cloudOk !== false) fetch(`/api/tts?b=${cloud.book}&c=${cloud.chapter}&v=${nx.v ?? nx.verse}&lang=${lang}&voice=${voice}`).catch(() => {});
+      if (i > start) await new Promise((r) => setTimeout(r, 250));
+      if (cancelled()) return;
       await speak(items[i].text, cloud ? `b=${cloud.book}&c=${cloud.chapter}&v=${items[i].v ?? items[i].verse}` : null, cancelled);
     }
     if (!cancelled()) { setPlaying(false); setCurrent(null); }
@@ -143,5 +190,5 @@ export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: strin
   // Stop speaking when leaving the page
   useEffect(() => () => { runId.current++; stopAudio(); void stopDevice(); }, []);
 
-  return { playing, current, play, stop, rate, setRate, voice, setVoice, supported: readAloudSupported() || cloudOk !== false };
+  return { playing, current, play, stop, rate, setRate, voice, setVoice, supported: readAloudSupported() || (CLOUD_ENABLED && cloudOk !== false), cloudEnabled: CLOUD_ENABLED };
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Play, Pause, X, ChevronDown, Bookmark, BookmarkCheck, Heart, Type } from "lucide-react";
 import { useReadAloud } from "@/lib/readAloud";
+import VoicePicker from "./VoicePicker";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA, type BibleBook } from "@/lib/bibleBooks";
 import { createClient } from "@/lib/supabase/client";
 
@@ -353,6 +354,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
             <Type className="h-4 w-4" />
             <span className="ml-0.5 font-sans text-[10px] font-bold">{FONT_SIZES[fontStep]}</span>
           </button>
+          <VoicePicker lang={lang} isId={isId} />
           <button
             onClick={togglePlay}
             aria-label={tts.playing ? (isId ? "Berhenti" : "Stop") : (isId ? "Dengarkan" : "Listen")}
@@ -367,11 +369,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
           <div style={{ top: 119 }} className="sticky z-20 flex items-center justify-between gap-2 bg-amber-50 px-4 py-1.5 font-sans text-xs text-amber-900">
             <span>{isId ? "Sedang membacakan" : "Reading"}{tts.current ? ` · ${isId ? "ayat" : "verse"} ${tts.current}` : "…"}</span>
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-1 rounded-full bg-white/60 p-0.5">
-                {(["f", "m"] as const).map((g) => (
-                  <button key={g} onClick={() => { const wasPlaying = tts.playing; tts.setVoice(g); if (wasPlaying) tts.stop(); }} className={`rounded-full px-2 py-0.5 ${tts.voice === g ? "bg-amber-500 text-white" : ""}`}>{g === "f" ? (isId ? "Wanita" : "Female") : (isId ? "Pria" : "Male")}</button>
-                ))}
-              </div>
+              <VoicePicker lang={lang} isId={isId} className="flex items-center gap-1 rounded-full bg-white/60 px-2 py-0.5 text-amber-900" />
               {[0.8, 1, 1.2].map((r) => (
                 <button key={r} onClick={() => tts.setRate(r)} className={`rounded-full px-2 py-0.5 ${tts.rate === r ? "bg-amber-500 text-white" : ""}`}>{r}×</button>
               ))}
@@ -513,11 +511,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         >
           {tts.playing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4 ml-0.5" fill="currentColor" />}
         </button>
-        <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-1 text-xs font-semibold text-white">
-          {(["f", "m"] as const).map((g) => (
-            <button key={g} onClick={() => { const was = tts.playing; tts.setVoice(g); if (was) tts.stop(); }} className={`rounded-full px-2.5 py-1 ${tts.voice === g ? "bg-amber-500" : "hover:bg-white/10"}`}>{g === "f" ? (isId ? "Wanita" : "Female") : (isId ? "Pria" : "Male")}</button>
-          ))}
-        </div>
+        <VoicePicker lang={lang} isId={isId} dark className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-2.5 text-white hover:bg-white/20" />
 
         <div className="flex items-center gap-1 bg-white/10 rounded-full px-3 py-2">
           {chapter > 1 ? (
