@@ -15,7 +15,7 @@ export default async function BishopsPage({
 }) {
   const { slug } = await params;
   const { d: open } = await searchParams;
-  const { supabase, canEdit } = await getCommunityPageContext(slug);
+  const { supabase, isSiteAdmin } = await getCommunityPageContext(slug);
   const { dioceses, fromDb } = await loadDioceses(supabase);
   const count = dioceses.filter((d) => d.kind !== "ordinariat").length;
 
@@ -27,13 +27,13 @@ export default async function BishopsPage({
         <p className="mt-2 text-[#EAE5D9]/80">
           {count} keuskupan dalam 10 provinsi gerejawi, ditambah Ordinariat Militer.
         </p>
-        {canEdit && !fromDb && (
+        {isSiteAdmin && !fromDb && (
           <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
             Mode admin: jalankan <code>supabase/080_catholic_indonesia_pages.sql</code> agar data uskup bisa diubah dari sini.
           </p>
         )}
       </header>
-      <DioceseDirectory dioceses={dioceses} canEdit={canEdit && fromDb} initialOpen={open} />
+      <DioceseDirectory dioceses={dioceses} canEdit={isSiteAdmin && fromDb} initialOpen={open} />
     </div>
   );
 }

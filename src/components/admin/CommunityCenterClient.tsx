@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import { createCommunity, updateCommunity, deleteCommunity, addCommunityAdmin, removeCommunityAdmin } from "@/app/actions/community";
-import { Plus, Trash2, Edit2, UserPlus, Shield } from "lucide-react";
+import { Plus, Trash2, Edit2, UserPlus, Shield, Settings } from "lucide-react";
+import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
 
@@ -137,7 +138,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
-            <h2 className="text-xl font-bold text-brand-gold">{community.name}</h2>
+            <h2 className="text-xl font-bold text-brand-gold pr-24">{community.name}</h2>
             <div className="flex items-center gap-2 mb-4">
               <p className="text-xs text-brand-muted font-mono">/{community.slug}</p>
               <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold ${
@@ -148,7 +149,14 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
                 {community.is_public !== false ? 'Public' : 'Private'}
               </span>
             </div>
-            <p className="text-sm text-gray-300 mb-6 flex-grow">{community.description}</p>
+            <p className="text-sm text-gray-300 mb-4 flex-grow">{community.description}</p>
+
+            <Link
+              href={`/admin/communities/${community.slug || community.id}`}
+              className="mb-5 inline-flex w-fit items-center gap-2 rounded-lg bg-brand-gold px-4 py-2 text-sm font-bold text-brand-dark hover:opacity-90"
+            >
+              <Settings className="h-4 w-4" /> Kelola komunitas
+            </Link>
             
             <div className="border-t border-[#333] pt-4 mt-auto">
               <div className="flex justify-between items-center mb-3">

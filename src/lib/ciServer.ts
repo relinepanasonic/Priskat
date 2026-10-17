@@ -11,14 +11,19 @@ export async function getCommunityPageContext(slug: string) {
   ]);
 
   let canEdit = false;
-  if (user && community) {
+  // Uskup and Romo are national church data: only admin, superadmin and founder may change them
+  let isSiteAdmin = false;
+  if (user) {
     const [{ data: prof }, { data: ca }] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
-      supabase.from("community_admins").select("id").eq("user_id", user.id).eq("community_id", community.id).maybeSingle(),
+      community
+        ? supabase.from("community_admins").select("id").eq("user_id", user.id).eq("community_id", community.id).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
-    canEdit = ["founder", "superadmin", "admin"].includes(String(prof?.role ?? "").toLowerCase()) || !!ca;
+    isSiteAdmin = ["founder", "superadmin", "admin"].includes(String(prof?.role ?? "").toLowerCase());
+    canEdit = isSiteAdmin || !!ca;
   }
-  return { supabase, community, user, canEdit };
+  return { supabase, community, user, canEdit, isSiteAdmin };
 }
 
 /** Dioceses from the database, or the built-in list if the table isn't there yet. */

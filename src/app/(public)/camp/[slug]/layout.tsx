@@ -18,6 +18,7 @@ import {
   Church,
   BadgeCheck,
   Images,
+  Settings,
 } from "lucide-react";
 import { resolveCommunity } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
@@ -135,6 +136,15 @@ export default function CommunitySlugLayout({
         </Link>
         <span className="text-[#333]">|</span>
         <h1 className="text-lg font-bold text-white tracking-wider">{heading}</h1>
+        {canPromote && (
+          <Link
+            href={`/admin/communities/${slug}`}
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold"
+          >
+            <Settings className="h-3.5 w-3.5" />
+            Community Center
+          </Link>
+        )}
       </div>
 
       {/* Tabs Navigation */}
