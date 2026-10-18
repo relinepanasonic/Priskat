@@ -35,6 +35,11 @@ export default function ResetPasswordPage() {
     setSuccess(false);
     
     const supabase = createClient();
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess.session) {
+      setError("Your reset link has expired. Please request a new one.");
+      return;
+    }
     const { error } = await supabase.auth.updateUser({
       password: data.password
     });

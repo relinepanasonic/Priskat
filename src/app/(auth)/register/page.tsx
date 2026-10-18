@@ -9,6 +9,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import GoogleButton from "@/components/auth/GoogleButton";
 
 const schema = z
   .object({
@@ -151,7 +152,11 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-4">
+          <GoogleButton label="Daftar dengan Google" onError={setError} />
+        </div>
+
+        <form className="mt-4 space-y-5" onSubmit={handleSubmit(onSubmit)}>
           {error && (
             <div className="rounded-md bg-red-900/50 border border-red-500 p-4">
               <div className="text-sm text-red-200">{error}</div>

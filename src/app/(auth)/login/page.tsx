@@ -9,6 +9,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import GoogleButton from "@/components/auth/GoogleButton";
 
 const passwordSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -53,6 +54,10 @@ export default function LoginPage() {
           {error}
         </div>
       )}
+
+      <div className="mb-4 space-y-4">
+        <GoogleButton label="Lanjutkan dengan Google" onError={setError} />
+      </div>
 
       <form
         onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}

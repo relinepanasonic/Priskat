@@ -16,7 +16,11 @@ const forgotSchema = z.object({
 type ForgotForm = z.infer<typeof forgotSchema>;
 
 export default function ForgotPasswordPage() {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("error") === "link_expired"
+      ? "That link has expired or was already used. Request a new one below."
+      : null
+  );
   const [success, setSuccess] = useState(false);
 
   const form = useForm<ForgotForm>({
