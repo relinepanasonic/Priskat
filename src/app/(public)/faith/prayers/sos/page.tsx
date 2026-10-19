@@ -1,54 +1,66 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { LifeBuoy, ChevronLeft, Heart, Phone } from "lucide-react";
+import { LifeBuoy, HeartHandshake, MessagesSquare, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = { title: "SOS Doa" };
 
-const waUrl = `https://wa.me/62818868885?text=${encodeURIComponent("Halo, saya butuh dukungan doa 🙏")}`;
+// WhatsApp number of the team (international format, no +). Change here if the two services get different numbers.
+const WA_PRAYER = "62818868885";
+const WA_COUNSEL = "62818868885";
+
+const wa = (number: string, text: string) => `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 
 export default function SOSPage() {
   return (
-    <main className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center p-6 text-center">
-      <Link
-        href="/faith/prayers"
-        className="absolute top-6 left-4 flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Kembali
-      </Link>
-
-      {/* Pulsing SOS Icon */}
-      <div className="relative mb-8">
-        <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping" />
-        <div className="relative w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500/40 flex items-center justify-center">
-          <LifeBuoy className="h-12 w-12 text-red-400" />
+    <main className="flex min-h-[560px] flex-col items-center justify-center bg-[#0f0f0f] p-6 text-center">
+      {/* Pulsing SOS icon */}
+      <div className="relative mb-6">
+        <div className="absolute inset-0 animate-ping rounded-full bg-red-500/20" />
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-red-500/40 bg-red-500/10">
+          <LifeBuoy className="h-10 w-10 text-red-400" />
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold text-white mb-3">SOS Doa</h1>
-      <p className="text-gray-400 text-base max-w-xs mb-2">
-        Kamu tidak sendirian.
-      </p>
-      <p className="text-gray-500 text-sm max-w-sm mb-10 leading-relaxed">
-        Kami ada untuk mendoakanmu. Kirimkan permintaan doamu dan komunitas akan mendoakanmu bersama.
+      <h1 className="mb-2 text-3xl font-bold text-white">SOS</h1>
+      <p className="mb-1 text-base text-gray-300">Kamu tidak sendirian.</p>
+      <p className="mb-8 max-w-sm text-sm leading-relaxed text-gray-500">
+        Pilih yang kamu butuhkan sekarang. Pesanmu akan terkirim lewat WhatsApp.
       </p>
 
-      <a
-        href={waUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 bg-red-500 hover:bg-red-400 text-white px-8 py-4 rounded-2xl font-bold text-base transition-all shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] active:scale-95"
-      >
-        <Phone className="h-5 w-5" />
-        Minta Didoakan (WhatsApp)
-      </a>
+      <div className="w-full max-w-sm space-y-3">
+        <a
+          href={wa(WA_PRAYER, "Halo, saya butuh didoakan 🙏")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex w-full items-center gap-4 rounded-2xl bg-red-500 p-4 text-left text-white shadow-[0_0_30px_rgba(239,68,68,0.35)] transition-all hover:bg-red-400 active:scale-[0.98]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/15">
+            <HeartHandshake className="h-6 w-6" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold">Saya Butuh Di-Doa-kan</span>
+            <span className="block text-xs text-white/80">Kirim permintaan doamu, kami mendoakanmu</span>
+          </span>
+          <ArrowRight className="h-5 w-5 shrink-0 opacity-80 transition-transform group-hover:translate-x-0.5" />
+        </a>
 
-      <div className="mt-12 flex flex-col items-center gap-3 text-gray-600">
-        <Heart className="h-5 w-5 text-red-900" />
-        <p className="text-xs max-w-xs">
-          "Berdoalah tanpa henti." — 1 Tesalonika 5:17
-        </p>
+        <a
+          href={wa(WA_COUNSEL, "Halo, saya butuh teman curhat dan konsultasi 🙏")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex w-full items-center gap-4 rounded-2xl border border-brand-gold/50 bg-brand-gold/10 p-4 text-left text-white transition-all hover:bg-brand-gold/20 active:scale-[0.98]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-gold/20 text-brand-gold">
+            <MessagesSquare className="h-6 w-6" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold">Saya Butuh Curhat dan Konsultasi</span>
+            <span className="block text-xs text-gray-300">Ceritakan pergumulanmu, ada yang mendengarkan</span>
+          </span>
+          <ArrowRight className="h-5 w-5 shrink-0 text-brand-gold transition-transform group-hover:translate-x-0.5" />
+        </a>
       </div>
+
+      <p className="mt-10 max-w-xs text-xs text-gray-600">&ldquo;Berdoalah tanpa henti.&rdquo; — 1 Tesalonika 5:17</p>
     </main>
   );
 }

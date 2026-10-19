@@ -21,10 +21,10 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
     { name: isId ? "Alkitab" : "Bible", href: "/faith/bible", icon: Book },
     { name: isId ? "Doa" : "Prayer", href: "/faith/prayers", icon: Heart, exclude: OWN_PRAYER_TABS },
     { name: isId ? "Renungan" : "Devotion", href: "/faith/devotions", icon: Sunrise },
-    { name: "SOS Doa", href: "/faith/prayers/sos", icon: LifeBuoy },
     { name: isId ? "Rosario" : "Rosary", href: "/faith/prayers/rosario", icon: CircleDot },
     { name: isId ? "Jalan Salib" : "Stations", href: "/faith/prayers/jalan-salib", icon: Cross },
     { name: isId ? "Ekaristi" : "Eucharist", href: "/faith/prayers/ekaristi", icon: Church },
+    { name: "SOS Doa", href: "/faith/prayers/sos", icon: LifeBuoy },
   ];
 
   const isActive = (t: (typeof tabs)[number]) =>
