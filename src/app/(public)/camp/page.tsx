@@ -23,6 +23,7 @@ export default async function CommunityListingPage() {
   const { data: { user } } = await supabase.auth.getUser();
   let myCommunityId = null;
   let isSuperAdmin = false;
+  let isFounder = false;
   let myAdminCommunityIds: string[] = [];
   const pendingIds = new Set<string>();
   const memberIds = new Set<string>();
@@ -32,6 +33,7 @@ export default async function CommunityListingPage() {
     if (prof) {
       myCommunityId = prof.community_id;
       isSuperAdmin = ["founder", "superadmin"].includes(prof.role || "");
+      isFounder = prof.role === "founder";
     }
     const { data: admins } = await supabase.from("community_admins").select("community_id").eq("user_id", user.id);
     if (admins) {
@@ -66,7 +68,7 @@ export default async function CommunityListingPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
         {(communities || []).map((c: any) => {
           const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || memberIds.has(c.id) || myAdminCommunityIds.includes(c.id);
-          const isMember = myCommunityId === c.id || memberIds.has(c.id) || isCatholicIndonesia(c.name, c.slug);
+          const isMember = isFounder || myCommunityId === c.id || memberIds.has(c.id) || isCatholicIndonesia(c.name, c.slug);
           const pending = pendingIds.has(c.id);
           // join_mode exists once the 086 SQL has been run
           const joinable = !!user && !isMember && "join_mode" in c && c.join_mode !== "closed";
