@@ -19,7 +19,7 @@ export default async function HomePage() {
   // Fetch user profile
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("*, community:communities(name)")
+    .select("*, community:communities!community_id(name)")
     .eq("id", user.id).single();
     
   const profile = profileData as any;

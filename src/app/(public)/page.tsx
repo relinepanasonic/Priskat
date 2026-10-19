@@ -25,7 +25,7 @@ export default async function HomePage() {
     // Current user profile with complete details for the Profile tab
     supabase
       .from("profiles")
-      .select("*, community:communities(name)")
+      .select("*, community:communities!community_id(name)")
       .eq("id", user.id)
       .single(),
     // Posts for the Thought tab

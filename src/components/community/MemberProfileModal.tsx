@@ -107,7 +107,7 @@ export default function MemberProfileModal({
         supabase
           .from("profiles")
           .select(
-            "id, full_name, nama_panggilan, avatar_url, bio, angkatan, kota, instagram, favorite_verse, favorite_songs, gallery_urls, camp_history, services_history, created_at, community:communities(name)"
+            "id, full_name, nama_panggilan, avatar_url, bio, angkatan, kota, instagram, favorite_verse, favorite_songs, gallery_urls, camp_history, services_history, created_at, community:communities!community_id(name)"
           )
           .eq("id", member.id)
           .maybeSingle(),

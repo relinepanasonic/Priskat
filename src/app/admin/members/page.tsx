@@ -22,7 +22,7 @@ export default async function AdminMembersPage() {
 
   let query = supabase
     .from("profiles")
-    .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities(id, name, slug)")
+    .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities!community_id(id, name, slug)")
     .order("created_at", { ascending: false });
 
   if (!isGlobalAdmin && user) {

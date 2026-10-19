@@ -8,9 +8,9 @@ export const metadata = { title: "Friends" };
 
 // Full field set for scoring + card; card only needs the last four.
 const PCOLS =
-  "id, full_name, nama_panggilan, avatar_url, angkatan, kota, favorite_verse, interests, skills, services_history, camp_history, community:communities(name)";
+  "id, full_name, nama_panggilan, avatar_url, angkatan, kota, favorite_verse, interests, skills, services_history, camp_history, community:communities!community_id(name)";
 const PCARD =
-  "id, full_name, nama_panggilan, avatar_url, angkatan, kota, favorite_verse, community:communities(name)";
+  "id, full_name, nama_panggilan, avatar_url, angkatan, kota, favorite_verse, community:communities!community_id(name)";
 
 export default async function FriendsPage() {
   const supabase = await createClient();

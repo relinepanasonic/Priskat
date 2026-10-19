@@ -25,7 +25,7 @@ export default async function PublicLayout({
     const [{ data }, { data: commAdmin }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("*, community:communities(*)")
+        .select("*, community:communities!community_id(*)")
         .eq("id", user.id)
         .single(),
       supabase

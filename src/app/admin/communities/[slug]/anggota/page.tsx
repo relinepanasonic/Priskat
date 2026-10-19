@@ -34,7 +34,7 @@ export default async function CommunityMembersPage({ params }: { params: Promise
   // Catholic Indonesia is everyone's community; other communities list their own members
   const everyone = isCatholicIndonesia(community.name, community.slug);
   const [data, { data: communityRows }] = await Promise.all([
-    loadCommunityMembers(supabase, community, "id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities(id, name, slug)"),
+    loadCommunityMembers(supabase, community, "id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities!community_id(id, name, slug)"),
     supabase.from("communities").select("id, name").order("name"),
   ]);
   const communities = sortCommunities(communityRows);

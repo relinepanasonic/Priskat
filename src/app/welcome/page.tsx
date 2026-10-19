@@ -39,7 +39,7 @@ export default async function WelcomePage() {
   // People most likely to be known: recent members, those with a photo first
   const { data: people } = await supabase
     .from("profiles")
-    .select("id, full_name, nama_panggilan, avatar_url, kota, angkatan, community:communities(name)")
+    .select("id, full_name, nama_panggilan, avatar_url, kota, angkatan, community:communities!community_id(name)")
     .not("full_name", "is", null)
     .order("created_at", { ascending: false })
     .limit(60);
