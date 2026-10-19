@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { loadCommunityMembers } from "@/lib/memberCounts";
 import { resolveCommunity, sortCommunities } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import { formatDate } from "@/lib/utils";
@@ -32,14 +33,8 @@ export default async function CommunityMembersPage({ params }: { params: Promise
 
   // Catholic Indonesia is everyone's community; other communities list their own members
   const everyone = isCatholicIndonesia(community.name, community.slug);
-  let query = supabase
-    .from("profiles")
-    .select("id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities(id, name, slug)")
-    .order("created_at", { ascending: false });
-  if (!everyone) query = query.eq("community_id", community.id);
-
-  const [{ data }, { data: communityRows }] = await Promise.all([
-    query,
+  const [data, { data: communityRows }] = await Promise.all([
+    loadCommunityMembers(supabase, community, "id, username, full_name, avatar_url, role, gender, completed_modules, created_at, camp_history, community_id, community:communities(id, name, slug)"),
     supabase.from("communities").select("id, name").order("name"),
   ]);
   const communities = sortCommunities(communityRows);
@@ -55,7 +50,7 @@ export default async function CommunityMembersPage({ params }: { params: Promise
       .order("created_at", { ascending: true });
     joinRequests = ((reqs as any[]) ?? []) as JoinRequestRow[];
   }
-  const members = (data as any[]) ?? [];
+  const members = data as any[];
 
   return (
     <div className="p-4 md:p-6">

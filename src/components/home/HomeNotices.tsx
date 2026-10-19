@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Camera, Clock, X } from "lucide-react";
+import { Camera, Clock, Users, X } from "lucide-react";
 
 const KEY = "photo-nudge-dismissed";
 
 /** Beranda reminders: add a profile photo (dismissible) and join requests still waiting for an admin. */
-export default function HomeNotices({ noPhoto, pendingCommunities }: { noPhoto: boolean; pendingCommunities: string[] }) {
+export default function HomeNotices({ noPhoto, pendingCommunities, needsMain = false }: { noPhoto: boolean; pendingCommunities: string[]; needsMain?: boolean }) {
   const [showPhoto, setShowPhoto] = useState(false);
 
   useEffect(() => {
@@ -15,10 +15,18 @@ export default function HomeNotices({ noPhoto, pendingCommunities }: { noPhoto: 
     try { setShowPhoto(localStorage.getItem(KEY) !== String(new Date().toDateString())); } catch { setShowPhoto(true); }
   }, [noPhoto]);
 
-  if (!showPhoto && pendingCommunities.length === 0) return null;
+  if (!showPhoto && pendingCommunities.length === 0 && !needsMain) return null;
 
   return (
     <div className="space-y-2 px-4 pt-3 md:px-0 md:pt-0">
+      {needsMain && (
+        <Link href="/profile/edit#komunitas" className="flex items-start gap-3 rounded-2xl border border-brand-gold/40 bg-brand-gold/10 p-3.5">
+          <Users className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
+          <p className="text-xs leading-relaxed text-brand-light">
+            Kamu sekarang tergabung di lebih dari satu komunitas. <b>Pilih komunitas utama</b> untuk profilmu.
+          </p>
+        </Link>
+      )}
       {pendingCommunities.length > 0 && (
         <Link href="/camp" className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
           <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />

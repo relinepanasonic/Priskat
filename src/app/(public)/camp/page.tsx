@@ -25,6 +25,7 @@ export default async function CommunityListingPage() {
   let isSuperAdmin = false;
   let myAdminCommunityIds: string[] = [];
   const pendingIds = new Set<string>();
+  const memberIds = new Set<string>();
 
   if (user) {
     const { data: prof } = await supabase.from("profiles").select("community_id, role").eq("id", user.id).single();
@@ -38,6 +39,8 @@ export default async function CommunityListingPage() {
     }
     const { data: reqs } = await supabase.from("community_join_requests").select("community_id").eq("user_id", user.id).eq("status", "pending");
     for (const r of (reqs as { community_id: string }[]) ?? []) pendingIds.add(r.community_id);
+    const { data: mems } = await supabase.from("community_memberships" as any).select("community_id").eq("user_id", user.id);
+    for (const m of (mems as { community_id: string }[]) ?? []) memberIds.add(m.community_id);
   }
 
   return (
@@ -62,8 +65,8 @@ export default async function CommunityListingPage() {
       {/* Phone: 2 cards across, ~2.5 rows per screen */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
         {(communities || []).map((c: any) => {
-          const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || myAdminCommunityIds.includes(c.id);
-          const isMember = myCommunityId === c.id || isCatholicIndonesia(c.name, c.slug);
+          const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || memberIds.has(c.id) || myAdminCommunityIds.includes(c.id);
+          const isMember = myCommunityId === c.id || memberIds.has(c.id) || isCatholicIndonesia(c.name, c.slug);
           const pending = pendingIds.has(c.id);
           // join_mode exists once the 086 SQL has been run
           const joinable = !!user && !isMember && "join_mode" in c && c.join_mode !== "closed";

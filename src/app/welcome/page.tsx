@@ -26,6 +26,10 @@ export default async function WelcomePage() {
     supabase.from("friendships").select("requester_id, receiver_id").or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
   ]);
 
+  const { data: mems } = await supabase.from("community_memberships" as any).select("community_id").eq("user_id", user.id);
+  const memberIds = ((mems as { community_id: string }[]) ?? []).map((m) => m.community_id);
+  if (me.community_id && !memberIds.includes(me.community_id)) memberIds.push(me.community_id);
+
   const exclude = new Set<string>([user.id]);
   for (const f of (friendRows as { requester_id: string; receiver_id: string }[]) ?? []) {
     exclude.add(f.requester_id);
@@ -49,7 +53,7 @@ export default async function WelcomePage() {
       me={{ id: me.id, name: (me as any).nama_panggilan || me.full_name || "" }}
       suggestions={suggestions}
       communities={sortCommunities(communityRows as any[])}
-      myCommunityId={me.community_id ?? null}
+      memberIds={memberIds}
       pendingIds={((requests as { community_id: string }[]) ?? []).map((r) => r.community_id)}
     />
   );

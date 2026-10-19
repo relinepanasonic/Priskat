@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BadgeCheck, CalendarDays, Images, MapPin, Network, Tent, TrendingUp, UserPlus, Users, Church } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { loadCommunityMembers } from "@/lib/memberCounts";
 import { resolveCommunity } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import DashboardCharts, { type Slice } from "@/components/admin/DashboardCharts";
@@ -32,9 +33,7 @@ export default async function CommunityDashboardPage({ params }: { params: Promi
   const head = { count: "exact" as const, head: true };
 
   // Members (Catholic Indonesia = every Ruang Iman member)
-  const memberQuery = supabase.from("profiles").select("created_at, gender").order("created_at", { ascending: true }).limit(20000);
-  const { data: memberRows } = await (everyone ? memberQuery : memberQuery.eq("community_id", community.id));
-  const members = (memberRows as { created_at: string; gender: string | null }[]) ?? [];
+  const members = await loadCommunityMembers<{ created_at: string; gender: string | null }>(supabase, community, "created_at, gender", { order: { column: "created_at", ascending: true } });
 
   const [{ data: campRows }, { data: eventRows }, structure, branches, romo, dioceses, photos] = await Promise.all([
     supabase.from("camp_cohorts").select("id, branch, camp_name, start_date").eq("community_id", community.id),

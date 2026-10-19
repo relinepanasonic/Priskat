@@ -31,13 +31,13 @@ export default function WelcomeClient({
   me,
   suggestions,
   communities,
-  myCommunityId,
+  memberIds,
   pendingIds,
 }: {
   me: { id: string; name: string };
   suggestions: Person[];
   communities: Community[];
-  myCommunityId: string | null;
+  memberIds: string[];
   pendingIds: string[];
 }) {
   const router = useRouter();
@@ -130,7 +130,7 @@ export default function WelcomeClient({
 
             <div className="mt-5 space-y-2">
               {communities.filter((c) => c.join_mode !== "closed").map((c) => {
-                const isMember = c.id === myCommunityId;
+                const isMember = memberIds.includes(c.id);
                 return (
                   <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3">
                     {c.logo_url ? (

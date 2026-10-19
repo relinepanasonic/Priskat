@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, HandHeart, Church, Users, MapPin, BadgeCheck, CalendarDays } from "lucide-react";
+import { countCommunityMembers } from "@/lib/memberCounts";
 import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
 import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
@@ -20,9 +21,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const everyone = isCatholicIndonesia(community.name, community.slug);
   const [{ data: info }, { count: members }, { count: romo }, { dioceses }] = await Promise.all([
     supabase.from("communities").select("*").eq("id", community.id).maybeSingle(),
-    everyone
-      ? supabase.from("profiles").select("id", { count: "exact", head: true })
-      : supabase.from("profiles").select("id", { count: "exact", head: true }).eq("community_id", community.id),
+    countCommunityMembers(supabase, community).then((n) => ({ count: n })),
     supabase.from("clergy" as any).select("user_id", { count: "exact", head: true }),
     loadDioceses(supabase),
   ]);
