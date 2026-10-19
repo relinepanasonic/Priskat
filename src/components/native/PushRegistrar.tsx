@@ -47,7 +47,9 @@ export default function PushRegistrar({ userId }: { userId: string }) {
           id: "messages", name: "Pesan", description: "Pesan pribadi dan grup", importance: 5, visibility: 1, vibration: true,
         });
         let perm = await PushNotifications.checkPermissions();
-        if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
+        // Ask only after the person said yes (reminders card / welcome step), never as a surprise
+        const consented = (() => { try { return localStorage.getItem("push-consent") === "1"; } catch { return false; } })();
+        if ((perm.receive === "prompt" || perm.receive === "prompt-with-rationale") && consented) {
           perm = await PushNotifications.requestPermissions();
         }
         if (perm.receive === "granted") await PushNotifications.register();

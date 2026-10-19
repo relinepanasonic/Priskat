@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { UserPlus, Check, Users, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import PrayerRemindersCard from "@/components/profile/PrayerRemindersCard";
 import JoinCommunityButton, { type JoinableCommunity } from "@/components/community/JoinCommunityButton";
 
 type Person = {
@@ -40,7 +41,7 @@ export default function WelcomeClient({
   pendingIds: string[];
 }) {
   const router = useRouter();
-  const [step, setStep] = useState<2 | 3>(suggestions.length ? 2 : 3);
+  const [step, setStep] = useState<2 | 3 | 4>(suggestions.length ? 2 : 3);
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState<Set<string>>(new Set(pendingIds));
   const [finishing, setFinishing] = useState(false);
@@ -67,11 +68,11 @@ export default function WelcomeClient({
       <div className="mx-auto w-full max-w-md">
         <div className="mb-6">
           <div className="flex items-center gap-1.5">
-            {[1, 2, 3].map((n) => (
+            {[1, 2, 3, 4].map((n) => (
               <span key={n} className={`h-1.5 flex-1 rounded-full ${n <= step ? "bg-brand-gold" : "bg-white/10"}`} />
             ))}
           </div>
-          <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-gold">Langkah {step} dari 3</p>
+          <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-gold">Langkah {step} dari 4</p>
         </div>
 
         {step === 2 && (
@@ -162,12 +163,33 @@ export default function WelcomeClient({
               </p>
             )}
 
-            <button onClick={finish} disabled={finishing} className="mt-6 w-full rounded-xl bg-brand-gold py-3.5 text-sm font-bold text-brand-dark disabled:opacity-60">
-              {finishing ? "…" : pendingNames.length ? "Selesai, mulai" : "Mulai"}
+            <button onClick={() => setStep(4)} className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-gold py-3.5 text-sm font-bold text-brand-dark">
+              Lanjut <ArrowRight className="h-4 w-4" />
             </button>
             {!pendingNames.length && (
-              <button onClick={finish} disabled={finishing} className="mt-2 w-full py-2 text-xs text-brand-muted">Lewati langkah ini</button>
+              <button onClick={() => setStep(4)} className="mt-2 w-full py-2 text-xs text-brand-muted">Lewati langkah ini</button>
             )}
+          </section>
+        )}
+
+        {step === 4 && (
+          <section>
+            <h1 className="text-2xl font-bold" style={serif}>Pengingat doa</h1>
+            <p className="mt-1 text-sm text-brand-muted">
+              Mau diingatkan untuk berdoa (Angelus, Rosario, novena) dan menerima notifikasi pesan? Kami hanya mengirim yang kamu pilih, dan bisa diubah kapan saja di Profil.
+            </p>
+            <div className="mt-5"><PrayerRemindersCard userId={me.id} /></div>
+
+            {pendingNames.length > 0 && (
+              <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
+                Permintaanmu ke <b>{pendingNames.join(", ")}</b> sedang ditinjau oleh admin komunitas.
+              </p>
+            )}
+
+            <button onClick={finish} disabled={finishing} className="mt-6 w-full rounded-xl border border-brand-gold py-3.5 text-sm font-bold text-brand-gold disabled:opacity-60">
+              {finishing ? "…" : "Selesai, mulai"}
+            </button>
+            <button onClick={finish} disabled={finishing} className="mt-2 w-full py-2 text-xs text-brand-muted">Lewati, nanti saja</button>
           </section>
         )}
       </div>

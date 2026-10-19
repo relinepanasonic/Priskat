@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
+import PrayerRemindersCard from "@/components/profile/PrayerRemindersCard";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Edit Profile" };
@@ -30,6 +31,12 @@ export default async function ProfileEditPage() {
           <div className="card-3d p-6 shadow-sm">
             <ProfileEditForm profile={profile} />
           </div>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="mb-1 text-xl font-bold text-white">Pengingat Doa & Notifikasi</h2>
+          <p className="mb-4 text-xs text-brand-muted">Pilih pengingat yang ingin kamu terima di aplikasi.</p>
+          <PrayerRemindersCard userId={user.id} />
         </section>
 
         <section className="mb-8 flex flex-col gap-2 text-sm">
