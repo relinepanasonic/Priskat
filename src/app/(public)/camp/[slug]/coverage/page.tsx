@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCommunity } from "@/lib/community";
 import CoverageTable, { type BranchRow } from "@/components/admin/CoverageTable";
+import CoverageMap from "@/components/camp/CoverageMap";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Coverage" };
@@ -32,5 +33,18 @@ export default async function CampCoveragePage({ params }: { params: Promise<{ s
     camps: perBranch.get(String(b.branch || b.kota).trim().toLowerCase()) ?? 0,
   }));
 
-  return <CoverageTable rows={rows} canEdit={false} />;
+  return (
+    <div className="space-y-6 p-4 md:p-6">
+      <header className="max-w-2xl">
+        <p className="text-xs uppercase tracking-[0.25em] text-[#D6B072]">Coverage</p>
+        <h2 className="mt-1 text-2xl font-semibold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>Jangkauan {community.name}</h2>
+        <p className="mt-1 text-sm text-brand-muted">Titik emas menandai kota yang sudah menyelenggarakan camp.</p>
+      </header>
+      <CoverageMap rows={rows} />
+      <details className="rounded-2xl border border-[#333]">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-white">Lihat sebagai tabel</summary>
+        <CoverageTable rows={rows} canEdit={false} />
+      </details>
+    </div>
+  );
 }
