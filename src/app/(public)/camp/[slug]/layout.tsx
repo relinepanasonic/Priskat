@@ -19,7 +19,7 @@ import {
   Images,
   Settings,
 } from "lucide-react";
-import { resolveCommunity } from "@/lib/community";
+import { resolveCommunity, isCatholicFamilyMinistry } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
 const titleCase = (s: string) =>
@@ -43,6 +43,7 @@ export default function CommunitySlugLayout({
   const [communityName, setCommunityName] = useState<string | null>(null);
   // Known from the URL immediately; confirmed by name once the community loads
   const [isCI, setIsCI] = useState(isCatholicIndonesia(null, slug));
+  const [isCFM, setIsCFM] = useState(isCatholicFamilyMinistry(null, slug));
   const [canPromote, setCanPromote] = useState(false);
   const supabase = createClient();
 
@@ -56,6 +57,7 @@ export default function CommunitySlugLayout({
       if (alive && community?.name) {
         setCommunityName(community.name);
         setIsCI(isCatholicIndonesia(community.name, community.slug));
+        setIsCFM(isCatholicFamilyMinistry(community.name, community.slug));
       }
 
       const {
@@ -105,7 +107,10 @@ export default function CommunitySlugLayout({
   // Default template for every new community
   const tabs = isCI ? ciTabs : [
     { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
-    { name: "Event", href: `/camp/${slug}/crew`, icon: Calendar },
+    // Catholic Family Ministry runs camps; every other community uses events
+    isCFM
+      ? { name: "Camp", href: `/camp/${slug}/crew`, icon: Tent }
+      : { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
     { name: "Promotion", href: `/camp/${slug}/promotion`, icon: Megaphone },
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
     { name: "Struktur", href: `/camp/${slug}/org-structure`, icon: Network },

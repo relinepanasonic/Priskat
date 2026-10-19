@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { resolveCommunity } from "@/lib/community";
+import { resolveCommunity, isCatholicFamilyMinistry } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import CommunityHubTabs from "@/components/admin/CommunityHubTabs";
 
@@ -57,7 +57,7 @@ export default async function CommunityHubLayout({
         </Link>
       </div>
 
-      <CommunityHubTabs slug={publicSlug} showRomo={showRomo} />
+      <CommunityHubTabs slug={publicSlug} showRomo={showRomo} showCamp={isCatholicFamilyMinistry(community.name, community.slug)} />
 
       <div className="overflow-hidden rounded-2xl border border-[#333] bg-[#1a1d24]">{children}</div>
     </div>

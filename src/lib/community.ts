@@ -72,3 +72,10 @@ export async function resolveCommunity(
     .maybeSingle();
   return (data as ResolvedCommunity) ?? null;
 }
+
+/** Catholic Family Ministry runs camps; every other community uses plain events. */
+export function isCatholicFamilyMinistry(name?: string | null, slug?: string | null) {
+  const n = (name ?? "").toLowerCase();
+  const s = (slug ?? "").toLowerCase();
+  return n.includes("family ministry") || s === "cfm" || s.startsWith("cfm-") || s.includes("catholic-family");
+}
