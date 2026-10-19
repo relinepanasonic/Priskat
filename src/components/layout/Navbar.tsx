@@ -29,7 +29,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     { href: "/", label: isEn ? "Home" : "Beranda", icon: Home },
     { href: "/community", label: isEn ? "Connect" : "Koneksi", icon: Users },
     { href: "/camp", label: isEn ? "Community" : "Komunitas", icon: Tent },
-    { href: "/faith/bible", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: Book },
+    { href: "/faith", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: Book },
     { href: "/news", label: isEn ? "News" : "Berita", icon: Newspaper },
     { href: "/profile", label: isEn ? "Profile" : "Profil", icon: User },
   ];
@@ -200,7 +200,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1e1e1e] border-t border-[#333333] pb-safe">
       <div className="flex justify-around items-center h-16 px-2">
         {/* Spiritual */}
-        <Link prefetch={true} href="/faith/bible" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
+        <Link prefetch={true} href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Book className="h-5 w-5" />
           <span className="text-[10px] font-medium">{isEn ? "Spiritual" : "Spiritual"}</span>
         </Link>

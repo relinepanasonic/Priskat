@@ -1,12 +1,6 @@
-import { getLanguage } from "@/lib/lang";
-import PlansListClient from "@/components/faith/PlansListClient";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Rencana Baca Alkitab | Ruang Iman",
-  description: "Perjalanan baca Alkitab harian berstruktur untuk pertumbuhan rohani.",
-};
-
-export default async function PlansPage() {
-  const lang = await getLanguage();
-  return <PlansListClient lang={lang} />;
+// "Rencana Baca" is the same as Renungan (devotions)
+export default function PlansPage() {
+  redirect("/faith/devotions");
 }

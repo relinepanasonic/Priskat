@@ -124,3 +124,6 @@ html {
 .paper-bar {
   background-color: rgba(246, 240, 224, 0.94);
 }
+
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
