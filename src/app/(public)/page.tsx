@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import HomeTabsClient from "@/components/home/HomeTabsClient";
+import HomeNotices from "@/components/home/HomeNotices";
 import { getLanguage } from "@/lib/lang";
 
 export const revalidate = 0;
@@ -61,6 +62,9 @@ export default async function HomePage() {
   ]);
 
   if (!profile) { redirect("/login"); } if (!profile.gender) { redirect("/profile/edit"); }
+  // New accounts: after the first profile save, offer the friends + community steps
+  // (=== null: stays off until the 086 SQL has added the column)
+  if ((profile as any).onboarded_at === null) { redirect("/welcome"); }
 
   let posts: any[] = [];
   if (postsError) console.error(postsError);
@@ -99,8 +103,17 @@ export default async function HomePage() {
     }
   }
 
+  // Join requests still waiting for a community admin
+  const { data: pendingRows } = await supabase
+    .from("community_join_requests")
+    .select("community:communities(name)")
+    .eq("user_id", user.id)
+    .eq("status", "pending");
+  const pendingCommunities = ((pendingRows as any[]) ?? []).map((r) => r.community?.name).filter(Boolean) as string[];
+
   return (
     <div className="md:p-6 md:h-full md:overflow-y-auto">
+      <HomeNotices noPhoto={!profile.avatar_url} pendingCommunities={pendingCommunities} />
       <HomeTabsClient
         profile={profile}
         posts={posts}

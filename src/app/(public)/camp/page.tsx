@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Users, Lock, Globe, ArrowRight, Settings } from "lucide-react";
 import { sortCommunities } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
+import JoinCommunityButton from "@/components/community/JoinCommunityButton";
 import { MemberCountSafe } from "@/lib/memberCounts";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export default async function CommunityListingPage() {
   let myCommunityId = null;
   let isSuperAdmin = false;
   let myAdminCommunityIds: string[] = [];
+  const pendingIds = new Set<string>();
 
   if (user) {
     const { data: prof } = await supabase.from("profiles").select("community_id, role").eq("id", user.id).single();
@@ -34,6 +36,8 @@ export default async function CommunityListingPage() {
     if (admins) {
       myAdminCommunityIds = admins.map((a: any) => a.community_id);
     }
+    const { data: reqs } = await supabase.from("community_join_requests").select("community_id").eq("user_id", user.id).eq("status", "pending");
+    for (const r of (reqs as { community_id: string }[]) ?? []) pendingIds.add(r.community_id);
   }
 
   return (
@@ -59,11 +63,13 @@ export default async function CommunityListingPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
         {(communities || []).map((c: any) => {
           const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || myAdminCommunityIds.includes(c.id);
-          const cardClass = `group flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:p-5 ${
-            hasAccess ? "cursor-pointer hover:border-brand-gold/50 hover:bg-[#1e2129]" : "cursor-not-allowed opacity-80"
-          }`;
+          const isMember = myCommunityId === c.id || isCatholicIndonesia(c.name, c.slug);
+          const pending = pendingIds.has(c.id);
+          // join_mode exists once the 086 SQL has been run
+          const joinable = !!user && !isMember && "join_mode" in c && c.join_mode !== "closed";
           const cardStyle = { minHeight: "min(26vh, 230px)" };
-          const body = (
+
+          const head = (
             <>
               <div className="mb-2 flex items-start justify-between gap-1">
                 {c.logo_url ? (
@@ -89,22 +95,42 @@ export default async function CommunityListingPage() {
               </h3>
               {(c.tagline || c.motto) && <p className="mt-0.5 line-clamp-2 text-[10px] italic leading-snug text-brand-gold/80 md:text-xs">{c.tagline || c.motto}</p>}
               {c.description && <p className="mt-1 hidden line-clamp-2 text-sm text-brand-muted md:block">{c.description}</p>}
+            </>
+          );
 
-              <div className="mt-auto flex items-center justify-between border-t border-[#2a2d35] pt-2 md:pt-4">
+          return (
+            <div
+              key={c.id}
+              style={cardStyle}
+              className={`group flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:p-5 ${
+                hasAccess ? "hover:border-brand-gold/50 hover:bg-[#1e2129]" : "opacity-90"
+              }`}
+            >
+              {hasAccess ? (
+                <Link href={`/camp/${c.slug || c.id}`} className="block flex-1">{head}</Link>
+              ) : (
+                <div className="flex-1">{head}</div>
+              )}
+
+              <div className="mt-2 flex items-center justify-between gap-1 border-t border-[#2a2d35] pt-2 md:pt-4">
                 <span className="flex items-center gap-1 text-[11px] text-gray-400 md:text-sm">
                   <Users className="h-3 w-3 md:h-4 md:w-4" />
                   {memberCounts[c.id] ?? c.member_count}
                 </span>
-                <span className={`flex items-center gap-1 text-xs font-bold md:text-sm ${hasAccess ? "text-brand-gold" : "text-gray-500"}`}>
-                  {hasAccess ? (<>Enter <ArrowRight className="h-3.5 w-3.5" /></>) : (<><Lock className="h-3 w-3" /> No Access</>)}
-                </span>
+                {joinable ? (
+                  <JoinCommunityButton
+                    community={{ id: c.id, name: c.name, join_mode: c.join_mode, join_fields: c.join_fields }}
+                    status={pending ? "pending" : "none"}
+                  />
+                ) : hasAccess ? (
+                  <Link href={`/camp/${c.slug || c.id}`} className="flex items-center gap-1 text-xs font-bold text-brand-gold md:text-sm">
+                    Enter <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs font-bold text-gray-500 md:text-sm"><Lock className="h-3 w-3" /> Private</span>
+                )}
               </div>
-            </>
-          );
-          return hasAccess ? (
-            <Link key={c.id} href={`/camp/${c.slug || c.id}`} className={cardClass} style={cardStyle}>{body}</Link>
-          ) : (
-            <div key={c.id} className={cardClass} style={cardStyle}>{body}</div>
+            </div>
           );
         })}
       </div>

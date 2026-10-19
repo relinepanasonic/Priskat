@@ -96,11 +96,6 @@ export default function ProfileEditForm({
     setError(null);
     setSuccess(false);
 
-    if (!avatarUrl) {
-      setError("Profile picture is required. Please upload one.");
-      return;
-    }
-
     const supabase = createClient();
 
     const skillsArr = data.skills
@@ -136,6 +131,11 @@ export default function ProfileEditForm({
 
     setSuccess(true);
     reset(data);
+    // First time here: continue to the friends / community steps
+    if ((profile as any).onboarded_at === null) {
+      router.push("/welcome");
+      return;
+    }
     router.refresh();
   }
 
@@ -164,9 +164,21 @@ export default function ProfileEditForm({
         <div>
           <p className="font-medium text-white">{profile.full_name}</p>
           <p className="text-sm text-brand-muted">@{profile.username}</p>
-          {uploading && <p className="text-xs text-brand-muted mt-1">Uploadingâ€¦</p>}
+          {uploading && <p className="text-xs text-brand-muted mt-1">Uploading…</p>}
         </div>
       </div>
+
+      {/* Gentle reminder: a photo is optional, but it helps */}
+      {!avatarUrl && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left">
+          <Camera className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+          <span className="text-xs leading-relaxed text-amber-100">
+            <b>Disarankan:</b> Apps ini akan lebih hidup kalau ada foto profil. Teman dan komunitas jadi lebih mudah mengenalimu.
+            <span className="mt-1 block font-semibold text-amber-300 underline underline-offset-2">Ketuk untuk menambah foto</span>
+          </span>
+          <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} disabled={uploading} />
+        </label>
+      )}
 
             <div>
         <label className="mb-1 block text-sm font-medium text-gray-500">Full Name *</label>

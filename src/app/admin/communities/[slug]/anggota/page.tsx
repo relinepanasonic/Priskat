@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import AdminMemberEditDialog from "@/components/admin/AdminMemberEditDialog";
 import AdminMemberDeleteButton from "@/components/admin/AdminMemberDeleteButton";
+import JoinRequestsPanel, { type JoinRequestRow } from "@/components/admin/JoinRequestsPanel";
 import InviteUserButton from "@/components/admin/InviteUserButton";
 import type { UserRole } from "@/lib/types/database.types";
 
@@ -42,6 +43,18 @@ export default async function CommunityMembersPage({ params }: { params: Promise
     supabase.from("communities").select("id, name").order("name"),
   ]);
   const communities = sortCommunities(communityRows);
+
+  // People asking to join this community (needs the 086 SQL; empty until then)
+  let joinRequests: JoinRequestRow[] = [];
+  if (!everyone) {
+    const { data: reqs } = await supabase
+      .from("community_join_requests")
+      .select("id, created_at, answers, profile:profiles!community_join_requests_user_id_fkey(full_name, username, avatar_url)")
+      .eq("community_id", community.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+    joinRequests = ((reqs as any[]) ?? []) as JoinRequestRow[];
+  }
   const members = (data as any[]) ?? [];
 
   return (
@@ -55,6 +68,8 @@ export default async function CommunityMembersPage({ params }: { params: Promise
         </div>
         <InviteUserButton />
       </div>
+
+      <JoinRequestsPanel requests={joinRequests} />
 
       {!canManage && (
         <p className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
