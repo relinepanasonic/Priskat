@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReadAloud } from "@/lib/readAloud";
 import type { AramaicPrayer } from "@/lib/aramaic";
@@ -12,6 +12,10 @@ const serif = { fontFamily: "'Lora', Georgia, serif" };
 export default function AramaicPrayerCard({ prayer }: { prayer: AramaicPrayer }) {
   const items = useMemo(() => prayer.lines.map((l, i) => ({ verse: i + 1, text: l.say })), [prayer]);
   const tts = useReadAloud(items, "id");
+
+  // A prayer is read slowly: 0.7x from the start
+  const { setRate } = tts;
+  useEffect(() => { setRate(0.7); }, [setRate]);
 
   const toggle = () => (tts.playing ? tts.stop() : void tts.play());
 
