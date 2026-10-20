@@ -205,8 +205,8 @@ export default function PrayerList({ prayers, lang }: Props) {
                     )}
                   </div>
 
-                  {/* Actions */}
-                  {body && <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                  {/* Actions (not for the basic prayers: they are for praying, not sharing) */}
+                  {body && prayer.category !== "basic_prayer" && <div className="mt-5 flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleShareToThought(title, body)}
                       className="flex-1 flex items-center justify-center gap-2 bg-[#222] hover:bg-[#2a2d35] text-brand-light hover:text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all border border-[#333] hover:border-brand-gold/50"
