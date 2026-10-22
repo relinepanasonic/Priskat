@@ -30,6 +30,9 @@ $$;
 DROP POLICY IF EXISTS "Allow authenticated insert to camp_crew" ON public.camp_crew;
 DROP POLICY IF EXISTS "Allow authenticated update to camp_crew" ON public.camp_crew;
 DROP POLICY IF EXISTS "Allow authenticated delete from camp_crew" ON public.camp_crew;
+DROP POLICY IF EXISTS camp_crew_insert ON public.camp_crew;
+DROP POLICY IF EXISTS camp_crew_update ON public.camp_crew;
+DROP POLICY IF EXISTS camp_crew_delete ON public.camp_crew;
 CREATE POLICY camp_crew_insert ON public.camp_crew FOR INSERT TO authenticated
   WITH CHECK (public.can_manage_cohort(cohort_id) OR (cohort_id IS NULL AND public.is_site_admin()));
 CREATE POLICY camp_crew_update ON public.camp_crew FOR UPDATE TO authenticated
@@ -47,6 +50,10 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS "Allow authenticated insert" ON public.%I', t);
     EXECUTE format('DROP POLICY IF EXISTS "Allow authenticated update" ON public.%I', t);
     EXECUTE format('DROP POLICY IF EXISTS "Allow authenticated delete" ON public.%I', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t || '_select', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t || '_insert', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t || '_update', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t || '_delete', t);
     EXECUTE format('CREATE POLICY %I ON public.%I FOR SELECT TO authenticated USING (public.can_access_cohort(cohort_id))', t || '_select', t);
     EXECUTE format('CREATE POLICY %I ON public.%I FOR INSERT TO authenticated WITH CHECK (public.can_access_cohort(cohort_id))', t || '_insert', t);
     EXECUTE format('CREATE POLICY %I ON public.%I FOR UPDATE TO authenticated USING (public.can_access_cohort(cohort_id)) WITH CHECK (public.can_access_cohort(cohort_id))', t || '_update', t);
@@ -56,6 +63,7 @@ END $$;
 
 -- ── collaborators: public read (kept), site admins write ────────────────────
 DROP POLICY IF EXISTS "Allow all access for authenticated users on collaborators" ON public.collaborators;
+DROP POLICY IF EXISTS collaborators_admin_write ON public.collaborators;
 CREATE POLICY collaborators_admin_write ON public.collaborators FOR ALL TO authenticated
   USING (public.is_site_admin()) WITH CHECK (public.is_site_admin());
 
@@ -72,9 +80,12 @@ BEGIN
       ('devotion_plans',      'Plans are deletable by admins.',      'Plans are insertable by admins.',      'Plans are updatable by admins.')
     ) AS v(tbl, del_policy, ins_policy, upd_policy)
   LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %L ON public.%I', rec.del_policy, rec.tbl);
-    EXECUTE format('DROP POLICY IF EXISTS %L ON public.%I', rec.ins_policy, rec.tbl);
-    EXECUTE format('DROP POLICY IF EXISTS %L ON public.%I', rec.upd_policy, rec.tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', rec.del_policy, rec.tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', rec.ins_policy, rec.tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', rec.upd_policy, rec.tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', rec.tbl || '_admin_insert', rec.tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', rec.tbl || '_admin_update', rec.tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', rec.tbl || '_admin_delete', rec.tbl);
     EXECUTE format('CREATE POLICY %I ON public.%I FOR INSERT TO authenticated WITH CHECK (public.is_site_admin() OR public.is_admin_or_mod())', rec.tbl || '_admin_insert', rec.tbl);
     EXECUTE format('CREATE POLICY %I ON public.%I FOR UPDATE TO authenticated USING (public.is_site_admin() OR public.is_admin_or_mod()) WITH CHECK (public.is_site_admin() OR public.is_admin_or_mod())', rec.tbl || '_admin_update', rec.tbl);
     EXECUTE format('CREATE POLICY %I ON public.%I FOR DELETE TO authenticated USING (public.is_site_admin() OR public.is_admin_or_mod())', rec.tbl || '_admin_delete', rec.tbl);
