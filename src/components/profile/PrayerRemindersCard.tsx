@@ -63,6 +63,24 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
     onSaved?.();
   }
 
+  // Switch every reminder off (the notification permission itself stays in the phone settings)
+  async function turnOff() {
+    setSaving(true);
+    setMsg(null);
+    const { error } = await createClient().from("prayer_reminders" as any).upsert({
+      user_id: userId,
+      slots: [],
+      tz_offset: -new Date().getTimezoneOffset(),
+      updated_at: new Date().toISOString(),
+    });
+    setSaving(false);
+    if (error) { setMsg("Belum bisa menyimpan. Coba lagi sebentar lagi."); return; }
+    setSlots([]);
+    try { localStorage.removeItem(PUSH_CONSENT_KEY); } catch { /* ignore */ }
+    setMsg("Semua pengingat dimatikan. Kamu bisa mengaktifkannya lagi kapan saja.");
+    onSaved?.();
+  }
+
   return (
     <div className="space-y-3">
       {REMINDER_SLOTS.map((s) => {
@@ -93,6 +111,14 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60"
       >
         <Bell className="h-4 w-4" /> {saving ? "Menyimpan…" : "Aktifkan notifikasi"}
+      </button>
+      <button
+        type="button"
+        onClick={turnOff}
+        disabled={saving || !loaded}
+        className="mx-auto block text-xs text-brand-muted underline underline-offset-4 hover:text-white disabled:opacity-60"
+      >
+        Tidak aktifkan
       </button>
       {msg && <p className="rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-brand-light">{msg}</p>}
     </div>
