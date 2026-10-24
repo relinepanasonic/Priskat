@@ -18,7 +18,7 @@ export default async function NewsEventsPage() {
   if (user) {
     const { data: prof } = await supabase
       .from("profiles")
-      .select("kota, community_id, community:communities(name)")
+      .select("kota, community_id, community:communities!community_id(name)")
       .eq("id", user.id)
       .maybeSingle();
     myCity = prof?.kota ?? null;
