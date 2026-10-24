@@ -28,6 +28,10 @@ export default async function HomePage() {
     redirect("/login");
   }
 
+  // Phone numbers live in profile_private (only the member and site admins can read them)
+  const { data: priv } = await supabase.from("profile_private" as any).select("phone").eq("user_id", user.id).maybeSingle();
+  if ((priv as any)?.phone) (profile as any).phone = (priv as any).phone;
+
   // Try to find alumni data matching the user's name
   let alumniData = null;
   if (profile.full_name) {

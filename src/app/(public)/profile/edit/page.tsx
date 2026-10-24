@@ -21,6 +21,10 @@ export default async function ProfileEditPage() {
 
   if (!profile) redirect("/login");
 
+  // Phone numbers live in profile_private (only the member and site admins can read them)
+  const { data: priv } = await supabase.from("profile_private" as any).select("phone").eq("user_id", user.id).maybeSingle();
+  if ((priv as any)?.phone) (profile as any).phone = (priv as any).phone;
+
   // Communities this person belongs to (Catholic Indonesia is everyone's): choose one as the main community
   const [{ data: mems }, { data: ci }] = await Promise.all([
     supabase.from("community_memberships" as any).select("community:communities(id, name, logo_url)").eq("user_id", user.id),
