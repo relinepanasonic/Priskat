@@ -1,0 +1,23 @@
+# Runs on every push and pull request: type errors and known-vulnerable packages.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit -p .
+      - name: Known vulnerabilities (critical only blocks)
+        run: npm audit --omit=dev --audit-level=critical
