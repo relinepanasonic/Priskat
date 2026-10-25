@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -17,7 +18,9 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 export async function POST(request: Request) {
   const secret = process.env.SECURITY_REPORT_SECRET;
-  if (!secret || request.headers.get("x-report-secret") !== secret) {
+  const given = Buffer.from(request.headers.get("x-report-secret") ?? "");
+  const expected = Buffer.from(secret ?? "");
+  if (!secret || given.length !== expected.length || !timingSafeEqual(given, expected)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

@@ -104,6 +104,11 @@ async function stopDevice() {
   }
 }
 
+/** Silent time after a verse so it can be read: longer verses wait longer (2–6 s), slower speech waits a little more. */
+function readingPause(text: string, rate: number) {
+  return Math.min(6000, Math.max(2000, 1500 + text.length * 25)) / Math.min(1, Math.max(0.5, rate));
+}
+
 export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: string, cloud?: CloudRef, introVerse?: string) {
   const [current, setCurrent] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -176,9 +181,10 @@ export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: strin
       setCurrent(items[i].verse);
       const nx = items[i + 1];
       if (CLOUD_ENABLED && cloud && nx && cloudOk !== false) fetch(`/api/tts?b=${cloud.book}&c=${cloud.chapter}&v=${nx.v ?? nx.verse}&lang=${lang}&voice=${voice}`).catch(() => {});
-      if (i > start) await new Promise((r) => setTimeout(r, 250));
-      if (cancelled()) return;
       await speak(items[i].text, cloud ? `b=${cloud.book}&c=${cloud.chapter}&v=${items[i].v ?? items[i].verse}` : null, cancelled);
+      // Hold the highlight on the verse just read so there is time to read it before the next one starts
+      if (i < items.length - 1 && !cancelled()) await new Promise((r) => setTimeout(r, readingPause(items[i].text, rate)));
+      if (cancelled()) return;
     }
     if (!cancelled()) { setPlaying(false); setCurrent(null); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
