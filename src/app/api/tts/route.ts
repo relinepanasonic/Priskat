@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
   let text = "";
   if (p.get("intro") === "1") {
-    const iv = (p.get("v") ?? "").match(/^(d{1,3})(?:-(d{1,3}))?$/);
+    const iv = (p.get("v") ?? "").match(/^(\d{1,3})(?:-(\d{1,3}))?$/);
     const idv = iv ? ` ayat ${iv[1]}${iv[2] ? ` sampai ${iv[2]}` : ""}` : "";
     const env = iv ? ` verse ${iv[1]}${iv[2] ? ` to ${iv[2]}` : ""}` : "";
     text = lang === "id" ? `${meta.name} pasal ${chapter}${idv}` : `${meta.name_en} chapter ${chapter}${env}`;
