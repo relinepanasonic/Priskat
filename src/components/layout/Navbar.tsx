@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { LogOut, User, Home, Newspaper, Book, Tent, Users, Database, Upload } from "lucide-react";
+import { LogOut, User, Home, Newspaper, Book, Tent, Users, Database, Upload, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
@@ -131,6 +131,15 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                   <Upload className="h-4 w-4" />
                   <span>Upload</span>
                 </a>
+                {String(profile?.role).toLowerCase() === "founder" && (
+                  <a
+                    href="/admin/security"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Security Log</span>
+                  </a>
+                )}
               </>
             )}
           </div>
