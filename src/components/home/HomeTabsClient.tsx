@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import HomeStreak from "./HomeStreak";
+import { NameText } from "@/components/game/Cosmetics";
 import Image from "next/image";
 import Link from "next/link";
 import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram, Users, ArrowRight } from "lucide-react";
@@ -96,7 +97,8 @@ export default function HomeTabsClient({
         </div>
 
         <div className="absolute bottom-[100px] left-6 text-white max-w-[65%] z-10">
-          <h1 className="text-3xl font-bold leading-tight drop-shadow-md">{profile.nama_panggilan || profile.full_name}</h1>
+          <h1 className="text-3xl font-bold leading-tight drop-shadow-md"><NameText name={profile.nama_panggilan || profile.full_name} color={(profile as any).equipped_name_color} /></h1>
+          {(profile as any).equipped_title && <p className="text-xs font-semibold text-brand-gold drop-shadow-md">{(profile as any).equipped_title}</p>}
           <p className="text-sm text-brand-light mt-1 font-medium drop-shadow-md flex items-center gap-1.5">
             <Tent className="w-4 h-4" />
             {profile.community?.name || "Catholic Indonesia"}

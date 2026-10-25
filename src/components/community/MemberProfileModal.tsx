@@ -1,5 +1,6 @@
 "use client";
 
+import { NameText } from "@/components/game/Cosmetics";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -72,6 +73,7 @@ export default function MemberProfileModal({
   const [p, setP] = useState<Prof>(member);
   const [loading, setLoading] = useState(true);
   const [clergyTitle, setClergyTitle] = useState<string | null>(null);
+  const [wear, setWear] = useState<{ equipped_name_color: string | null; equipped_title: string | null } | null>(null);
 
   const [friendship, setFriendship] = useState<Friendship>(
     member.id === viewerId ? "self" : "loading"
@@ -124,6 +126,10 @@ export default function MemberProfileModal({
       ]);
       if (!alive) return;
       if (cl) setClergyTitle((cl as any).title);
+
+      // What this member wears (separate query: stays harmless until the game SQL exists)
+      const { data: wear } = await supabase.from("profiles").select("equipped_name_color, equipped_title").eq("id", member.id).maybeSingle();
+      if (alive && wear) setWear(wear as { equipped_name_color: string | null; equipped_title: string | null });
 
       if (prof) {
         const full = prof as Prof;
@@ -282,8 +288,9 @@ export default function MemberProfileModal({
           <div className="absolute bottom-[104px] left-6 z-10 max-w-[65%]">
             {clergyTitle && <ClergyBadge title={clergyTitle} />}
             <h1 className="text-3xl font-bold leading-tight drop-shadow-md">
-              {name}
+              <NameText name={name} color={wear?.equipped_name_color} />
             </h1>
+            {wear?.equipped_title && <p className="text-xs font-semibold text-brand-gold drop-shadow-md">{wear.equipped_title}</p>}
             <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-brand-light drop-shadow-md">
               <Tent className="h-4 w-4" />
               {p.community?.name || "Catholic Indonesia"}

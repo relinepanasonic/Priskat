@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Flame, Trophy } from "lucide-react";
+import Link from "next/link";
+import { Flame, Gift, Trophy, Crown, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LAUNCH_DAY, DAY_LABELS, addDays, levelFor, localDay, weekStart } from "@/lib/activity";
 import { recordStreakCheckIn } from "@/lib/streak";
 import TebusHariDialog from "./TebusHariDialog";
+import LootDialog from "@/components/game/LootDialog";
 
 type Row = { day: string; kind: string; points: number; redeemed_on: string | null };
 type State = "prayed" | "redeemed" | "missed" | "today" | "future";
@@ -36,6 +38,8 @@ export default function HomeStreak({ isEn, createdAt }: { isEn: boolean; created
   const [total, setTotal] = useState(0);
   const [legacy, setLegacy] = useState<number | null>(null);
   const [tebus, setTebus] = useState<string | null>(null);
+  const [lootOpen, setLootOpen] = useState(false);
+  const [lootClaimed, setLootClaimed] = useState<boolean | null>(null);
   const today = localDay();
 
   const load = useCallback(async () => {
@@ -50,6 +54,8 @@ export default function HomeStreak({ isEn, createdAt }: { isEn: boolean; created
       return;
     }
     setRows((data as unknown as Row[]) ?? []);
+    const { data: lc } = await supabase.from("loot_claims" as any).select("day").eq("day", today).maybeSingle();
+    setLootClaimed(!!lc);
     const { data: t } = await supabase.rpc("my_total_points");
     setTotal(typeof t === "number" ? t : 0);
   }, [today]);
@@ -83,7 +89,7 @@ export default function HomeStreak({ isEn, createdAt }: { isEn: boolean; created
   // ── Weekly states ────────────────────────────────────────────────────────
   const dayState = (day: string): State => {
     const mine = rows.filter((r) => r.day === day);
-    if (mine.some((r) => r.kind !== "redeem")) return "prayed";
+    if (mine.some((r) => r.kind !== "redeem" && r.kind !== "loot" && r.kind !== "campaign")) return "prayed";
     if (mine.some((r) => r.kind === "redeem")) return "redeemed";
     if (day === today) return "today";
     return day < today ? "missed" : "future";
@@ -147,6 +153,21 @@ export default function HomeStreak({ isEn, createdAt }: { isEn: boolean; created
 
         {daysDone === 7 && <p className="mt-2 text-center text-[11px] font-semibold text-amber-200">🌟 Seminggu penuh! Tuhan memberkatimu.</p>}
 
+        {dayState(today) === "prayed" && lootClaimed === false && (
+          <button
+            onClick={() => setLootOpen(true)}
+            className="mt-3 flex w-full animate-pulse items-center justify-center gap-2 rounded-xl border border-amber-400/50 bg-amber-400/15 px-3 py-2.5 text-xs font-bold text-amber-100 transition active:scale-[0.98]"
+          >
+            <Gift className="h-4 w-4 text-amber-300" /> Berkat Harian siap dibuka
+          </button>
+        )}
+
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] font-semibold text-amber-100/90">
+          <Link href="/leaderboard" className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 px-2 py-2"><Crown className="h-4 w-4 text-amber-300" />Peringkat</Link>
+          <Link href="/campaigns" className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 px-2 py-2"><Sparkles className="h-4 w-4 text-amber-300" />Kampanye</Link>
+          <Link href="/profile/koleksi" className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 px-2 py-2"><Trophy className="h-4 w-4 text-amber-300" />Koleksi</Link>
+        </div>
+
         {canRedeem && (
           <button
             onClick={() => setTebus(target)}
@@ -159,6 +180,7 @@ export default function HomeStreak({ isEn, createdAt }: { isEn: boolean; created
       </div>
 
       {canRedeem && <OpenOncePerDay day={today} onOpen={() => setTebus(target)} />}
+      {lootOpen && <LootDialog onClose={() => setLootOpen(false)} onDone={() => { setLootOpen(false); setLootClaimed(true); void load(); }} />}
       {tebus && (
         <TebusHariDialog
           missedDay={tebus}

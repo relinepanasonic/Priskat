@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { LADDER } from "@/lib/gameCatalog";
 
 /** Prayer game: what counts, local dates, levels. Points are decided on the server (094 SQL). */
 export type ActivityKind = "bible" | "devotion" | "prayer" | "rosary" | "jalan_salib" | "ekaristi" | "aramaic" | "reading";
@@ -22,14 +23,7 @@ const dayIndexMonFirst = (day: string) => {
 export const weekStart = (day: string) => addDays(day, -dayIndexMonFirst(day));
 export const DAY_LABELS = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 
-export const LEVELS = [
-  { min: 0, name: "Pemula Doa" },
-  { min: 100, name: "Peziarah" },
-  { min: 300, name: "Setia" },
-  { min: 700, name: "Sahabat Doa" },
-  { min: 1500, name: "Pendoa Tekun" },
-  { min: 3000, name: "Saksi Iman" },
-];
+export const LEVELS = LADDER.map((b) => ({ min: b.min ?? 0, name: b.name, key: b.key, emoji: b.emoji }));
 export function levelFor(points: number) {
   let i = 0;
   LEVELS.forEach((l, idx) => { if (points >= l.min) i = idx; });
