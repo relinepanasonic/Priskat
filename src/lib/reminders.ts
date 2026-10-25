@@ -7,6 +7,8 @@ export type ReminderSlot = {
   title: string;
   body: string;
   url: string;
+  /** only send when the person has not prayed on the day that just ended */
+  onlyIfMissedYesterday?: boolean;
 };
 
 export const REMINDER_SLOTS: ReminderSlot[] = [
@@ -34,6 +36,12 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
     key: "novena", label: "Doa malam & Novena", desc: "Pukul 21.00",
     times: ["21:00"],
     title: "Doa Malam", body: "Tutup hari ini dengan doa syukur dan novena.", url: "/faith/prayers",
+  },
+  {
+    key: "tebus", label: "Tebus Hari", desc: "Pukul 00.00, hanya jika kemarin belum berdoa",
+    times: ["00:00"],
+    title: "Kemarin terlewat", body: "Tidak apa-apa. Buka Ruang Iman dan Tebus Hari dengan satu doa singkat 🙏", url: "/",
+    onlyIfMissedYesterday: true,
   },
 ];
 

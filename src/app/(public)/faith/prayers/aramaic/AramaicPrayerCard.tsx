@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReadAloud } from "@/lib/readAloud";
+import { recordActivity } from "@/lib/activity";
 import type { AramaicPrayer } from "@/lib/aramaic";
 
 const GOLD = "#D6B072";
@@ -17,7 +18,11 @@ export default function AramaicPrayerCard({ prayer }: { prayer: AramaicPrayer })
   const { setRate } = tts;
   useEffect(() => { setRate(0.7); }, [setRate]);
 
-  const toggle = () => (tts.playing ? tts.stop() : void tts.play());
+  const toggle = () => {
+    if (tts.playing) { tts.stop(); return; }
+    void recordActivity("aramaic", prayer.slug);
+    void tts.play();
+  };
 
   return (
     <section className="rounded-2xl border bg-[#14171c] p-4" style={{ borderColor: `${GOLD}33` }}>

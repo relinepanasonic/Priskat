@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Play, Pause, X, ChevronDown, Bookmark, BookmarkCheck, Heart, Type } from "lucide-react";
 import { useReadAloud } from "@/lib/readAloud";
 import VoicePicker from "./VoicePicker";
+import ActivityTimer from "@/components/home/ActivityTimer";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA, type BibleBook } from "@/lib/bibleBooks";
 import { createClient } from "@/lib/supabase/client";
 
@@ -339,6 +340,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         </Link>
       </div>
 
+      <ActivityTimer kind="bible" refId={`${bookId}:${chapter}`} seconds={30} />
       {/* ── MOBILE: full-width scrolling reader ── */}
       <div className="md:hidden w-full">
         {/* Sticky bar under the app header */}

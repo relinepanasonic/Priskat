@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { recordActivity } from "@/lib/activity";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, List, RotateCcw, X } from "lucide-react";
@@ -327,6 +328,8 @@ export default function RosarioClient() {
   const [visible, setVisible] = useState(true);
   const [pressing, setPressing] = useState(false);
   const pendingStep = useRef<() => void>(() => {});
+
+  useEffect(() => { if (done) void recordActivity("rosary", chosen ?? "done"); }, [done, chosen]);
 
   const steps = chosen ? buildSteps(chosen) : [];
   const current = steps[stepIdx];

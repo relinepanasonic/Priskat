@@ -148,7 +148,7 @@ export default function HomeTabsClient({
 
       {/* Stats: My Services + Ongoing Devotion */}
       <div className="px-4 mt-6 flex flex-col gap-3">
-        <HomeStreak isEn={isEn} />
+        <HomeStreak isEn={isEn} createdAt={(profile as any).created_at} />
         {/* Ongoing Devotion Premium Card */}
         <Link href="/faith/devotions/plans" className="relative overflow-hidden bg-brand-surface/60 backdrop-blur-md border border-brand-gold/20 rounded-[20px] p-5 flex flex-col hover:border-brand-gold/50 hover:bg-brand-surface/80 hover:shadow-[0_8px_30px_rgba(212,175,55,0.12)] transition-all duration-300 group shadow-lg">
           {/* Subtle gold glow behind */}

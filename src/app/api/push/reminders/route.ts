@@ -28,6 +28,21 @@ export async function POST(request: Request) {
   }
   if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
 
+  // "Tebus Hari" nudge: only for people who did nothing on the day that just ended (local time)
+  const GAME_START = "2026-10-26";
+  for (const [userId, slots] of [...due.entries()]) {
+    if (!slots.some((x) => x.onlyIfMissedYesterday)) continue;
+    const p = people.find((q) => q.user_id === userId);
+    const localNow = new Date(Date.now() + (p?.tz_offset ?? 420) * 60_000);
+    const yesterday = new Date(Date.UTC(localNow.getUTCFullYear(), localNow.getUTCMonth(), localNow.getUTCDate() - 1)).toISOString().slice(0, 10);
+    const { count } = await db.from("daily_activity" as any).select("id", { count: "exact", head: true }).eq("user_id", userId).eq("day", yesterday);
+    if (yesterday < GAME_START || (count ?? 0) > 0) {
+      const rest = slots.filter((x) => !x.onlyIfMissedYesterday);
+      if (rest.length) due.set(userId, rest); else due.delete(userId);
+    }
+  }
+  if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
+
   const { data: tokenRows } = await db.from("push_tokens" as any).select("token, user_id").in("user_id", [...due.keys()]);
   let sent = 0;
   const invalid: string[] = [];

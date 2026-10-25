@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { recordActivity } from "@/lib/activity";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
@@ -100,6 +101,7 @@ export default function ReadClient({
           is_finished: isFinished
         } as any)
         .eq("id", progress.id);
+      void recordActivity("devotion", `${plan.id}:${dayNum}`);
     }
     
     router.push(`/faith/devotions/plans/${plan.id}/day/${dayNum}`);

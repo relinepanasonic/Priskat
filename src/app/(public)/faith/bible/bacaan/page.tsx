@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getTodayReadings } from "@/lib/bacaanHarian";
 import { cleanVerse } from "@/lib/bibleText";
+import ActivityTimer from "@/components/home/ActivityTimer";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,7 @@ export default async function TodayReadingPage() {
 
   return (
     <div className="w-full max-w-2xl space-y-5">
+      <ActivityTimer kind="reading" refId="today" seconds={20} />
       <Link href="/faith/bible" className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Alkitab
       </Link>

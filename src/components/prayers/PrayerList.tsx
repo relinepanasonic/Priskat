@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Prayer, PrayerCategory } from "@/lib/types/database.types";
 import { PRAYER_CATEGORIES } from "@/lib/types/database.types";
 import { createClient } from "@/lib/supabase/client";
+import ActivityTimer from "@/components/home/ActivityTimer";
 import { ChevronDown, Search, X, Share2, MessageSquarePlus, Sparkles, Heart, Loader2 } from "lucide-react";
 
 /** The list only carries titles; each prayer's text is fetched when it's opened. */
@@ -186,6 +187,7 @@ export default function PrayerList({ prayers, lang }: Props) {
               {/* Collapsible Body — only rendered while open */}
               {isOpen && (
                 <div>
+                  <ActivityTimer kind="prayer" refId={prayer.id} seconds={20} />
                 <div className="px-5 pb-6 pt-2">
                   <div className="relative bg-[#111] rounded-xl p-4 sm:p-5 border border-[#222]">
                     <div className="absolute top-3 left-3 text-4xl text-brand-gold/10 font-serif leading-none">"</div>

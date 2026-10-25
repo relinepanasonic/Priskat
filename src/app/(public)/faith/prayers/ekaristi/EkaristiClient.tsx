@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ArrowRight, Info } from "lucide-react";
+import ActivityTimer from "@/components/home/ActivityTimer";
 import { MASS, SEASONS, type SeasonId } from "@/lib/ekaristi";
 
 const GOLD = "#D6B072";
@@ -17,6 +18,7 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
 
   return (
     <div className="p-4 md:p-6">
+      <ActivityTimer kind="ekaristi" refId="mass" seconds={20} />
       <h1 className="text-2xl font-bold text-white" style={serif}>Perayaan Ekaristi</h1>
       <p className="mt-1 text-sm text-brand-muted">Urutan Misa dari awal sampai berkat penutup. Pilih masa liturgi untuk melihat perbedaannya.</p>
 

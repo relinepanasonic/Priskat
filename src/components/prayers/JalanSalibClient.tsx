@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { recordActivity } from "@/lib/activity";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
@@ -156,6 +157,8 @@ export default function JalanSalibClient() {
       setSubIdx(totalSubSteps - 1);
     }
   }, [subIdx, stationIdx, totalSubSteps]);
+
+  useEffect(() => { if (done) void recordActivity("jalan_salib", "done"); }, [done]);
 
   const station = STATIONS[stationIdx];
   const subText = getSubText(stationIdx, subIdx);
