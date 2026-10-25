@@ -5,7 +5,7 @@ import HomeStreak from "./HomeStreak";
 import { NameText } from "@/components/game/Cosmetics";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram, Users, ArrowRight } from "lucide-react";
+import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram, Users, ArrowRight, Clock } from "lucide-react";
 import FeedClient from "@/components/social/FeedClient";
 import { formatDate } from "@/lib/utils";
 import { uploadImage, storagePath } from "@/lib/upload";
@@ -18,14 +18,16 @@ export default function HomeTabsClient({
   userId,
   activeDevotion,
   myCamps = [],
-  lang = "id"
+  lang = "id",
+  pendingCommunities = []
 }: {
   profile: any,
   posts: any[],
   userId: string,
   activeDevotion?: any,
   myCamps?: any[],
-  lang?: "id" | "en"
+  lang?: "id" | "en",
+  pendingCommunities?: string[]
 }) {
   const [activeTab, setActiveTab] = useState<"Thought" | "Profile" | "Service">("Thought");
 
@@ -103,6 +105,12 @@ export default function HomeTabsClient({
             <Tent className="w-4 h-4" />
             {profile.community?.name || "Catholic Indonesia"}
           </p>
+          {pendingCommunities.length > 0 && (
+            <Link href="/camp" className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold text-amber-200 backdrop-blur">
+              <Clock className="h-3 w-3 shrink-0" />
+              <span className="truncate">{lang === "en" ? "Awaiting approval" : "Menunggu persetujuan"}: {pendingCommunities.join(", ")}</span>
+            </Link>
+          )}
           {profile.favorite_verse && (
             <p className="text-xs text-brand-gold mt-1 italic drop-shadow-md">
               "{profile.favorite_verse}"

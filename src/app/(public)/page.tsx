@@ -111,9 +111,16 @@ export default async function HomePage() {
     .eq("status", "pending");
   const pendingCommunities = ((pendingRows as any[]) ?? []).map((r) => r.community?.name).filter(Boolean) as string[];
 
+  // In several communities but no main one chosen yet (needs the 088 SQL; stays quiet until then)
+  let needsMain = false;
+  if ((profile as any).main_community_chosen === false) {
+    const { count } = await supabase.from("community_memberships" as any).select("community_id", { count: "exact", head: true }).eq("user_id", user.id);
+    needsMain = (count ?? 0) > 1;
+  }
+
   return (
     <div className="md:p-6 md:h-full md:overflow-y-auto">
-      <HomeNotices noPhoto={!profile.avatar_url} pendingCommunities={pendingCommunities} />
+      <HomeNotices noPhoto={!profile.avatar_url} needsMain={needsMain} />
       <HomeTabsClient
         profile={profile}
         posts={posts}
@@ -121,6 +128,7 @@ export default async function HomePage() {
         activeDevotion={activeDevotion}
         myCamps={myCamps}
         lang={lang}
+        pendingCommunities={pendingCommunities}
       />
     </div>
   );

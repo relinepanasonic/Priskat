@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Camera, Clock, Users, X } from "lucide-react";
+import { Camera, Users, X } from "lucide-react";
 
 const KEY = "photo-nudge-dismissed";
 
-/** Beranda reminders: add a profile photo (dismissible) and join requests still waiting for an admin. */
-export default function HomeNotices({ noPhoto, pendingCommunities, needsMain = false }: { noPhoto: boolean; pendingCommunities: string[]; needsMain?: boolean }) {
+/** Slim Beranda hints: add a profile photo (dismissible) and choose a main community. */
+export default function HomeNotices({ noPhoto, needsMain = false }: { noPhoto: boolean; needsMain?: boolean }) {
   const [showPhoto, setShowPhoto] = useState(false);
 
   useEffect(() => {
@@ -15,38 +15,26 @@ export default function HomeNotices({ noPhoto, pendingCommunities, needsMain = f
     try { setShowPhoto(localStorage.getItem(KEY) !== String(new Date().toDateString())); } catch { setShowPhoto(true); }
   }, [noPhoto]);
 
-  if (!showPhoto && pendingCommunities.length === 0 && !needsMain) return null;
+  if (!showPhoto && !needsMain) return null;
 
   return (
-    <div className="space-y-2 px-4 pt-3 md:px-0 md:pt-0">
+    <div className="space-y-1.5 px-4 pt-2 md:px-0 md:pt-0">
       {needsMain && (
-        <Link href="/profile/edit#komunitas" className="flex items-start gap-3 rounded-2xl border border-brand-gold/40 bg-brand-gold/10 p-3.5">
-          <Users className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
-          <p className="text-xs leading-relaxed text-brand-light">
-            Kamu sekarang tergabung di lebih dari satu komunitas. <b>Pilih komunitas utama</b> untuk profilmu.
-          </p>
-        </Link>
-      )}
-      {pendingCommunities.length > 0 && (
-        <Link href="/camp" className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
-          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
-          <p className="text-xs leading-relaxed text-amber-100">
-            Permintaanmu bergabung ke <b>{pendingCommunities.join(", ")}</b> sedang ditinjau oleh admin komunitas. Kami akan memperbarui statusnya di halaman Komunitas.
-          </p>
+        <Link href="/profile/edit#komunitas" className="flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-[11px] text-brand-light">
+          <Users className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
+          <span className="min-w-0 flex-1 truncate">Kamu di beberapa komunitas. <b>Pilih komunitas utama</b></span>
         </Link>
       )}
       {showPhoto && (
-        <div className="flex items-start gap-3 rounded-2xl border border-brand-gold/30 bg-brand-gold/10 p-3.5">
-          <Camera className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
-          <Link href="/profile/edit" className="flex-1 text-xs leading-relaxed text-brand-light">
-            Apps ini akan lebih hidup kalau ada <b>foto profil</b>. Ketuk untuk menambahkan.
-          </Link>
+        <div className="flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-[11px] text-brand-light">
+          <Camera className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
+          <Link href="/profile/edit" className="min-w-0 flex-1 truncate">Tambahkan <b>foto profil</b> supaya lebih hidup</Link>
           <button
             aria-label="Tutup"
             onClick={() => { setShowPhoto(false); try { localStorage.setItem(KEY, new Date().toDateString()); } catch { /* ignore */ } }}
-            className="rounded-full p-1 text-gray-400 hover:bg-white/10"
+            className="rounded-full p-0.5 text-gray-400 hover:bg-white/10"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
