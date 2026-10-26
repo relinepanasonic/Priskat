@@ -82,6 +82,9 @@ export function ChallengeClaimer({ book, chapter }: { book: number; chapter: num
 
   if (!toast) return null;
   return (
-    <div className="fixed left-1/2 top-20 z-[95] -translate-x-1/2 rounded-full border border-brand-gold/50 bg-[#1a1d24] px-4 py-2 text-sm font-semibold text-brand-gold shadow-2xl">{toast}</div>
+    <div className="fixed left-1/2 top-20 z-[95] flex -translate-x-1/2 items-center gap-3 rounded-full border border-brand-gold/50 bg-[#1a1d24] px-4 py-2 text-sm font-semibold text-brand-gold shadow-2xl">
+      <span>{toast}</span>
+      <Link href="/leaderboard" className="rounded-full bg-brand-gold px-2.5 py-1 text-xs font-bold text-brand-dark">Lihat peringkat</Link>
+    </div>
   );
 }
