@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Play, Pause, X, ChevronDown, Bookmark, Bookm
 import { useReadAloud } from "@/lib/readAloud";
 import VoicePicker from "./VoicePicker";
 import ActivityTimer from "@/components/home/ActivityTimer";
+import { ChallengeClaimer } from "@/components/game/BibleChallenge";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA, type BibleBook } from "@/lib/bibleBooks";
 import { createClient } from "@/lib/supabase/client";
 
@@ -341,6 +342,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
       </div>
 
       <ActivityTimer kind="bible" refId={`${bookId}:${chapter}`} seconds={30} />
+      <ChallengeClaimer book={bookId} chapter={chapter} />
       {/* ── MOBILE: full-width scrolling reader ── */}
       <div className="md:hidden w-full">
         {/* Sticky bar under the app header */}

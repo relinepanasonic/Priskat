@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLanguage } from "@/lib/lang";
 import { getTodayReadings } from "@/lib/bacaanHarian";
 import VerseOfDayCard from "@/components/faith/VerseOfDayCard";
+import { BibleChallengeCard } from "@/components/game/BibleChallenge";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Spiritual" };
@@ -47,6 +48,7 @@ export default async function SpiritualLanding() {
   return (
     <div className="space-y-6 p-4 md:p-6">
       <VerseOfDayCard isId={isId} />
+      <BibleChallengeCard compact />
 
       {/* Today's Mass readings */}
       <Link

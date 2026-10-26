@@ -24,6 +24,8 @@ export const ACHIEVEMENTS: BadgeDef[] = [
   { key: "week_full", name: "Seminggu Penuh", emoji: "🌟", desc: "Berdoa 7 hari dalam satu minggu" },
   { key: "streak_7", name: "7 Hari Berturut", emoji: "🔥", desc: "7 hari berdoa berturut-turut" },
   { key: "streak_30", name: "30 Hari Berturut", emoji: "🏅", desc: "30 hari berdoa berturut-turut" },
+  { key: "challenge_7", name: "7 Tantangan Alkitab", emoji: "📜", desc: "Menyelesaikan 7 Tantangan Alkitab harian" },
+  { key: "challenge_30", name: "30 Tantangan Alkitab", emoji: "🏛️", desc: "Menyelesaikan 30 Tantangan Alkitab. Gelar: Pembaca Setia" },
   { key: "camp_arwah_2026", name: "Pendoa Arwah 2026", emoji: "🕯️", desc: "Menyelesaikan kampanye Bulan Arwah 2026" },
 ];
 
