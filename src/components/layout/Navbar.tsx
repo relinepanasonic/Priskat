@@ -30,7 +30,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     { href: "/community", label: isEn ? "Connect" : "Koneksi", icon: Users },
     { href: "/camp", label: isEn ? "Community" : "Komunitas", icon: Tent },
     { href: "/faith", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: Book },
-    { href: "/news", label: isEn ? "News" : "Berita", icon: Newspaper },
+    { href: "/news", label: isEn ? "Warta" : "Warta", icon: Newspaper },
     { href: "/profile", label: isEn ? "Profile" : "Profil", icon: User },
   ];
 
@@ -247,7 +247,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
         {/* News */}
         <Link prefetch={true} href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Newspaper className="h-5 w-5" />
-          <span className="text-[10px] font-medium">{isEn ? "News" : "Berita"}</span>
+          <span className="text-[10px] font-medium">{isEn ? "Warta" : "Warta"}</span>
         </Link>
       </div>
     </nav>

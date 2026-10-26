@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Book, Heart, Sunrise, LifeBuoy, CircleDot, Cross, Church } from "lucide-react";
+import { Sparkles, Book, Heart, Sunrise, LifeBuoy, CircleDot, Cross, Church, Mic2 } from "lucide-react";
 
 // These prayer pages have their own tab, so the "Doa" tab must not light up for them
 const OWN_PRAYER_TABS = ["/faith/prayers/sos", "/faith/prayers/rosario", "/faith/prayers/jalan-salib", "/faith/prayers/ekaristi"];
@@ -21,6 +21,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
     { name: isId ? "Alkitab" : "Bible", href: "/faith/bible", icon: Book },
     { name: isId ? "Doa" : "Prayer", href: "/faith/prayers", icon: Heart, exclude: OWN_PRAYER_TABS },
     { name: isId ? "Renungan" : "Devotion", href: "/faith/devotions", icon: Sunrise },
+    { name: "Romo", href: "/faith/romo", icon: Mic2 },
     { name: isId ? "Rosario" : "Rosary", href: "/faith/prayers/rosario", icon: CircleDot },
     { name: isId ? "Jalan Salib" : "Stations", href: "/faith/prayers/jalan-salib", icon: Cross },
     { name: isId ? "Ekaristi" : "Eucharist", href: "/faith/prayers/ekaristi", icon: Church },
@@ -69,8 +70,8 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
 
           {/* Tabs: the next one is always partly visible so it's clear there is more to the right */}
           <div className="relative -mx-4 sm:mx-0">
-            <div className="overflow-x-auto pb-2 pl-4 pr-10 sm:px-0 hide-scrollbar">
-              <nav data-faith-tabs className="flex min-w-max space-x-2" aria-label="Tabs">
+            <div className="overflow-x-auto pb-2 pl-4 pr-4 sm:px-0 hide-scrollbar">
+              <nav data-faith-tabs className="flex min-w-max gap-1.5 sm:gap-2" aria-label="Tabs">
                 {tabs.map((tab) => {
                   const active = isActive(tab);
                   return (
@@ -78,7 +79,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
                       key={tab.name}
                       href={tab.href}
                       prefetch={true}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-all sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                         active
                           ? "bg-brand-gold text-brand-dark shadow-md"
                           : "text-brand-muted hover:text-white hover:bg-[#1a1d24] border border-transparent hover:border-[#333]"
@@ -92,7 +93,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
                 })}
               </nav>
             </div>
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-brand-dark to-transparent sm:hidden" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-brand-dark/90 to-transparent sm:hidden" />
           </div>
         </>
       )}

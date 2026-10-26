@@ -6,7 +6,7 @@ import { BibleChallengeCard } from "@/components/game/BibleChallenge";
 import { NameText } from "@/components/game/Cosmetics";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Instagram, Users, ArrowRight, Clock } from "lucide-react";
+import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Users, ArrowRight, Clock, Church } from "lucide-react";
 import FeedClient from "@/components/social/FeedClient";
 import { formatDate } from "@/lib/utils";
 import { uploadImage, storagePath } from "@/lib/upload";
@@ -34,7 +34,6 @@ export default function HomeTabsClient({
 
   const angkatan = profile.angkatan || "-";
   const city = profile.kota || "-";
-  const instagram = profile.instagram || "";
   
   const defaultImage = profile.avatar_url || "";
   const [userGallery, setUserGallery] = useState<string[]>(profile.gallery_urls || []);
@@ -89,14 +88,9 @@ export default function HomeTabsClient({
 
         <div className="absolute bottom-[90px] right-4 flex flex-col gap-3 z-20">
           
-          {instagram && (
-            <a href={`https://instagram.com/${instagram.replace(/^@/, '')}`} target="_blank" rel="noreferrer" className="h-12 w-12 bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] rounded-full flex items-center justify-center text-brand-gold shadow-lg shadow-black/50 hover:bg-[#2a2d35] transition-colors">
-              <Instagram className="h-5 w-5" />
-            </a>
-          )}
-          <button onClick={() => alert("Private message feature coming soon!")} className="h-12 w-12 bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] rounded-full flex items-center justify-center text-brand-gold shadow-lg shadow-black/50 hover:bg-[#2a2d35] transition-colors">
+          <Link href="/community/messages" aria-label="Pesan" className="h-12 w-12 bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] rounded-full flex items-center justify-center text-brand-gold shadow-lg shadow-black/50 hover:bg-[#2a2d35] transition-colors">
             <MessageSquare className="h-5 w-5 fill-current" />
-          </button>
+          </Link>
         </div>
 
         <div className="absolute bottom-[100px] left-6 text-white max-w-[65%] z-10">
@@ -106,6 +100,12 @@ export default function HomeTabsClient({
             <Tent className="w-4 h-4" />
             {profile.community?.name || "Catholic Indonesia"}
           </p>
+          {profile.paroki && (
+            <Link href={`/news/schedule/search?q=${encodeURIComponent(profile.paroki)}`} className="mt-1 inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-brand-light drop-shadow-md">
+              <Church className="h-4 w-4 shrink-0" />
+              <span className="truncate">{profile.paroki}</span>
+            </Link>
+          )}
           {pendingCommunities.length > 0 && (
             <Link href="/camp" className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold text-amber-200 backdrop-blur">
               <Clock className="h-3 w-3 shrink-0" />

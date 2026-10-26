@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Book, Heart, Sunrise, LifeBuoy, CircleDot, Cross, Church, CalendarCheck, ArrowRight } from "lucide-react";
+import { Book, Heart, Sunrise, LifeBuoy, CircleDot, Cross, Church, CalendarCheck, ArrowRight, Mic2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getLanguage } from "@/lib/lang";
 import { getTodayReadings } from "@/lib/bacaanHarian";
@@ -39,6 +39,7 @@ export default async function SpiritualLanding() {
     { href: "/faith/bible", title: isId ? "Alkitab" : "Bible", text: isId ? "Baca, cari, dan dengarkan" : "Read, search and listen", icon: Book },
     { href: "/faith/prayers", title: isId ? "Doa" : "Prayers", text: isId ? "Doa harian dan doa dasar" : "Daily and basic prayers", icon: Heart },
     { href: "/faith/devotions", title: isId ? "Renungan" : "Devotion", text: isId ? "Rencana renungan harian" : "Daily devotion plans", icon: Sunrise },
+    { href: "/faith/romo", title: "Romo", text: isId ? "Doa, homili, dan video" : "Prayers, homilies, videos", icon: Mic2 },
     { href: "/faith/prayers/sos", title: "SOS", text: isId ? "Doa saat butuh segera" : "Prayers for urgent moments", icon: LifeBuoy },
     { href: "/faith/prayers/rosario", title: isId ? "Rosario" : "Rosary", text: isId ? "Doa rosario 3D" : "Guided rosary", icon: CircleDot },
     { href: "/faith/prayers/jalan-salib", title: isId ? "Jalan Salib" : "Stations", text: isId ? "14 perhentian" : "14 stations", icon: Cross },

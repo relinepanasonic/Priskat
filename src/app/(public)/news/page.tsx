@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function NewsPage() {
-  redirect("/news/events");
+  redirect("/news/wall-of-fame");
 }

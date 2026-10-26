@@ -8,7 +8,7 @@ import {
   Check,
   Clock,
   Heart,
-  Instagram,
+  Church,
   Loader2,
   MessageSquare,
   Tent,
@@ -73,7 +73,7 @@ export default function MemberProfileModal({
   const [p, setP] = useState<Prof>(member);
   const [loading, setLoading] = useState(true);
   const [clergyTitle, setClergyTitle] = useState<string | null>(null);
-  const [wear, setWear] = useState<{ equipped_name_color: string | null; equipped_title: string | null } | null>(null);
+  const [wear, setWear] = useState<{ equipped_name_color: string | null; equipped_title: string | null; paroki?: string | null } | null>(null);
 
   const [friendship, setFriendship] = useState<Friendship>(
     member.id === viewerId ? "self" : "loading"
@@ -128,8 +128,8 @@ export default function MemberProfileModal({
       if (cl) setClergyTitle((cl as any).title);
 
       // What this member wears (separate query: stays harmless until the game SQL exists)
-      const { data: wear } = await supabase.from("profiles").select("equipped_name_color, equipped_title").eq("id", member.id).maybeSingle();
-      if (alive && wear) setWear(wear as { equipped_name_color: string | null; equipped_title: string | null });
+      const { data: wear } = await supabase.from("profiles").select("equipped_name_color, equipped_title, paroki").eq("id", member.id).maybeSingle();
+      if (alive && wear) setWear(wear as { equipped_name_color: string | null; equipped_title: string | null; paroki?: string | null });
 
       if (prof) {
         const full = prof as Prof;
@@ -263,16 +263,6 @@ export default function MemberProfileModal({
           <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/30 to-transparent" />
 
           <div className="absolute bottom-[92px] right-4 z-20 flex flex-col gap-3">
-            {p.instagram && (
-              <a
-                href={`https://instagram.com/${p.instagram.replace(/^@/, "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#333] bg-[#1a1d24]/80 text-brand-gold shadow-lg shadow-black/50 backdrop-blur-md transition-colors hover:bg-[#2a2d35]"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-            )}
             {friendship !== "self" && (
               <Link
                 href={`/community/messages?u=${member.id}`}
@@ -295,6 +285,12 @@ export default function MemberProfileModal({
               <Tent className="h-4 w-4" />
               {p.community?.name || "Catholic Indonesia"}
             </p>
+            {wear?.paroki && (
+              <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-brand-light drop-shadow-md">
+                <Church className="h-4 w-4" />
+                {wear.paroki}
+              </p>
+            )}
             {p.favorite_verse && (
               <p className="mt-1 text-xs italic text-brand-gold drop-shadow-md">
                 &ldquo;{p.favorite_verse}&rdquo;

@@ -98,7 +98,7 @@ export default async function HomePage() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 mt-6">
-            <a href={waLink} target="_blank" rel="noreferrer" className="h-12 w-12 rounded-full bg-brand-surface border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold hover:border-brand-gold/50 transition-colors shadow-lg group">
+            <a href="/community/messages" className="h-12 w-12 rounded-full bg-brand-surface border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold hover:border-brand-gold/50 transition-colors shadow-lg group">
               <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
             </a>
             <a href={`tel:${mobile}`} className="h-12 w-12 rounded-full bg-brand-surface border border-[#333] flex items-center justify-center text-brand-light hover:text-brand-gold hover:border-brand-gold/50 transition-colors shadow-lg group">
@@ -161,8 +161,8 @@ export default async function HomePage() {
             <h3 className="text-sm font-semibold text-brand-gold mb-2 uppercase tracking-wider">Handphone No</h3>
             <div className="bg-[#111] border border-[#333] rounded-xl p-4 flex items-center justify-between">
               <span className="text-white font-medium">{mobile}</span>
-              <a href={waLink} target="_blank" rel="noreferrer" className="text-xs bg-[#25d366] text-white px-3 py-1.5 rounded-lg font-bold shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:scale-105 transition-transform">
-                Chat WA
+              <a href="/community/messages" className="text-xs bg-brand-gold text-brand-dark px-3 py-1.5 rounded-lg font-bold hover:scale-105 transition-transform">
+                Chat
               </a>
             </div>
           </div>

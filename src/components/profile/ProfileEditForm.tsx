@@ -37,6 +37,7 @@ export default function ProfileEditForm({
 }) {
   const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
+  const [paroki, setParoki] = useState<string>(((profile as any).paroki as string) ?? "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -116,7 +117,6 @@ export default function ProfileEditForm({
         favorite_verse: data.favorite_verse,
         birthdate: data.birthdate || null,
         phone: data.phone ?? "",
-          instagram: data.instagram ?? "",
         bio: data.bio ?? "",
         skills: skillsArr,
         interests: interestsArr,
@@ -128,6 +128,9 @@ export default function ProfileEditForm({
       setError(updateError.message);
       return;
     }
+
+    // Home parish: its own update (needs the 098 SQL; ignored until then)
+    await supabase.from("profiles").update({ paroki: paroki.trim() || null } as any).eq("id", profile.id);
 
     setSuccess(true);
     reset(data);
@@ -231,15 +234,14 @@ export default function ProfileEditForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Instagram Username</label>
-        <div className="flex items-center rounded-lg border border-brand-border bg-[#1a1d24] overflow-hidden focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-brand-blue transition-all">
-          <span className="pl-4 text-gray-500">@</span>
-          <input
-            {...register("instagram")}
-            placeholder="username"
-            className="w-full bg-transparent px-2 py-2.5 text-white placeholder-gray-500 focus:outline-none text-sm"
-          />
-        </div>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Gereja / Paroki <span className="text-brand-muted font-normal">(tampil di Beranda)</span></label>
+        <input
+          value={paroki}
+          onChange={(e) => setParoki(e.target.value)}
+          placeholder="mis. Paroki St. Yosef, Bogor"
+          maxLength={80}
+          className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none bg-[#1a1d24] text-white"
+        />
       </div>
 
       <div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Calendar, Church, ChevronLeft, Newspaper } from "lucide-react";
+import { Calendar, Church, ChevronLeft, Newspaper, Crown } from "lucide-react";
 
 const FROM_KEY = "news-from-community";
 
@@ -24,6 +24,7 @@ export default function NewsLayoutClient({ children }: { children: React.ReactNo
   const fromName = from && from.replace(/[-_]/g, "").toLowerCase() === "catholicindonesia" ? "Catholic Indonesia" : "komunitas";
 
   const tabs = [
+    { name: "Wall of Fame", href: "/news/wall-of-fame", icon: Crown },
     { name: "Events", href: "/news/events", icon: Calendar },
     { name: "Church Schedule", href: "/news/schedule", icon: Church },
     { name: "Blog", href: "/news/blog", icon: Newspaper },
@@ -42,7 +43,7 @@ export default function NewsLayoutClient({ children }: { children: React.ReactNo
       )}
 
       <div>
-        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">News and Promotion</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Warta Iman</h1>
       </div>
 
       {/* Tabs Navigation */}
