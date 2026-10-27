@@ -259,8 +259,8 @@ BEGIN
 
   -- pity: after 6 chests without a card or cosmetic, the next one has one
   SELECT count(*) INTO recent_special FROM (
-    SELECT reward FROM public.loot_claims WHERE user_id = uid ORDER BY day DESC LIMIT 6
-  ) x WHERE reward->>'type' IN ('card', 'cosmetic');
+    SELECT lc.reward FROM public.loot_claims lc WHERE lc.user_id = uid ORDER BY lc.day DESC LIMIT 6
+  ) x WHERE x.reward->>'type' IN ('card', 'cosmetic');
   IF (SELECT count(*) FROM public.loot_claims WHERE user_id = uid) >= 6 AND recent_special = 0 THEN r := 0.7; END IF;
   IF big THEN r := 0.7; END IF;
 

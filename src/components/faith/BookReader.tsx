@@ -181,8 +181,13 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
 
   // ── Listen (read aloud) ───────────────────────────────────────────────────
   const readItems = useMemo(
-    () => verses.filter((v) => v.type === "content" && v.verse > 0).map((v) => ({ verse: v.verse, text: v.content })),
-    [verses]
+    // The Indonesian text carries Hebrew verse markers like "(41-8)": a voice would say "41 sampai 8",
+    // so they are spoken as "Pasal 41 ayat 8" instead
+    () => verses.filter((v) => v.type === "content" && v.verse > 0).map((v) => ({
+      verse: v.verse,
+      text: v.content.replace(/\((\d{1,3})-(\d{1,3})\)\s*/g, (_m: string, c: string, n: string) => (isId ? ` Pasal ${c} ayat ${n}. ` : ` Chapter ${c} verse ${n}. `)),
+    })),
+    [verses, isId]
   );
   const tts = useReadAloud(readItems, lang, `${bookName} ${isId ? "pasal" : "chapter"} ${chapter}`, { book: bookId, chapter });
   const togglePlay = () => {
