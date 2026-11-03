@@ -5,7 +5,8 @@ import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks"
  * read from the public liturgical calendar of imankatolik.or.id. Only Bible references
  * are taken from there; the verse text always comes from our own Bible.
  */
-export type Reading = { label: string; display: string; book: number | null; chapter: number; from: number; to: number };
+export type Segment = { book: number | null; chapter: number; from: number; to: number };
+export type Reading = { label: string; display: string; book: number | null; chapter: number; from: number; to: number; segments: Segment[] };
 export type DayReadings = { date: string; celebration: string; readings: Reading[] } | null;
 
 const SOURCE = "https://www.imankatolik.or.id/kalender.php";
@@ -61,8 +62,14 @@ export async function getTodayReadings(): Promise<DayReadings> {
     const m = first.match(/^(\d?[A-Za-z]+)(\d+):(\d+)(?:-(\d+))?/);
     const isPsalm = /^mzm/i.test(l.text);
     const label = links.length === 3 || links.length >= 4 ? (isPsalm ? "Mazmur" : i === links.length - 1 ? "Injil" : labels[i] ?? "Bacaan") : labels[i] ?? "Bacaan";
+    // every verse range of the reading ("Yes45:1;Yes45:4-6;" = two ranges)
+    const segments: Segment[] = decodeURIComponent(l.q).split(";").filter(Boolean).map((part) => {
+      const mm = part.match(/^(d?[A-Za-z]+)(d+):(d+)(?:-(d+))?/);
+      return mm ? { book: bookNo(mm[1]), chapter: Number(mm[2]), from: Number(mm[3]), to: Number(mm[4] ?? mm[3]) } : null;
+    }).filter((x): x is Segment => !!x);
     return {
       label,
+      segments,
       display: l.text,
       book: m ? bookNo(m[1]) : null,
       chapter: m ? Number(m[2]) : 0,

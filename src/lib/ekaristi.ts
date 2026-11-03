@@ -61,6 +61,10 @@ export type Part = {
   text?: string; // common text, if any
   onlyIf?: "gloria" | "credo-sunday";
   link?: { href: string; label: string };
+  /** shown inline from today's readings instead of opening the Bible */
+  reading?: "Bacaan I" | "Mazmur" | "Bacaan II" | "Injil";
+  /** choose Doa Syukur Agung I-X right here */
+  dsa?: boolean;
 };
 export type Group = { title: string; parts: Part[] };
 
@@ -96,9 +100,9 @@ export const MASS: Group[] = [
   {
     title: "Liturgi Sabda",
     parts: [
-      { title: "Bacaan I", what: "Biasanya dari Perjanjian Lama (pada masa Paskah dari Kisah Para Rasul). Pembaca menutup: \"Demikianlah sabda Tuhan.\" Umat: \"Syukur kepada Allah.\"", link: { href: "/faith/bible/bacaan", label: "Lihat bacaan hari ini" } },
-      { title: "Mazmur Tanggapan", what: "Pemazmur melagukan mazmur, umat menanggapi dengan ulangan (refren)." },
-      { title: "Bacaan II", what: "Dari surat para rasul atau Kitab Wahyu. Dibacakan pada hari Minggu dan hari raya." },
+      { title: "Bacaan I", what: "Biasanya dari Perjanjian Lama (pada masa Paskah dari Kisah Para Rasul). Pembaca menutup: \"Demikianlah sabda Tuhan.\" Umat: \"Syukur kepada Allah.\"", reading: "Bacaan I" },
+      { title: "Mazmur Tanggapan", what: "Pemazmur melagukan mazmur, umat menanggapi dengan ulangan (refren).", reading: "Mazmur" },
+      { title: "Bacaan II", what: "Dari surat para rasul atau Kitab Wahyu. Dibacakan pada hari Minggu dan hari raya.", reading: "Bacaan II" },
       {
         title: "Bait Pengantar Injil",
         what: "Umat berdiri dan menyambut Injil dengan nyanyian.",
@@ -107,6 +111,7 @@ export const MASS: Group[] = [
       {
         title: "Injil",
         what: "Imam atau diakon membacakan Injil. Umat membuat tanda salib kecil di dahi, mulut, dan dada.",
+        reading: "Injil",
         text: "Imam: Tuhan beserta Anda.\nUmat: Dan beserta Anda juga.\nImam: Inilah Injil Yesus Kristus menurut ...\nUmat: Dimuliakanlah Tuhan.\n...\nImam: Demikianlah sabda Tuhan.\nUmat: Terpujilah Kristus.",
       },
       { title: "Homili", what: "Imam menguraikan sabda Tuhan dan menerapkannya dalam hidup umat. Hening sejenak sesudahnya." },
@@ -137,10 +142,8 @@ export const MASS: Group[] = [
       {
         title: "Doa Syukur Agung",
         what: "Inti perayaan: imam mendoakan epiklesis (memohon Roh Kudus), kisah institusi (roti menjadi Tubuh dan anggur menjadi Darah Kristus), anamnesis, dan permohonan bagi Gereja, yang hidup, dan yang meninggal. Ada beberapa Doa Syukur Agung (I sampai X).",
-        link: { href: "/faith/prayers", label: "Teks Doa Syukur Agung I–X" },
+        dsa: true,
       },
-      { title: "Aklamasi anamnesis", what: "Setelah konsekrasi, umat menyatakan misteri iman.", text: "Imam: Misteri iman.\nUmat: Sebagaimana Engkau telah wafat dan bangkit, kami mewartakan Engkau, ya Tuhan, sampai Engkau datang kembali." },
-      { title: "Doksologi & Amin", what: "Penutup Doa Syukur Agung. Imam mengangkat Tubuh dan Darah Kristus.", text: "Imam: Dengan perantaraan Kristus, bersama Kristus, dan dalam Kristus, bagi-Mu, Allah Bapa yang mahakuasa, dalam persekutuan Roh Kudus, segala hormat dan kemuliaan, sepanjang segala masa.\nUmat: Amin." },
       {
         title: "Bapa Kami",
         what: "Doa Tuhan, didoakan atau dinyanyikan seluruh umat.",

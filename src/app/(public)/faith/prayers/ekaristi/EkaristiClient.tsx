@@ -1,20 +1,159 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { ChevronDown, ArrowRight, Info } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { ChevronDown, Info, Pencil, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import ActivityTimer from "@/components/home/ActivityTimer";
-import { MASS, SEASONS, type SeasonId } from "@/lib/ekaristi";
+import { MASS, SEASONS, type Part, type SeasonId } from "@/lib/ekaristi";
 
 const GOLD = "#D6B072";
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
-export default function EkaristiClient({ defaultSeason, celebration }: { defaultSeason: SeasonId; celebration: string | null }) {
+export type TodayReading = { label: string; display: string; verses: { verse: number; text: string }[] };
+type Override = { mazmur_ulangan: string | null; mazmur_text: string | null; source: string | null } | null;
+
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+
+/** Who speaks: the priest and the people get their own colours. */
+const SPEAKERS: Record<string, { label: string; text: string; badge: string }> = {
+  Imam: { label: "Imam", text: "text-amber-200", badge: "bg-amber-400/20 text-amber-300" },
+  Umat: { label: "Umat", text: "text-sky-200", badge: "bg-sky-400/20 text-sky-300" },
+  Pembaca: { label: "Pembaca", text: "text-emerald-200", badge: "bg-emerald-400/20 text-emerald-300" },
+  Pemazmur: { label: "Pemazmur", text: "text-violet-200", badge: "bg-violet-400/20 text-violet-300" },
+  Diakon: { label: "Diakon", text: "text-amber-200", badge: "bg-amber-400/20 text-amber-300" },
+};
+
+function Dialogue({ text }: { text: string }) {
+  return (
+    <div className="space-y-1.5 text-[15px] leading-[1.75]" style={serif}>
+      {text.split("\n").map((line, i) => {
+        if (!line.trim()) return <div key={i} className="h-2" />;
+        const m = line.match(/^(Imam|Umat|Pembaca|Pemazmur|Diakon)\s*:\s*(.*)$/);
+        if (!m) return <p key={i} className="text-[#EAE5D9]">{line}</p>;
+        const sp = SPEAKERS[m[1]];
+        return (
+          <p key={i} className={sp.text}>
+            <span className={`mr-2 inline-block rounded px-1.5 py-0.5 align-middle font-sans text-[10px] font-bold uppercase tracking-wider ${sp.badge}`}>{sp.label}</span>
+            {m[2]}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function Verses({ verses }: { verses: { verse: number; text: string }[] }) {
+  return (
+    <p className="text-[15px] leading-[1.85] text-[#EAE5D9]" style={serif}>
+      {verses.map((v) => (
+        <Fragment key={v.verse}>
+          <sup className="mr-0.5 font-sans text-[10px] text-brand-muted">{v.verse}</sup>
+          {v.text}{" "}
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
+export default function EkaristiClient({
+  defaultSeason, celebration, readings, day, mazmurOverride, isAdmin,
+}: { defaultSeason: SeasonId; celebration: string | null; readings: TodayReading[]; day: string; mazmurOverride: Override; isAdmin: boolean }) {
   const [seasonId, setSeasonId] = useState<SeasonId>(defaultSeason);
   const [open, setOpen] = useState<string | null>(null);
+  const [dsa, setDsa] = useState<number>(1);
+  const [dsaText, setDsaText] = useState<Record<number, string | "loading" | "none">>({});
+  const [editing, setEditing] = useState(false);
   const season = SEASONS.find((s) => s.id === seasonId)!;
 
+  // Doa Syukur Agung text, loaded when a number is chosen
+  useEffect(() => {
+    if (open === null || dsaText[dsa] !== undefined) return;
+    const isDsaOpen = MASS.some((g) => g.parts.some((p) => p.dsa && `${g.title}-${p.title}` === open));
+    if (!isDsaOpen) return;
+    setDsaText((t) => ({ ...t, [dsa]: "loading" }));
+    (async () => {
+      const { data } = await createClient().from("prayers" as any).select("body_id").eq("slug", `doa-syukur-agung-${dsa}`).maybeSingle();
+      const body = String((data as any)?.body_id ?? "").trim();
+      setDsaText((t) => ({ ...t, [dsa]: !body || body.startsWith("[") ? "none" : body }));
+    })();
+  }, [open, dsa, dsaText]);
+
   let n = 0;
+
+  const readingBlock = (p: Part) => {
+    const r = readings.find((x) => x.label === p.reading);
+    if (!r) {
+      return <p className="text-sm text-brand-muted">{p.reading === "Bacaan II" ? "Hari ini tidak ada Bacaan II." : readings.length === 0 ? "Bacaan hari ini belum bisa dimuat." : "Bacaan ini tidak ada hari ini."}</p>;
+    }
+    if (p.reading === "Mazmur") {
+      return (
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>{r.display}</p>
+          {mazmurOverride?.mazmur_ulangan && (
+            <p className="rounded-xl bg-sky-400/10 px-3 py-2 text-[15px] italic text-sky-200" style={serif}>
+              <span className="mr-2 inline-block rounded bg-sky-400/20 px-1.5 py-0.5 align-middle font-sans text-[10px] font-bold not-italic uppercase tracking-wider text-sky-300">Ulangan · Umat</span>
+              {mazmurOverride.mazmur_ulangan}
+            </p>
+          )}
+          {mazmurOverride?.mazmur_text ? (
+            <p className="whitespace-pre-line text-[15px] leading-[1.85] text-violet-200" style={serif}>{mazmurOverride.mazmur_text}</p>
+          ) : (
+            <>
+              <Verses verses={r.verses} />
+              <p className="text-[11px] text-brand-muted">Teks dari Terjemahan Baru. Mazmur Tanggapan di Misa memakai teks lektionari dengan ulangan, jadi kata-katanya bisa sedikit berbeda.</p>
+            </>
+          )}
+          {mazmurOverride?.source && <p className="text-[11px] text-brand-muted">Sumber: {mazmurOverride.source}</p>}
+          {isAdmin && (
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: GOLD }}>
+              <Pencil className="h-3.5 w-3.5" /> {mazmurOverride ? "Ubah" : "Isi"} Mazmur Tanggapan hari ini
+            </button>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-3">
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>{r.display}</p>
+        <Verses verses={r.verses} />
+        {p.reading === "Injil" ? (
+          <Dialogue text={"Imam: Demikianlah sabda Tuhan.\nUmat: Terpujilah Kristus."} />
+        ) : (
+          <Dialogue text={"Pembaca: Demikianlah sabda Tuhan.\nUmat: Syukur kepada Allah."} />
+        )}
+      </div>
+    );
+  };
+
+  const dsaBlock = () => {
+    const t = dsaText[dsa];
+    return (
+      <div className="space-y-3">
+        <div className="-mx-1 flex flex-wrap gap-1.5">
+          {ROMAN.map((r, i) => (
+            <button
+              key={r}
+              onClick={() => setDsa(i + 1)}
+              className={`min-w-[2.5rem] rounded-full px-3 py-1.5 text-xs font-bold transition ${dsa === i + 1 ? "bg-brand-gold text-brand-dark" : "bg-[#1a1d24] text-brand-muted"}`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>Doa Syukur Agung {ROMAN[dsa - 1]}</p>
+        {t === undefined || t === "loading" ? (
+          <p className="text-sm text-brand-muted">Memuat…</p>
+        ) : t === "none" ? (
+          <p className="text-sm text-brand-muted">Teks Doa Syukur Agung {ROMAN[dsa - 1]} belum tersedia.</p>
+        ) : (
+          <>
+            <Dialogue text={t} />
+            <p className="text-[11px] text-brand-muted">Termasuk aklamasi anamnesis dan doksologi dengan Amin.</p>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="p-4 md:p-6">
@@ -22,16 +161,13 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
       <h1 className="text-2xl font-bold text-white" style={serif}>Perayaan Ekaristi</h1>
       <p className="mt-1 text-sm text-brand-muted">Urutan Misa dari awal sampai berkat penutup. Pilih masa liturgi untuk melihat perbedaannya.</p>
 
-      {/* Season picker */}
       <div className="-mx-4 mt-4 overflow-x-auto px-4 pb-2 hide-scrollbar md:mx-0 md:px-0" data-noswipe>
         <div className="flex min-w-max gap-2">
           {SEASONS.map((s) => (
             <button
               key={s.id}
               onClick={() => setSeasonId(s.id)}
-              className={`flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
-                s.id === seasonId ? "border-brand-gold bg-brand-gold text-brand-dark" : "border-[#333] text-brand-light hover:border-brand-gold/50"
-              }`}
+              className={`flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${s.id === seasonId ? "border-brand-gold bg-brand-gold text-brand-dark" : "border-[#333] text-brand-light hover:border-brand-gold/50"}`}
             >
               <span className="h-2.5 w-2.5 rounded-full border border-black/30" style={{ background: s.dot }} />
               {s.label}
@@ -41,7 +177,6 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
       </div>
       {celebration && seasonId === defaultSeason && <p className="mt-1 text-[11px] text-brand-muted">Hari ini: {celebration}</p>}
 
-      {/* What changes in this season */}
       <div className="mt-4 rounded-2xl border bg-[#14171c] p-4" style={{ borderColor: `${GOLD}33` }}>
         <div className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-full border border-black/30" style={{ background: season.dot }} />
@@ -56,8 +191,13 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
         </ul>
       </div>
 
-      {/* Order of the Mass */}
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-brand-muted">
+        {(["Imam", "Umat", "Pembaca", "Pemazmur"] as const).map((k) => (
+          <span key={k} className="flex items-center gap-1.5"><span className={`rounded px-1.5 py-0.5 font-bold ${SPEAKERS[k].badge}`}>{k}</span></span>
+        ))}
+      </div>
+
+      <div className="mt-4 space-y-6">
         {MASS.map((group) => (
           <section key={group.title}>
             <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: GOLD }}>{group.title}</h2>
@@ -67,14 +207,10 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
                 n += 1;
                 const key = `${group.title}-${p.title}`;
                 const isOpen = open === key;
-                const hasMore = !!p.text || !!p.link;
+                const hasMore = !!p.text || !!p.link || !!p.reading || !!p.dsa;
                 return (
                   <div key={key} className="rounded-2xl border border-[#2a2d35] bg-[#14171c]">
-                    <button
-                      onClick={() => hasMore && setOpen(isOpen ? null : key)}
-                      className="flex w-full items-start gap-3 p-3.5 text-left"
-                      aria-expanded={isOpen}
-                    >
+                    <button onClick={() => hasMore && setOpen(isOpen ? null : key)} className="flex w-full items-start gap-3 p-3.5 text-left" aria-expanded={isOpen}>
                       <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: `${GOLD}1f`, color: GOLD }}>{n}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold text-white">{p.title}</span>
@@ -84,12 +220,8 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
                     </button>
                     {isOpen && (
                       <div className="border-t border-[#2a2d35] px-4 pb-4 pt-3">
-                        {p.text && <p className="whitespace-pre-line text-[15px] leading-[1.8] text-[#EAE5D9]" style={serif}>{p.text}</p>}
-                        {p.link && (
-                          <Link href={p.link.href} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: GOLD }}>
-                            {p.link.label} <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        )}
+                        {p.reading ? readingBlock(p) : p.dsa ? dsaBlock() : p.text ? <Dialogue text={p.text} /> : null}
+                        {p.reading && p.text && <div className="mt-3"><Dialogue text={p.text} /></div>}
                       </div>
                     )}
                   </div>
@@ -104,6 +236,45 @@ export default function EkaristiClient({ defaultSeason, celebration }: { default
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         Teks dan urutan di sini adalah ringkasan untuk membantu umat mengikuti Misa. Rumusan resmi mengikuti Tata Perayaan Ekaristi yang dipakai di parokimu, dan bisa sedikit berbeda menurut edisi dan kebiasaan setempat.
       </p>
+
+      {editing && <MazmurEditor day={day} initial={mazmurOverride} onClose={() => setEditing(false)} />}
+    </div>
+  );
+}
+
+function MazmurEditor({ day, initial, onClose }: { day: string; initial: Override; onClose: () => void }) {
+  const [ulangan, setUlangan] = useState(initial?.mazmur_ulangan ?? "");
+  const [text, setText] = useState(initial?.mazmur_text ?? "");
+  const [source, setSource] = useState(initial?.source ?? "");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
+
+  async function save() {
+    setBusy(true);
+    setErr(null);
+    const supabase = createClient();
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from("liturgy_texts" as any).upsert({
+      day, mazmur_ulangan: ulangan.trim() || null, mazmur_text: text.trim() || null, source: source.trim() || null, updated_by: u.user?.id, updated_at: new Date().toISOString(),
+    } as any);
+    setBusy(false);
+    if (error) { setErr(error.message); return; }
+    window.location.reload();
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 md:items-center" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="relative max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl border border-[#333] bg-[#1a1d24] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:rounded-3xl">
+        <button onClick={onClose} aria-label="Tutup" className="absolute right-3 top-3 rounded-full p-1.5 text-gray-400 hover:bg-white/10"><X className="h-5 w-5" /></button>
+        <h3 className="text-lg font-bold text-white">Mazmur Tanggapan hari ini</h3>
+        <p className="text-xs text-brand-muted">Tanggal {day}. Tempel teks Mazmur dari buku bacaan Misa. Isi "Ulangan" (refren) dan ayat-ayatnya.</p>
+        <div><label className="mb-1 block text-xs text-brand-muted">Ulangan (refren umat)</label><textarea className={input} rows={2} value={ulangan} onChange={(e) => setUlangan(e.target.value)} /></div>
+        <div><label className="mb-1 block text-xs text-brand-muted">Ayat-ayat (satu bait per paragraf)</label><textarea className={input} rows={9} value={text} onChange={(e) => setText(e.target.value)} /></div>
+        <div><label className="mb-1 block text-xs text-brand-muted">Sumber (opsional)</label><input className={input} value={source} onChange={(e) => setSource(e.target.value)} placeholder="mis. Buku Bacaan Misa, KWI" /></div>
+        {err && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{err}</p>}
+        <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan"}</button>
+      </div>
     </div>
   );
 }
