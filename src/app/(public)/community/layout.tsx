@@ -24,15 +24,15 @@ export default function CommunityLayout({ children }: { children: React.ReactNod
   return (
     <div className="w-full min-h-[100dvh] bg-brand-dark text-white font-sans">
       {/* Sub-tab header */}
-      <div className="sticky top-0 z-30 bg-brand-bg border-b border-brand-border">
-        <div className="flex">
+      <div className="sticky top-[70px] md:top-0 z-30 bg-brand-bg border-b border-brand-border">
+        <div className="flex h-16">
           {TABS.map(({ href, label, icon: Icon, badge }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className={`relative flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-bold tracking-wide transition-colors ${
+                className={`relative flex-1 flex flex-col items-center justify-center gap-1 text-[11px] font-bold tracking-wide transition-colors ${
                   active ? "text-brand-gold border-b-2 border-brand-gold" : "text-gray-500 hover:text-white"
                 }`}
               >

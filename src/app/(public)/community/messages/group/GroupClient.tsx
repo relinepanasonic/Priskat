@@ -915,7 +915,7 @@ export default function GroupClient({
   /* ---- render ------------------------------------------- */
   const shell =
     "flex overflow-hidden bg-brand-dark text-white md:h-[calc(100vh-56px)] " +
-    "max-md:fixed max-md:inset-x-0 max-md:top-[112px] max-md:bottom-16 max-md:z-40";
+    "max-md:fixed max-md:inset-x-0 max-md:top-[186px] max-md:bottom-16 max-md:z-40";
 
   return (
     <div className={shell}>
