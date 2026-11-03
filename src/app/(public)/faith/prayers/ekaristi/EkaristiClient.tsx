@@ -238,8 +238,17 @@ export default function EkaristiClient({
                 const isOpen = open === key;
                 const hasMore = !!p.text || !!p.link || !!p.reading || !!p.dsa;
                 return (
-                  <div key={key} className="rounded-2xl border border-[#2a2d35] bg-[#14171c]">
-                    <button onClick={() => hasMore && setOpen(isOpen ? null : key)} className="flex w-full items-start gap-3 p-3.5 text-left" aria-expanded={isOpen}>
+                  <div key={key} data-part className="scroll-mt-24 rounded-2xl border border-[#2a2d35] bg-[#14171c]">
+                    <button
+                      onClick={(e) => {
+                        if (!hasMore) return;
+                        const card = e.currentTarget.closest("[data-part]");
+                        setOpen(isOpen ? null : key);
+                        if (!isOpen) requestAnimationFrame(() => requestAnimationFrame(() => card?.scrollIntoView({ block: "start", behavior: "smooth" })));
+                      }}
+                      className="flex w-full items-start gap-3 p-3.5 text-left"
+                      aria-expanded={isOpen}
+                    >
                       <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: `${GOLD}1f`, color: GOLD }}>{n}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold text-white">{p.title}</span>

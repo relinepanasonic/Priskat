@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import GoogleButton from "@/components/auth/GoogleButton";
+import { friendlyAuthError } from "@/lib/authErrors";
 
 const passwordSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,11 +32,11 @@ export default function LoginPage() {
     setError(null);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
+      email: data.email.trim().toLowerCase(),
       password: data.password,
     });
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error.message));
       return;
     }
     router.push("/");
@@ -72,6 +73,10 @@ export default function LoginPage() {
             <input
               {...passwordForm.register("email")}
               type="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="email"
+              spellCheck={false}
               placeholder="you@example.com"
               className="w-full rounded-lg border border-brand-border py-2.5 pl-10 pr-4 text-sm bg-brand-surface text-brand-light focus:border-brand-blue focus:outline-none"
             />
