@@ -29,6 +29,7 @@ export default function JoinRequestsPanel({ requests }: { requests: JoinRequestR
     const { error } = await createClient().rpc("decide_join_request", { p_request_id: id, p_approve: approve });
     setBusy(null);
     if (error) { setError(error.message); return; }
+    fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "join_decided", id }) }).catch(() => {});
     router.refresh();
   }
 

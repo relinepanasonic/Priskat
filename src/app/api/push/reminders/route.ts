@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   for (const p of people) {
     const local = new Date(Date.now() + (p.tz_offset ?? 420) * 60_000);
     const hhmm = `${String(local.getUTCHours()).padStart(2, "0")}:${String(Math.floor(local.getUTCMinutes() / 15) * 15).padStart(2, "0")}`;
-    const slots = REMINDER_SLOTS.filter((s) => p.slots!.includes(s.key) && s.times.includes(hhmm));
+    const slots = REMINDER_SLOTS.filter((s) => p.slots!.includes(s.key) && s.times.includes(hhmm) && (s.weekday === undefined || s.weekday === local.getUTCDay()));
     if (slots.length) due.set(p.user_id, slots);
   }
   if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
@@ -38,6 +38,19 @@ export async function POST(request: Request) {
     const { count } = await db.from("daily_activity" as any).select("id", { count: "exact", head: true }).eq("user_id", userId).eq("day", yesterday);
     if (yesterday < GAME_START || (count ?? 0) > 0) {
       const rest = slots.filter((x) => !x.onlyIfMissedYesterday);
+      if (rest.length) due.set(userId, rest); else due.delete(userId);
+    }
+  }
+  if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
+
+  // "Jaga api doamu": only for people who have not prayed yet today (local time)
+  for (const [userId, slots] of [...due.entries()]) {
+    if (!slots.some((x) => x.onlyIfNotPrayedToday)) continue;
+    const p = people.find((q) => q.user_id === userId);
+    const today = new Date(Date.now() + (p?.tz_offset ?? 420) * 60_000).toISOString().slice(0, 10);
+    const { count } = await db.from("daily_activity" as any).select("id", { count: "exact", head: true }).eq("user_id", userId).eq("day", today).neq("kind", "redeem");
+    if ((count ?? 0) > 0) {
+      const rest = slots.filter((x) => !x.onlyIfNotPrayedToday);
       if (rest.length) due.set(userId, rest); else due.delete(userId);
     }
   }

@@ -9,6 +9,12 @@ export type ReminderSlot = {
   url: string;
   /** only send when the person has not prayed on the day that just ended */
   onlyIfMissedYesterday?: boolean;
+  /** only send when the person has not prayed yet today (local time) */
+  onlyIfNotPrayedToday?: boolean;
+  /** only on this weekday, local time (0 = Sunday ... 6 = Saturday) */
+  weekday?: number;
+  /** not on a clock: sent when something happens (someone prays for your intention ...); the switch only allows or stops it */
+  event?: boolean;
 };
 
 export const REMINDER_SLOTS: ReminderSlot[] = [
@@ -43,6 +49,25 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
     title: "Kemarin terlewat", body: "Tidak apa-apa. Buka Ruang Iman dan Tebus Hari dengan satu doa singkat 🙏", url: "/",
     onlyIfMissedYesterday: true,
   },
+  {
+    key: "streak", label: "Jaga api doamu", desc: "Pukul 19.30, hanya jika hari ini belum berdoa",
+    times: ["19:30"],
+    title: "Apimu masih menyala?", body: "Belum ada doa hari ini. Satu doa singkat cukup untuk menjaga apimu 🔥", url: "/",
+    onlyIfNotPrayedToday: true,
+  },
+  {
+    key: "peringkat", label: "Hasil mingguan", desc: "Senin pukul 08.00: peringkat dan lencana pekan lalu",
+    times: ["08:00"], weekday: 1,
+    title: "Peringkat mingguan sudah keluar", body: "Lihat posisimu dan lencana yang kamu dapat pekan ini.", url: "/leaderboard",
+  },
+  {
+    key: "intensi", label: "Intensi doamu didoakan", desc: "Saat ada saudara seiman mendoakan intensimu",
+    times: [], title: "", body: "", url: "/faith/intensi", event: true,
+  },
+  {
+    key: "komunitas", label: "Permintaan bergabung", desc: "Saat permintaanmu masuk komunitas disetujui atau belum",
+    times: [], title: "", body: "", url: "/camp", event: true,
+  },
 ];
 
-export const DEFAULT_SLOTS = ["angelus", "bacaan"];
+export const DEFAULT_SLOTS = ["angelus", "bacaan", "streak", "intensi", "komunitas"];

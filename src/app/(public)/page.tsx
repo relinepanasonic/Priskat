@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import HomeTabsClient from "@/components/home/HomeTabsClient";
 import HomeNotices from "@/components/home/HomeNotices";
+import PushAskCard from "@/components/home/PushAskCard";
 import { getLanguage } from "@/lib/lang";
 
 export const revalidate = 0;
@@ -120,6 +121,7 @@ export default async function HomePage() {
 
   return (
     <div className="md:p-6 md:h-full md:overflow-y-auto">
+      <PushAskCard userId={user.id} />
       <HomeNotices noPhoto={!profile.avatar_url} needsMain={needsMain} />
       <HomeTabsClient
         profile={profile}

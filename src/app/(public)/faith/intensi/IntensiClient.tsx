@@ -50,7 +50,9 @@ export default function IntensiClient({ isId, signedIn }: { isId: boolean; signe
   async function pray(it: Intention) {
     if (it.i_prayed) return;
     setItems((cur) => cur?.map((x) => (x.id === it.id ? { ...x, i_prayed: true, prayed_count: x.prayed_count + 1 } : x)) ?? cur);
-    await supabase.rpc("pray_for_intention" as any, { p_id: it.id } as any);
+    const { error } = await supabase.rpc("pray_for_intention" as any, { p_id: it.id } as any);
+    // Tell the author (the server decides if and when it is worth a notification)
+    if (!error) fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "intention_prayed", id: it.id }) }).catch(() => {});
   }
 
   async function answered(it: Intention) {
