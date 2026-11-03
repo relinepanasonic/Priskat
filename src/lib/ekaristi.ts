@@ -62,7 +62,7 @@ export type Part = {
   onlyIf?: "gloria" | "credo-sunday";
   link?: { href: string; label: string };
   /** shown inline from today's readings instead of opening the Bible */
-  reading?: "Bacaan I" | "Mazmur" | "Bacaan II" | "Injil";
+  reading?: "Bacaan I" | "Mazmur" | "Bacaan II" | "Injil" | "Bait";
   /** choose Doa Syukur Agung I-X right here */
   dsa?: boolean;
 };
@@ -106,6 +106,7 @@ export const MASS: Group[] = [
       {
         title: "Bait Pengantar Injil",
         what: "Umat berdiri dan menyambut Injil dengan nyanyian.",
+        reading: "Bait",
         text: "Alleluia, alleluia ... (pada Prapaskah: \"Terpujilah Engkau, Kristus, Raja kemuliaan abadi\")",
       },
       {

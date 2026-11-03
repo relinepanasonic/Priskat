@@ -3,7 +3,7 @@ import { getTodayReadings, jakartaParts } from "@/lib/bacaanHarian";
 import { loadReadingVerses } from "@/lib/readingText";
 import { seasonFromCelebration } from "@/lib/ekaristi";
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks";
-import EkaristiClient, { type TodayReading } from "./EkaristiClient";
+import EkaristiClient, { type TodayReading, type LiturgyTexts } from "./EkaristiClient";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Ekaristi" };
@@ -18,7 +18,7 @@ export default async function EkaristiPage() {
 
   const [{ data: { user } }, { data: override }] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("liturgy_texts" as any).select("mazmur_ulangan, mazmur_text, source").eq("day", dayIso).maybeSingle(),
+    supabase.from("liturgy_texts" as any).select("mazmur_ulangan, mazmur_text, bacaan1_text, bacaan2_text, injil_text, bait_text, source").eq("day", dayIso).maybeSingle(),
   ]);
 
   let isAdmin = false;
@@ -46,7 +46,7 @@ export default async function EkaristiPage() {
       celebration={today?.celebration ?? null}
       readings={readings}
       day={dayIso}
-      mazmurOverride={(override as { mazmur_ulangan: string | null; mazmur_text: string | null; source: string | null } | null) ?? null}
+      texts={(override as LiturgyTexts | null) ?? null}
       isAdmin={isAdmin}
     />
   );

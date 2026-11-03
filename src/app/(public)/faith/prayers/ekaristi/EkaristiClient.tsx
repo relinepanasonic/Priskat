@@ -10,7 +10,12 @@ const GOLD = "#D6B072";
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
 export type TodayReading = { label: string; display: string; verses: { verse: number; text: string }[] };
-type Override = { mazmur_ulangan: string | null; mazmur_text: string | null; source: string | null } | null;
+export type LiturgyTexts = {
+  mazmur_ulangan: string | null; mazmur_text: string | null;
+  bacaan1_text: string | null; bacaan2_text: string | null; injil_text: string | null; bait_text: string | null;
+  source: string | null;
+};
+type Override = LiturgyTexts | null;
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
@@ -56,8 +61,9 @@ function Verses({ verses }: { verses: { verse: number; text: string }[] }) {
 }
 
 export default function EkaristiClient({
-  defaultSeason, celebration, readings, day, mazmurOverride, isAdmin,
-}: { defaultSeason: SeasonId; celebration: string | null; readings: TodayReading[]; day: string; mazmurOverride: Override; isAdmin: boolean }) {
+  defaultSeason, celebration, readings, day, texts, isAdmin,
+}: { defaultSeason: SeasonId; celebration: string | null; readings: TodayReading[]; day: string; texts: Override; isAdmin: boolean }) {
+  const mazmurOverride = texts;
   const [seasonId, setSeasonId] = useState<SeasonId>(defaultSeason);
   const [open, setOpen] = useState<string | null>(null);
   const [dsa, setDsa] = useState<number>(1);
@@ -80,8 +86,38 @@ export default function EkaristiClient({
 
   let n = 0;
 
+  const lectionary = (label: string | undefined) =>
+    label === "Bacaan I" ? texts?.bacaan1_text : label === "Bacaan II" ? texts?.bacaan2_text : label === "Injil" ? texts?.injil_text : null;
+
+  const editButton = isAdmin && (
+    <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: GOLD }}>
+      <Pencil className="h-3.5 w-3.5" /> Isi / ubah teks Misa hari ini
+    </button>
+  );
+
+  const baitBlock = (p: Part) => (
+    <div className="space-y-3">
+      {p.text && <Dialogue text={p.text} />}
+      {texts?.bait_text && (
+        <p className="whitespace-pre-line rounded-xl bg-emerald-400/10 px-3 py-2 text-[15px] italic leading-[1.8] text-emerald-200" style={serif}>{texts.bait_text}</p>
+      )}
+      {editButton}
+    </div>
+  );
+
   const readingBlock = (p: Part) => {
     const r = readings.find((x) => x.label === p.reading);
+    const own = lectionary(p.reading);
+    if (own && r) {
+      return (
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>{r.display}</p>
+          <p className="whitespace-pre-line text-[15px] leading-[1.85] text-[#EAE5D9]" style={serif}>{own}</p>
+          {p.reading !== "Injil" && <Dialogue text={"Pembaca: Demikianlah sabda Tuhan.\nUmat: Syukur kepada Allah."} />}
+          {editButton}
+        </div>
+      );
+    }
     if (!r) {
       return <p className="text-sm text-brand-muted">{p.reading === "Bacaan II" ? "Hari ini tidak ada Bacaan II." : readings.length === 0 ? "Bacaan hari ini belum bisa dimuat." : "Bacaan ini tidak ada hari ini."}</p>;
     }
@@ -104,11 +140,7 @@ export default function EkaristiClient({
             </>
           )}
           {mazmurOverride?.source && <p className="text-[11px] text-brand-muted">Sumber: {mazmurOverride.source}</p>}
-          {isAdmin && (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: GOLD }}>
-              <Pencil className="h-3.5 w-3.5" /> {mazmurOverride ? "Ubah" : "Isi"} Mazmur Tanggapan hari ini
-            </button>
-          )}
+          {editButton}
         </div>
       );
     }
@@ -116,11 +148,8 @@ export default function EkaristiClient({
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>{r.display}</p>
         <Verses verses={r.verses} />
-        {p.reading === "Injil" ? (
-          <Dialogue text={"Imam: Demikianlah sabda Tuhan.\nUmat: Terpujilah Kristus."} />
-        ) : (
-          <Dialogue text={"Pembaca: Demikianlah sabda Tuhan.\nUmat: Syukur kepada Allah."} />
-        )}
+        {p.reading !== "Injil" && <Dialogue text={"Pembaca: Demikianlah sabda Tuhan.\nUmat: Syukur kepada Allah."} />}
+        {editButton}
       </div>
     );
   };
@@ -220,8 +249,13 @@ export default function EkaristiClient({
                     </button>
                     {isOpen && (
                       <div className="border-t border-[#2a2d35] px-4 pb-4 pt-3">
-                        {p.reading ? readingBlock(p) : p.dsa ? dsaBlock() : p.text ? <Dialogue text={p.text} /> : null}
-                        {p.reading && p.text && <div className="mt-3"><Dialogue text={p.text} /></div>}
+                        {p.reading === "Bait" ? baitBlock(p) : p.reading === "Injil" && p.text ? (
+                          <div className="space-y-3">
+                            <Dialogue text={p.text.split("\n...\n")[0]} />
+                            {readingBlock(p)}
+                            <Dialogue text={p.text.split("\n...\n")[1] ?? ""} />
+                          </div>
+                        ) : p.reading ? readingBlock(p) : p.dsa ? dsaBlock() : p.text ? <Dialogue text={p.text} /> : null}
                       </div>
                     )}
                   </div>
@@ -237,27 +271,34 @@ export default function EkaristiClient({
         Teks dan urutan di sini adalah ringkasan untuk membantu umat mengikuti Misa. Rumusan resmi mengikuti Tata Perayaan Ekaristi yang dipakai di parokimu, dan bisa sedikit berbeda menurut edisi dan kebiasaan setempat.
       </p>
 
-      {editing && <MazmurEditor day={day} initial={mazmurOverride} onClose={() => setEditing(false)} />}
+      {editing && <TextsEditor day={day} initial={texts} onClose={() => setEditing(false)} />}
     </div>
   );
 }
 
-function MazmurEditor({ day, initial, onClose }: { day: string; initial: Override; onClose: () => void }) {
-  const [ulangan, setUlangan] = useState(initial?.mazmur_ulangan ?? "");
-  const [text, setText] = useState(initial?.mazmur_text ?? "");
-  const [source, setSource] = useState(initial?.source ?? "");
+function TextsEditor({ day, initial, onClose }: { day: string; initial: Override; onClose: () => void }) {
+  const [v, setV] = useState({
+    mazmur_ulangan: initial?.mazmur_ulangan ?? "", mazmur_text: initial?.mazmur_text ?? "",
+    bacaan1_text: initial?.bacaan1_text ?? "", bacaan2_text: initial?.bacaan2_text ?? "",
+    bait_text: initial?.bait_text ?? "", injil_text: initial?.injil_text ?? "", source: initial?.source ?? "",
+  });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
+  const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => setV((x) => ({ ...x, [k]: e.target.value }));
+  const fields: [keyof typeof v, string, number][] = [
+    ["bacaan1_text", "Bacaan I", 7], ["mazmur_ulangan", "Mazmur: Ulangan (refren umat)", 2], ["mazmur_text", "Mazmur: ayat-ayat (satu bait per paragraf)", 8],
+    ["bacaan2_text", "Bacaan II (jika ada)", 7], ["bait_text", "Bait Pengantar Injil", 3], ["injil_text", "Injil", 9],
+  ];
 
   async function save() {
     setBusy(true);
     setErr(null);
     const supabase = createClient();
     const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("liturgy_texts" as any).upsert({
-      day, mazmur_ulangan: ulangan.trim() || null, mazmur_text: text.trim() || null, source: source.trim() || null, updated_by: u.user?.id, updated_at: new Date().toISOString(),
-    } as any);
+    const row: Record<string, unknown> = { day, updated_by: u.user?.id, updated_at: new Date().toISOString() };
+    for (const k of Object.keys(v) as (keyof typeof v)[]) row[k] = v[k].trim() || null;
+    const { error } = await supabase.from("liturgy_texts" as any).upsert(row as any);
     setBusy(false);
     if (error) { setErr(error.message); return; }
     window.location.reload();
@@ -267,11 +308,12 @@ function MazmurEditor({ day, initial, onClose }: { day: string; initial: Overrid
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 md:items-center" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="relative max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl border border-[#333] bg-[#1a1d24] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:rounded-3xl">
         <button onClick={onClose} aria-label="Tutup" className="absolute right-3 top-3 rounded-full p-1.5 text-gray-400 hover:bg-white/10"><X className="h-5 w-5" /></button>
-        <h3 className="text-lg font-bold text-white">Mazmur Tanggapan hari ini</h3>
-        <p className="text-xs text-brand-muted">Tanggal {day}. Tempel teks Mazmur dari buku bacaan Misa. Isi "Ulangan" (refren) dan ayat-ayatnya.</p>
-        <div><label className="mb-1 block text-xs text-brand-muted">Ulangan (refren umat)</label><textarea className={input} rows={2} value={ulangan} onChange={(e) => setUlangan(e.target.value)} /></div>
-        <div><label className="mb-1 block text-xs text-brand-muted">Ayat-ayat (satu bait per paragraf)</label><textarea className={input} rows={9} value={text} onChange={(e) => setText(e.target.value)} /></div>
-        <div><label className="mb-1 block text-xs text-brand-muted">Sumber (opsional)</label><input className={input} value={source} onChange={(e) => setSource(e.target.value)} placeholder="mis. Buku Bacaan Misa, KWI" /></div>
+        <h3 className="text-lg font-bold text-white">Teks Misa hari ini</h3>
+        <p className="text-xs text-brand-muted">Tanggal {day}. Isi hanya yang perlu. Bagian yang kosong memakai teks Alkitab (Terjemahan Baru).</p>
+        {fields.map(([k, label, rows]) => (
+          <div key={k}><label className="mb-1 block text-xs text-brand-muted">{label}</label><textarea className={input} rows={rows} value={v[k]} onChange={set(k)} /></div>
+        ))}
+        <div><label className="mb-1 block text-xs text-brand-muted">Sumber (opsional)</label><input className={input} value={v.source} onChange={set("source")} /></div>
         {err && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{err}</p>}
         <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan"}</button>
       </div>
