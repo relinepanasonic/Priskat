@@ -3,6 +3,7 @@ import Navbar from "@/components/layout/Navbar";
 import DmNotifier from "@/components/community/DmNotifier";
 import GroupNotifier from "@/components/community/GroupNotifier";
 import PushRegistrar from "@/components/native/PushRegistrar";
+import WidgetSync from "@/components/native/WidgetSync";
 import PlayerProvider from "@/components/audio/PlayerProvider";
 import GlobalMiniPlayer from "@/components/audio/GlobalMiniPlayer";
 import { getLanguage } from "@/lib/lang";
@@ -45,6 +46,7 @@ export default async function PublicLayout({
       {user && <DmNotifier />}
       {user && <GroupNotifier />}
       {user && <PushRegistrar userId={user.id} />}
+      {user && <WidgetSync userId={user.id} isEn={lang === "en"} />}
       <PlayerProvider initialQueue={(profile?.favorite_songs as any[]) || []}>
         {/* Phones: leave room for the fixed bottom navigation bar (+ the raised Beranda button and the safe area) */}
         <main className="flex-1 overflow-x-clip pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">{children}</main>

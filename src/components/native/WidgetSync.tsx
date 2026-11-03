@@ -1,0 +1,56 @@
+"use client";
+
+import { useEffect } from "react";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+import { createClient } from "@/lib/supabase/client";
+import { addDays, localDay } from "@/lib/activity";
+
+type WidgetData = { streak: number; lastDay: string; verseText: string; verseRef: string; isEn: boolean };
+const RuangWidget = registerPlugin<{ update(data: WidgetData): Promise<void> }>("RuangWidget");
+
+/**
+ * Keeps the Android home-screen widget up to date: streak, last prayer day and today's verse.
+ * Runs when the app opens, comes back to the front, or records a prayer. Does nothing in a
+ * browser or in app builds without the widget.
+ */
+export default function WidgetSync({ userId, isEn }: { userId: string; isEn: boolean }) {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable("RuangWidget")) return;
+
+    const sync = async () => {
+      const today = localDay();
+      const { data } = await createClient()
+        .from("daily_activity" as any)
+        .select("day, kind")
+        .eq("user_id", userId)
+        .gte("day", addDays(today, -60));
+      // A day counts when the person prayed or redeemed it (loot and campaign points alone do not)
+      const done = new Set(((data as unknown as { day: string; kind: string }[]) ?? []).filter((r) => r.kind !== "loot" && r.kind !== "campaign").map((r) => r.day));
+      let cursor = done.has(today) ? today : addDays(today, -1);
+      const lastDay = done.has(cursor) ? cursor : [...done].sort().pop() ?? "";
+      let streak = 0;
+      while (done.has(cursor)) { streak += 1; cursor = addDays(cursor, -1); }
+
+      let verseText = "";
+      let verseRef = "";
+      try {
+        const r = await fetch(`/api/bible/votd?lang=${isEn ? "en" : "id"}`);
+        if (r.ok) { const v = await r.json(); verseText = v.text ?? ""; verseRef = v.reference ?? ""; }
+      } catch { /* keep the widget's streak even without the verse */ }
+
+      await RuangWidget.update({ streak, lastDay, verseText, verseRef, isEn });
+    };
+
+    const run = () => { sync().catch(() => {}); };
+    const onVisible = () => { if (document.visibilityState === "visible") run(); };
+    run();
+    window.addEventListener("activity-recorded", run);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("activity-recorded", run);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [userId, isEn]);
+
+  return null;
+}
