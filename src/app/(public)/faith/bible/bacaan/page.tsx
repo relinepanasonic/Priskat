@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronDown, Church } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getTodayReadings } from "@/lib/bacaanHarian";
+import { getTodayReadings, jakartaParts } from "@/lib/bacaanHarian";
 import { loadReadingVerses, readingTitle } from "@/lib/readingText";
 import ActivityTimer from "@/components/home/ActivityTimer";
 
@@ -17,10 +17,21 @@ export default async function TodayReadingPage() {
   // The text of every reading, from our own Bible (TB; deuterocanonical books only exist in NRSV-CE)
   const verses = await Promise.all((day?.readings ?? []).map((r) => loadReadingVerses(supabase, r.segments)));
 
+  // The lectionary wording an admin entered for today wins over the Bible text
+  const { day: dd, month, year } = jakartaParts();
+  const { data: own } = await supabase
+    .from("liturgy_texts" as any)
+    .select("mazmur_ulangan, mazmur_text, bacaan1_text, bacaan2_text, injil_text")
+    .eq("day", `${year}-${String(month).padStart(2, "0")}-${String(dd).padStart(2, "0")}`)
+    .maybeSingle();
+  const lect = own as { mazmur_ulangan: string | null; mazmur_text: string | null; bacaan1_text: string | null; bacaan2_text: string | null; injil_text: string | null } | null;
+  const ownText = (label: string) =>
+    label === "Bacaan I" ? lect?.bacaan1_text : label === "Bacaan II" ? lect?.bacaan2_text : label === "Injil" ? lect?.injil_text : label === "Mazmur" ? lect?.mazmur_text : null;
+
   const today = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
 
   return (
-    <div className="w-full max-w-2xl space-y-5">
+    <div className="w-full max-w-2xl space-y-5 p-4 pb-8 md:p-6">
       <ActivityTimer kind="reading" refId="today" seconds={20} />
       <Link href="/faith/bible" className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Alkitab
@@ -48,7 +59,12 @@ export default async function TodayReadingPage() {
                 <ChevronDown className="h-5 w-5 shrink-0 text-brand-muted transition-transform group-open:rotate-180" />
               </summary>
               <div className="border-t border-[#2a2d35] px-4 pb-4 pt-3">
-                {verses[i].length ? (
+                {r.label === "Mazmur" && lect?.mazmur_ulangan && (
+                  <p className="mb-3 rounded-xl bg-sky-400/10 px-3 py-2 text-[15px] italic text-sky-200" style={serif}>{lect.mazmur_ulangan}</p>
+                )}
+                {ownText(r.label) ? (
+                  <p className="whitespace-pre-line text-[15px] leading-[1.85] text-[#EAE5D9]" style={serif}>{ownText(r.label)}</p>
+                ) : verses[i].length ? (
                   <p className="text-[15px] leading-[1.85] text-[#EAE5D9]" style={serif}>
                     {verses[i].map((v) => (
                       <span key={`${v.chapter}-${v.verse}`}>

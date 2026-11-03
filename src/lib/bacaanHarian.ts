@@ -64,7 +64,7 @@ export async function getTodayReadings(): Promise<DayReadings> {
     const label = links.length === 3 || links.length >= 4 ? (isPsalm ? "Mazmur" : i === links.length - 1 ? "Injil" : labels[i] ?? "Bacaan") : labels[i] ?? "Bacaan";
     // every verse range of the reading ("Yes45:1;Yes45:4-6;" = two ranges)
     const segments: Segment[] = decodeURIComponent(l.q).split(";").filter(Boolean).map((part) => {
-      const mm = part.match(/^(d?[A-Za-z]+)(d+):(d+)(?:-(d+))?/);
+      const mm = part.match(/^(\d?[A-Za-z]+)(\d+):(\d+)[a-z]?(?:-(\d+))?/);
       return mm ? { book: bookNo(mm[1]), chapter: Number(mm[2]), from: Number(mm[3]), to: Number(mm[4] ?? mm[3]) } : null;
     }).filter((x): x is Segment => !!x);
     return {
