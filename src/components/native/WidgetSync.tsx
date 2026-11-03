@@ -46,7 +46,11 @@ export default function WidgetSync({ userId, isEn }: { userId: string; isEn: boo
         if (r.ok) {
           const d = (await r.json()) as { celebration?: string; readings?: { label: string; title: string }[] };
           celebration = d.celebration ?? "";
-          readings = (d.readings ?? []).map((x) => `${x.label}: ${x.title}`).join("\n");
+          // Short lines so nothing is cut off: "Bacaan I  Filipi 2:5-11", "Mazmur  22:26b-27…", "Injil  Lukas 14:15-24"
+          const short = (t: string) => (t.length > 22 ? `${t.slice(0, 21).trimEnd()}…` : t);
+          readings = (d.readings ?? [])
+            .map((x) => (x.label === "Mazmur" ? `Mazmur  ${short(x.title.replace(/^[^\d]*/, ""))}` : `${x.label}  ${short(x.title)}`))
+            .join("\n");
         }
       } catch { /* the other cards still work */ }
 

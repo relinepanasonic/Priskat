@@ -103,11 +103,6 @@ public class RuangWidgetService extends RemoteViewsService {
         private RemoteViews massCard() {
             RemoteViews v = new RemoteViews(context.getPackageName(), R.layout.widget_card_mass);
             v.setTextViewText(R.id.card_title, en ? "Today's readings" : "Bacaan hari ini");
-            if (celebration.isEmpty()) v.setViewVisibility(R.id.widget_celebration, View.GONE);
-            else {
-                v.setViewVisibility(R.id.widget_celebration, View.VISIBLE);
-                v.setTextViewText(R.id.widget_celebration, celebration);
-            }
             v.setTextViewText(R.id.widget_readings, readings.isEmpty()
                     ? (en ? "Open the app to load today's readings." : "Buka aplikasi untuk memuat bacaan hari ini.")
                     : readings);

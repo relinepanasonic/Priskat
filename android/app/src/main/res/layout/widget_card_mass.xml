@@ -17,25 +17,16 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/widget_celebration"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="#D6B072"
-        android:textSize="12sp" />
-
-    <TextView
         android:id="@+id/widget_readings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:ellipsize="end"
-        android:lineSpacingExtra="2dp"
-        android:maxLines="5"
+        android:lineSpacingExtra="1dp"
+        android:maxLines="4"
+        android:singleLine="false"
         android:textColor="#EAE5D9"
-        android:textSize="13sp" />
+        android:textSize="12sp" />
 
     <View
         android:layout_width="match_parent"
