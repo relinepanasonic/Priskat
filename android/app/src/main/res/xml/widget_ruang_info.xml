@@ -2,7 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_description"
     android:initialLayout="@layout/widget_ruang"
-    android:previewLayout="@layout/widget_ruang"
+    android:previewLayout="@layout/widget_card_streak"
     android:minWidth="250dp"
     android:minHeight="110dp"
     android:targetCellWidth="4"

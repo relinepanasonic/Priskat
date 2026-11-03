@@ -6,77 +6,46 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.view.View;
+import android.net.Uri;
+import android.os.Build;
 import android.widget.RemoteViews;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
-
 /**
- * Home-screen widget: the prayer flame with the streak, whether today is done, and the verse of the day.
- * Tapping it opens the app. It redraws every 30 minutes so "today" stays right after midnight.
+ * Home-screen widget: a stack of three cards you swipe up and down (prayer streak, verse of the day,
+ * today's Mass readings). Tapping a card opens the app. The cards are drawn by RuangWidgetService.
+ * Android redraws it every 30 minutes so "today" stays right after midnight.
  */
 public class RuangWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
-        for (int id : ids) manager.updateAppWidget(id, build(context));
+        for (int id : ids) manager.updateAppWidget(id, build(context, id));
+        manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_stack);
     }
 
     static void refreshAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
         int[] ids = manager.getAppWidgetIds(new ComponentName(context, RuangWidgetProvider.class));
-        for (int id : ids) manager.updateAppWidget(id, build(context));
+        for (int id : ids) manager.updateAppWidget(id, build(context, id));
+        manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_stack);
     }
 
-    private static String day(int offset) {
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DAY_OF_YEAR, offset);
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(c.getTime());
-    }
-
-    private static RemoteViews build(Context context) {
-        SharedPreferences p = context.getSharedPreferences(RuangWidgetPlugin.PREFS, Context.MODE_PRIVATE);
-        boolean en = p.getBoolean("isEn", false);
-        String lastDay = p.getString("lastDay", "");
-        int saved = p.getInt("streak", 0);
-        String verse = p.getString("verseText", "");
-        String ref = p.getString("verseRef", "");
-
-        boolean prayedToday = day(0).equals(lastDay);
-        boolean alive = prayedToday || day(-1).equals(lastDay);
-        // The saved streak is only still true if the last prayer was today or yesterday
-        int streak = alive ? saved : 0;
-
-        String status;
-        if (prayedToday) status = en ? "Prayed today ✓" : "Sudah berdoa hari ini ✓";
-        else if (streak > 0) status = en ? "Keep your flame alive today" : "Ayo jaga apimu hari ini";
-        else status = en ? "Start praying today" : "Mulai berdoa hari ini";
-
+    private static RemoteViews build(Context context, int widgetId) {
         RemoteViews v = new RemoteViews(context.getPackageName(), R.layout.widget_ruang);
-        v.setTextViewText(R.id.widget_streak, String.valueOf(streak));
-        v.setTextViewText(R.id.widget_streak_label, en ? (streak == 1 ? "day" : "days") : "hari");
-        v.setTextViewText(R.id.widget_status, status);
-        v.setTextColor(R.id.widget_status, prayedToday ? 0xFF86EFAC : 0xFFD6B072);
-        v.setTextViewText(R.id.widget_button, prayedToday ? (en ? "Open" : "Buka") : (en ? "Pray" : "Berdoa"));
 
-        if (verse.isEmpty()) {
-            v.setViewVisibility(R.id.widget_verse, View.GONE);
-            v.setViewVisibility(R.id.widget_ref, View.GONE);
-        } else {
-            v.setViewVisibility(R.id.widget_verse, View.VISIBLE);
-            v.setViewVisibility(R.id.widget_ref, View.VISIBLE);
-            v.setTextViewText(R.id.widget_verse, "“" + verse + "”");
-            v.setTextViewText(R.id.widget_ref, ref);
-        }
+        Intent svc = new Intent(context, RuangWidgetService.class);
+        svc.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        svc.setData(Uri.parse(svc.toUri(Intent.URI_INTENT_SCHEME)));
+        v.setRemoteAdapter(R.id.widget_stack, svc);
+        v.setEmptyView(R.id.widget_stack, R.id.widget_empty);
 
+        // One template for every card; each card adds an empty fill-in intent so its taps count
         Intent open = new Intent(context, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pi = PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        v.setOnClickPendingIntent(R.id.widget_root, pi);
-        v.setOnClickPendingIntent(R.id.widget_button, pi);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
+        PendingIntent template = PendingIntent.getActivity(context, 0, open, flags);
+        v.setPendingIntentTemplate(R.id.widget_stack, template);
+        v.setOnClickPendingIntent(R.id.widget_empty, PendingIntent.getActivity(context, 1, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
         return v;
     }
 }

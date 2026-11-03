@@ -1,90 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_bg"
-    android:orientation="vertical"
-    android:padding="14dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <StackView
+        android:id="@+id/widget_stack"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🔥"
-            android:textSize="26sp" />
-
-        <TextView
-            android:id="@+id/widget_streak"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:text="0"
-            android:textColor="#D6B072"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/widget_streak_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="hari"
-            android:textColor="#B8B2A6"
-            android:textSize="13sp" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <TextView
-            android:id="@+id/widget_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_button_bg"
-            android:paddingStart="14dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="6dp"
-            android:text="Berdoa"
-            android:textColor="#121417"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+        android:layout_height="match_parent"
+        android:loopViews="true" />
 
     <TextView
-        android:id="@+id/widget_status"
+        android:id="@+id/widget_empty"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="Mulai berdoa hari ini"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bg"
+        android:gravity="center"
+        android:text="Ruang Iman"
         android:textColor="#D6B072"
-        android:textSize="12sp" />
-
-    <TextView
-        android:id="@+id/widget_verse"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:ellipsize="end"
-        android:fontFamily="serif"
-        android:maxLines="3"
-        android:textColor="#EAE5D9"
-        android:textSize="13sp"
-        android:textStyle="italic" />
-
-    <TextView
-        android:id="@+id/widget_ref"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textColor="#D6B072"
-        android:textSize="11sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
-</LinearLayout>
+</FrameLayout>

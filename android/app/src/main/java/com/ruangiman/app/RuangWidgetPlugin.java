@@ -10,7 +10,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
  * The web app tells the home-screen widget what to show: the prayer streak, the last day the
- * person prayed, and today's verse. Stored on the phone so the widget works while the app is closed.
+ * person prayed, today's verse and today's Mass readings. Stored on the phone so the widget
+ * works while the app is closed.
  */
 @CapacitorPlugin(name = "RuangWidget")
 public class RuangWidgetPlugin extends Plugin {
@@ -25,6 +26,8 @@ public class RuangWidgetPlugin extends Plugin {
         e.putString("lastDay", call.getString("lastDay", ""));
         e.putString("verseText", call.getString("verseText", ""));
         e.putString("verseRef", call.getString("verseRef", ""));
+        e.putString("celebration", call.getString("celebration", ""));
+        e.putString("readings", call.getString("readings", ""));
         e.putBoolean("isEn", Boolean.TRUE.equals(call.getBoolean("isEn", false)));
         e.apply();
         RuangWidgetProvider.refreshAll(ctx);

@@ -5,11 +5,11 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
 import { addDays, localDay } from "@/lib/activity";
 
-type WidgetData = { streak: number; lastDay: string; verseText: string; verseRef: string; isEn: boolean };
+type WidgetData = { streak: number; lastDay: string; verseText: string; verseRef: string; celebration: string; readings: string; isEn: boolean };
 const RuangWidget = registerPlugin<{ update(data: WidgetData): Promise<void> }>("RuangWidget");
 
 /**
- * Keeps the Android home-screen widget up to date: streak, last prayer day and today's verse.
+ * Keeps the Android home-screen widget up to date: streak, last prayer day, today's verse and today's readings.
  * Runs when the app opens, comes back to the front, or records a prayer. Does nothing in a
  * browser or in app builds without the widget.
  */
@@ -38,7 +38,19 @@ export default function WidgetSync({ userId, isEn }: { userId: string; isEn: boo
         if (r.ok) { const v = await r.json(); verseText = v.text ?? ""; verseRef = v.reference ?? ""; }
       } catch { /* keep the widget's streak even without the verse */ }
 
-      await RuangWidget.update({ streak, lastDay, verseText, verseRef, isEn });
+      // Today's Mass readings, one per line: "Bacaan I  Filipi 2:5-11"
+      let celebration = "";
+      let readings = "";
+      try {
+        const r = await fetch("/api/readings/today");
+        if (r.ok) {
+          const d = (await r.json()) as { celebration?: string; readings?: { label: string; title: string }[] };
+          celebration = d.celebration ?? "";
+          readings = (d.readings ?? []).map((x) => `${x.label}: ${x.title}`).join("\n");
+        }
+      } catch { /* the other cards still work */ }
+
+      await RuangWidget.update({ streak, lastDay, verseText, verseRef, celebration, readings, isEn });
     };
 
     const run = () => { sync().catch(() => {}); };
