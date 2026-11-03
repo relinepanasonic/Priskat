@@ -30,7 +30,7 @@ const NAV = [
   { href: "/admin/devotions", label: "Devotions", icon: BookOpen },
   { href: "/admin/prayers", label: "Prayers / Doa", icon: HandHeart },
   { href: "/admin/communities", label: "Community Center", icon: Network, superAdminOnly: true },
-  { href: "/admin/database", label: "Database", icon: Database, superAdminOnly: true },
+  { href: "/admin/database", label: "Database", icon: Database, founderOnly: true },
   { href: "/admin/invite", label: "Invite Users", icon: HandHeart, superAdminOnly: true },
 ];
 
@@ -46,6 +46,7 @@ export default function AdminSidebar({ role, fullName }: Props) {
   }
 
   const links = NAV.filter((n) => {
+    if ((n as { founderOnly?: boolean }).founderOnly) return role === "founder";
     if (n.superAdminOnly) return role === "superadmin" || role === "founder";
     if (n.adminOnly) return role === "admin" || role === "superadmin" || role === "founder";
     return true;
