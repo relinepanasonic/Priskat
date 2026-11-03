@@ -1,38 +1,21 @@
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, ChevronDown, Church } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getTodayReadings } from "@/lib/bacaanHarian";
-import { cleanVerse } from "@/lib/bibleText";
+import { loadReadingVerses, readingTitle } from "@/lib/readingText";
 import ActivityTimer from "@/components/home/ActivityTimer";
-import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Bacaan Hari Ini" };
 
-const BOOKS = new Map([...OLD_TESTAMENT, ...NEW_TESTAMENT, ...DEUTEROCANONICA].map((b) => [b.no, b]));
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
 export default async function TodayReadingPage() {
   const day = await getTodayReadings();
   const supabase = await createClient();
 
-  // First verses of each reading, from our own Bible (TB; deuterocanonical books only exist in NRSV-CE)
-  const snippets = await Promise.all(
-    (day?.readings ?? []).map(async (r) => {
-      if (!r.book || !r.chapter) return "";
-      const { data } = await supabase
-        .from("bible_verses")
-        .select("content")
-        .eq("translation", r.book >= 67 ? "NRSV-CE" : "TB")
-        .eq("book_no", r.book)
-        .eq("chapter", r.chapter)
-        .gte("verse", r.from)
-        .lte("verse", Math.min(r.to, r.from + 1))
-        .order("verse");
-      const text = ((data as { content: string }[]) ?? []).map((d) => cleanVerse(d.content)).join(" ");
-      return text.length > 190 ? `${text.slice(0, 187).trimEnd()}…` : text;
-    })
-  );
+  // The text of every reading, from our own Bible (TB; deuterocanonical books only exist in NRSV-CE)
+  const verses = await Promise.all((day?.readings ?? []).map((r) => loadReadingVerses(supabase, r.segments)));
 
   const today = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
 
@@ -52,32 +35,38 @@ export default async function TodayReadingPage() {
       {!day ? (
         <div className="rounded-2xl border border-[#333] bg-[#1a1d24] p-6 text-center text-sm text-brand-muted">
           Bacaan hari ini belum bisa dimuat. Coba lagi sebentar lagi.
-          <a href="https://www.imankatolik.or.id/kalender.php" target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1.5 text-brand-gold">
-            Buka kalender liturgi <ExternalLink className="h-3.5 w-3.5" />
-          </a>
         </div>
       ) : (
         <div className="space-y-3">
-          {day.readings.map((r, i) => {
-            const meta = r.book ? BOOKS.get(r.book) : null;
-            const inner = (
-              <>
+          {day.readings.map((r, i) => (
+            <details key={i} className="group rounded-2xl border border-[#333] bg-[#1a1d24] transition-colors open:border-brand-gold/40">
+              <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">{r.label}</p>
-                  <p className="mt-0.5 font-semibold text-white">{meta ? `${meta.name} ${r.display.replace(/^[^\d]*\s*(?=\d)/, "")}` : r.display}</p>
-                  {snippets[i] && <p className="mt-1.5 text-sm leading-relaxed text-gray-300" style={serif}>&ldquo;{snippets[i]}&rdquo;</p>}
+                  <p className="mt-0.5 font-semibold text-white">{readingTitle(r.display, r.book)}</p>
                 </div>
-                {r.book && <ChevronRight className="h-5 w-5 shrink-0 text-brand-muted" />}
-              </>
-            );
-            const cls = "flex items-center gap-3 rounded-2xl border border-[#333] bg-[#1a1d24] p-4 transition-colors";
-            return r.book && r.chapter ? (
-              <Link key={i} href={`/faith/bible/${r.book}/${r.chapter}?ayat=${r.from}`} className={`${cls} hover:border-brand-gold/50 hover:bg-[#1e2129] active:scale-[0.99]`}>{inner}</Link>
-            ) : (
-              <div key={i} className={cls}>{inner}</div>
-            );
-          })}
-          <p className="pt-1 text-center text-[11px] text-brand-muted">Bacaan Misa Gereja Katolik Indonesia · sumber: imankatolik.or.id</p>
+                <ChevronDown className="h-5 w-5 shrink-0 text-brand-muted transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="border-t border-[#2a2d35] px-4 pb-4 pt-3">
+                {verses[i].length ? (
+                  <p className="text-[15px] leading-[1.85] text-[#EAE5D9]" style={serif}>
+                    {verses[i].map((v) => (
+                      <span key={`${v.chapter}-${v.verse}`}>
+                        <sup className="mr-0.5 font-sans text-[10px] text-brand-muted">{v.verse}</sup>
+                        {v.text}{" "}
+                      </span>
+                    ))}
+                  </p>
+                ) : (
+                  <p className="text-sm text-brand-muted">Teks bacaan ini belum bisa dimuat.</p>
+                )}
+              </div>
+            </details>
+          ))}
+          <Link href="/faith/prayers/ekaristi" className="flex items-center justify-center gap-2 pt-1 text-xs font-semibold text-brand-gold">
+            <Church className="h-4 w-4" /> Ikuti urutan Misa lengkap
+          </Link>
+          <p className="text-center text-[11px] text-brand-muted">Bacaan Misa Gereja Katolik Indonesia</p>
         </div>
       )}
     </div>

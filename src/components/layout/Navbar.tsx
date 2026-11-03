@@ -9,6 +9,7 @@ import { useSession } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Profile } from "@/lib/types/database.types";
+import BenedictusCross from "@/components/icons/BenedictusCross";
 import LanguageToggle from "@/components/ui/LanguageToggle";
 import { forgetPushToken } from "@/components/native/PushRegistrar";
 import ConnectUnreadDot from "@/components/community/ConnectUnreadDot";
@@ -29,7 +30,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     { href: "/", label: isEn ? "Home" : "Beranda", icon: Home },
     { href: "/community", label: isEn ? "Connect" : "Koneksi", icon: Users },
     { href: "/camp", label: isEn ? "Community" : "Komunitas", icon: Tent },
-    { href: "/faith", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: Book },
+    { href: "/faith", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: BenedictusCross },
     { href: "/news", label: isEn ? "Warta" : "Warta", icon: Newspaper },
     { href: "/profile", label: isEn ? "Profile" : "Profil", icon: User },
   ];
@@ -73,7 +74,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
 
         {/* Desktop nav */}
         <nav className="flex-1 space-y-1">
-          {DESKTOP_NAV_LINKS.map(({ href, match, label, icon: Icon }: { href: string; match?: string; label: string; icon: typeof Book }) => {
+          {DESKTOP_NAV_LINKS.map(({ href, match, label, icon: Icon }: { href: string; match?: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
             const isActive = pathname.startsWith(match ?? href) && (href !== "/" || pathname === "/");
             return (
               <Link
@@ -217,7 +218,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
       <div className="flex justify-around items-center h-16 px-2">
         {/* Spiritual */}
         <Link prefetch={true} href="/faith" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/faith') ? 'text-brand-gold' : 'text-gray-500'}`}>
-          <Book className="h-5 w-5" />
+          <BenedictusCross className="h-5 w-5" />
           <span className="text-[10px] font-medium">{isEn ? "Spiritual" : "Spiritual"}</span>
         </Link>
         

@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Segment } from "@/lib/bacaanHarian";
 import { cleanVerse } from "@/lib/bibleText";
+import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks";
+
+const BOOKS = new Map([...OLD_TESTAMENT, ...NEW_TESTAMENT, ...DEUTEROCANONICA].map((b) => [b.no, b]));
 
 export type ReadingVerse = { chapter: number; verse: number; text: string };
 
@@ -23,4 +26,10 @@ export async function loadReadingVerses(supabase: SupabaseClient, segments: Segm
     }
   }
   return out;
+}
+
+/** "Yesaya 45:1, 4-6": the book name from our Bible list in front of the reference. */
+export function readingTitle(display: string, bookNo: number | null): string {
+  const meta = bookNo ? BOOKS.get(bookNo) : null;
+  return meta ? `${meta.name} ${display.replace(/^[^\d]*\s*(?=\d)/, "")}` : display;
 }
