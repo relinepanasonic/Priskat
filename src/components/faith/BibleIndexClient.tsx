@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Bookmark, ArrowRight, Shuffle, CalendarCheck, Loader2 } from "lucide-react";
+import { Search, Bookmark, ArrowRight, Shuffle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BookListClient from "./BookListClient";
@@ -22,7 +22,6 @@ interface BibleIndexClientProps {
   deuterocanonica: Book[];
 }
 
-import VerseOfDayCard from "./VerseOfDayCard";
 
 export default function BibleIndexClient({
   isId,
@@ -77,9 +76,6 @@ export default function BibleIndexClient({
 
   return (
     <div className="w-full">
-      {/* Verse of the day first, then search, then quick actions */}
-      {!searchQuery && <div className="mb-5 max-w-2xl"><VerseOfDayCard isId={isId} /></div>}
-
       {/* Row 1: search + version */}
       <div className="mb-3 flex max-w-2xl items-center gap-2 sm:gap-3">
         <form onSubmit={searchBible} className="relative flex-1 min-w-0" role="search">
@@ -121,7 +117,7 @@ export default function BibleIndexClient({
 
       </div>
 
-      {/* Row 2: Fav, random verse, today's reading */}
+      {/* Row 2: Fav, random verse */}
       <div className="mb-8 flex max-w-2xl items-center gap-2">
         <Link href="/profile/favorites" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20">
           <Bookmark className="h-4 w-4" fill="currentColor" /> {isId ? "Fav ku" : "My Fav"}
@@ -129,9 +125,6 @@ export default function BibleIndexClient({
         <button onClick={randomVerse} disabled={rolling} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold disabled:opacity-60">
           {rolling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shuffle className="h-4 w-4" />} {isId ? "Acak" : "Random"}
         </button>
-        <Link href="/faith/bible/bacaan" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all active:scale-95 border-[#333] bg-[#1a1d24] text-gray-200 hover:border-brand-gold/50 hover:text-brand-gold">
-          <CalendarCheck className="h-4 w-4" /> {isId ? "Bacaan Hari Ini" : "Today's Reading"}
-        </Link>
       </div>
 
       {/* Reference typed (book + chapter[:verse]) → open it directly */}
