@@ -18,6 +18,7 @@ import {
   BadgeCheck,
   Images,
   Settings,
+  UsersRound,
 } from "lucide-react";
 import { resolveCommunity, isCatholicFamilyMinistry } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
@@ -45,6 +46,7 @@ export default function CommunitySlugLayout({
   const [isCI, setIsCI] = useState(isCatholicIndonesia(null, slug));
   const [isCFM, setIsCFM] = useState(isCatholicFamilyMinistry(null, slug));
   const [canPromote, setCanPromote] = useState(false);
+  const [leadsCg, setLeadsCg] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -82,6 +84,16 @@ export default function CommunitySlugLayout({
           ok = !!ca;
         }
         if (alive) setCanPromote(ok);
+        // PIC or pengurus of a Connect Group in this community
+        if (community) {
+          const { data: lead } = await supabase
+            .from("connect_group_members" as any)
+            .select("id, cg:connect_groups!cg_id(community_id)")
+            .eq("user_id", user.id)
+            .in("role", ["pic", "pengurus"]);
+          const leads = ((lead as unknown as { cg: { community_id: string } | null }[]) ?? []).some((r) => r.cg?.community_id === community.id);
+          if (alive) setLeadsCg(leads);
+        }
       }
     })();
     return () => {
@@ -111,6 +123,7 @@ export default function CommunitySlugLayout({
     isCFM
       ? { name: "Camp", href: `/camp/${slug}/crew`, icon: Tent }
       : { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
+    ...(canPromote || leadsCg ? [{ name: "Connect Group", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
     { name: "Promotion", href: `/camp/${slug}/promotion`, icon: Megaphone },
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
     { name: "Struktur", href: `/camp/${slug}/org-structure`, icon: Network },

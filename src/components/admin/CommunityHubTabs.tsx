@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Tent, CalendarPlus, Network, Map, BadgeCheck } from "lucide-react";
+import { LayoutDashboard, Users, Tent, CalendarPlus, Network, Map, BadgeCheck, UsersRound } from "lucide-react";
 
 export default function CommunityHubTabs({ slug, showRomo, showCamp = true }: { slug: string; showRomo: boolean; showCamp?: boolean }) {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function CommunityHubTabs({ slug, showRomo, showCamp = true }: { 
     { name: "Dashboard", href: `${base}/dashboard`, icon: LayoutDashboard },
     { name: "Anggota", href: `${base}/anggota`, icon: Users },
     ...(showCamp ? [{ name: "Camp", href: `${base}/camp`, icon: Tent }] : []),
+    { name: "Connect Group", href: `${base}/connect-group`, icon: UsersRound },
     { name: "Event", href: `${base}/event`, icon: CalendarPlus },
     { name: "Struktur Organisasi", href: `${base}/struktur`, icon: Network },
     { name: "Coverage", href: `${base}/coverage`, icon: Map },
