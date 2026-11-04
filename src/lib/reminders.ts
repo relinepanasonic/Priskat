@@ -65,9 +65,13 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
     times: [], title: "", body: "", url: "/faith/intensi", event: true,
   },
   {
+    key: "cg", label: "Ajakan Connect Group", desc: "Satu jam sebelum CG yang kamu ikuti mulai",
+    times: [], title: "", body: "", url: "/camp", event: true,
+  },
+  {
     key: "komunitas", label: "Permintaan bergabung", desc: "Saat permintaanmu masuk komunitas disetujui atau belum",
     times: [], title: "", body: "", url: "/camp", event: true,
   },
 ];
 
-export const DEFAULT_SLOTS = ["angelus", "bacaan", "streak", "intensi", "komunitas"];
+export const DEFAULT_SLOTS = ["angelus", "bacaan", "streak", "intensi", "cg", "komunitas"];

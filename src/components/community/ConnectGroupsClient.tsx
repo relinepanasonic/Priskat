@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, Palette, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const GOLD = "#D6B072";
 const DAYS = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 const PRESETS = ["#D6B072", "#38BDF8", "#34D399", "#F472B6", "#A78BFA", "#FB923C", "#F87171", "#FACC15"];
 
@@ -13,7 +12,6 @@ type CG = { id: string; name: string; address: string | null; event_day: number 
 type Member = { id: string; cg_id: string; user_id: string | null; role: Role; name: string; baptism_name: string | null; priskat_ke: string | null; phone: string | null; address: string | null; joined_at: string };
 type Log = { id: string; cg_id: string; event_date: string; attendees: number; title: string; memo: string | null };
 type Colors = { pic_color: string; pengurus_color: string };
-type Account = { user_id: string; name: string };
 
 const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
 const th = "px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-brand-muted whitespace-nowrap";
@@ -288,44 +286,100 @@ function CGForm({ communityId, cg, onClose, onSaved }: { communityId: string; cg
   );
 }
 
-function MemberForm({ cg, communityId, isAdmin, member, onClose, onSaved }: { cg: CG; communityId: string; isAdmin: boolean; member?: Member; onClose: () => void; onSaved: () => void }) {
+type Picked = { id: string; name: string; baptism: string | null };
+
+function MemberForm({ cg, isAdmin, member, onClose, onSaved }: { cg: CG; communityId: string; isAdmin: boolean; member?: Member; onClose: () => void; onSaved: () => void }) {
   const [v, setV] = useState({
     name: member?.name ?? "", baptism_name: member?.baptism_name ?? "", priskat_ke: member?.priskat_ke ?? "", phone: member?.phone ?? "",
     address: member?.address ?? "", joined_at: member?.joined_at ?? new Date().toISOString().slice(0, 10), role: (member?.role ?? "anggota") as Role, user_id: member?.user_id ?? "",
   });
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [picked, setPicked] = useState<string>(""); // display name of the linked Ruang Iman account
   const [q, setQ] = useState("");
+  const [found, setFound] = useState<Picked[]>([]);
+  const [searching, setSearching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // Admins link a PIC or pengurus to their Ruang Iman account (that account is what lets them manage the group)
+  // The linked account's name when editing
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!member?.user_id) return;
     (async () => {
-      const { data } = await db().from("community_memberships").select("user_id, profile:profiles!user_id(full_name, nama_panggilan)").eq("community_id", communityId);
-      setAccounts(((data ?? []) as any[]).map((r) => ({ user_id: r.user_id, name: r.profile?.nama_panggilan || r.profile?.full_name || "Tanpa nama" })));
+      const { data } = await db().from("profiles").select("full_name, nama_panggilan").eq("id", member.user_id).maybeSingle();
+      if (data) setPicked(data.nama_panggilan || data.full_name || "");
     })();
-  }, [isAdmin, communityId]);
+  }, [member?.user_id]);
 
-  const shown = useMemo(() => accounts.filter((a) => !q || a.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8), [accounts, q]);
-  const linked = accounts.find((a) => a.user_id === v.user_id);
+  // Search Ruang Iman users by name while typing
+  useEffect(() => {
+    const term = q.trim().replace(/[%,()]/g, " ");
+    if (term.length < 2) { setFound([]); return; }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      const { data } = await db().from("profiles").select("id, full_name, nama_panggilan, nama_baptis").or(`full_name.ilike.%${term}%,nama_panggilan.ilike.%${term}%`).limit(8);
+      setFound(((data ?? []) as any[]).map((p) => ({ id: p.id, name: p.full_name || p.nama_panggilan || "Tanpa nama", baptism: p.nama_baptis ?? null })));
+      setSearching(false);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  function pick(p: Picked) {
+    setV((x) => ({ ...x, user_id: p.id, name: p.name, baptism_name: x.baptism_name || p.baptism || "" }));
+    setPicked(p.name);
+    setQ("");
+    setFound([]);
+  }
 
   async function save() {
     setBusy(true); setErr(null);
+    if (isAdmin && v.role !== "anggota" && !v.user_id) { setBusy(false); setErr("PIC dan pengurus harus dipilih dari pengguna Ruang Iman, supaya bisa mengelola CG."); return; }
     const row: Record<string, unknown> = {
-      cg_id: cg.id, name: v.name.trim(), baptism_name: v.baptism_name.trim() || null, priskat_ke: v.priskat_ke.trim() || null,
+      cg_id: cg.id, user_id: v.user_id || null, name: v.name.trim(), baptism_name: v.baptism_name.trim() || null, priskat_ke: v.priskat_ke.trim() || null,
       phone: v.phone.trim() || null, address: v.address.trim() || null, joined_at: v.joined_at || new Date().toISOString().slice(0, 10),
     };
-    if (isAdmin) { row.role = v.role; row.user_id = v.user_id || null; }
-    if (isAdmin && v.role !== "anggota" && !v.user_id) { setBusy(false); setErr("PIC dan pengurus harus dihubungkan ke akun Ruang Iman, supaya bisa mengelola CG."); return; }
+    if (isAdmin) row.role = v.role;
     const { error } = member ? await db().from("connect_group_members").update(row).eq("id", member.id) : await db().from("connect_group_members").insert(row);
     setBusy(false);
-    if (error) { setErr(error.message.includes("row-level security") ? "Kamu tidak punya izin untuk ini." : error.message); return; }
+    if (error) {
+      setErr(error.message.includes("row-level security") ? "Kamu tidak punya izin untuk ini." : error.message.includes("one_account") || error.message.includes("duplicate") ? "Orang ini sudah ada di CG ini." : error.message);
+      return;
+    }
     onSaved();
   }
 
   return (
     <Modal title={member ? "Ubah anggota" : `Tambah anggota ${cg.name}`} onClose={onClose}>
+      {isAdmin && (
+        <Field label="Peran">
+          <select className={input} value={v.role} onChange={(e) => setV({ ...v, role: e.target.value as Role })}>
+            <option value="anggota">Anggota</option>
+            <option value="pengurus">Pengurus CG</option>
+            <option value="pic">PIC</option>
+          </select>
+        </Field>
+      )}
+
+      <Field label={v.role === "anggota" ? "Pilih dari pengguna Ruang Iman" : "Pilih dari pengguna Ruang Iman (wajib)"}>
+        {v.user_id ? (
+          <div className="flex items-center justify-between rounded-lg border border-brand-gold/40 bg-brand-gold/10 px-3 py-2.5 text-sm text-white">
+            <span className="min-w-0 truncate">{picked || "Akun terhubung"}</span>
+            <button type="button" onClick={() => { setV({ ...v, user_id: "" }); setPicked(""); }} className="ml-3 shrink-0 text-xs text-brand-muted hover:text-white">Lepas</button>
+          </div>
+        ) : (
+          <>
+            <input className={input} placeholder="Ketik nama, mis. Maria" value={q} onChange={(e) => setQ(e.target.value)} />
+            {q.trim().length >= 2 && (
+              <div className="mt-1 overflow-hidden rounded-lg border border-[#333]">
+                {searching && <p className="px-3 py-2 text-xs text-brand-muted">Mencari…</p>}
+                {!searching && found.length === 0 && <p className="px-3 py-2 text-xs text-brand-muted">Tidak ketemu. Kamu bisa mengisi data di bawah secara manual.</p>}
+                {found.map((p) => (
+                  <button key={p.id} type="button" onClick={() => pick(p)} className="block w-full px-3 py-2 text-left text-sm text-brand-light hover:bg-white/5">{p.name}</button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </Field>
+
       <Field label="Nama"><input className={input} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Nama Baptis"><input className={input} value={v.baptism_name} onChange={(e) => setV({ ...v, baptism_name: e.target.value })} /></Field>
@@ -334,39 +388,6 @@ function MemberForm({ cg, communityId, isAdmin, member, onClose, onSaved }: { cg
       <Field label="No HP"><input className={input} value={v.phone} onChange={(e) => setV({ ...v, phone: e.target.value })} inputMode="tel" /></Field>
       <Field label="Alamat"><textarea className={input} rows={2} value={v.address} onChange={(e) => setV({ ...v, address: e.target.value })} /></Field>
       <Field label="Join since"><input type="date" className={input} value={v.joined_at} onChange={(e) => setV({ ...v, joined_at: e.target.value })} /></Field>
-
-      {isAdmin && (
-        <div className="space-y-3 rounded-xl border border-brand-gold/30 bg-brand-gold/5 p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: GOLD }}>Hanya admin komunitas</p>
-          <Field label="Peran">
-            <select className={input} value={v.role} onChange={(e) => setV({ ...v, role: e.target.value as Role })}>
-              <option value="anggota">Anggota</option>
-              <option value="pengurus">Pengurus CG</option>
-              <option value="pic">PIC</option>
-            </select>
-          </Field>
-          <Field label={`Akun Ruang Iman${v.role === "anggota" ? " (opsional)" : ""}`}>
-            {linked ? (
-              <div className="flex items-center justify-between rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white">
-                {linked.name}
-                <button type="button" onClick={() => setV({ ...v, user_id: "" })} className="text-xs text-brand-muted hover:text-white">Lepas</button>
-              </div>
-            ) : (
-              <>
-                <input className={input} placeholder="Cari nama anggota komunitas" value={q} onChange={(e) => setQ(e.target.value)} />
-                {q && (
-                  <div className="mt-1 overflow-hidden rounded-lg border border-[#333]">
-                    {shown.length === 0 && <p className="px-3 py-2 text-xs text-brand-muted">Tidak ada yang cocok.</p>}
-                    {shown.map((a) => (
-                      <button key={a.user_id} type="button" onClick={() => { setV({ ...v, user_id: a.user_id, name: v.name || a.name }); setQ(""); }} className="block w-full px-3 py-2 text-left text-sm text-brand-light hover:bg-white/5">{a.name}</button>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </Field>
-        </div>
-      )}
 
       {err && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{err}</p>}
       <button onClick={save} disabled={busy || v.name.trim().length < 2} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-50">{busy ? "Menyimpan…" : "Simpan"}</button>

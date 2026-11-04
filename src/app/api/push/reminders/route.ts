@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPush } from "@/lib/push";
 import { REMINDER_SLOTS } from "@/lib/reminders";
+import { sendCgInvites } from "@/lib/cgInvites";
 
 /**
  * Called every 15 minutes by the Supabase cron job in supabase/087.
@@ -14,9 +15,12 @@ export async function POST(request: Request) {
   }
 
   const db = createAdminClient();
+  // "See you at CG": one hour before a Connect Group meets (works for people without prayer reminders too)
+  const cgSent = await sendCgInvites(db).catch((e) => { console.error("CG invites failed", e); return 0; });
+
   const { data: rows } = await db.from("prayer_reminders" as any).select("user_id, slots, tz_offset");
   const people = ((rows as { user_id: string; slots: string[] | null; tz_offset: number | null }[]) ?? []).filter((r) => r.slots?.length);
-  if (people.length === 0) return NextResponse.json({ ok: true, sent: 0 });
+  if (people.length === 0) return NextResponse.json({ ok: true, sent: cgSent });
 
   // due[userId] = slots due right now (local time rounded down to the quarter hour)
   const due = new Map<string, typeof REMINDER_SLOTS>();
@@ -26,7 +30,7 @@ export async function POST(request: Request) {
     const slots = REMINDER_SLOTS.filter((s) => p.slots!.includes(s.key) && s.times.includes(hhmm) && (s.weekday === undefined || s.weekday === local.getUTCDay()));
     if (slots.length) due.set(p.user_id, slots);
   }
-  if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
+  if (due.size === 0) return NextResponse.json({ ok: true, sent: cgSent });
 
   // "Tebus Hari" nudge: only for people who did nothing on the day that just ended (local time)
   const GAME_START = "2026-10-26";
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
       if (rest.length) due.set(userId, rest); else due.delete(userId);
     }
   }
-  if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
+  if (due.size === 0) return NextResponse.json({ ok: true, sent: cgSent });
 
   // "Jaga api doamu": only for people who have not prayed yet today (local time)
   for (const [userId, slots] of [...due.entries()]) {
@@ -54,7 +58,7 @@ export async function POST(request: Request) {
       if (rest.length) due.set(userId, rest); else due.delete(userId);
     }
   }
-  if (due.size === 0) return NextResponse.json({ ok: true, sent: 0 });
+  if (due.size === 0) return NextResponse.json({ ok: true, sent: cgSent });
 
   const { data: tokenRows } = await db.from("push_tokens" as any).select("token, user_id").in("user_id", [...due.keys()]);
   let sent = 0;
@@ -67,5 +71,5 @@ export async function POST(request: Request) {
     }
   }
   if (invalid.length) await db.from("push_tokens" as any).delete().in("token", invalid);
-  return NextResponse.json({ ok: true, sent });
+  return NextResponse.json({ ok: true, sent: sent + cgSent });
 }
