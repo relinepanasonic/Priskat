@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
+import CommunityAdminGuard from "@/components/admin/CommunityAdminGuard";
 import { getLanguage } from "@/lib/lang";
 import type { Profile } from "@/lib/types/database.types";
 
@@ -41,7 +42,8 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
-      <Navbar profile={profile} lang={lang} />
+      <Navbar profile={profile} lang={lang} isCommunityAdmin={isCommunityAdmin} />
+      {isCommunityAdmin && <CommunityAdminGuard />}
       <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">
         <div className="p-6 lg:p-8 bg-[#1e2128] min-h-full">
           {children}

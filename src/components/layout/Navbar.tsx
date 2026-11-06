@@ -100,13 +100,25 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
         {/* Superadmin Invite & Database Buttons */}
         {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder" || isCommunityAdmin) && (
           <div className="mt-3 space-y-1">
-            <a
-              href="/admin/members"
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-            >
-              <Users className="h-4 w-4" />
-              <span>{isEn ? "Manage Users" : "Kelola Pengguna"}</span>
-            </a>
+            {/* A community admin works only inside the Community Center */}
+            {isCommunityAdmin && !["superadmin", "founder"].includes(String(profile?.role).toLowerCase()) && (
+              <a
+                href="/admin/communities"
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+              >
+                <Tent className="h-4 w-4" />
+                <span>{isEn ? "Community Center" : "Pusat Komunitas"}</span>
+              </a>
+            )}
+            {["superadmin", "founder"].includes(String(profile?.role).toLowerCase()) && (
+              <a
+                href="/admin/members"
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+              >
+                <Users className="h-4 w-4" />
+                <span>{isEn ? "Manage Users" : "Kelola Pengguna"}</span>
+              </a>
+            )}
             
             {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder") && (
               <>
