@@ -27,7 +27,21 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const pathname = request.nextUrl.pathname;
+  // communitycenter.ruangiman.com is the community back office: "/" opens the admin
+  // dashboard and anything outside the admin/auth routes is sent back to "/".
+  const host = (request.headers.get("host") ?? "").toLowerCase();
+  const isCommunityCenterHost = host.startsWith("communitycenter.");
+  let pathname = request.nextUrl.pathname;
+  let rewriteToAdmin = false;
+  if (isCommunityCenterHost) {
+    const allowed = ["/admin", "/login", "/forgot-password", "/reset-password", "/auth", "/api", "/privacy"];
+    if (pathname === "/") {
+      rewriteToAdmin = true;
+      pathname = "/admin";
+    } else if (!allowed.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
   const isProtected = pathname.startsWith("/admin") || pathname.startsWith("/profile");
 
   // Refresh session — IMPORTANT: do not remove.
@@ -79,6 +93,12 @@ export async function middleware(request: NextRequest) {
         new URL(`/login?next=${encodeURIComponent(pathname)}`, request.url)
       );
     }
+  }
+
+  if (rewriteToAdmin) {
+    const rewritten = NextResponse.rewrite(new URL("/admin", request.url), { request });
+    supabaseResponse.cookies.getAll().forEach((c) => rewritten.cookies.set(c));
+    return rewritten;
   }
 
   return supabaseResponse;
