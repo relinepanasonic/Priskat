@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   let pathname = request.nextUrl.pathname;
   let rewriteToAdmin = false;
   if (isCommunityCenterHost) {
-    const allowed = ["/admin", "/login", "/forgot-password", "/reset-password", "/auth", "/api", "/privacy"];
+    const allowed = ["/admin", "/camp", "/login", "/forgot-password", "/reset-password", "/auth", "/api", "/privacy"];
     if (pathname === "/") {
       rewriteToAdmin = true;
       pathname = "/admin";

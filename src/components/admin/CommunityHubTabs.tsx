@@ -2,21 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Tent, CalendarPlus, Network, Map, BadgeCheck, UsersRound } from "lucide-react";
+import { communityNav } from "@/lib/communityNav";
 
-export default function CommunityHubTabs({ slug, showRomo, showCamp = true }: { slug: string; showRomo: boolean; showCamp?: boolean }) {
+export default function CommunityHubTabs({ slug, name }: { slug: string; name: string | null }) {
   const pathname = usePathname();
-  const base = `/admin/communities/${slug}`;
-  const tabs = [
-    { name: "Dashboard", href: `${base}/dashboard`, icon: LayoutDashboard },
-    { name: "Anggota", href: `${base}/anggota`, icon: Users },
-    ...(showCamp ? [{ name: "Camp", href: `${base}/camp`, icon: Tent }] : []),
-    { name: "Connect Group", href: `${base}/connect-group`, icon: UsersRound },
-    { name: "Event", href: `${base}/event`, icon: CalendarPlus },
-    { name: "Struktur Organisasi", href: `${base}/struktur`, icon: Network },
-    { name: "Coverage", href: `${base}/coverage`, icon: Map },
-    ...(showRomo ? [{ name: "Romo", href: `${base}/romo`, icon: BadgeCheck }] : []),
-  ];
+  const tabs = communityNav(`/admin/communities/${slug}`, { name, slug });
 
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-1">
