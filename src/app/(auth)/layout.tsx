@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AuthLayout({
   children,
@@ -17,6 +18,11 @@ export default function AuthLayout({
         <div className="rounded-2xl bg-[#1a1d24] p-8 shadow-xl border border-[#333]">
           {children}
         </div>
+        <p className="mt-5 text-center text-xs text-[#8b8f98]">
+          <Link href="/privacy" className="underline hover:text-white">Kebijakan Privasi</Link>
+          <span className="mx-2">·</span>
+          <Link href="/hapus-akun" className="underline hover:text-white">Hapus akun</Link>
+        </p>
       </div>
     </div>
   );
