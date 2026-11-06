@@ -4,7 +4,6 @@ import { resolveCommunity } from "@/lib/community";
 import ConnectGroupsClient from "@/components/community/ConnectGroupsClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Connect Group" };
 
 /** Community Center → Connect Group. The layout above already limits this to community admins. */
 export default async function ConnectGroupAdminPage({ params }: { params: Promise<{ slug: string }> }) {
