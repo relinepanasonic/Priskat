@@ -18,7 +18,10 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            // Code shrinking and obfuscation (R8). Off by default; switch on with enableR8=true in android/gradle.properties
+            def r8 = (project.findProperty('enableR8') ?: 'false') == 'true'
+            minifyEnabled r8
+            shrinkResources r8
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
