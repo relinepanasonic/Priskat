@@ -7,7 +7,7 @@ android {
         applicationId "com.ruangiman.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
+        versionCode 7
         versionName "2.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -55,3 +55,15 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+// Stop a build that would ship without its Capacitor settings. An empty or missing file makes the app open
+// https://localhost/ instead of apps.ruangiman.com ("Webpage not available").
+tasks.register('checkCapacitorConfig') {
+    doLast {
+        def f = file('src/main/assets/capacitor.config.json')
+        if (!f.exists() || f.length() < 50 || !f.text.contains('apps.ruangiman.com')) {
+            throw new GradleException("capacitor.config.json is empty or has no server url. Run 'npx cap sync android' in the project folder (and let it finish), then build again.")
+        }
+    }
+}
+preBuild.dependsOn checkCapacitorConfig
