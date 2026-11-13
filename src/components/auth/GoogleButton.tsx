@@ -102,7 +102,7 @@ export default function GoogleButton({ label, onError }: { label: string; onErro
       await SocialLogin.initialize({ google: { webClientId: CLIENT_ID, mode: "online", skipAuthOnlyAuthorizationAfterSignIn: true } });
       const raw = crypto.randomUUID() + crypto.randomUUID();
       const hashed = await sha256Hex(raw);
-      const res = await SocialLogin.login({ provider: "google", options: { scopes: ["email", "profile"], nonce: hashed } });
+      const res = await SocialLogin.login({ provider: "google", options: { nonce: hashed } });
       const idToken = (res as { result?: { idToken?: string | null } }).result?.idToken;
       if (!idToken) throw new Error("Google tidak mengirim token masuk.");
       const { error } = await createClient().auth.signInWithIdToken({ provider: "google", token: idToken, nonce: raw });
