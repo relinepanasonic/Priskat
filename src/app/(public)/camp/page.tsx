@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Users, Lock, Globe, ArrowRight, Settings } from "lucide-react";
+import { Users, Lock, Globe, ArrowRight, Settings, BadgeCheck } from "lucide-react";
 import { sortCommunities } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import JoinCommunityButton from "@/components/community/JoinCommunityButton";
@@ -85,13 +85,16 @@ export default async function CommunityListingPage() {
                     <Users className="h-5 w-5 text-brand-gold md:h-7 md:w-7" />
                   </div>
                 )}
+                {/* Member of it: "Member". Not yet: Public or Private */}
                 <span className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold md:px-2.5 md:py-1 md:text-[11px] ${
-                  c.is_public
+                  isMember
+                    ? "border-brand-gold/40 bg-brand-gold/10 text-brand-gold"
+                    : c.is_public
                     ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                     : "border-orange-500/30 bg-orange-500/10 text-orange-400"
                 }`}>
-                  {c.is_public ? <Globe className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <Lock className="h-2.5 w-2.5 md:h-3 md:w-3" />}
-                  {c.is_public ? "Public" : "Private"}
+                  {isMember ? <BadgeCheck className="h-2.5 w-2.5 md:h-3 md:w-3" /> : c.is_public ? <Globe className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <Lock className="h-2.5 w-2.5 md:h-3 md:w-3" />}
+                  {isMember ? "Member" : c.is_public ? "Public" : "Private"}
                 </span>
               </div>
 
