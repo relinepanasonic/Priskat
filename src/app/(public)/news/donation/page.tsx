@@ -1,17 +1,26 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Landmark } from "lucide-react";
+import CopyNumber from "./CopyNumber";
 
 export const metadata: Metadata = {
   title: "Donasi",
   description: "Pesan dari pendiri Ruang Iman dan cara mendukung pelayanan ini.",
 };
 
-/**
- * Bank details are filled in here once. While `ACCOUNT` is null the page shows a short notice instead.
- * Example: { bank: "BCA", number: "1234567890", holder: "Nico Japar" }
- */
-const ACCOUNT: { bank: string; number: string; holder: string } | null = null;
+/** Bank details for donations. Set to null to hide them. */
+const ACCOUNT: { bank: string; number: string; holder: string } | null = { bank: "BCA", number: "3882171717", holder: "Nico Winarta Japar" };
+
+/** The BCA wordmark, drawn here so no outside image is needed */
+function BcaMark() {
+  return (
+    <span className="inline-flex items-center rounded-lg bg-white px-3 py-1.5 shadow">
+      <svg viewBox="0 0 92 30" className="h-6 w-auto" role="img" aria-label="BCA">
+        <text x="2" y="25" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontStyle="italic" fontSize="28" fill="#0060AF" letterSpacing="1">BCA</text>
+      </svg>
+    </span>
+  );
+}
 
 export default function DonationPage() {
   return (
@@ -75,8 +84,8 @@ export default function DonationPage() {
         {ACCOUNT ? (
           <div className="mt-3 space-y-1">
             <p className="text-xs text-brand-muted">Silakan transfer ke rekening</p>
-            <p className="text-sm font-semibold text-white">{ACCOUNT.bank}</p>
-            <p className="select-all text-2xl font-bold tracking-wider text-brand-gold">{ACCOUNT.number}</p>
+            <div className="py-1">{ACCOUNT.bank === "BCA" ? <BcaMark /> : <p className="text-sm font-semibold text-white">{ACCOUNT.bank}</p>}</div>
+            <CopyNumber value={ACCOUNT.number} />
             <p className="text-sm text-brand-light">a.n. {ACCOUNT.holder}</p>
           </div>
         ) : (

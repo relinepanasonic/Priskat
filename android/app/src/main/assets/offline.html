@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruang Iman</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #121417; color: #fff; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px 96px; box-sizing: border-box; text-align: center; }
+  .ring { width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(212,175,55,.12); border: 1px solid rgba(212,175,55,.35); }
+  h1 { font-size: 21px; margin: 24px 0 8px; }
+  p { margin: 0; max-width: 320px; font-size: 14.5px; line-height: 1.6; color: #b9c0cc; }
+  .verse { margin-top: 22px; font-family: Georgia, serif; font-style: italic; font-size: 14px; color: #d4af37; max-width: 320px; line-height: 1.6; }
+  .ref { margin-top: 4px; font-size: 11px; letter-spacing: .18em; color: #7c8594; text-transform: uppercase; }
+  button { margin-top: 28px; border: 0; border-radius: 12px; background: #d4af37; color: #121417; font-weight: 700; font-size: 15px; padding: 14px 40px; }
+  button:active { transform: scale(.97); }
+  .busy { opacity: .6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ring">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 20h.01"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/><path d="M5 12.86a10 10 0 0 1 5.17-2.69"/><path d="M19 12.86a10 10 0 0 0-2-1.45"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="m2 2 20 20"/>
+    </svg>
+  </div>
+  <h1>Tidak ada koneksi internet</h1>
+  <p>Ruang Iman belum bisa terhubung. Periksa Wi-Fi atau data selulermu, lalu coba lagi.</p>
+  <div class="verse">&ldquo;Tenanglah, dan ketahuilah bahwa Akulah Allah.&rdquo;</div>
+  <div class="ref">Mazmur 46:11</div>
+  <button id="retry">Coba lagi</button>
+</div>
+<script>
+  // The page that failed is passed in by MainActivity (window.__FAILED_URL__)
+  var target = window.__FAILED_URL__ || "https://apps.ruangiman.com/";
+  document.getElementById("retry").addEventListener("click", function () {
+    this.className = "busy"; this.textContent = "Menghubungkan…";
+    window.location.href = target;
+  });
+</script>
+</body>
+</html>
