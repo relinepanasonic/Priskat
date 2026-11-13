@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Bell, BellOff, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { DEFAULT_SLOTS } from "@/lib/reminders";
-import { PUSH_CONSENT_KEY } from "@/components/profile/PrayerRemindersCard";
+import PrayerRemindersCard from "@/components/profile/PrayerRemindersCard";
 
 const ASKED_KEY = "push-ask-at";
 const DAY = 86_400_000;
@@ -19,7 +18,7 @@ type Mode = "ask" | "denied" | null;
  */
 export default function PushAskCard({ userId }: { userId: string }) {
   const [mode, setMode] = useState<Mode>(null);
-  const [done, setDone] = useState(false);
+  const [choosing, setChoosing] = useState(false);
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_PUSH_ENABLED !== "1") return;
@@ -45,27 +44,11 @@ export default function PushAskCard({ userId }: { userId: string }) {
     setMode(null);
   };
 
-  async function enable() {
-    const supabase = createClient();
-    // Keep a choice the person already made; otherwise start with the default reminders
-    const { data: existing } = await supabase.from("prayer_reminders" as any).select("user_id").eq("user_id", userId).maybeSingle();
-    if (!existing) {
-      await supabase.from("prayer_reminders" as any).upsert({
-        user_id: userId, slots: DEFAULT_SLOTS, tz_offset: -new Date().getTimezoneOffset(), updated_at: new Date().toISOString(),
-      });
-    }
-    const { PushNotifications } = await import("@capacitor/push-notifications");
-    const perm = await PushNotifications.requestPermissions();
+  // After the person saved their choice (the card asks for notification permission itself)
+  const saved = () => {
     try { localStorage.setItem(ASKED_KEY, String(Date.now())); } catch { /* ignore */ }
-    if (perm.receive === "granted") {
-      try { localStorage.setItem(PUSH_CONSENT_KEY, "1"); } catch { /* ignore */ }
-      await PushNotifications.register();
-      setDone(true);
-      setTimeout(() => setMode(null), 3500);
-    } else {
-      setMode("denied");
-    }
-  }
+    setTimeout(() => { setChoosing(false); setMode(null); }, 5000);
+  };
 
   if (!mode) return null;
 
@@ -76,14 +59,18 @@ export default function PushAskCard({ userId }: { userId: string }) {
           {mode === "ask" ? <Bell className="h-[18px] w-[18px]" /> : <BellOff className="h-[18px] w-[18px]" />}
         </span>
         <div className="min-w-0 flex-1">
-          {done ? (
-            <p className="text-sm font-semibold text-white">Notifikasi aktif. Kamu bisa mengaturnya di Profil.</p>
+          {mode === "ask" && choosing ? (
+            <>
+              <p className="text-sm font-semibold text-white">Pengingat doa mana yang kamu mau?</p>
+              <p className="mb-3 mt-0.5 text-xs leading-relaxed text-brand-light">Pilih satu atau lebih. Bisa kamu ubah kapan saja di Profil.</p>
+              <PrayerRemindersCard userId={userId} onSaved={saved} />
+            </>
           ) : mode === "ask" ? (
             <>
               <p className="text-sm font-semibold text-white">Ingatkan aku berdoa?</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-brand-light">Pengingat Angelus, bacaan harian, dan penjaga apimu. Maksimal beberapa kali sehari, bisa kamu ubah kapan saja.</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-brand-light">Kamu yang memilih doa mana yang mau diingatkan: Angelus, Rosario, bacaan harian, dan lainnya.</p>
               <div className="mt-2.5 flex gap-2">
-                <button onClick={enable} className="rounded-lg bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark active:scale-95">Aktifkan</button>
+                <button onClick={() => setChoosing(true)} className="rounded-lg bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark active:scale-95">Pilih pengingat</button>
                 <button onClick={later} className="rounded-lg px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/10">Nanti saja</button>
               </div>
             </>
@@ -95,7 +82,7 @@ export default function PushAskCard({ userId }: { userId: string }) {
             </>
           )}
         </div>
-        {!done && <button aria-label="Tutup" onClick={later} className="rounded-full p-1 text-gray-400 hover:bg-white/10"><X className="h-4 w-4" /></button>}
+        {!choosing && <button aria-label="Tutup" onClick={later} className="rounded-full p-1 text-gray-400 hover:bg-white/10"><X className="h-4 w-4" /></button>}
       </div>
     </div>
   );
