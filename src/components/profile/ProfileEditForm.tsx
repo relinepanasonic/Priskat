@@ -11,6 +11,7 @@ import Button from "@/components/ui/Button";
 import { Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Profile } from "@/lib/types/database.types";
+import FounderWelcome from "@/components/profile/FounderWelcome";
 
 const schema = z.object({
   full_name: z.string().min(2),
@@ -36,6 +37,7 @@ export default function ProfileEditForm({
   profile: Profile & { instagram?: string };
 }) {
   const router = useRouter();
+  const [welcome, setWelcome] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
   const [paroki, setParoki] = useState<string>(((profile as any).paroki as string) ?? "");
   const [uploading, setUploading] = useState(false);
@@ -136,7 +138,7 @@ export default function ProfileEditForm({
     reset(data);
     // First time here: continue to the friends / community steps
     if ((profile as any).onboarded_at === null) {
-      router.push("/welcome");
+      setWelcome(true);
       return;
     }
     router.refresh();
@@ -144,6 +146,7 @@ export default function ProfileEditForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {welcome && <FounderWelcome name={profile.full_name} onContinue={() => router.push("/welcome")} />}
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{error}</div>
       )}

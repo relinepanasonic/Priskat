@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TAGLINE, TAGLINE_REF } from "@/lib/tagline";
 
 export default function Footer() {
   return (
@@ -13,6 +14,7 @@ export default function Footer() {
             <p className="text-sm text-brand-muted">
               Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.
             </p>
+            <p className="mt-2 text-xs italic leading-relaxed text-brand-gold/80">&ldquo;{TAGLINE}&rdquo; ({TAGLINE_REF})</p>
           </div>
 
           <div>
