@@ -15,6 +15,8 @@ export type ReminderSlot = {
   weekday?: number;
   /** not on a clock: sent when something happens (someone prays for your intention ...); the switch only allows or stops it */
   event?: boolean;
+  /** always on for everyone who has notifications on: not shown as a choice */
+  auto?: boolean;
 };
 
 export const REMINDER_SLOTS: ReminderSlot[] = [
@@ -47,31 +49,35 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
     key: "tebus", label: "Tebus Hari", desc: "Pukul 00.00, hanya jika kemarin belum berdoa",
     times: ["00:00"],
     title: "Kemarin terlewat", body: "Tidak apa-apa. Buka Ruang Iman dan Tebus Hari dengan satu doa singkat 🙏", url: "/",
-    onlyIfMissedYesterday: true,
+    onlyIfMissedYesterday: true, auto: true,
   },
   {
     key: "streak", label: "Jaga api doamu", desc: "Pukul 19.30, hanya jika hari ini belum berdoa",
     times: ["19:30"],
     title: "Apimu masih menyala?", body: "Belum ada doa hari ini. Satu doa singkat cukup untuk menjaga apimu 🔥", url: "/",
-    onlyIfNotPrayedToday: true,
+    onlyIfNotPrayedToday: true, auto: true,
   },
   {
     key: "peringkat", label: "Hasil mingguan", desc: "Senin pukul 08.00: peringkat dan lencana pekan lalu",
     times: ["08:00"], weekday: 1,
-    title: "Peringkat mingguan sudah keluar", body: "Lihat posisimu dan lencana yang kamu dapat pekan ini.", url: "/leaderboard",
+    title: "Peringkat mingguan sudah keluar", body: "Lihat posisimu dan lencana yang kamu dapat pekan ini.", url: "/leaderboard", auto: true,
   },
   {
     key: "intensi", label: "Intensi doamu didoakan", desc: "Saat ada saudara seiman mendoakan intensimu",
-    times: [], title: "", body: "", url: "/faith/intensi", event: true,
+    times: [], title: "", body: "", url: "/faith/intensi", event: true, auto: true,
   },
   {
     key: "cg", label: "Ajakan Connect Group", desc: "Satu jam sebelum CG yang kamu ikuti mulai",
-    times: [], title: "", body: "", url: "/camp", event: true,
+    times: [], title: "", body: "", url: "/camp", event: true, auto: true,
   },
   {
     key: "komunitas", label: "Permintaan bergabung", desc: "Saat permintaanmu masuk komunitas disetujui atau belum",
-    times: [], title: "", body: "", url: "/camp", event: true,
+    times: [], title: "", body: "", url: "/camp", event: true, auto: true,
   },
 ];
 
-export const DEFAULT_SLOTS = ["angelus", "bacaan", "streak", "intensi", "cg", "komunitas"];
+/** The reminders a person can pick (prayer invitations). The rest are automatic. */
+export const CHOOSABLE_SLOTS = REMINDER_SLOTS.filter((s) => !s.auto);
+export const AUTO_KEYS = REMINDER_SLOTS.filter((s) => s.auto).map((s) => s.key);
+
+export const DEFAULT_SLOTS = ["angelus", "bacaan", ...AUTO_KEYS];

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   // Respect the person's switch (no saved choice yet = allowed)
   const { data: pref } = await db.from("prayer_reminders" as any).select("slots").eq("user_id", target).maybeSingle();
   const slots = (pref as { slots: string[] | null } | null)?.slots;
-  if (slots && !slots.includes(key)) return NextResponse.json({ ok: true, skipped: "switched off" });
+  if (slots && slots.length === 0) return NextResponse.json({ ok: true, skipped: "switched off" });
 
   const { data: tokenRows } = await db.from("push_tokens" as any).select("token").eq("user_id", target);
   const tokens = ((tokenRows as { token: string }[]) ?? []).map((t) => t.token);

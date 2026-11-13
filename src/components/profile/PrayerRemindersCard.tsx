@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Bell, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { DEFAULT_SLOTS, REMINDER_SLOTS } from "@/lib/reminders";
+import { AUTO_KEYS, CHOOSABLE_SLOTS, DEFAULT_SLOTS } from "@/lib/reminders";
 
 export const PUSH_CONSENT_KEY = "push-consent";
 
@@ -34,7 +34,8 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
     const supabase = createClient();
     const { error } = await supabase.from("prayer_reminders" as any).upsert({
       user_id: userId,
-      slots,
+      // the automatic notifications (weekly result, streak, chat ...) are always included
+      slots: [...new Set([...slots.filter((k) => !AUTO_KEYS.includes(k)), ...AUTO_KEYS])],
       tz_offset: -new Date().getTimezoneOffset(),
       updated_at: new Date().toISOString(),
     });
@@ -83,7 +84,8 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
 
   return (
     <div className="space-y-3">
-      {REMINDER_SLOTS.map((s) => {
+      <p className="text-xs leading-relaxed text-brand-muted">Pilih doa yang mau diingatkan. Pesan chat, hasil mingguan, apimu, dan kabar lain dikirim otomatis.</p>
+      {CHOOSABLE_SLOTS.map((s) => {
         const on = slots.includes(s.key);
         return (
           <button

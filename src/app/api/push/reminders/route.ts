@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   for (const p of people) {
     const local = new Date(Date.now() + (p.tz_offset ?? 420) * 60_000);
     const hhmm = `${String(local.getUTCHours()).padStart(2, "0")}:${String(Math.floor(local.getUTCMinutes() / 15) * 15).padStart(2, "0")}`;
-    const slots = REMINDER_SLOTS.filter((s) => p.slots!.includes(s.key) && s.times.includes(hhmm) && (s.weekday === undefined || s.weekday === local.getUTCDay()));
+    const slots = REMINDER_SLOTS.filter((s) => (s.auto || p.slots!.includes(s.key)) && s.times.includes(hhmm) && (s.weekday === undefined || s.weekday === local.getUTCDay()));
     if (slots.length) due.set(p.user_id, slots);
   }
   if (due.size === 0) return NextResponse.json({ ok: true, sent: cgSent });

@@ -50,7 +50,7 @@ export async function sendCgInvites(db: SupabaseClient): Promise<number> {
     db.from("prayer_reminders").select("user_id, slots").in("user_id", people),
     db.from("push_tokens").select("token, user_id").in("user_id", people),
   ]);
-  const off = new Set(((prefs as { user_id: string; slots: string[] | null }[]) ?? []).filter((p) => p.slots && !p.slots.includes("cg")).map((p) => p.user_id));
+  const off = new Set(((prefs as { user_id: string; slots: string[] | null }[]) ?? []).filter((p) => p.slots && p.slots.length === 0).map((p) => p.user_id));
   const tokensOf = new Map<string, string[]>();
   for (const t of (tokens as { token: string; user_id: string }[]) ?? []) tokensOf.set(t.user_id, [...(tokensOf.get(t.user_id) ?? []), t.token]);
 
