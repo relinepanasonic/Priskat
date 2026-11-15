@@ -1,9 +1,11 @@
 import { OLD_TESTAMENT, NEW_TESTAMENT, DEUTEROCANONICA } from "@/lib/bibleBooks";
+import { fetchEvangelizoDay, formatRanges, celebrationId } from "@/lib/evangelizo";
 
 /**
- * Daily Mass readings of the Catholic Church in Indonesia (Misale Romawi / KWI),
- * read from the public liturgical calendar of imankatolik.or.id. Only Bible references
- * are taken from there; the verse text always comes from our own Bible.
+ * Daily Mass readings of the Catholic Church (Roman lectionary, the same readings as the KWI Misale).
+ * The references are read from the public calendar of imankatolik.or.id; when that site cannot be read
+ * (it now shows a "bot verification" page to servers) they come from the Evangelizo API instead.
+ * Only Bible references are taken from there; the verse text always comes from our own Bible.
  */
 export type Segment = { book: number | null; chapter: number; from: number; to: number };
 export type Reading = { label: string; display: string; book: number | null; chapter: number; from: number; to: number; segments: Segment[] };
@@ -34,7 +36,37 @@ export const jakartaParts = () => {
   return { day: d.getUTCDate(), month: d.getUTCMonth() + 1, year: d.getUTCFullYear() };
 };
 
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** The day's readings from the Evangelizo API, in the same shape as the calendar site gives them. */
+async function readingsFromEvangelizo(): Promise<DayReadings> {
+  const { day, month, year } = jakartaParts();
+  const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const d = await fetchEvangelizoDay(iso);
+  if (!d) return null;
+  let nReading = 0;
+  const readings: Reading[] = d.readings.map((r) => {
+    const label = r.type === "psalm" ? "Mazmur" : r.type === "gospel" ? "Injil" : (++nReading === 1 ? "Bacaan I" : nReading === 2 ? "Bacaan II" : `Bacaan ${nReading}`);
+    const segments: Segment[] = r.segments.map((x) => ({ book: bookNo(x.abbr), chapter: x.chapter, from: x.from, to: x.to }));
+    const first = segments[0];
+    return {
+      label,
+      segments,
+      display: `${cap(r.segments[0].abbr)} ${formatRanges(r.segments)}`,
+      book: first.book,
+      chapter: first.chapter,
+      from: first.from,
+      to: first.to,
+    };
+  });
+  return { date: `${day}`, celebration: celebrationId(d.title), readings };
+}
+
 export async function getTodayReadings(): Promise<DayReadings> {
+  return (await readingsFromCalendarSite()) ?? (await readingsFromEvangelizo());
+}
+
+async function readingsFromCalendarSite(): Promise<DayReadings> {
   const { day } = jakartaParts();
   let html = "";
   try {
@@ -45,7 +77,7 @@ export async function getTodayReadings(): Promise<DayReadings> {
     return null;
   }
 
-  const cell = html.split("k_tbl_td").slice(1).find((c) => new RegExp(`class="k_tgl"[^>]*>\s*${day}\s*<`).test(c));
+  const cell = html.split("k_tbl_td").slice(1).find((c) => new RegExp(`class="k_tgl"[^>]*>\\s*${day}\\s*<`).test(c));
   if (!cell) return null;
 
   const celebration = strip((cell.match(/class="k_perayaan">([\s\S]*?)<\/div>/)?.[1] ?? "").replace(/<br\s*\/?>/g, " · ")).replace(/(\s*·\s*)+$/, "");
