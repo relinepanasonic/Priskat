@@ -66,7 +66,19 @@ function pickVoice(lang: string, chosen: string | null) {
   return (chosen ? voices.find((v) => (v.voiceURI || v.name) === chosen) : undefined) ?? voices.find((v) => v.lang === lang) ?? voices.find((v) => langBase(v.lang) === base) ?? null;
 }
 
-async function speakDevice(text: string, lang: string, rate: number, cancelled: () => boolean) {
+/**
+ * Indonesian voices say "Allah" the Arabic way ("Owloh"). Catholics say "A-lah", so it is respelled
+ * before it is spoken (also "ALLAH", "Allah-ku", "Allahmu"). "TUHAN" in capitals is lowered so no voice spells it out.
+ */
+export function forSpeech(text: string, lang: string) {
+  if (!lang.startsWith("id")) return text;
+  return text
+    .replace(/\ballah(?=ku\b|mu\b|nya\b|\b)/gi, "Alah")
+    .replace(/\bTUHAN(?=ku\b|mu\b|nya\b|\b)/g, "Tuhan");
+}
+
+async function speakDevice(raw: string, lang: string, rate: number, cancelled: () => boolean) {
+  const text = forSpeech(raw, lang);
   const chosen = getChosenVoice(lang.startsWith("id") ? "id" : "en");
   if (native()) {
     const { TextToSpeech } = await import("@capacitor-community/text-to-speech");
