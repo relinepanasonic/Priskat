@@ -88,10 +88,12 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
       await PushNotifications.register();
       await new Promise((r) => setTimeout(r, 3000)); // time for the phone to give its token and for the app to save it
       setMsg("Sekarang tekan tombol Home (keluar dari aplikasi). Notifikasi uji akan muncul dalam sekitar 10 detik.");
-      const res = await fetch("/api/push/test", { method: "POST" });
-      const j = (await res.json().catch(() => ({}))) as { status?: string; detail?: string };
+      let phoneToken = "";
+      try { phoneToken = localStorage.getItem("push-token") ?? ""; } catch { /* ignore */ }
+      const res = await fetch("/api/push/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: phoneToken }) });
+      const j = (await res.json().catch(() => ({}))) as { status?: string; detail?: string; thisPhone?: boolean; moved?: boolean };
       const text: Record<string, string> = {
-        sent: "Terkirim ke ponselmu. Kalau tidak muncul saat aplikasi ditutup, buka Pengaturan HP, Aplikasi, Ruang Iman: izinkan Notifikasi, dan di Baterai pilih Tanpa batasan.",
+        sent: (j.moved ? "Ponsel ini tadinya terdaftar di akun lain, sekarang sudah dipindah ke akunmu. " : "") + (j.thisPhone ? "" : "(Kode ponsel ini belum ada, dikirim ke semua ponselmu.) ") + "Terkirim ke ponselmu. Kalau tidak muncul saat aplikasi ditutup, buka Pengaturan HP, Aplikasi, Ruang Iman: izinkan Notifikasi, dan di Baterai pilih Tanpa batasan.",
         no_phone: "Ponselmu belum terdaftar untuk notifikasi. Tutup aplikasi sepenuhnya, buka lagi, lalu coba tombol ini sekali lagi.",
         server_not_configured: `Server belum diatur untuk mengirim notifikasi${j.detail ? ` (${j.detail})` : ""}. Ini masalah di pihak kami, bukan di ponselmu.`,
         token_expired: "Ponselmu terdaftar dengan kode lama. Tutup aplikasi sepenuhnya, buka lagi, lalu coba lagi.",

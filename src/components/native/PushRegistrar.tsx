@@ -41,9 +41,16 @@ export default function PushRegistrar({ userId }: { userId: string }) {
       const handles = await Promise.all([
         PushNotifications.addListener("registration", async ({ value }) => {
           try { localStorage.setItem(TOKEN_KEY, value); } catch { /* ignore */ }
-          await supabase.from("push_tokens" as any).upsert({
-            token: value, user_id: userId, platform: Capacitor.getPlatform(), updated_at: new Date().toISOString(),
-          });
+          // Saved by the server, so a token used before by another account on this phone moves to this account
+          const res = await fetch("/api/push/register", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: value, platform: Capacitor.getPlatform() }),
+          }).catch(() => null);
+          if (!res || !res.ok) {
+            await supabase.from("push_tokens" as any).upsert({
+              token: value, user_id: userId, platform: Capacitor.getPlatform(), updated_at: new Date().toISOString(),
+            });
+          }
         }),
         PushNotifications.addListener("registrationError", (e) => console.warn("Push registration failed", e)),
         // Android does not show a notification while the app is open: show our own banner instead
