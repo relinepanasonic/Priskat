@@ -7,15 +7,33 @@ type ServiceAccount = { project_id: string; client_email: string; private_key: s
 
 let cached: { token: string; expires: number } | null = null;
 
+/** Why the key cannot be used (never its content): null when it is fine. */
+export let pushConfigProblem: string | null = null;
+
+/**
+ * Reads FIREBASE_SERVICE_ACCOUNT and forgives the usual paste mistakes: the whole value wrapped in quotes,
+ * real line breaks inside the private key, or the file pasted as base64.
+ */
 function serviceAccount(): ServiceAccount | null {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) return null;
-  try {
-    const sa = JSON.parse(raw);
-    return { ...sa, private_key: String(sa.private_key).replace(/\\n/g, "\n") };
-  } catch {
-    return null;
+  let raw = (process.env.FIREBASE_SERVICE_ACCOUNT ?? "").trim();
+  if (!raw) { pushConfigProblem = "missing"; return null; }
+  if ((raw.startsWith("'") && raw.endsWith("'")) || (raw.startsWith('"') && raw.endsWith('"') && !raw.startsWith('"{'))) raw = raw.slice(1, -1).trim();
+  if (raw.startsWith('"{')) { try { raw = JSON.parse(raw); } catch { /* keep */ } }
+  if (!raw.startsWith("{")) {
+    try { const decoded = Buffer.from(raw, "base64").toString("utf8").trim(); if (decoded.startsWith("{")) raw = decoded; } catch { /* keep */ }
   }
+  let sa: Record<string, unknown> | null = null;
+  try {
+    sa = JSON.parse(raw);
+  } catch {
+    // real line breaks inside the private key make the JSON invalid: turn them back into \n
+    const fixed = raw.replace(/("private_key"\s*:\s*")([\s\S]*?)(")/, (_m, a: string, key: string, b: string) => a + key.replace(/\r?\n/g, "\\n") + b);
+    try { sa = JSON.parse(fixed); } catch { pushConfigProblem = "invalid_json"; return null; }
+  }
+  if (!sa || !sa.project_id || !sa.client_email || !sa.private_key) { pushConfigProblem = "missing_fields"; return null; }
+  if (sa.project_id !== "ruang-iman") { pushConfigProblem = `wrong_project:${String(sa.project_id)}`; }
+  else pushConfigProblem = null;
+  return { project_id: String(sa.project_id), client_email: String(sa.client_email), private_key: String(sa.private_key).replace(/\\n/g, "\n") };
 }
 
 const b64url = (s: string | Buffer) => Buffer.from(s).toString("base64url");

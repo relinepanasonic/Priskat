@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPush } from "@/lib/push";
+import { sendPush, pushConfigProblem } from "@/lib/push";
 
 /**
  * "Kirim notifikasi uji": sends one test notification to the signed-in person's own phones
@@ -25,10 +25,10 @@ export async function POST() {
 
   try {
     const r = await sendPush(tokens, { title: "Tes notifikasi Ruang Iman 🙏", body: "Kalau kamu melihat ini, notifikasi di ponselmu sudah berfungsi.", url: "/" });
-    if (!r.configured) return NextResponse.json({ status: "server_not_configured" });
+    if (!r.configured) return NextResponse.json({ status: "server_not_configured", detail: pushConfigProblem });
     if (r.invalid.length) await db.from("push_tokens" as any).delete().in("token", r.invalid);
     if (r.sent > 0) return NextResponse.json({ status: "sent", phones: r.sent });
-    return NextResponse.json({ status: r.invalid.length ? "token_expired" : "fcm_error", detail: r.errors[0] ?? null });
+    return NextResponse.json({ status: r.invalid.length ? "token_expired" : "fcm_error", detail: [r.errors[0], pushConfigProblem].filter(Boolean).join(" · ") || null });
   } catch (e) {
     return NextResponse.json({ status: "fcm_auth_error", detail: String((e as Error).message).slice(0, 160) });
   }

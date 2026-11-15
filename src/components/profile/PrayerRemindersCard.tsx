@@ -92,7 +92,7 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
       const text: Record<string, string> = {
         sent: "Terkirim. Notifikasi uji seharusnya muncul di ponselmu dalam beberapa detik.",
         no_phone: "Ponselmu belum terdaftar untuk notifikasi. Tutup aplikasi sepenuhnya, buka lagi, lalu coba tombol ini sekali lagi.",
-        server_not_configured: "Server belum diatur untuk mengirim notifikasi. Ini masalah di pihak kami, bukan di ponselmu.",
+        server_not_configured: `Server belum diatur untuk mengirim notifikasi${j.detail ? ` (${j.detail})` : ""}. Ini masalah di pihak kami, bukan di ponselmu.`,
         token_expired: "Ponselmu terdaftar dengan kode lama. Tutup aplikasi sepenuhnya, buka lagi, lalu coba lagi.",
         fcm_error: `Google menolak pengiriman${j.detail ? ` (${j.detail})` : ""}. Kabari pengembang dengan pesan ini.`,
         fcm_auth_error: `Server tidak bisa masuk ke layanan notifikasi${j.detail ? ` (${j.detail})` : ""}. Kabari pengembang dengan pesan ini.`,
