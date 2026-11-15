@@ -67,13 +67,14 @@ function pickVoice(lang: string, chosen: string | null) {
 }
 
 /**
- * Indonesian voices say "Allah" the Arabic way ("Owloh"). Catholics say "A-lah", so it is respelled
- * before it is spoken (also "ALLAH", "Allah-ku", "Allahmu"). "TUHAN" in capitals is lowered so no voice spells it out.
+ * Indonesian voices say "Allah" the Arabic way ("Owloh"), and also when it is respelled "Alah".
+ * Catholics say "A-lah": a plain Indonesian "a", then "lah". So it is spoken as the two words "A lah"
+ * (also "ALLAH", "Allahku", "Allahmu"). "TUHAN" in capitals is lowered so no voice spells it out.
  */
 export function forSpeech(text: string, lang: string) {
   if (!lang.startsWith("id")) return text;
   return text
-    .replace(/\ballah(?=ku\b|mu\b|nya\b|\b)/gi, "Alah")
+    .replace(/\ballah(ku|mu|nya)?\b/gi, (_m, suffix?: string) => (suffix ? `A lah${suffix}` : "A lah"))
     .replace(/\bTUHAN(?=ku\b|mu\b|nya\b|\b)/g, "Tuhan");
 }
 
@@ -104,7 +105,7 @@ async function speakDevice(raw: string, lang: string, rate: number, cancelled: (
 /** Say a short sample with the currently chosen voice (used by the voice picker). */
 export async function previewVoice(lang: "id" | "en") {
   await stopDevice();
-  await speakDevice(lang === "id" ? "Tuhan adalah gembalaku, takkan kekurangan aku." : "The Lord is my shepherd, I shall not want.", lang === "id" ? "id-ID" : "en-US", 1, () => false);
+  await speakDevice(lang === "id" ? "Allah adalah kasih. Tuhan adalah gembalaku, takkan kekurangan aku." : "The Lord is my shepherd, I shall not want.", lang === "id" ? "id-ID" : "en-US", 1, () => false);
 }
 
 async function stopDevice() {
