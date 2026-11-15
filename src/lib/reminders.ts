@@ -46,15 +46,15 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
     title: "Doa Malam", body: "Tutup hari ini dengan doa syukur dan novena.", url: "/faith/prayers",
   },
   {
-    key: "tebus", label: "Tebus Hari", desc: "Pukul 00.00, hanya jika kemarin belum berdoa",
+    key: "tebus", label: "Tebus Hari", desc: "Pukul 00.00, hanya jika kemarin belum membaca atau berdoa",
     times: ["00:00"],
-    title: "Kemarin terlewat", body: "Tidak apa-apa. Buka Ruang Iman dan Tebus Hari dengan satu doa singkat 🙏", url: "/",
+    title: "Kemarin terlewat", body: "Tidak apa-apa. Buka Ruang Iman dan Tebus Hari dengan membaca satu ayat Alkitab 🙏", url: "/",
     onlyIfMissedYesterday: true, auto: true,
   },
   {
     key: "streak", label: "Jaga api doamu", desc: "Pukul 19.30, hanya jika hari ini belum berdoa",
     times: ["19:30"],
-    title: "Apimu masih menyala?", body: "Belum ada doa hari ini. Satu doa singkat cukup untuk menjaga apimu 🔥", url: "/",
+    title: "Apimu masih menyala?", body: "Belum ada bacaan hari ini. Satu ayat Alkitab cukup untuk menjaga apimu 🔥", url: "/",
     onlyIfNotPrayedToday: true, auto: true,
   },
   {

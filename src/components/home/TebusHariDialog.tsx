@@ -7,7 +7,6 @@ import { localDay } from "@/lib/activity";
 import { useReadAloud } from "@/lib/readAloud";
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
-const CATEGORIES = ["basic_prayer", "bunda_maria", "doa_harian", "tobat_syukur"];
 const WAIT = 30;
 
 const fmtDay = (day: string) => {
@@ -17,7 +16,7 @@ const fmtDay = (day: string) => {
 
 type Prayer = { id: string; title: string; body: string };
 
-/** Tebus Hari: pray one short prayer given at random to make up a missed day. */
+/** Tebus Hari: read one Bible verse given at random to make up a missed day. */
 export default function TebusHariDialog({ missedDay, onClose, onDone }: { missedDay: string; onClose: () => void; onDone: () => void }) {
   const [prayer, setPrayer] = useState<Prayer | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +26,14 @@ export default function TebusHariDialog({ missedDay, onClose, onDone }: { missed
 
   useEffect(() => {
     (async () => {
-      const supabase = createClient();
-      const { data } = await supabase.from("prayers" as any).select("id, title_id, title_en").eq("is_published", true).in("category", CATEGORIES).limit(200);
-      const list = (data as any[]) ?? [];
-      if (list.length === 0) { setError("Belum ada doa yang bisa dipakai. Coba lagi nanti."); return; }
-      const pick = list[Math.floor(Math.random() * list.length)];
-      const { data: full } = await supabase.from("prayers" as any).select("body_id, body_en").eq("id", pick.id).single();
-      setPrayer({ id: pick.id, title: pick.title_id || pick.title_en, body: (full as any)?.body_id || (full as any)?.body_en || "" });
+      try {
+        const res = await fetch("/api/bible/votd?random=1&lang=id", { cache: "no-store" });
+        const v = await res.json();
+        if (!res.ok || !v.text) throw new Error("none");
+        setPrayer({ id: `bible:${v.book}:${v.chapter}:${v.from}`, title: v.reference, body: v.text });
+      } catch {
+        setError("Belum bisa memuat ayat. Periksa koneksi internetmu lalu coba lagi.");
+      }
     })();
   }, []);
 
@@ -72,16 +72,16 @@ export default function TebusHariDialog({ missedDay, onClose, onDone }: { missed
           <div className="py-10 text-center">
             <Flame className="mx-auto h-14 w-14 fill-violet-400 text-violet-300" />
             <h3 className="mt-3 text-xl font-bold">Hari ditebus 🙏</h3>
-            <p className="mt-1 text-sm text-brand-muted">Nyalamu terjaga. Terima kasih sudah kembali berdoa.</p>
+            <p className="mt-1 text-sm text-brand-muted">Nyalamu terjaga. Terima kasih sudah kembali membaca Firman.</p>
           </div>
         ) : (
           <>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-gold">Tebus Hari</p>
             <h3 className="mt-1 text-xl font-bold" style={serif}>{fmtDay(missedDay)} terlewat</h3>
-            <p className="mt-1 text-sm text-brand-muted">Tidak apa-apa. Doakan satu doa ini dengan tenang untuk menebusnya.</p>
+            <p className="mt-1 text-sm text-brand-muted">Tidak apa-apa. Bacalah satu ayat Alkitab ini dengan tenang untuk menebusnya.</p>
 
             <div className="mt-4 min-h-[140px] flex-1 overflow-y-auto rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4">
-              {!prayer && !error && <p className="text-sm text-brand-muted">Memilih doa…</p>}
+              {!prayer && !error && <p className="text-sm text-brand-muted">Memilih ayat…</p>}
               {prayer && (
                 <>
                   <div className="flex items-start justify-between gap-2">

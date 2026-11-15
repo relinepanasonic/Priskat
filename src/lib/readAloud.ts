@@ -80,7 +80,8 @@ export function forSpeech(text: string, lang: string) {
 
 async function speakDevice(raw: string, lang: string, rate: number, cancelled: () => boolean) {
   const text = forSpeech(raw, lang);
-  const chosen = getChosenVoice(lang.startsWith("id") ? "id" : "en");
+  // The chosen voice is only for Indonesian and English; Latin (read with an Italian voice) uses the phone's default
+  const chosen = lang.startsWith("id") ? getChosenVoice("id") : lang.startsWith("en") ? getChosenVoice("en") : null;
   if (native()) {
     const { TextToSpeech } = await import("@capacitor-community/text-to-speech");
     let voice: number | undefined;
@@ -122,7 +123,8 @@ function readingPause(text: string, rate: number) {
   return Math.min(6000, Math.max(2000, 1500 + text.length * 25)) / Math.min(1, Math.max(0.5, rate));
 }
 
-export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: string, cloud?: CloudRef, introVerse?: string) {
+/** "la" = Latin: no phone has a Latin voice, so it is read with the Italian voice, which pronounces church Latin well. */
+export function useReadAloud(items: ReadItem[], lang: "id" | "en" | "la", intro?: string, cloud?: CloudRef, introVerse?: string) {
   const [current, setCurrent] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(1);
@@ -174,7 +176,7 @@ export function useReadAloud(items: ReadItem[], lang: "id" | "en", intro?: strin
       cloudOk = false; // fall through to the device voice for this and the following clips
     }
     if (cancelled()) return;
-    await speakDevice(text, lang === "id" ? "id-ID" : "en-US", rate, cancelled);
+    await speakDevice(text, lang === "id" ? "id-ID" : lang === "la" ? "it-IT" : "en-US", rate, cancelled);
   };
 
   const play = useCallback(async (fromVerse?: number) => {
