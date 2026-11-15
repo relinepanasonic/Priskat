@@ -31,5 +31,5 @@ export async function loadReadingVerses(supabase: SupabaseClient, segments: Segm
 /** "Yesaya 45:1, 4-6": the book name from our Bible list in front of the reference. */
 export function readingTitle(display: string, bookNo: number | null): string {
   const meta = bookNo ? BOOKS.get(bookNo) : null;
-  return meta ? `${meta.name} ${display.replace(/^[^\d]*\s*(?=\d)/, "")}` : display;
+  return meta ? `${meta.name} ${display.replace(/^\d?[A-Za-z.]*\s*(?=\d+:)/, "")}` : display;
 }

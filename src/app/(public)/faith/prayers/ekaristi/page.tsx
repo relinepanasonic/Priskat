@@ -34,7 +34,7 @@ export default async function EkaristiPage() {
       const meta = r.book ? BOOKS.get(r.book) : null;
       return {
         label: r.label,
-        display: meta ? `${meta.name} ${r.display.replace(/^[^\d]*\s*(?=\d)/, "")}` : r.display,
+        display: meta ? `${meta.name} ${r.display.replace(/^\d?[A-Za-z.]*\s*(?=\d+:)/, "")}` : r.display,
         verses: verses.map((v) => ({ verse: v.verse, text: v.text })),
       };
     })
