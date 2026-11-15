@@ -49,7 +49,11 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
           const { PushNotifications } = await import("@capacitor/push-notifications");
           let perm = await PushNotifications.checkPermissions();
           if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") perm = await PushNotifications.requestPermissions();
-          if (perm.receive === "granted") { localStorage.setItem(PUSH_CONSENT_KEY, "1"); note = "Pengingat dan notifikasi aktif."; }
+          if (perm.receive === "granted") {
+            localStorage.setItem(PUSH_CONSENT_KEY, "1");
+            await PushNotifications.register(); // saves this phone for notifications right away
+            note = "Pengingat dan notifikasi aktif.";
+          }
           else note = "Pilihanmu tersimpan, tetapi notifikasi belum diizinkan. Kamu bisa mengaktifkannya di Pengaturan HP.";
         } else {
           localStorage.setItem(PUSH_CONSENT_KEY, "1");
@@ -62,6 +66,45 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
     setSaving(false);
     setMsg(note);
     onSaved?.();
+  }
+
+  // "Kirim notifikasi uji": register this phone again and have the server send one notification to it
+  const [testing, setTesting] = useState(false);
+  async function sendTest() {
+    setTesting(true);
+    setMsg(null);
+    try {
+      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable("PushNotifications")) {
+        setMsg("Notifikasi hanya bisa diuji di aplikasi Android Ruang Iman (versi terbaru).");
+        return;
+      }
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      let perm = await PushNotifications.checkPermissions();
+      if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") perm = await PushNotifications.requestPermissions();
+      if (perm.receive !== "granted") {
+        setMsg("Notifikasi belum diizinkan. Buka Pengaturan HP, Aplikasi, Ruang Iman, Notifikasi, lalu izinkan.");
+        return;
+      }
+      await PushNotifications.register();
+      await new Promise((r) => setTimeout(r, 3000)); // time for the phone to give its token and for the app to save it
+      const res = await fetch("/api/push/test", { method: "POST" });
+      const j = (await res.json().catch(() => ({}))) as { status?: string; detail?: string };
+      const text: Record<string, string> = {
+        sent: "Terkirim. Notifikasi uji seharusnya muncul di ponselmu dalam beberapa detik.",
+        no_phone: "Ponselmu belum terdaftar untuk notifikasi. Tutup aplikasi sepenuhnya, buka lagi, lalu coba tombol ini sekali lagi.",
+        server_not_configured: "Server belum diatur untuk mengirim notifikasi. Ini masalah di pihak kami, bukan di ponselmu.",
+        token_expired: "Ponselmu terdaftar dengan kode lama. Tutup aplikasi sepenuhnya, buka lagi, lalu coba lagi.",
+        fcm_error: `Google menolak pengiriman${j.detail ? ` (${j.detail})` : ""}. Kabari pengembang dengan pesan ini.`,
+        fcm_auth_error: `Server tidak bisa masuk ke layanan notifikasi${j.detail ? ` (${j.detail})` : ""}. Kabari pengembang dengan pesan ini.`,
+        slow_down: "Tunggu sebentar, lalu coba lagi.",
+        unauthorized: "Masuk dulu ke akunmu.",
+      };
+      setMsg(text[j.status ?? ""] ?? "Belum bisa menguji. Coba lagi sebentar lagi.");
+    } catch {
+      setMsg("Belum bisa menguji. Periksa koneksi internetmu.");
+    } finally {
+      setTesting(false);
+    }
   }
 
   // Switch every reminder off (the notification permission itself stays in the phone settings)
@@ -121,6 +164,14 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
         className="mx-auto block text-xs text-brand-muted underline underline-offset-4 hover:text-white disabled:opacity-60"
       >
         Tidak aktifkan
+      </button>
+      <button
+        type="button"
+        onClick={sendTest}
+        disabled={testing || saving}
+        className="mx-auto block text-xs font-semibold text-brand-gold underline underline-offset-4 disabled:opacity-60"
+      >
+        {testing ? "Menguji…" : "Kirim notifikasi uji"}
       </button>
       {msg && <p className="rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-brand-light">{msg}</p>}
     </div>

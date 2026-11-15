@@ -49,9 +49,11 @@ async function accessToken(sa: ServiceAccount) {
 export type PushMessage = { title: string; body: string; url?: string };
 
 /** Sends to each token; returns the tokens FCM says are no longer valid. */
-export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ sent: number; invalid: string[] }> {
+export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ sent: number; invalid: string[]; errors: string[]; configured: boolean }> {
   const sa = serviceAccount();
-  if (!sa || tokens.length === 0) return { sent: 0, invalid: [] };
+  if (!sa) return { sent: 0, invalid: [], errors: [], configured: false };
+  if (tokens.length === 0) return { sent: 0, invalid: [], errors: [], configured: true };
+  const errors: string[] = [];
   const auth = await accessToken(sa);
   const invalid: string[] = [];
   let sent = 0;
@@ -74,6 +76,7 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
     // Only drop tokens FCM says are gone; other errors (e.g. a bad payload) must not wipe tokens
     if (res.status === 404 || text.includes("UNREGISTERED") || text.includes("registration token is not a valid")) invalid.push(token);
     else console.error("FCM send failed", res.status, text);
+    errors.push(`${res.status} ${(text.match(/"status":\s*"([A-Z_]+)"/)?.[1] ?? text.slice(0, 120))}`);
   }));
-  return { sent, invalid };
+  return { sent, invalid, errors, configured: true };
 }
