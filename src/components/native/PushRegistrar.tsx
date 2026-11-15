@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
@@ -13,8 +14,18 @@ const TOKEN_KEY = "push-token";
  * notification opens the chat it came from. Does nothing in a normal browser
  * or in older app builds without the push plugin.
  */
+type Banner = { title: string; body: string; url?: string };
+
 export default function PushRegistrar({ userId }: { userId: string }) {
   const router = useRouter();
+  const [banner, setBanner] = useState<Banner | null>(null);
+
+  // The in-app banner disappears by itself after a few seconds
+  useEffect(() => {
+    if (!banner) return;
+    const t = window.setTimeout(() => setBanner(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [banner]);
 
   useEffect(() => {
     // Off until Firebase is configured (google-services.json in the app build + server keys);
@@ -35,6 +46,10 @@ export default function PushRegistrar({ userId }: { userId: string }) {
           });
         }),
         PushNotifications.addListener("registrationError", (e) => console.warn("Push registration failed", e)),
+        // Android does not show a notification while the app is open: show our own banner instead
+        PushNotifications.addListener("pushNotificationReceived", (n) => {
+          setBanner({ title: n.title ?? "Ruang Iman", body: n.body ?? "", url: (n.data as { url?: string } | undefined)?.url });
+        }),
         PushNotifications.addListener("pushNotificationActionPerformed", ({ notification }) => {
           const url = (notification.data as { url?: string } | undefined)?.url;
           if (url && url.startsWith("/")) router.push(url);
@@ -61,7 +76,20 @@ export default function PushRegistrar({ userId }: { userId: string }) {
     return () => cleanup();
   }, [userId, router]);
 
-  return null;
+  if (!banner) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => { const u = banner.url; setBanner(null); if (u && u.startsWith("/")) router.push(u); }}
+      className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[200] flex items-start gap-3 rounded-2xl border border-brand-gold/40 bg-[#1a1d24]/95 p-3.5 text-left shadow-2xl backdrop-blur md:left-auto md:right-4 md:w-96"
+    >
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gold/20 text-brand-gold"><Bell className="h-4 w-4" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-white">{banner.title}</span>
+        {banner.body && <span className="mt-0.5 block text-xs leading-relaxed text-brand-light">{banner.body}</span>}
+      </span>
+    </button>
+  );
 }
 
 /** Call before signing out so this phone stops getting the old account's messages. */

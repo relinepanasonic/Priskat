@@ -9,6 +9,8 @@ import { sendPush, pushConfigProblem } from "@/lib/push";
  */
 const last = new Map<string, number>();
 
+export const maxDuration = 30;
+
 export async function POST() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,6 +24,9 @@ export async function POST() {
   const { data: rows } = await db.from("push_tokens" as any).select("token").eq("user_id", user.id);
   const tokens = ((rows as { token: string }[]) ?? []).map((r) => r.token);
   if (tokens.length === 0) return NextResponse.json({ status: "no_phone" });
+
+  // Wait a little so the person can leave the app: Android only shows a notification when the app is not on screen
+  await new Promise((r) => setTimeout(r, 8000));
 
   try {
     const r = await sendPush(tokens, { title: "Tes notifikasi Ruang Iman 🙏", body: "Kalau kamu melihat ini, notifikasi di ponselmu sudah berfungsi.", url: "/" });
