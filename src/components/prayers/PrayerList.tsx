@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Prayer, PrayerCategory } from "@/lib/types/database.types";
 import { PRAYER_CATEGORIES } from "@/lib/types/database.types";
@@ -37,6 +37,22 @@ export default function PrayerList({ prayers, lang }: Props) {
     if (error || !data) requested.current.delete(id);
     setBodies((b) => ({ ...b, [id]: error || !data ? "error" : (data as unknown as PrayerBody) }));
   };
+
+  // Opened from a notification (?doa=angelus): open that prayer and scroll to it. No match = the normal list.
+  useEffect(() => {
+    let term = "";
+    try { term = (new URLSearchParams(window.location.search).get("doa") ?? "").trim().toLowerCase(); } catch { /* ignore */ }
+    if (!term) return;
+    const match = prayers.find((p) => (p.title_id ?? "").toLowerCase().includes(term) || (p.title_en ?? "").toLowerCase().includes(term));
+    if (!match) return;
+    setSelectedCategory("all");
+    setSearch("");
+    setOpenId(match.id);
+    void loadBody(match.id);
+    const t = window.setTimeout(() => document.getElementById(`prayer-${match.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 350);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = prayers.filter((p) => {
     const matchCat = selectedCategory === "all" || p.category === selectedCategory;
@@ -149,7 +165,8 @@ export default function PrayerList({ prayers, lang }: Props) {
           return (
             <div
               key={prayer.id}
-              className={`relative overflow-hidden rounded-2xl transition-all duration-300 border ${
+              id={`prayer-${prayer.id}`}
+              className={`relative scroll-mt-24 overflow-hidden rounded-2xl transition-all duration-300 border ${
                 isOpen 
                   ? "bg-[#15171c] border-brand-gold/40 shadow-[0_8px_30px_rgba(0,0,0,0.5)]" 
                   : "bg-[#111] border-[#222] hover:border-[#333] shadow-md"

@@ -23,7 +23,7 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
   {
     key: "angelus", label: "Angelus", desc: "Pukul 06.00, 12.00, dan 18.00",
     times: ["06:00", "12:00", "18:00"],
-    title: "Waktunya Doa Angelus", body: "Malaikat Tuhan mewartakan kepada Maria … Mari berhenti sejenak untuk berdoa.", url: "/faith/prayers",
+    title: "Waktunya Doa Angelus", body: "Malaikat Tuhan mewartakan kepada Maria … Mari berhenti sejenak untuk berdoa.", url: "/faith/prayers?doa=angelus",
   },
   {
     key: "bacaan", label: "Bacaan Hari Ini", desc: "Bacaan Misa harian, pukul 06.30",
@@ -33,7 +33,7 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
   {
     key: "kerahiman", label: "Jam Kerahiman Ilahi", desc: "Pukul 15.00",
     times: ["15:00"],
-    title: "Jam Kerahiman Ilahi", body: "Pukul tiga, saat Yesus wafat. Mari berdoa Koronka atau doa singkat kerahiman.", url: "/faith/prayers",
+    title: "Jam Kerahiman Ilahi", body: "Pukul tiga, saat Yesus wafat. Mari berdoa Koronka atau doa singkat kerahiman.", url: "/faith/prayers?doa=kerahiman",
   },
   {
     key: "rosario", label: "Rosario", desc: "Doa rosario malam, pukul 20.00",
