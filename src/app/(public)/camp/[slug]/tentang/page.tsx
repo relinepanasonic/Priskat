@@ -4,6 +4,7 @@ import { BookOpen, HandHeart, Church, Users, MapPin, BadgeCheck, CalendarDays } 
 import { countCommunityMembers } from "@/lib/memberCounts";
 import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
 import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
+import JoinCommunityButton, { type JoinStatus } from "@/components/community/JoinCommunityButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tentang" };
@@ -14,7 +15,7 @@ const PILLAR_ICONS = [BookOpen, HandHeart, Church, Users];
 
 export default async function AboutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { supabase, community } = await getCommunityPageContext(slug);
+  const { supabase, community, user, canEdit } = await getCommunityPageContext(slug);
   if (!community) redirect("/camp");
 
   // Catholic Indonesia is everyone's community: count every Ruang Iman member
@@ -27,6 +28,19 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   ]);
 
   const c = (info ?? {}) as Record<string, any>;
+
+  // Everyone can read this page, private or not. People who are not members get the join button here.
+  let joinStatus: JoinStatus = everyone || canEdit ? "member" : "none";
+  if (user && !everyone && !canEdit) {
+    const [{ data: prof }, { data: ms }, { data: req }] = await Promise.all([
+      supabase.from("profiles").select("community_id").eq("id", user.id).maybeSingle(),
+      supabase.from("community_memberships" as any).select("community_id").eq("user_id", user.id).eq("community_id", community.id).maybeSingle(),
+      supabase.from("community_join_requests").select("id").eq("user_id", user.id).eq("community_id", community.id).eq("status", "pending").maybeSingle(),
+    ]);
+    if ((prof as { community_id?: string | null } | null)?.community_id === community.id || ms) joinStatus = "member";
+    else if (req) joinStatus = "pending";
+  }
+  const showJoin = !everyone && joinStatus !== "member" && c.join_mode !== "closed";
   const dioceseCount = dioceses.filter((d) => d.kind !== "ordinariat").length;
   const missions: string[] = String(c.mission ?? "")
     .split(/\n+/)
@@ -61,6 +75,23 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
         <p className="relative mt-6 max-w-3xl leading-relaxed text-[#EAE5D9]/90">{c.description || (everyone ? ABOUT_FALLBACK.description : "Belum ada deskripsi komunitas.")}</p>
+
+        {showJoin && (
+          <div className="relative mt-6">
+            {user ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <JoinCommunityButton
+                  community={{ id: community.id, name: community.name ?? "", join_mode: (c.join_mode ?? "request") as "open" | "request" | "closed", join_fields: c.join_fields ?? null }}
+                  status={joinStatus}
+                  className="!px-6 !py-3 !text-sm"
+                />
+                <span className="text-xs text-brand-muted">{c.join_mode === "open" ? "Terbuka untuk semua." : "Permintaanmu akan ditinjau oleh admin komunitas."}</span>
+              </div>
+            ) : (
+              <Link href="/login" className="inline-block rounded-full bg-brand-gold px-6 py-3 text-sm font-bold text-brand-dark">Masuk untuk bergabung</Link>
+            )}
+          </div>
+        )}
 
         <div className="relative mt-6 grid grid-cols-3 gap-3 max-w-md">
           {stats.map((s) => (

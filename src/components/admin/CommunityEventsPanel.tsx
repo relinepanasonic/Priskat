@@ -251,6 +251,9 @@ export default function CommunityEventsPanel({
                 <span className="mt-2 inline-block rounded-full bg-brand-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-gold">
                   {ev.status}
                 </span>
+                <a href={`/acara/${ev.id}`} className="mt-2 flex items-center justify-center rounded-lg bg-brand-gold px-3 py-2 text-xs font-bold text-brand-dark">
+                  Pendaftaran, peserta, dan absensi
+                </a>
               </div>
             </div>
           ))}

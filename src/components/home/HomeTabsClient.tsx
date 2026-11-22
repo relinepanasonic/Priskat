@@ -343,13 +343,7 @@ export default function HomeTabsClient({
               {isEn ? "Combined across all your communities." : "Digabung dari semua komunitasmu."}
             </p>
 
-            <ServiceTimeline userId={userId} isEn={isEn} />
-
-            {myCamps.length > 0 && (
-              <h3 className="pt-3 text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
-                <Users className="h-4 w-4" /> {isEn ? "Active services" : "Pelayanan aktif"}
-              </h3>
-            )}
+            <ServiceTimeline userId={userId} />
 
             {myCamps.length > 0 ? (
               <div className="space-y-3">

@@ -230,8 +230,7 @@ export default function CommunitySlugLayout({
 
       {browseOnly && (
         <p className="rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 py-3 text-xs leading-relaxed text-brand-light">
-          Kamu sedang melihat halaman umum komunitas ini. Camp, event, dan halaman lainnya terbuka untuk anggota.{" "}
-          <Link href="/camp" className="font-semibold text-brand-gold underline underline-offset-2">Kembali ke daftar komunitas untuk bergabung</Link>.
+          Kamu sedang melihat halaman umum komunitas ini. Camp, event, dan halaman lainnya terbuka untuk anggota. Gunakan tombol <b>gabung</b> di halaman Tentang ini untuk meminta bergabung.
         </p>
       )}
 

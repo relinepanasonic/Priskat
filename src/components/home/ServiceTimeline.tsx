@@ -1,28 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarPlus, Check, Clock, MapPin, Pencil, Trash2, UserPlus, Users, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { CalendarDays, Check, Clock, MapPin, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type Vis = "tagged" | "friends" | "network";
+type Vis = "tagged" | "friends";
 type Person = { id: string; name: string; avatar: string | null };
-type Part = { user_id: string; status: "invited" | "accepted" | "declined"; can_edit: boolean };
-type Ev = {
-  id: string; owner_id: string; title: string; starts_at: string; ends_at: string | null; place: string | null; notes: string | null;
-  visibility: Vis; participants: Part[];
-};
+type Part = { user_id: string; status: "invited" | "accepted" | "declined" };
+type Ev = { id: string; owner_id: string; title: string; starts_at: string; place: string | null; notes: string | null; visibility: Vis; participants: Part[] };
 
 const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
 const db = () => createClient() as any;
-const VIS_LABEL: Record<Vis, string> = {
-  tagged: "Hanya yang ditandai",
-  friends: "Teman dan yang ditandai",
-  network: "Teman, kolaborator, dan kolaborator teman",
-};
+const VIS: { key: Vis; label: string }[] = [
+  { key: "tagged", label: "Hanya yang ditandai" },
+  { key: "friends", label: "Teman dan yang ditandai" },
+];
 const initials = (n: string) => n.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 const pad = (n: number) => String(n).padStart(2, "0");
 const toLocalInput = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-const dayKey = (iso: string) => new Date(iso).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jakarta" });
+const dateOf = (iso: string) => new Date(iso).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Jakarta" });
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" });
 
 function Avatar({ p, size = 24 }: { p: Person; size?: number }) {
@@ -33,23 +29,21 @@ function Avatar({ p, size = 24 }: { p: Person; size?: number }) {
 }
 
 /**
- * "Timeline pelayanan": your events and the ones you were tagged in, merged into one list by date.
- * Tag friends as collaborators; they accept or decline. Who sees an event is chosen per event.
+ * Your events as cards in "Pelayanan Saya", in the same look as the service cards.
+ * Yours, the ones you were tagged in, and your friends' events share one list, soonest first.
  */
-export default function ServiceTimeline({ userId, isEn }: { userId: string; isEn: boolean }) {
+export default function ServiceTimeline({ userId }: { userId: string }) {
   const [events, setEvents] = useState<Ev[]>([]);
   const [people, setPeople] = useState<Record<string, Person>>({});
   const [friends, setFriends] = useState<Person[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [showOthers, setShowOthers] = useState(false);
   const [form, setForm] = useState<Ev | "new" | null>(null);
 
   const load = useCallback(async () => {
     const supabase = db();
-    const from = new Date(Date.now() - 7 * 86400_000).toISOString();
-    const { data: evs, error } = await supabase.from("timeline_events").select("*, participants:timeline_participants(user_id, status, can_edit)").gte("starts_at", from).order("starts_at", { ascending: true }).limit(200);
-    if (error) { setFailed(true); setLoaded(true); return; }
+    const from = new Date(Date.now() - 24 * 3600_000).toISOString();
+    const { data: evs, error } = await supabase.from("timeline_events").select("*, participants:timeline_participants(user_id, status)").gte("starts_at", from).order("starts_at", { ascending: true }).limit(100);
+    if (error) { setFailed(true); return; }
     const list = (evs as Ev[]) ?? [];
     setEvents(list);
 
@@ -63,18 +57,9 @@ export default function ServiceTimeline({ userId, isEn }: { userId: string; isEn
     ((profs as { id: string; full_name: string | null; nama_panggilan: string | null; avatar_url: string | null }[]) ?? []).forEach((p) => { map[p.id] = { id: p.id, name: p.nama_panggilan || p.full_name || "Teman", avatar: p.avatar_url }; });
     setPeople(map);
     setFriends(friendIds.map((i) => map[i]).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name)));
-    setLoaded(true);
   }, [userId]);
 
   useEffect(() => { void load(); }, [load]);
-
-  const mine = (e: Ev) => e.owner_id === userId || e.participants.some((p) => p.user_id === userId && p.status !== "declined");
-  const shown = useMemo(() => events.filter((e) => showOthers || mine(e)), [events, showOthers, userId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const groups = useMemo(() => {
-    const g: { day: string; items: Ev[] }[] = [];
-    shown.forEach((e) => { const k = dayKey(e.starts_at); const last = g[g.length - 1]; if (last?.day === k) last.items.push(e); else g.push({ day: k, items: [e] }); });
-    return g;
-  }, [shown]);
 
   async function respond(e: Ev, accept: boolean) {
     await db().rpc("timeline_respond", { p_event: e.id, p_accept: accept });
@@ -87,113 +72,83 @@ export default function ServiceTimeline({ userId, isEn }: { userId: string; isEn
     void load();
   }
 
-  const noPeopleHint = friends.length === 0;
+  if (failed) return null; // the 109 SQL has not been run yet: the page simply shows the services as before
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-gold"><Clock className="h-4 w-4" /> {isEn ? "Timeline" : "Timeline"}</h3>
-        <button onClick={() => setForm("new")} className="inline-flex items-center gap-1.5 rounded-full bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark active:scale-95"><CalendarPlus className="h-3.5 w-3.5" /> {isEn ? "Add event" : "Tambah acara"}</button>
-      </div>
-      <label className="flex items-center gap-2 text-xs text-brand-muted">
-        <input type="checkbox" checked={showOthers} onChange={(e) => setShowOthers(e.target.checked)} className="accent-[#D6B072]" />
-        {isEn ? "Also show events of my friends and network" : "Tampilkan juga acara teman dan jaringanku"}
-      </label>
+      <button onClick={() => setForm("new")} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-gold/50 py-3.5 text-sm font-semibold text-brand-gold transition-colors hover:bg-brand-gold/10">
+        <Plus className="h-4 w-4" /> Tambah acara
+      </button>
 
-      {!loaded && <p className="py-6 text-center text-sm text-brand-muted">Memuat…</p>}
-      {loaded && failed && <p className="rounded-xl border border-[#333] bg-[#1a1d24] p-4 text-center text-xs text-brand-muted">Timeline belum aktif. Admin perlu menjalankan pembaruan database terlebih dahulu.</p>}
-      {loaded && !failed && groups.length === 0 && (
-        <div className="rounded-2xl border border-[#2a2d35] bg-[#14171c] px-5 py-8 text-center">
-          <Clock className="mx-auto h-8 w-8 text-brand-muted/50" />
-          <p className="mt-2 text-sm font-semibold text-white">Belum ada acara di timeline-mu</p>
-          <p className="mt-1 text-xs text-brand-muted">Catat pelayanan atau kegiatanmu, lalu tandai teman untuk berkolaborasi.</p>
-        </div>
-      )}
+      {events.map((e) => {
+        const mine = e.owner_id === userId;
+        const me = e.participants.find((p) => p.user_id === userId);
+        const owner = people[e.owner_id];
+        const crew = [owner, ...e.participants.filter((p) => p.status !== "declined").map((p) => people[p.user_id])].filter(Boolean) as Person[];
+        const role = mine ? "Pemilik" : me ? "Kolaborator" : `Teman: ${owner?.name ?? ""}`;
+        return (
+          <div key={e.id} className={`relative overflow-hidden rounded-2xl border p-4 shadow-sm ${me?.status === "invited" ? "border-sky-500/40 bg-sky-500/[0.06]" : "border-[#333] bg-[#1a1d24]"}`}>
+            <div className="mb-3 flex items-start justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold"><CalendarDays className="h-5 w-5" /></div>
+              <span className="rounded-full border border-brand-gold/30 bg-brand-gold/10 px-2.5 py-1 text-[10px] font-bold text-brand-gold">{dateOf(e.starts_at)}</span>
+            </div>
+            <h4 className="text-sm font-bold text-white">{e.title}</h4>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-brand-muted">
+              <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {timeOf(e.starts_at)}</span>
+              {e.place && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {e.place}</span>}
+            </p>
+            {e.notes && <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-brand-light">{e.notes}</p>}
 
-      {groups.map((g) => (
-        <div key={g.day}>
-          <p className="mb-1.5 mt-3 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-gold">{g.day}</p>
-          <div className="space-y-2.5">
-            {g.items.map((e) => {
-              const owner = people[e.owner_id];
-              const me = e.participants.find((p) => p.user_id === userId);
-              const canEdit = e.owner_id === userId || (me?.status === "accepted" && me.can_edit);
-              const crew = [owner, ...e.participants.filter((p) => p.status !== "declined").map((p) => people[p.user_id])].filter(Boolean) as Person[];
-              return (
-                <div key={e.id} className={`rounded-2xl border p-3.5 ${e.owner_id === userId ? "border-[#333] bg-[#1a1d24]" : "border-sky-500/30 bg-sky-500/[0.06]"}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-white">{e.title}</p>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-brand-muted"><Clock className="h-3 w-3" /> {timeOf(e.starts_at)}{e.ends_at ? ` – ${timeOf(e.ends_at)}` : ""}</p>
-                      {e.place && <p className="mt-0.5 flex items-center gap-1.5 text-xs text-brand-muted"><MapPin className="h-3 w-3 shrink-0" /> {e.place}</p>}
-                    </div>
-                    {canEdit && (
-                      <div className="flex shrink-0 gap-1">
-                        <button aria-label="Ubah" onClick={() => setForm(e)} className="rounded-lg border border-[#333] p-1.5 text-brand-light"><Pencil className="h-3.5 w-3.5" /></button>
-                        {e.owner_id === userId && <button aria-label="Hapus" onClick={() => remove(e)} className="rounded-lg border border-[#333] p-1.5 text-red-300"><Trash2 className="h-3.5 w-3.5" /></button>}
-                      </div>
-                    )}
-                  </div>
-                  {e.notes && <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-brand-light">{e.notes}</p>}
-                  <div className="mt-2.5 flex items-center justify-between">
-                    <div className="flex items-center">
-                      {crew.slice(0, 6).map((p, i) => <span key={p.id} className={i ? "-ml-1.5" : ""}><Avatar p={p} /></span>)}
-                      <span className="ml-2 text-[11px] text-brand-muted">
-                        {e.owner_id === userId ? "Kamu" : owner?.name ?? "Teman"}{crew.length > 1 ? ` dan ${crew.length - 1} lainnya` : ""}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-brand-muted">{e.visibility === "tagged" ? "Terbatas" : e.visibility === "friends" ? "Teman" : "Jaringan"}</span>
-                  </div>
-                  {me?.status === "invited" && (
-                    <div className="mt-3 flex items-center gap-2 rounded-xl bg-sky-500/10 p-2.5">
-                      <span className="flex-1 text-xs text-sky-100">{owner?.name ?? "Temanmu"} menandai kamu di acara ini.</span>
-                      <button onClick={() => respond(e, true)} className="inline-flex items-center gap-1 rounded-lg bg-brand-gold px-3 py-1.5 text-xs font-bold text-brand-dark"><Check className="h-3.5 w-3.5" /> Terima</button>
-                      <button onClick={() => respond(e, false)} className="rounded-lg border border-[#444] px-3 py-1.5 text-xs font-semibold text-brand-light">Tolak</button>
-                    </div>
-                  )}
+            {me?.status === "invited" && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-sky-500/10 p-2.5">
+                <span className="flex-1 text-xs text-sky-100">{owner?.name ?? "Temanmu"} mengajakmu ikut.</span>
+                <button onClick={() => respond(e, true)} className="inline-flex items-center gap-1 rounded-lg bg-brand-gold px-3 py-1.5 text-xs font-bold text-brand-dark"><Check className="h-3.5 w-3.5" /> Ikut</button>
+                <button onClick={() => respond(e, false)} className="rounded-lg border border-[#444] px-3 py-1.5 text-xs font-semibold text-brand-light">Tidak</button>
+              </div>
+            )}
+
+            <div className="mt-3 flex items-center justify-between border-t border-[#222] pt-3">
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span className="flex items-center">{crew.slice(0, 4).map((p, i) => <span key={p.id} className={i ? "-ml-1.5" : ""}><Avatar p={p} /></span>)}</span>
+                <span>Peran: <span className="font-semibold text-white">{role}</span></span>
+              </div>
+              {mine && (
+                <div className="flex gap-1">
+                  <button aria-label="Ubah" onClick={() => setForm(e)} className="rounded-lg border border-[#333] p-1.5 text-brand-light"><Pencil className="h-3.5 w-3.5" /></button>
+                  <button aria-label="Hapus" onClick={() => remove(e)} className="rounded-lg border border-[#333] p-1.5 text-red-300"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {form && (
-        <EventForm
-          userId={userId} friends={friends} people={people} editing={form === "new" ? null : form} noPeopleHint={noPeopleHint}
-          onClose={() => setForm(null)} onSaved={() => { setForm(null); void load(); }}
-        />
+        <EventForm userId={userId} friends={friends} people={people} editing={form === "new" ? null : form} onClose={() => setForm(null)} onSaved={() => { setForm(null); void load(); }} />
       )}
     </div>
   );
 }
 
-function EventForm({ userId, friends, people, editing, noPeopleHint, onClose, onSaved }: {
-  userId: string; friends: Person[]; people: Record<string, Person>; editing: Ev | null; noPeopleHint: boolean; onClose: () => void; onSaved: () => void;
+function EventForm({ userId, friends, people, editing, onClose, onSaved }: {
+  userId: string; friends: Person[]; people: Record<string, Person>; editing: Ev | null; onClose: () => void; onSaved: () => void;
 }) {
-  const owner = !editing || editing.owner_id === userId;
   const [title, setTitle] = useState(editing?.title ?? "");
   const [starts, setStarts] = useState(editing ? toLocalInput(editing.starts_at) : "");
-  const [ends, setEnds] = useState(editing?.ends_at ? toLocalInput(editing.ends_at) : "");
   const [place, setPlace] = useState(editing?.place ?? "");
-  const [notes, setNotes] = useState(editing?.notes ?? "");
-  const [vis, setVis] = useState<Vis>(editing?.visibility ?? "network");
-  const [tagged, setTagged] = useState<Record<string, boolean>>(() => Object.fromEntries((editing?.participants ?? []).map((p) => [p.user_id, p.can_edit])));
+  const [vis, setVis] = useState<Vis>(editing?.visibility ?? "friends");
+  const [tagged, setTagged] = useState<string[]>(() => (editing?.participants ?? []).map((p) => p.user_id));
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const candidates = friends.filter((f) => !(f.id in tagged) && f.name.toLowerCase().includes(search.trim().toLowerCase())).slice(0, 8);
+  const candidates = friends.filter((f) => !tagged.includes(f.id) && f.name.toLowerCase().includes(search.trim().toLowerCase())).slice(0, 6);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!starts) { setError("Isi tanggal dan jam mulai."); return; }
     setBusy(true); setError(null);
     const supabase = db();
-    const row = {
-      title: title.trim(), starts_at: new Date(starts).toISOString(), ends_at: ends ? new Date(ends).toISOString() : null,
-      place: place.trim() || null, notes: notes.trim() || null, ...(owner ? { visibility: vis } : {}),
-    };
+    const row = { title: title.trim(), starts_at: new Date(starts).toISOString(), place: place.trim() || null, visibility: vis };
     let id = editing?.id ?? "";
     if (editing) {
       const { error: err } = await supabase.from("timeline_events").update(row).eq("id", editing.id);
@@ -203,19 +158,15 @@ function EventForm({ userId, friends, people, editing, noPeopleHint, onClose, on
       if (err || !data) { setBusy(false); setError(err?.message ?? "Belum bisa menyimpan."); return; }
       id = data.id as string;
     }
-
-    // Tag the new people (and update edit rights); remove the ones taken out
-    const before = new Map((editing?.participants ?? []).map((p) => [p.user_id, p.can_edit]));
-    const newlyTagged: string[] = [];
-    for (const [uid, canEdit] of Object.entries(tagged)) {
-      if (!before.has(uid) || before.get(uid) !== canEdit) {
-        const { error: err } = await supabase.rpc("timeline_tag", { p_event: id, p_user: uid, p_can_edit: owner ? canEdit : false });
-        if (err) { setError(err.message); continue; }
-        if (!before.has(uid)) newlyTagged.push(uid);
-      }
+    const before = new Set((editing?.participants ?? []).map((p) => p.user_id));
+    let added = 0;
+    for (const uid of tagged) {
+      if (before.has(uid)) continue;
+      const { error: err } = await supabase.rpc("timeline_tag", { p_event: id, p_user: uid, p_can_edit: false });
+      if (err) setError(err.message); else added += 1;
     }
-    if (owner) for (const uid of before.keys()) if (!(uid in tagged)) await supabase.from("timeline_participants").delete().eq("event_id", id).eq("user_id", uid);
-    if (newlyTagged.length) void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "timeline_tag", id }) }).catch(() => {});
+    for (const uid of before) if (!tagged.includes(uid)) await supabase.from("timeline_participants").delete().eq("event_id", id).eq("user_id", uid);
+    if (added) void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "timeline_tag", id }) }).catch(() => {});
     setBusy(false);
     onSaved();
   }
@@ -227,63 +178,49 @@ function EventForm({ userId, friends, people, editing, noPeopleHint, onClose, on
           <h3 className="text-lg font-bold">{editing ? "Ubah acara" : "Tambah acara"}</h3>
           <button type="button" onClick={onClose} aria-label="Tutup" className="rounded-full p-1.5 text-gray-400 hover:bg-white/10"><X className="h-5 w-5" /></button>
         </div>
-        <input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nama acara atau pelayanan" maxLength={120} className={input} />
-        <div className="grid grid-cols-2 gap-2">
-          <div><label className="mb-1 block text-[11px] text-brand-muted">Mulai</label><input required type="datetime-local" value={starts} onChange={(e) => setStarts(e.target.value)} className={input} /></div>
-          <div><label className="mb-1 block text-[11px] text-brand-muted">Selesai (opsional)</label><input type="datetime-local" value={ends} onChange={(e) => setEnds(e.target.value)} className={input} /></div>
-        </div>
-        <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Tempat atau tautan" maxLength={200} className={input} />
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={1000} placeholder="Catatan (opsional)" className={input} />
+        <input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nama acara" maxLength={120} className={input} />
+        <input required type="datetime-local" value={starts} onChange={(e) => setStarts(e.target.value)} className={input} />
+        <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Tempat (opsional)" maxLength={200} className={input} />
 
         <div>
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-brand-muted">Kolaborator</p>
-          {Object.keys(tagged).length > 0 && (
-            <div className="mb-2 space-y-1.5">
-              {Object.entries(tagged).map(([uid, canEdit]) => {
-                const p = people[uid];
-                return (
-                  <div key={uid} className="flex items-center gap-2 rounded-xl bg-[#14171c] p-2">
-                    {p && <Avatar p={p} size={28} />}
-                    <span className="min-w-0 flex-1 truncate text-sm">{p?.name ?? "Teman"}</span>
-                    {owner && <label className="flex items-center gap-1 text-[11px] text-brand-light"><input type="checkbox" checked={canEdit} onChange={(e) => setTagged({ ...tagged, [uid]: e.target.checked })} className="accent-[#D6B072]" /> boleh edit</label>}
-                    {owner && <button type="button" aria-label="Hapus" onClick={() => { const n = { ...tagged }; delete n[uid]; setTagged(n); }} className="text-gray-400"><X className="h-4 w-4" /></button>}
-                  </div>
-                );
-              })}
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-brand-muted">Ajak teman</p>
+          {tagged.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {tagged.map((uid) => (
+                <span key={uid} className="inline-flex items-center gap-1.5 rounded-full bg-[#14171c] py-1 pl-1 pr-2 text-xs">
+                  {people[uid] && <Avatar p={people[uid]} size={20} />} {people[uid]?.name ?? "Teman"}
+                  <button type="button" aria-label="Hapus" onClick={() => setTagged(tagged.filter((x) => x !== uid))} className="text-gray-400"><X className="h-3.5 w-3.5" /></button>
+                </span>
+              ))}
             </div>
           )}
-          {noPeopleHint ? (
-            <p className="rounded-xl bg-white/5 p-3 text-xs text-brand-muted">Kamu belum punya teman di Ruang Iman. Tambah teman di menu Koneksi, lalu kamu bisa menandai mereka di sini.</p>
+          {friends.length === 0 ? (
+            <p className="rounded-xl bg-white/5 p-3 text-xs text-brand-muted">Belum ada teman. Tambah teman di menu Koneksi dulu.</p>
           ) : (
             <>
-              <div className="relative"><UserPlus className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari temanmu untuk ditandai" className={`${input} pl-9`} /></div>
-              {(search || candidates.length > 0) && (
-                <div className="mt-1.5 max-h-40 space-y-1 overflow-y-auto">
+              <div className="relative"><UserPlus className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama teman" className={`${input} pl-9`} /></div>
+              {candidates.length > 0 && (
+                <div className="mt-1.5 space-y-1">
                   {candidates.map((f) => (
-                    <button key={f.id} type="button" onClick={() => { setTagged({ ...tagged, [f.id]: false }); setSearch(""); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-white/5"><Avatar p={f} size={24} /> {f.name}</button>
+                    <button key={f.id} type="button" onClick={() => { setTagged([...tagged, f.id]); setSearch(""); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-white/5"><Avatar p={f} size={24} /> {f.name}</button>
                   ))}
-                  {candidates.length === 0 && <p className="px-2 py-1 text-xs text-brand-muted">Tidak ada teman dengan nama itu.</p>}
                 </div>
               )}
             </>
           )}
         </div>
 
-        {owner && (
-          <div>
-            <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-brand-muted"><Users className="mr-1 inline h-3.5 w-3.5" />Siapa boleh melihat</p>
-            <div className="space-y-1.5">
-              {(Object.keys(VIS_LABEL) as Vis[]).map((v) => (
-                <label key={v} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm ${vis === v ? "border-brand-gold/60 bg-brand-gold/10" : "border-[#333]"}`}>
-                  <input type="radio" name="vis" checked={vis === v} onChange={() => setVis(v)} className="accent-[#D6B072]" /> {VIS_LABEL[v]}
-                </label>
-              ))}
-            </div>
+        <div>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-brand-muted">Siapa boleh melihat</p>
+          <div className="grid grid-cols-2 gap-2">
+            {VIS.map((v) => (
+              <button key={v.key} type="button" onClick={() => setVis(v.key)} className={`rounded-xl border px-3 py-2.5 text-xs font-semibold ${vis === v.key ? "border-brand-gold bg-brand-gold/10 text-brand-gold" : "border-[#333] text-brand-light"}`}>{v.label}</button>
+            ))}
           </div>
-        )}
+        </div>
 
         {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
-        <button type="submit" disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : editing ? "Simpan perubahan" : "Simpan acara"}</button>
+        <button type="submit" disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan"}</button>
       </form>
     </div>
   );
