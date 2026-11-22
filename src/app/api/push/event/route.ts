@@ -51,6 +51,24 @@ export async function POST(request: Request) {
     msg = r.status === "approved"
       ? { title: `Selamat datang di ${name}`, body: "Permintaan bergabungmu disetujui.", url: "/camp" }
       : { title: "Permintaan bergabung", body: `Permintaanmu ke ${name} belum disetujui.`, url: "/camp" };
+  } else if (body.type === "registration_decided") {
+    key = "acara";
+    // only the admin of the event, and only for a decision made just now
+    const { data: rr } = await db.from("event_registrations" as any).select("event_id, user_id, status, decided_at, event:events!event_id(title)").eq("id", id).maybeSingle();
+    const r = rr as { event_id: string; user_id: string; status: string; decided_at: string | null; event: { title: string } | null } | null;
+    const { data: adm } = r ? await supabase.rpc("event_admin_of" as any, { p_event: r.event_id }) : { data: false };
+    if (adm !== true || !r || !r.decided_at || Date.now() - new Date(r.decided_at).getTime() > 10 * 60_000 || !["approved", "rejected"].includes(r.status)) {
+      return NextResponse.json({ ok: true, skipped: "not decided by you just now" });
+    }
+    const seen = (globalThis as any).__regPushSeen ?? ((globalThis as any).__regPushSeen = new Map<string, number>());
+    const dedupe = `${id}:${r.status}`;
+    if ((seen.get(dedupe) ?? 0) > Date.now() - 3600_000) return NextResponse.json({ ok: true, skipped: "already sent" });
+    seen.set(dedupe, Date.now());
+    target = r.user_id;
+    const title = r.event?.title ?? "acara";
+    msg = r.status === "approved"
+      ? { title: "Pendaftaranmu disetujui 🎟️", body: `Tiket QR untuk ${title} sudah siap. Ketuk untuk membukanya.`, url: `/acara/${r.event_id}`, channel: "chat" }
+      : { title: "Pendaftaran belum disetujui", body: `Pendaftaranmu untuk ${title} belum bisa disetujui. Ketuk untuk melihat alasannya.`, url: `/acara/${r.event_id}`, channel: "chat" };
   } else if (body.type === "friend_request" || body.type === "friend_accepted") {
     key = "teman";
     const { data: fr } = await db.from("friendships" as any).select("requester_id, receiver_id, status, created_at").eq("id", id).maybeSingle();

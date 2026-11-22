@@ -66,6 +66,9 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
           </p>
         )}
         {e.description && <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-gray-300">{e.description}</p>}
+        <Link href={`/acara/${e.id}`} className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-4 py-2 text-xs font-bold text-brand-dark">
+          Detail dan daftar
+        </Link>
       </div>
     </article>
   );
