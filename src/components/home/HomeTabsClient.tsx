@@ -221,7 +221,7 @@ export default function HomeTabsClient({
               <Tent className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-[13px] font-bold text-white/90 tracking-wide uppercase">{isEn ? "My Services" : "Pelayanan Saya"}</p>
+              <p className="text-[13px] font-bold text-white/90 tracking-wide uppercase">{isEn ? "My Timeline" : "Timeline Saya"}</p>
               <p className="text-xs text-brand-muted mt-1 max-w-[180px] truncate">
                 {myServices.length > 0 ? <><span className="text-brand-light/60">{isEn ? "Latest:" : "Terakhir:"}</span> <span className="text-white/80">{myServices[myServices.length - 1]?.position || "?"}</span></> : (isEn ? "No service records yet" : "Belum ada catatan pelayanan")}
               </p>
@@ -252,7 +252,7 @@ export default function HomeTabsClient({
             onClick={() => setActiveTab("Service")}
             className={`flex-1 py-2.5 px-1 rounded-full text-xs font-bold transition-all whitespace-nowrap ${activeTab === "Service" ? "bg-brand-gold text-brand-dark shadow-md" : "text-brand-muted hover:text-white"}`}
           >
-            {isEn ? "My Service" : "Pelayanan Saya"}
+            {isEn ? "My Timeline" : "Timeline Saya"}
           </button>
         </div>
       </div>
@@ -336,7 +336,7 @@ export default function HomeTabsClient({
           <div className="px-6 space-y-4 animate-in fade-in duration-300 pb-12">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
-                <Tent className="h-4 w-4" /> {isEn ? "My Service" : "Pelayanan Saya"}
+                <Tent className="h-4 w-4" /> {isEn ? "My Timeline" : "Timeline Saya"}
               </h3>
             </div>
             <p className="text-xs text-brand-muted -mt-2">
