@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
 import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import JoinCommunityButton, { type JoinStatus } from "@/components/community/JoinCommunityButton";
+import ShareCommunityButton from "@/components/community/ShareCommunityButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tentang" };
@@ -86,8 +87,12 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         </div>
         <p className="relative mt-6 max-w-3xl leading-relaxed text-[#EAE5D9]/90">{c.description || (everyone ? ABOUT_FALLBACK.description : "Belum ada deskripsi komunitas.")}</p>
 
+        <div className="relative mt-5">
+          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} />
+        </div>
+
         {showJoin && (
-          <div className="relative mt-6">
+          <div className="relative mt-4">
             {user ? (
               <div className="flex flex-wrap items-center gap-3">
                 <JoinCommunityButton
