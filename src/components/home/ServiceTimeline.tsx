@@ -154,9 +154,10 @@ function EventForm({ userId, friends, people, editing, onClose, onSaved }: {
       const { error: err } = await supabase.from("timeline_events").update(row).eq("id", editing.id);
       if (err) { setBusy(false); setError(err.message); return; }
     } else {
-      const { data, error: err } = await supabase.from("timeline_events").insert({ ...row, owner_id: userId }).select("id").single();
-      if (err || !data) { setBusy(false); setError(err?.message ?? "Belum bisa menyimpan."); return; }
-      id = data.id as string;
+      // The id is made here, so the insert does not have to read the new row back (the read policy cannot see a row of the same statement)
+      id = crypto.randomUUID();
+      const { error: err } = await supabase.from("timeline_events").insert({ ...row, id, owner_id: userId });
+      if (err) { setBusy(false); setError(err.message); return; }
     }
     const before = new Set((editing?.participants ?? []).map((p) => p.user_id));
     let added = 0;

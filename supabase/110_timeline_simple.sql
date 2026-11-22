@@ -20,3 +20,12 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
     )
   );
 $$;
+
+-- The owner always sees and edits their own row directly (a function that re-reads the table cannot see a row
+-- that is being inserted or returned in the same statement)
+DROP POLICY IF EXISTS timeline_events_read ON public.timeline_events;
+CREATE POLICY timeline_events_read ON public.timeline_events FOR SELECT TO authenticated
+  USING (owner_id = auth.uid() OR public.timeline_can_see(id));
+DROP POLICY IF EXISTS timeline_events_update ON public.timeline_events;
+CREATE POLICY timeline_events_update ON public.timeline_events FOR UPDATE TO authenticated
+  USING (owner_id = auth.uid() OR public.timeline_can_edit(id)) WITH CHECK (owner_id = auth.uid() OR public.timeline_can_edit(id));
