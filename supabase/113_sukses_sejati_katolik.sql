@@ -12,13 +12,13 @@ BEGIN
   SELECT id INTO cid FROM public.communities WHERE slug = 'sukses-sejati-katolik' OR btrim(name) ILIKE 'sukses sejati katolik' LIMIT 1;
 
   IF cid IS NULL THEN
-    INSERT INTO public.communities (name, slug, is_public) VALUES ('Sukses Sejati Katolik', 'sukses-sejati-katolik', true) RETURNING id INTO cid;
+    INSERT INTO public.communities (name, slug, is_public) VALUES ('Sukses Sejati Katolik', 'sukses-sejati-katolik', false) RETURNING id INTO cid;
   END IF;
 
   UPDATE public.communities SET
     name = 'Sukses Sejati Katolik',
     slug = 'sukses-sejati-katolik',
-    is_public = true,
+    is_public = false,   -- private: everyone can read the About page, but joining needs approval
     logo_url = '/images/communities/sukses-sejati-katolik.png',
     tagline = 'Build to Bless, Lead to Bless',
     motto = 'Kesuksesan sejati dimulai dari cara berpikir yang benar.',
