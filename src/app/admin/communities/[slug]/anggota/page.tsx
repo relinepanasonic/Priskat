@@ -80,7 +80,7 @@ export default async function CommunityMembersPage({ params }: { params: Promise
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[#333]">
+      <div className="hidden overflow-x-auto rounded-xl border border-[#333] md:block">
         <table className="w-full min-w-[640px]">
           <thead className="border-b border-brand-border bg-brand-surface-hover">
             <tr>
@@ -125,6 +125,34 @@ export default async function CommunityMembersPage({ params }: { params: Promise
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Phone: one card per person instead of a table that has to be scrolled sideways */}
+      <div className="space-y-2.5 md:hidden">
+        {members.length === 0 && <p className="rounded-xl border border-[#333] py-10 text-center text-sm text-brand-muted">Belum ada anggota.</p>}
+        {members.map((m) => (
+          <div key={m.id} className="rounded-2xl border border-[#333] bg-[#1a1d24] p-3.5">
+            <div className="flex items-center gap-3">
+              {m.avatar_url ? (
+                <Image src={m.avatar_url} alt={m.full_name || ""} width={44} height={44} className="h-11 w-11 shrink-0 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-bg text-sm font-semibold text-brand-gold">{m.full_name?.[0] || "?"}</div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-white">{m.full_name}</p>
+                <p className="truncate text-xs text-brand-muted">@{m.username}</p>
+              </div>
+              <Badge variant={roleVariant(m.role)}>{m.role}</Badge>
+            </div>
+            <p className="mt-2 text-xs text-brand-muted">{m.role === "founder" ? "Semua komunitas" : m.community?.name || "-"} · Bergabung {formatDate(m.created_at)}</p>
+            {canManage && (
+              <div className="mt-3 flex items-center justify-end gap-2 border-t border-[#2a2d35] pt-3">
+                <AdminMemberEditDialog member={m} callerRole={callerRole} communities={communities || []} />
+                <AdminMemberDeleteButton memberId={m.id} memberName={m.full_name || m.username || "User"} />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

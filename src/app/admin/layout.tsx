@@ -65,7 +65,7 @@ export default async function AdminLayout({
         />
         <CommunityAdminGuard />
         <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">
-          <div className="p-4 md:p-6 lg:p-8 bg-[#1e2128] min-h-full">
+          <div className="min-h-full bg-[#1e2128] p-0 md:p-6 lg:p-8">
             {children}
           </div>
         </main>

@@ -76,7 +76,7 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
 
   return (
     <div className="p-4 md:p-6">
-      <div className="mb-5 flex items-start justify-between gap-3">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.25em]" style={{ color: GOLD }}>Event</p>
           <h2 className="mt-1 text-2xl font-semibold text-white" style={serif}>Kegiatan {community.name}</h2>

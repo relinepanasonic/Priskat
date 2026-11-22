@@ -26,7 +26,7 @@ export default async function CommunityCenterPage() {
       .filter((c): c is { id: string; name: string; slug: string | null } => !!c);
     if (list.length === 1) redirect(`/admin/communities/${list[0].slug || list[0].id}/dashboard`);
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 p-4 md:p-0">
         <div>
           <h1 className="text-2xl font-bold text-white">Community Center</h1>
           <p className="mt-1 text-brand-muted">Pilih komunitas yang kamu kelola.</p>

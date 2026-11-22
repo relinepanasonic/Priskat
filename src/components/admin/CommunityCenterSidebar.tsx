@@ -41,6 +41,46 @@ export default function CommunityCenterSidebar({
   }
 
   return (
+    <>
+    {/* Phone: the community switcher and the pages as a row of tabs (the sidebar below is for tablets and computers) */}
+    <div className="sticky top-0 z-30 border-b border-[#333] bg-[#1a1d24] md:hidden">
+      <div className="flex items-center gap-2 px-3 pt-3">
+        <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" />
+        <select
+          value={current ? current.slug || current.id : ""}
+          onChange={(e) => e.target.value && router.push(`/admin/communities/${e.target.value}/dashboard`)}
+          aria-label="Pilih komunitas"
+          className="min-w-0 flex-1 truncate rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3 py-2.5 text-sm font-semibold text-white focus:outline-none"
+        >
+          <option value="" disabled>Pilih komunitas</option>
+          {communities.map((c) => <option key={c.id} value={c.slug || c.id}>{c.name}</option>)}
+        </select>
+        <button onClick={signOut} aria-label="Keluar" className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white"><LogOut className="h-5 w-5" /></button>
+      </div>
+      <nav className="flex gap-1.5 overflow-x-auto px-3 py-2.5" aria-label="Halaman Community Center">
+        {current && nav.map((t) => {
+          const on = pathname.startsWith(t.href);
+          return (
+            <Link key={t.href} href={t.href} aria-current={on ? "page" : undefined}
+              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold ${on ? "bg-brand-gold text-brand-dark" : "bg-white/5 text-gray-300"}`}>
+              <t.icon className="h-4 w-4" /> {t.name}
+            </Link>
+          );
+        })}
+        {current && (
+          <Link href={`/camp/${current.slug || current.id}`} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-gold/30 px-3.5 py-2 text-sm font-semibold text-brand-gold">
+            <ExternalLink className="h-4 w-4" /> Halaman komunitas
+          </Link>
+        )}
+        {canManageAll && (
+          <Link href="/admin/communities" className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white/5 px-3.5 py-2 text-sm font-semibold text-gray-300">
+            <Settings2 className="h-4 w-4" /> Kelola
+          </Link>
+        )}
+        {!current && communities.length > 0 && <span className="px-1 py-2 text-xs text-brand-muted">Pilih komunitas di atas.</span>}
+      </nav>
+    </div>
+
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-[#333] bg-[#1a1d24] md:flex">
       <div className="flex items-center gap-2.5 px-4 py-5">
         <Image src="/logo.png" alt="" width={36} height={36} className="rounded-lg" />
@@ -130,5 +170,6 @@ export default function CommunityCenterSidebar({
         </button>
       </div>
     </aside>
+    </>
   );
 }
