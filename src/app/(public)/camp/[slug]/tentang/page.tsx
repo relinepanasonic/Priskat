@@ -67,10 +67,10 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     : [{ label: "Anggota", value: members ?? 0, icon: Users }];
 
   return (
-    <div className="space-y-8 p-4 md:p-6">
+    <div className="space-y-5 p-4 md:space-y-8 md:p-6">
       {/* Hero */}
       <section
-        className="relative overflow-hidden rounded-3xl p-6 md:p-10"
+        className="relative overflow-hidden rounded-3xl p-5 md:p-10"
         style={{ background: "linear-gradient(160deg, #1f2a44 0%, #121417 70%)", border: `1px solid ${GOLD}33` }}
       >
         <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full blur-3xl" style={{ background: `${GOLD}22` }} />
@@ -85,30 +85,26 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             {c.motto && <p className="mt-2 italic text-[#EAE5D9]/80" style={serif}>&ldquo;{c.motto}&rdquo;</p>}
           </div>
         </div>
-        <p className="relative mt-6 max-w-3xl leading-relaxed text-[#EAE5D9]/90">{c.description || (everyone ? ABOUT_FALLBACK.description : "Belum ada deskripsi komunitas.")}</p>
+        <p className="relative mt-4 max-w-3xl whitespace-pre-line text-[15px] leading-[1.75] text-[#EAE5D9]/90 md:mt-6 md:text-base md:leading-relaxed">{c.description || (everyone ? ABOUT_FALLBACK.description : "Belum ada deskripsi komunitas.")}</p>
 
-        <div className="relative mt-5">
-          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} />
+        {/* One row of actions: join (when it applies) and share, the same height */}
+        <div className="relative mt-5 flex items-stretch gap-2.5">
+          {showJoin && (user ? (
+            <JoinCommunityButton
+              community={{ id: community.id, name: community.name ?? "", join_mode: (c.join_mode ?? "request") as "open" | "request" | "closed", join_fields: c.join_fields ?? null }}
+              status={joinStatus}
+              className="flex-1 justify-center !rounded-xl !px-4 !py-3 text-center !text-sm"
+            />
+          ) : (
+            <Link href="/login" className="flex flex-1 items-center justify-center rounded-xl bg-brand-gold px-4 py-3 text-center text-sm font-bold text-brand-dark">Masuk untuk bergabung</Link>
+          ))}
+          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} className={showJoin ? "" : "flex-1 justify-center"} />
         </div>
-
-        {showJoin && (
-          <div className="relative mt-4">
-            {user ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <JoinCommunityButton
-                  community={{ id: community.id, name: community.name ?? "", join_mode: (c.join_mode ?? "request") as "open" | "request" | "closed", join_fields: c.join_fields ?? null }}
-                  status={joinStatus}
-                  className="!px-6 !py-3 !text-sm"
-                />
-                <span className="text-xs text-brand-muted">{c.join_mode === "open" ? "Terbuka untuk semua." : "Permintaanmu akan ditinjau oleh admin komunitas."}</span>
-              </div>
-            ) : (
-              <Link href="/login" className="inline-block rounded-full bg-brand-gold px-6 py-3 text-sm font-bold text-brand-dark">Masuk untuk bergabung</Link>
-            )}
-          </div>
+        {showJoin && user && (
+          <p className="relative mt-2 text-[11px] text-brand-muted">{c.join_mode === "open" ? "Terbuka untuk semua." : "Permintaanmu akan ditinjau oleh admin komunitas."}</p>
         )}
 
-        <div className="relative mt-6 grid grid-cols-3 gap-3 max-w-md">
+        <div className={`relative mt-5 gap-3 md:mt-6 ${stats.length === 1 ? "inline-grid w-36" : "grid max-w-md grid-cols-3"}`}>
           {stats.map((s) => (
             <div key={s.label} className="rounded-2xl bg-white/5 p-3 text-center" style={{ border: `1px solid ${GOLD}22` }}>
               <s.icon className="mx-auto h-4 w-4" style={{ color: GOLD }} />
@@ -123,13 +119,13 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       {(c.vision || missions.length > 0) && (
         <section className="grid gap-4 md:grid-cols-2">
           {c.vision && (
-            <div className="rounded-3xl bg-[#1a1d24] p-6" style={{ border: `1px solid ${GOLD}22` }}>
+            <div className="rounded-3xl bg-[#1a1d24] p-5 md:p-6" style={{ border: `1px solid ${GOLD}22` }}>
               <h3 className="text-sm uppercase tracking-[0.2em]" style={{ color: GOLD }}>Visi</h3>
               <p className="mt-3 leading-relaxed text-[#EAE5D9]" style={serif}>{c.vision}</p>
             </div>
           )}
           {missions.length > 0 && (
-            <div className="rounded-3xl bg-[#1a1d24] p-6" style={{ border: `1px solid ${GOLD}22` }}>
+            <div className="rounded-3xl bg-[#1a1d24] p-5 md:p-6" style={{ border: `1px solid ${GOLD}22` }}>
               <h3 className="text-sm uppercase tracking-[0.2em]" style={{ color: GOLD }}>Misi</h3>
               <ol className="mt-3 space-y-2">
                 {missions.map((m, i) => (

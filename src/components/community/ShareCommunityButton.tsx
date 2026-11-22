@@ -72,7 +72,7 @@ export default function ShareCommunityButton({ name, slug, className = "" }: { n
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className={`inline-flex items-center gap-2 rounded-full border border-brand-gold/50 px-4 py-2 text-xs font-bold text-brand-gold transition-colors hover:bg-brand-gold/10 ${className}`}>
+      <button onClick={() => setOpen(true)} className={`inline-flex items-center gap-2 rounded-xl border border-brand-gold/50 px-4 py-3 text-sm font-bold text-brand-gold transition-colors hover:bg-brand-gold/10 ${className}`}>
         <Share2 className="h-4 w-4" /> Bagikan
       </button>
 

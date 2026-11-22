@@ -171,9 +171,9 @@ export default function CommunitySlugLayout({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-8 space-y-4 flex flex-col font-sans">
+    <div className="flex h-full w-full flex-col space-y-3 pb-28 pt-3 font-sans md:space-y-4 md:p-8 md:pb-8">
       {/* Back button + Community name */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-4 md:px-0">
         <Link
           href="/camp"
           className="flex items-center gap-1 text-brand-muted hover:text-white text-sm transition-colors"
@@ -195,7 +195,7 @@ export default function CommunitySlugLayout({
       </div>
 
       {/* Tabs Navigation */}
-      <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
         <nav data-community-tabs className="flex space-x-2 min-w-max" aria-label="Tabs">
           {shownTabs.map((tab) => {
             const isActive = pathname.startsWith(tab.href);
@@ -227,7 +227,7 @@ export default function CommunitySlugLayout({
       </div>
 
       {/* Main Content Area */}
-      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-x-hidden overflow-y-auto min-h-[500px] flex-1 flex flex-col relative">
+      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto md:min-h-[500px] md:rounded-2xl md:border md:border-[#333] md:bg-[#1a1d24] md:shadow-xl">
         {children}
       </div>
     </div>
