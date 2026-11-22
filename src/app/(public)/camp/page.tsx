@@ -16,7 +16,8 @@ export default async function CommunityListingPage() {
     .from("communities")
     .select("*")
     .order("created_at", { ascending: true });
-  const communities = sortCommunities(communityRows);
+  // Hidden communities (is_hidden, from the 107 SQL) are not listed; they are kept, not deleted
+  const communities = sortCommunities((communityRows ?? []).filter((c: any) => c.is_hidden !== true));
   // Everyone in Ruang Iman is a Catholic Indonesia member; other communities count their own members
   const memberCounts = await MemberCountSafe(supabase, communities);
 

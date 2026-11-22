@@ -64,7 +64,9 @@ export default function RegisterPage() {
   useEffect(() => {
     async function fetchData() {
       // Only public communities can be joined at sign-up; the Ruang Iman team community is assigned by admins
-      const { data: cData } = await supabase.from("communities").select("id, name").eq("is_public", true).order("name");
+      const { data: cRows } = await supabase.from("communities").select("*").eq("is_public", true).order("name");
+      // hidden communities (107 SQL) are not offered
+      const cData = (cRows as any[] | null)?.filter((c) => c.is_hidden !== true).map((c) => ({ id: c.id as string, name: c.name as string }));
       if (cData) {
         setCommunities(cData);
         
