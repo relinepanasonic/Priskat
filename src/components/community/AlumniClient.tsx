@@ -76,7 +76,31 @@ export default function AlumniClient({ rows, communityName }: { rows: Alumnus[];
 
       <p className="text-xs text-brand-muted">{shown.length} dari {inProgram.length}</p>
 
-      <div className="overflow-x-auto rounded-2xl border border-[#2a2d35]">
+      {/* Phone: cards, no sideways scrolling */}
+      <div className="space-y-2.5 md:hidden">
+        {shown.length === 0 && <p className="rounded-2xl border border-[#2a2d35] px-3 py-10 text-center text-sm text-brand-muted">Tidak ada data.</p>}
+        {shown.map((r) => (
+          <div key={r.id} className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-3.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-semibold text-white">{r.full_name}{r.nickname ? <span className="font-normal text-brand-muted"> ({r.nickname})</span> : null}</p>
+                <p className="text-xs text-brand-muted">{[r.angkatan ? `${program === "PT" ? "P" : "Angkatan"} ${r.angkatan}` : null, r.city].filter(Boolean).join(" · ")}</p>
+              </div>
+              {r.claimed_user_id && <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">di Ruang Iman</span>}
+            </div>
+            {(r.paroki ?? r.paroki_group) && <p className="mt-1.5 text-xs text-brand-light">{r.paroki ?? r.paroki_group}</p>}
+            {(r.phone || r.phone2) && (
+              <div className="mt-2.5 border-t border-[#2a2d35] pt-2.5">
+                {r.phone
+                  ? <a href={wa(r.phone)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-gold"><MessageCircle className="h-4 w-4" /> {r.phone}</a>
+                  : <span className="text-sm text-brand-muted">{r.phone2}</span>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-[#2a2d35] md:block">
         <table className="w-full min-w-[760px]">
           <thead className="bg-[#14171c]">
             <tr>

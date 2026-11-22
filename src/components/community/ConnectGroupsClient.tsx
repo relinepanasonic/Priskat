@@ -136,7 +136,37 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
         {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
         {view === "anggota" ? (
-          <div className="overflow-x-auto rounded-xl border border-[#2a2d35]">
+          <>
+          <div className="space-y-2.5 md:hidden">
+            {mine.length === 0 && <p className="rounded-xl border border-[#2a2d35] px-3 py-8 text-center text-sm text-brand-muted">Belum ada anggota.</p>}
+            {mine.map((m) => {
+              const c = roleColor(m.role);
+              return (
+                <div key={m.id} className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-3.5" style={c ? { borderColor: `${c}66`, background: `${c}12` } : undefined}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white">{m.name}</p>
+                      {m.baptism_name && <p className="text-xs text-brand-muted">{m.baptism_name}</p>}
+                    </div>
+                    {c && <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ background: `${c}2e`, color: c }}>{m.role === "pic" ? "PIC" : "Pengurus"}</span>}
+                  </div>
+                  <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                    <dt className="text-brand-muted">Priskat ke</dt><dd className="text-brand-light">{m.priskat_ke || "-"}</dd>
+                    <dt className="text-brand-muted">No HP</dt><dd className="text-brand-light">{m.phone || "-"}</dd>
+                    <dt className="text-brand-muted">Alamat</dt><dd className="text-brand-light">{m.address || "-"}</dd>
+                    <dt className="text-brand-muted">Join Since</dt><dd className="text-brand-light">{fmtDate(m.joined_at)}</dd>
+                  </dl>
+                  {(isAdmin || m.role === "anggota") && (
+                    <div className="mt-3 flex justify-end gap-2 border-t border-[#2a2d35] pt-2.5">
+                      <button onClick={() => setModal({ kind: "member", member: m })} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-1.5 text-xs font-semibold text-brand-light"><Pencil className="h-3.5 w-3.5" /> Ubah</button>
+                      <button onClick={() => removeRow("connect_group_members", m.id, m.name)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-1.5 text-xs font-semibold text-red-300"><Trash2 className="h-3.5 w-3.5" /> Hapus</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto rounded-xl border border-[#2a2d35] md:block">
             <table className="w-full min-w-[760px]">
               <thead className="bg-[#14171c]"><tr>
                 <th className={th}>Nama</th><th className={th}>Nama Baptis</th><th className={th}>Priskat ke</th><th className={th}>No HP</th><th className={th}>Alamat</th><th className={th}>Join Since</th><th className={th} />
@@ -170,8 +200,27 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
               </tbody>
             </table>
           </div>
+          </>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-[#2a2d35]">
+          <>
+          <div className="space-y-2.5 md:hidden">
+            {myLogs.length === 0 && <p className="rounded-xl border border-[#2a2d35] px-3 py-8 text-center text-sm text-brand-muted">Belum ada log event.</p>}
+            {myLogs.map((l) => (
+              <div key={l.id} className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-white">{l.title}</p>
+                  <span className="shrink-0 rounded-full bg-brand-gold/15 px-2 py-0.5 text-[10px] font-bold text-brand-gold">{l.attendees} hadir</span>
+                </div>
+                <p className="mt-0.5 text-xs text-brand-muted">{open.name} · {fmtDate(l.event_date)}</p>
+                {l.memo && <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-brand-light">{l.memo}</p>}
+                <div className="mt-3 flex justify-end gap-2 border-t border-[#2a2d35] pt-2.5">
+                  <button onClick={() => setModal({ kind: "log", log: l })} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-1.5 text-xs font-semibold text-brand-light"><Pencil className="h-3.5 w-3.5" /> Ubah</button>
+                  <button onClick={() => removeRow("connect_group_logs", l.id, "log ini")} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-1.5 text-xs font-semibold text-red-300"><Trash2 className="h-3.5 w-3.5" /> Hapus</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto rounded-xl border border-[#2a2d35] md:block">
             <table className="w-full min-w-[640px]">
               <thead className="bg-[#14171c]"><tr>
                 <th className={th}>Nama CG</th><th className={th}>Date</th><th className={th}>Qtt Datang</th><th className={th}>Event Title</th><th className={th}>Memo CG</th><th className={th} />
@@ -194,6 +243,7 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {modal?.kind === "member" && <MemberForm cg={open} communityId={communityId} isAdmin={isAdmin} member={modal.member} onClose={() => setModal(null)} onSaved={() => { setModal(null); void load(); }} />}
@@ -212,7 +262,7 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
           <p className="text-sm text-brand-muted">{communityName} · {groups.length} CG</p>
         </div>
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <button onClick={() => setModal({ kind: "colors" })} className="flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/5"><Palette className="h-3.5 w-3.5" /> Warna PIC dan Pengurus</button>
             <button onClick={() => setModal({ kind: "cg" })} className="flex items-center gap-1.5 rounded-lg bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark active:scale-95"><Plus className="h-4 w-4" /> Tambah CG</button>
           </div>
@@ -221,7 +271,22 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
 
       {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
-      <div className="overflow-x-auto rounded-xl border border-[#2a2d35]">
+      <div className="space-y-2.5 md:hidden">
+        {groups.length === 0 && (
+          <div className="rounded-xl border border-[#2a2d35] px-3 py-10 text-center text-sm text-brand-muted"><Users className="mx-auto mb-2 h-6 w-6" />{isAdmin ? "Belum ada Connect Group. Tekan Tambah CG." : "Kamu belum menjadi PIC atau pengurus Connect Group."}</div>
+        )}
+        {groups.map((g, i) => (
+          <button key={g.id} onClick={() => { setOpenId(g.id); setView("anggota"); setError(null); }} className="block w-full rounded-2xl border border-[#2a2d35] bg-[#14171c] p-3.5 text-left transition-colors active:bg-white/5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-semibold text-white"><span className="mr-1.5 text-brand-muted">{i + 1}.</span>{g.name}</p>
+              <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-brand-light">{members.filter((m) => m.cg_id === g.id).length} anggota</span>
+            </div>
+            <p className="mt-1 text-xs text-brand-muted">PIC: {picNames(g.id) || "-"}</p>
+            <p className="mt-0.5 text-xs text-brand-muted">{g.event_day ? DAYS[g.event_day] : "-"}{hhmm(g.event_time) ? `, ${hhmm(g.event_time)}` : ""}{g.address ? ` · ${g.address}` : ""}</p>
+          </button>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto rounded-xl border border-[#2a2d35] md:block">
         <table className="w-full min-w-[720px]">
           <thead className="bg-[#14171c]"><tr>
             <th className={th}>No</th><th className={th}>CG Name</th><th className={th}>PIC</th><th className={th}>Qtt Anggota</th><th className={th}>Alamat</th><th className={th}>Day Event</th><th className={th}>Time Event</th>
