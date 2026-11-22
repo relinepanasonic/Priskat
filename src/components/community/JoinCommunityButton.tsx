@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Clock, Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -77,8 +78,8 @@ export default function JoinCommunityButton({
         {busy ? "…" : needsForm ? "Ajukan bergabung" : "Gabung"}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 md:items-center" onClick={() => setOpen(false)}>
+      {open && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/70 md:items-center" onClick={() => setOpen(false)}>
           <form
             onSubmit={submit}
             onClick={(e) => e.stopPropagation()}
@@ -124,7 +125,8 @@ export default function JoinCommunityButton({
               {busy ? "Mengirim…" : "Kirim permintaan"}
             </button>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

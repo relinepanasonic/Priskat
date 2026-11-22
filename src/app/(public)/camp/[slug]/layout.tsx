@@ -47,6 +47,8 @@ export default function CommunitySlugLayout({
   const [isCFM, setIsCFM] = useState(isCatholicFamilyMinistry(null, slug));
   const [canPromote, setCanPromote] = useState(false);
   const [leadsCg, setLeadsCg] = useState(false);
+  // null = not known yet. Not a member of a community (other than Catholic Indonesia): only "Tentang" is open
+  const [isMember, setIsMember] = useState<boolean | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -66,14 +68,20 @@ export default function CommunitySlugLayout({
         data: { user },
       } = await supabase.auth.getUser();
 
+      if (!user && alive) setIsMember(false);
       if (user) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, community_id")
           .eq("id", user.id)
           .maybeSingle();
         const role = String(prof?.role ?? "").toLowerCase();
         let ok = ["founder", "superadmin", "admin"].includes(role);
+        let member = ok || (!!community && (prof as { community_id?: string | null } | null)?.community_id === community.id);
+        if (!member && community) {
+          const { data: ms } = await supabase.from("community_memberships" as any).select("community_id").eq("user_id", user.id).eq("community_id", community.id).maybeSingle();
+          member = !!ms;
+        }
         if (!ok && community) {
           const { data: ca } = await supabase
             .from("community_admins")
@@ -82,8 +90,9 @@ export default function CommunitySlugLayout({
             .eq("community_id", community.id)
             .maybeSingle();
           ok = !!ca;
+          if (ok) member = true;
         }
-        if (alive) setCanPromote(ok);
+        if (alive) { setCanPromote(ok); setIsMember(member); }
         // PIC or pengurus of a Connect Group in this community
         if (community) {
           const { data: lead } = await supabase
@@ -128,6 +137,12 @@ export default function CommunitySlugLayout({
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
     { name: "Struktur", href: `/camp/${slug}/org-structure`, icon: Network },
   ];
+
+  const browseOnly = !isCI && isMember === false;
+  const shownTabs = browseOnly ? tabs.filter((t) => t.name === "Tentang") : tabs;
+  useEffect(() => {
+    if (browseOnly && !pathname.startsWith(`/camp/${slug}/tentang`)) router.replace(`/camp/${slug}/tentang`);
+  }, [browseOnly, pathname, slug, router]);
 
   // keep the active tab visible in the scrolling tab bar
   useEffect(() => {
@@ -184,7 +199,7 @@ export default function CommunitySlugLayout({
       {/* Tabs Navigation */}
       <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
         <nav data-community-tabs className="flex space-x-2 min-w-max" aria-label="Tabs">
-          {tabs.map((tab) => {
+          {shownTabs.map((tab) => {
             const isActive = pathname.startsWith(tab.href);
             const Icon = tab.icon;
             return (
@@ -212,6 +227,13 @@ export default function CommunitySlugLayout({
           })}
         </nav>
       </div>
+
+      {browseOnly && (
+        <p className="rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 py-3 text-xs leading-relaxed text-brand-light">
+          Kamu sedang melihat halaman umum komunitas ini. Camp, event, dan halaman lainnya terbuka untuk anggota.{" "}
+          <Link href="/camp" className="font-semibold text-brand-gold underline underline-offset-2">Kembali ke daftar komunitas untuk bergabung</Link>.
+        </p>
+      )}
 
       {/* Main Content Area */}
       <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-x-hidden overflow-y-auto min-h-[500px] flex-1 flex flex-col relative">

@@ -67,7 +67,8 @@ export default async function CommunityListingPage() {
       {/* Phone: 2 cards across, ~2.5 rows per screen */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
         {(communities || []).map((c: any) => {
-          const hasAccess = c.is_public || isSuperAdmin || myCommunityId === c.id || memberIds.has(c.id) || myAdminCommunityIds.includes(c.id);
+          // Everyone can browse a community's "Tentang" page; the rest of it is for members (see the community layout)
+          const hasAccess = true;
           const isMember = isFounder || myCommunityId === c.id || memberIds.has(c.id) || isCatholicIndonesia(c.name, c.slug);
           const pending = pendingIds.has(c.id);
           // join_mode exists once the 086 SQL has been run
@@ -132,7 +133,7 @@ export default async function CommunityListingPage() {
                   />
                 ) : hasAccess ? (
                   <Link href={`/camp/${c.slug || c.id}`} className="flex items-center gap-1 text-xs font-bold text-brand-gold md:text-sm">
-                    Enter <ArrowRight className="h-3.5 w-3.5" />
+                    {isMember ? "Enter" : "Lihat"} <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 ) : (
                   <span className="flex items-center gap-1 text-xs font-bold text-gray-500 md:text-sm"><Lock className="h-3 w-3" /> Private</span>
