@@ -26,7 +26,8 @@ const schema = z.object({
   bio: z.string().max(300).optional(),
   skills: z.string().optional(),
   interests: z.string().optional(),
-  gender: z.enum(["male", "female"]).nullable().optional(),
+  // Required: the Beranda sends people back here until this is chosen
+  gender: z.enum(["male", "female"], { errorMap: () => ({ message: "Pilih jenis kelamin dulu, supaya kamu bisa lanjut ke Beranda." }) }),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -61,7 +62,7 @@ export default function ProfileEditForm({
       bio: profile.bio ?? "",
       skills: profile.skills?.join(", ") ?? "",
       interests: profile.interests?.join(", ") ?? "",
-      gender: profile.gender ?? null,
+      gender: (profile.gender ?? "") as "male" | "female",
     },
   });
 
@@ -145,7 +146,15 @@ export default function ProfileEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, () => {
+      // Bring the first problem into view (a missing field used to fail silently far down the form)
+      window.setTimeout(() => document.querySelector("[data-field-error]")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    })} className="space-y-6">
+      {!profile.gender && (
+        <div className="rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3 text-sm leading-relaxed text-brand-light">
+          Selamat datang! Lengkapi <b>nama</b> dan <b>jenis kelamin</b>, lalu tekan <b>Save</b> di bawah untuk masuk ke Beranda.
+        </div>
+      )}
       {welcome && <FounderWelcome name={profile.full_name} onContinue={() => router.push("/welcome")} />}
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -189,7 +198,7 @@ export default function ProfileEditForm({
             <div>
         <label className="mb-1 block text-sm font-medium text-gray-500">Full Name *</label>
         <input {...register("full_name")} className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none" />
-        {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>}
+        {errors.full_name && <p data-field-error className="mt-1 text-xs font-semibold text-red-400">{errors.full_name.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -254,13 +263,13 @@ export default function ProfileEditForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Gender</label>
+        <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Jenis kelamin (Gender) <span className="text-red-400">*</span></label>
         <select {...register("gender")} className="w-full input-3d text-sm">
-          <option value="">Select Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
+          <option value="">Pilih…</option>
+          <option value="male">Laki-laki (Male)</option>
+          <option value="female">Perempuan (Female)</option>
         </select>
-        {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender.message}</p>}
+        {errors.gender && <p data-field-error className="mt-1 text-xs font-semibold text-red-400">{errors.gender.message}</p>}
       </div>
 
       <div>
