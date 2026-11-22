@@ -72,10 +72,30 @@ function pickVoice(lang: string, chosen: string | null) {
  * (also "ALLAH", "Allahku", "Allahmu"). "TUHAN" in capitals is lowered so no voice spells it out.
  */
 export function forSpeech(text: string, lang: string) {
-  if (!lang.startsWith("id")) return text;
-  return text
+  const id = lang.startsWith("id");
+  const en = lang.startsWith("en");
+  if (!id && !en) return text;
+
+  // Bible references: "Roma 8:38-39" is chapter 8, verses 38 to 39. Voices read it as a clock time and the dash as "minus".
+  const words = id
+    ? { c: "pasal", v: "ayat", to: "sampai" }
+    : { c: "chapter", v: "verse", to: "to" };
+  const ref = (c: string, v: string, end?: string) => `${words.c} ${c}, ${words.v} ${v}${end ? ` ${words.to} ${end}` : ""}`;
+  let t = text
+    // a clock time stays a time: "Pukul 17:30" -> "Pukul 17.30"
+    .replace(/\b(pukul|jam|at)(\s+)(\d{1,2}):(\d{2})\b/gi, "$1$2$3.$4")
+    // with a book name in front: "Roma 8:38-39", "1 Korintus 15:20-26a.28"
+    .replace(/(\p{L}{3,}\.?)(\s+)(\d{1,3}):(\d{1,3})[a-z]?(?:\s*[-–]\s*(\d{1,3})[a-z]?)?/giu, (m, word: string, sp: string, c: string, v: string, end?: string) =>
+      /^(pukul|jam|at|time)$/i.test(word) ? m : `${word}${sp}${ref(c, v, end)}`)
+    // a chapter:verse on its own, e.g. the second part of "1:1-4; 2:1-5"
+    .replace(/\b(\d{1,3}):(\d{1,3})[a-z]?(?:\s*[-–]\s*(\d{1,3})[a-z]?)?/g, (_m, c: string, v: string, end?: string) => ref(c, v, end))
+    // the other ranges of a reading ("19-20, 30-31") and verse lists
+    .replace(/\b(\d{1,3})\s*[-–]\s*(\d{1,3})\b/g, `$1 ${words.to} $2`);
+  if (!id) return t;
+  t = t
     .replace(/\ballah(ku|mu|nya)?\b/gi, (_m, suffix?: string) => (suffix ? `A lah${suffix}` : "A lah"))
     .replace(/\bTUHAN(?=ku\b|mu\b|nya\b|\b)/g, "Tuhan");
+  return t;
 }
 
 async function speakDevice(raw: string, lang: string, rate: number, cancelled: () => boolean) {
