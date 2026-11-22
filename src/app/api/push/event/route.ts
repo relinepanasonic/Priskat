@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const db = createAdminClient();
   let target: string | null = null;
   let key = "";
-  let msg: { title: string; body: string; url: string } | null = null;
+  let msg: { title: string; body: string; url: string; channel?: "chat" } | null = null;
 
   if (body.type === "intention_prayed") {
     key = "intensi";
@@ -51,6 +51,24 @@ export async function POST(request: Request) {
     msg = r.status === "approved"
       ? { title: `Selamat datang di ${name}`, body: "Permintaan bergabungmu disetujui.", url: "/camp" }
       : { title: "Permintaan bergabung", body: `Permintaanmu ke ${name} belum disetujui.`, url: "/camp" };
+  } else if (body.type === "friend_request" || body.type === "friend_accepted") {
+    key = "teman";
+    const { data: fr } = await db.from("friendships" as any).select("requester_id, receiver_id, status, created_at").eq("id", id).maybeSingle();
+    const f = fr as { requester_id: string; receiver_id: string; status: string; created_at: string } | null;
+    const accepted = body.type === "friend_accepted";
+    // the caller must really be the one who sent the request / accepted it, and only once
+    const okCaller = !!f && (accepted ? f.receiver_id === user.id && f.status === "accepted" : f.requester_id === user.id && f.status === "pending" && Date.now() - new Date(f.created_at).getTime() < 10 * 60_000);
+    if (!f || !okCaller) return NextResponse.json({ ok: true, skipped: "not a fresh friend action" });
+    const seen = (globalThis as any).__friendPushSeen ?? ((globalThis as any).__friendPushSeen = new Map<string, number>());
+    const dedupe = `${body.type}:${id}`;
+    if ((seen.get(dedupe) ?? 0) > Date.now() - 3600_000) return NextResponse.json({ ok: true, skipped: "already sent" });
+    seen.set(dedupe, Date.now());
+    target = accepted ? f.requester_id : f.receiver_id;
+    const { data: who } = await db.from("profiles").select("full_name, nama_panggilan").eq("id", user.id).maybeSingle();
+    const name = (who as any)?.nama_panggilan || (who as any)?.full_name || "Seseorang";
+    msg = accepted
+      ? { title: "Ajakan pertemananmu diterima 🤝", body: `${name} sekarang berteman denganmu.`, url: "/community/friends", channel: "chat" }
+      : { title: "Ajakan pertemanan 🙋", body: `${name} mengajakmu berteman di Ruang Iman.`, url: "/community/friends", channel: "chat" };
   } else {
     return NextResponse.json({ error: "unknown type" }, { status: 400 });
   }

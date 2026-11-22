@@ -48,10 +48,14 @@ export default function WelcomeClient({
 
   async function addFriend(p: Person) {
     setSent((s) => new Set(s).add(p.id));
-    const { error } = await createClient()
+    const { data: created, error } = await createClient()
       .from("friendships")
-      .insert({ requester_id: me.id, receiver_id: p.id, status: "pending" } as any);
-    if (error) setSent((s) => { const n = new Set(s); n.delete(p.id); return n; });
+      .insert({ requester_id: me.id, receiver_id: p.id, status: "pending" } as any)
+      .select("id")
+      .maybeSingle();
+    if (error) { setSent((s) => { const n = new Set(s); n.delete(p.id); return n; }); return; }
+    const newId = (created as { id?: string } | null)?.id;
+    if (newId) void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "friend_request", id: newId }) }).catch(() => {});
   }
 
   async function finish() {

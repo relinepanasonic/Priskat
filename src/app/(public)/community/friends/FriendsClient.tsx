@@ -65,9 +65,13 @@ function FriendCard({
 
   const sendRequest = () =>
     startTransition(async () => {
-      await supabase
+      const { data: created } = await supabase
         .from("friendships")
-        .insert({ requester_id: userId, receiver_id: user.id });
+        .insert({ requester_id: userId, receiver_id: user.id })
+        .select("id")
+        .maybeSingle();
+      // tell the other person (a notification that works like a chat message)
+      if (created?.id) void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "friend_request", id: created.id }) }).catch(() => {});
       onAction?.();
       router.refresh();
     });
@@ -225,6 +229,7 @@ export default function FriendsClient({
       .from("friendships")
       .update({ status: "accepted" })
       .eq("id", friendshipId);
+    void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "friend_accepted", id: friendshipId }) }).catch(() => {});
     setLocalIncoming((prev) =>
       prev.filter((p) => p.friendshipId !== friendshipId)
     );

@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The chat tone is only used by name (see MainActivity), so resource shrinking must not remove it -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@raw/ruang_chime" />

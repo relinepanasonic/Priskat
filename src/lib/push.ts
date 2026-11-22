@@ -64,7 +64,8 @@ async function accessToken(sa: ServiceAccount) {
   return cached.token;
 }
 
-export type PushMessage = { title: string; body: string; url?: string };
+/** channel: "chat" = the Ruang Iman chime (chat and friends); default "messages". Older app builds without "chat" fall back to Android's default channel. */
+export type PushMessage = { title: string; body: string; url?: string; channel?: "messages" | "chat" };
 
 /** Sends to each token; returns the tokens FCM says are no longer valid. */
 export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ sent: number; invalid: string[]; errors: string[]; configured: boolean }> {
@@ -85,7 +86,7 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
           token,
           notification: { title: msg.title, body: msg.body },
           data: { url: msg.url ?? "/" },
-          android: { priority: "high", notification: { channel_id: "messages", color: "#D6B072" } },
+          android: { priority: "high", notification: { channel_id: msg.channel ?? "messages", color: "#D6B072" } },
         },
       }),
     });

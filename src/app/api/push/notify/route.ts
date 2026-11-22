@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   const { data: rows } = await db.from("push_tokens" as any).select("token").in("user_id", recipients);
   const tokens = ((rows as any[]) ?? []).map((r) => r.token);
   const body = record.content.length > 140 ? `${record.content.slice(0, 137)}…` : record.content;
-  const { sent, invalid } = await sendPush(tokens, { title, body, url });
+  const { sent, invalid } = await sendPush(tokens, { title, body, url, channel: "chat" });
 
   if (invalid.length) await db.from("push_tokens" as any).delete().in("token", invalid);
   return NextResponse.json({ ok: true, sent });

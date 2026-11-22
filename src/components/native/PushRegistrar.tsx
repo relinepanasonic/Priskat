@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
+import { playMessageChime } from "@/lib/sounds";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
@@ -55,6 +56,7 @@ export default function PushRegistrar({ userId }: { userId: string }) {
         PushNotifications.addListener("registrationError", (e) => console.warn("Push registration failed", e)),
         // Android does not show a notification while the app is open: show our own banner instead
         PushNotifications.addListener("pushNotificationReceived", (n) => {
+          try { playMessageChime(); } catch { /* ignore */ }
           setBanner({ title: n.title ?? "Ruang Iman", body: n.body ?? "", url: (n.data as { url?: string } | undefined)?.url });
         }),
         PushNotifications.addListener("pushNotificationActionPerformed", ({ notification }) => {
