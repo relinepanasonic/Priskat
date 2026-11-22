@@ -5,13 +5,14 @@ import { Flame, Pause, Play, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { localDay } from "@/lib/activity";
 import { useReadAloud } from "@/lib/readAloud";
+import { formatWeekdayDate } from "@/lib/utils";
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 const WAIT = 15;
 
 const fmtDay = (day: string) => {
   const [y, m, d] = day.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
+  return formatWeekdayDate(new Date(Date.UTC(y, m - 1, d, 5)));
 };
 
 type Prayer = { id: string; title: string; body: string };

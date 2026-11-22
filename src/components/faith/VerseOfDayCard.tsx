@@ -6,6 +6,7 @@ import { BookOpen, Pause, Play, Share2, CalendarDays } from "lucide-react";
 import { BACKGROUNDS } from "./DailyVerseCard";
 import { useReadAloud } from "@/lib/readAloud";
 import { spokenReference } from "@/lib/bibleRef";
+import { formatWeekdayDate } from "@/lib/utils";
 
 type Votd = { book: number; chapter: number; from: number; to: number; reference: string; text: string; day: number };
 
@@ -34,7 +35,7 @@ export default function VerseOfDayCard({ isId }: { isId: boolean }) {
   useEffect(() => { tts.stop(); }, [verse, tts.stop]);
 
   const bg = BACKGROUNDS[(verse?.day ?? 0) % BACKGROUNDS.length];
-  const today = new Date().toLocaleDateString(isId ? "id-ID" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+  const today = formatWeekdayDate(new Date());
 
   const share = async () => {
     if (!verse) return;

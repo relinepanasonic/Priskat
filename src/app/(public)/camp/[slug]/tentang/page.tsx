@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, HandHeart, Church, Users, MapPin, BadgeCheck, CalendarDays } from "lucide-react";
 import { countCommunityMembers } from "@/lib/memberCounts";
+import { formatDate } from "@/lib/utils";
 import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
 import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import JoinCommunityButton, { type JoinStatus } from "@/components/community/JoinCommunityButton";
@@ -28,6 +29,15 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   ]);
 
   const c = (info ?? {}) as Record<string, any>;
+
+  // Promotion banners: upcoming events with a poster, the nearest to today first
+  const todayJ = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+  const { data: promoRows } = everyone
+    ? { data: [] as any[] }
+    : await supabase.from("events").select("id, title, event_date, banner_image_url")
+        .eq("community_id", community.id).eq("status", "published").not("banner_image_url", "is", null)
+        .gte("event_date", todayJ).order("event_date", { ascending: true }).limit(10);
+  const promos = ((promoRows as { id: string; title: string; event_date: string | null; banner_image_url: string | null }[]) ?? []);
 
   // Everyone can read this page, private or not. People who are not members get the join button here.
   let joinStatus: JoinStatus = everyone || canEdit ? "member" : "none";
@@ -156,20 +166,23 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             <p className="text-xs text-brand-muted">{l.text}</p>
           </Link>
         ))}
-      </section> : (
-        <section className="grid gap-3 sm:grid-cols-2">
-          {[
-            { href: `/camp/${slug}/crew`, title: "Event", text: "Camp dan kegiatan komunitas", icon: CalendarDays },
-            { href: `/camp/${slug}/org-structure`, title: "Struktur Organisasi", text: "Pengurus dan penanggung jawab", icon: Users },
-          ].map((l) => (
-            <Link key={l.title} href={l.href} className="group rounded-2xl bg-[#1a1d24] p-4 transition-colors hover:bg-[#20242c]" style={{ border: `1px solid ${GOLD}22` }}>
-              <l.icon className="h-5 w-5" style={{ color: GOLD }} />
-              <div className="mt-2 font-semibold text-white group-hover:text-[#E8C98B]">{l.title}</div>
-              <p className="text-xs text-brand-muted">{l.text}</p>
-            </Link>
-          ))}
+      </section> : promos.length > 0 ? (
+        <section>
+          <h3 className="mb-3 text-sm uppercase tracking-[0.2em]" style={{ color: GOLD }}>Promosi</h3>
+          <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
+            {promos.map((e) => (
+              <Link key={e.id} href={`/acara/${e.id}`} className="group relative aspect-[4/5] w-44 shrink-0 snap-start overflow-hidden rounded-2xl bg-[#1a1d24] sm:w-52" style={{ border: `1px solid ${GOLD}33` }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={e.banner_image_url as string} alt={e.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3 pt-10">
+                  <p className="line-clamp-2 text-sm font-semibold text-white">{e.title}</p>
+                  {e.event_date && <p className="mt-0.5 text-[11px] font-semibold" style={{ color: GOLD }}>{formatDate(e.event_date)}</p>}
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

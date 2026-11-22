@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Gift, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { badgeByKey, frameByKey } from "@/lib/gameCatalog";
 import { localDay } from "@/lib/activity";
+import { formatDate } from "@/lib/utils";
 
 export type CampaignView = {
   id: string; slug: string; title: string; description: string | null; emoji: string;
@@ -18,7 +19,7 @@ export type CampaignView = {
 };
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
-const fmt = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "long" });
+const fmt = (d: string) => formatDate(d);
 const today = () => localDay();
 
 export default function CampaignsClient({ campaigns }: { campaigns: CampaignView[] }) {

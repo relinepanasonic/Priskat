@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays, MapPin, Plus, ExternalLink } from "lucide-react";
 import { getCommunityPageContext } from "@/lib/ciServer";
+import { formatWeekdayDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Event" };
@@ -21,7 +22,7 @@ type EventRow = {
 };
 
 const fmt = (d: string | null) =>
-  d ? new Date(d).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }) : "";
+  d ? formatWeekdayDate(d) : "";
 
 /** Events of a community (every community except Catholic Family Ministry, which runs camps). */
 export default async function CommunityEventsPage({ params }: { params: Promise<{ slug: string }> }) {

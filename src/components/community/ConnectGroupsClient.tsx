@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, Palette, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { formatDate } from "@/lib/utils";
 
 const DAYS = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 const PRESETS = ["#D6B072", "#38BDF8", "#34D399", "#F472B6", "#A78BFA", "#FB923C", "#F87171", "#FACC15"];
@@ -17,7 +18,7 @@ const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 t
 const th = "px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-brand-muted whitespace-nowrap";
 const td = "px-3 py-3 text-sm text-brand-light";
 const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
-const fmtDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+const fmtDate = (d: string) => formatDate(d);
 const db = () => createClient() as any;
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {

@@ -133,9 +133,7 @@ export default function CommunitySlugLayout({
       ? { name: "Camp", href: `/camp/${slug}/crew`, icon: Tent }
       : { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
     ...(canPromote || leadsCg ? [{ name: "Connect Group", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
-    { name: "Promotion", href: `/camp/${slug}/promotion`, icon: Megaphone },
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
-    { name: "Struktur", href: `/camp/${slug}/org-structure`, icon: Network },
   ];
 
   const browseOnly = !isCI && isMember === false;

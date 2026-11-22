@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { ShieldCheck, ShieldAlert, ExternalLink, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { formatDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Security Log" };
@@ -61,7 +62,7 @@ export default async function SecurityLogPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-white">{r.title}</p>
                 <p className="text-xs text-brand-muted">
-                  {new Date(r.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" })}
+                  {formatDateTime(r.created_at)}
                   {r.commit_range ? ` · ${r.commit_range}` : ""} · {r.findings?.length ?? 0} temuan
                 </p>
               </div>

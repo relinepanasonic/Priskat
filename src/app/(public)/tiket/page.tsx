@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ChevronRight, Ticket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABEL, type RegStatus } from "@/lib/eventReg";
+import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tiket saya" };
@@ -30,7 +31,7 @@ export default async function MyTicketsPage() {
         <Link key={r.id} href={`/acara/${r.event!.id}`} className="flex items-center gap-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4 hover:border-brand-gold/40">
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-white">{r.event!.title}</p>
-            <p className="text-xs text-brand-muted">{new Date(r.event!.event_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" })}</p>
+            <p className="text-xs text-brand-muted">{formatDate(r.event!.event_date)}</p>
             <p className={`mt-1 text-xs font-semibold ${r.status === "approved" ? "text-emerald-300" : r.status === "rejected" ? "text-red-300" : "text-amber-300"}`}>
               {r.checked_in_at ? "Sudah hadir" : STATUS_LABEL[r.status]}
             </p>

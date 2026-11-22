@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CommunityEventsPanel from "@/components/admin/CommunityEventsPanel";
 import { resolveCommunity } from "@/lib/community";
+import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,7 @@ export default async function CampPromotionPage({
                 )}
                 <div className="p-4">
                   <h3 className="font-semibold text-white">{e.title}</h3>
-                  {e.event_date && <p className="mt-0.5 text-xs text-brand-gold">{new Date(e.event_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>}
+                  {e.event_date && <p className="mt-0.5 text-xs text-brand-gold">{formatDate(e.event_date)}</p>}
                   {e.location && <p className="text-xs text-brand-muted">{e.location}</p>}
                   {e.description && <p className="mt-2 line-clamp-3 text-sm text-gray-300">{e.description}</p>}
                 </div>

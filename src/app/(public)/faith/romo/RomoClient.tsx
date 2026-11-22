@@ -6,6 +6,7 @@ import { HandHeart, Mic2, PlayCircle, Plus, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { youtubeId } from "@/lib/youtube";
 import ActivityTimer from "@/components/home/ActivityTimer";
+import { formatDate } from "@/lib/utils";
 
 export type RomoPost = {
   id: string; author_id: string; kind: "doa" | "homili" | "video"; title: string; body: string | null; video_url: string | null; created_at: string;
@@ -84,7 +85,7 @@ export default function RomoClient({ posts, titles, canPost, userId, missing }: 
               <div className="p-4">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-brand-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-gold">{KIND_LABEL[p.kind]}</span>
-                  <span className="text-[11px] text-brand-muted">{new Date(p.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+                  <span className="text-[11px] text-brand-muted">{formatDate(p.created_at)}</span>
                   {userId === p.author_id && (
                     <button onClick={() => remove(p.id)} aria-label="Hapus" className="ml-auto rounded-full p-1 text-gray-500 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
                   )}

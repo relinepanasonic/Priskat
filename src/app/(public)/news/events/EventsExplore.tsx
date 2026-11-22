@@ -10,6 +10,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { formatDate, formatTime } from "@/lib/utils";
 
 export type ExploreEvent = {
   id: string;
@@ -75,21 +76,14 @@ function fullWhen(startIso: string, endIso: string | null) {
     year: "numeric",
   };
   const start = new Date(startIso);
-  const time = start.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  let s = `${start.toLocaleDateString(undefined, opts)} · ${time}`;
+  const time = formatTime(start);
+  let s = `${formatDate(start)} · ${time}`;
   if (endIso) {
     const end = new Date(endIso);
     const sameDay = start.toDateString() === end.toDateString();
     s += sameDay
-      ? ` – ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-      : ` – ${end.toLocaleDateString(undefined, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })}`;
+      ? ` – ${formatTime(end)}`
+      : ` – ${formatDate(end)}`;
   }
   return s;
 }

@@ -31,6 +31,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
 import { pingGroupChanged, GROUP_CHANGED } from "@/lib/dmEvents";
+import { formatDate } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -226,11 +227,7 @@ function dayLabel(iso: string, t: T) {
     new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   if (diff === 0) return t.today;
   if (diff === 86400000) return t.yesterday;
-  return d.toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "long",
-    year: d.getFullYear() === now.getFullYear() ? undefined : "numeric",
-  });
+  return formatDate(d);
 }
 const tempId = () =>
   "temp-" + Math.random().toString(36).slice(2) + Date.now().toString(36);

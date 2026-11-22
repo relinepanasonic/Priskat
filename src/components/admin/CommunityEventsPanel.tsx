@@ -17,6 +17,7 @@ import Modal from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
 import { promoteEvent, deleteEvent } from "@/app/actions/events";
+import { formatDateTime } from "@/lib/utils";
 
 type EventRow = {
   id: string;
@@ -31,11 +32,7 @@ type EventRow = {
   created_at: string;
 };
 
-const fmt = (iso: string) =>
-  new Date(iso).toLocaleString("en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+const fmt = (iso: string) => formatDateTime(iso);
 
 // Standard promo poster: Instagram portrait.
 const POSTER_W = 1080;
@@ -137,7 +134,7 @@ export default function CommunityEventsPanel({
     e.preventDefault();
     setError(null);
     if (!title.trim() || description.trim().length < 10 || !eventDate || !location.trim()) {
-      setError("Fill in content title, a description (10+ chars), time and location.");
+      setError("Isi judul, deskripsi (minimal 10 huruf), waktu, dan lokasi.");
       return;
     }
     const fd = new FormData();
@@ -182,7 +179,7 @@ export default function CommunityEventsPanel({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-brand-muted">
-          Promote a community event — optionally publish it to News in one go.
+          Buat event komunitas. Pendaftaran dan absensi diatur dari kartu event; promosi (poster) adalah bagian dari event.
         </p>
         <Button
           onClick={() => {
@@ -191,14 +188,13 @@ export default function CommunityEventsPanel({
           }}
           className="flex items-center gap-2"
         >
-          <Megaphone className="h-4 w-4" /> Promotion
+          <CalendarDays className="h-4 w-4" /> Buat event
         </Button>
       </div>
 
       {initialEvents.length === 0 ? (
         <div className="rounded-xl border border-[#333] bg-[#15181e] p-10 text-center text-sm text-gray-500">
-          No events yet. Hit <span className="text-brand-gold">Promotion</span> to
-          create one.
+          Belum ada event. Tekan <span className="text-brand-gold">Buat event</span> untuk membuatnya.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -260,75 +256,13 @@ export default function CommunityEventsPanel({
         </div>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Event Promotion">
+      <Modal open={open} onClose={() => setOpen(false)} title="Buat event">
         <form
           onSubmit={submit}
           className="max-h-[72vh] space-y-4 overflow-y-auto pr-2"
         >
-          {/* upload konten */}
           <div>
-            <label className="mb-1 flex items-baseline justify-between gap-2 text-sm text-brand-light">
-              <span>Content (poster / image)</span>
-              <span className="text-[11px] font-normal text-brand-muted">
-                {POSTER_W}×{POSTER_H} · 4:5 portrait
-              </span>
-            </label>
-            <div className="mx-auto w-full max-w-[220px]">
-              {banner ? (
-                <div className="relative aspect-[4/5]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={banner}
-                    alt="preview"
-                    className="h-full w-full rounded-xl object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBanner("");
-                      setSizeNote(null);
-                    }}
-                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-border text-brand-muted hover:border-brand-gold"
-                >
-                  {uploading ? (
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  ) : (
-                    <>
-                      <ImagePlus className="h-6 w-6" />
-                      <span className="text-sm">Upload content</span>
-                      <span className="text-[11px]">
-                        {POSTER_W}×{POSTER_H}
-                      </span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-            {sizeNote && (
-              <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] text-amber-400">
-                {sizeNote}
-              </p>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={onUpload}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm text-brand-light">Title</label>
+            <label className="mb-1 block text-sm text-brand-light">Nama event</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -411,6 +345,73 @@ export default function CommunityEventsPanel({
             />
           </div>
 
+          {/* Promotion is part of the event: a poster and, if wanted, a post in News */}
+          <div className="space-y-3 rounded-xl border border-brand-gold/30 bg-brand-gold/[0.04] p-3">
+            <p className="flex items-center gap-2 text-sm font-bold text-brand-gold"><Megaphone className="h-4 w-4" /> Promosi (opsional)</p>
+            <p className="text-xs text-brand-muted">Poster akan tampil sebagai banner di halaman Tentang komunitas, diurutkan dari event terdekat.</p>
+          
+          <div>
+            <label className="mb-1 flex items-baseline justify-between gap-2 text-sm text-brand-light">
+              <span>Content (poster / image)</span>
+              <span className="text-[11px] font-normal text-brand-muted">
+                {POSTER_W}×{POSTER_H} · 4:5 portrait
+              </span>
+            </label>
+            <div className="mx-auto w-full max-w-[220px]">
+              {banner ? (
+                <div className="relative aspect-[4/5]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={banner}
+                    alt="preview"
+                    className="h-full w-full rounded-xl object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBanner("");
+                      setSizeNote(null);
+                    }}
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-border text-brand-muted hover:border-brand-gold"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <>
+                      <ImagePlus className="h-6 w-6" />
+                      <span className="text-sm">Upload content</span>
+                      <span className="text-[11px]">
+                        {POSTER_W}×{POSTER_H}
+                      </span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            {sizeNote && (
+              <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] text-amber-400">
+                {sizeNote}
+              </p>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={onUpload}
+            />
+          </div>
+
+
           <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#333] bg-[#15181e] p-3 text-sm text-brand-light">
             <input
               type="checkbox"
@@ -421,6 +422,8 @@ export default function CommunityEventsPanel({
             <Newspaper className="h-4 w-4 text-brand-gold" />
             Also publish this to News
           </label>
+
+          </div>
 
           {error && (
             <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">
@@ -433,7 +436,7 @@ export default function CommunityEventsPanel({
             className="w-full"
             loading={pending || uploading}
           >
-            {pushNews ? "Promote + Publish to News" : "Create Event"}
+            {pushNews ? "Simpan event dan publikasikan ke Warta" : "Simpan event"}
           </Button>
         </form>
       </Modal>

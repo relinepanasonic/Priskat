@@ -4,14 +4,15 @@ import { ArrowLeft, CalendarDays, MapPin, ExternalLink, Settings2, Users } from 
 import { createClient } from "@/lib/supabase/server";
 import EventRegisterClient from "@/components/events/EventRegisterClient";
 import { rupiah, type RegSettings, type Registration } from "@/lib/eventReg";
+import { formatWeekdayDate, formatTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 const GOLD = "#D6B072";
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
-const fmt = (d: string) => new Date(d).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
-const fmtTime = (d: string) => new Date(d).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" });
+const fmt = (d: string) => formatWeekdayDate(d);
+const fmtTime = (d: string) => formatTime(d);
 
 /** One event: what it is, and registration (form, manual transfer, QR ticket). */
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {

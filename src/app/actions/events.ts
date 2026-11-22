@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { slugify } from "@/lib/utils";
+import { slugify, formatDateTime } from "@/lib/utils";
 import { z } from "zod";
 
 const eventSchema = z.object({
@@ -126,10 +126,7 @@ export async function promoteEvent(formData: FormData) {
   let newsSlug: string | null = null;
   if (d.push_to_news === "on") {
     const slug = slugify(d.title) + "-" + Date.now().toString(36);
-    const when = new Date(d.event_date).toLocaleString("en-GB", {
-      dateStyle: "full",
-      timeStyle: "short",
-    });
+    const when = formatDateTime(d.event_date);
     const body =
       `${d.description}\n\n**When:** ${when}\n**Where:** ${d.location}` +
       (d.maps_url ? `\n**Map:** ${d.maps_url}` : "");

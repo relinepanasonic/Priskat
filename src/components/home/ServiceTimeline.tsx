@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, Check, Clock, MapPin, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { formatDate, formatTime } from "@/lib/utils";
 
 type Vis = "tagged" | "friends";
 type Person = { id: string; name: string; avatar: string | null };
@@ -18,8 +19,8 @@ const VIS: { key: Vis; label: string }[] = [
 const initials = (n: string) => n.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 const pad = (n: number) => String(n).padStart(2, "0");
 const toLocalInput = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-const dateOf = (iso: string) => new Date(iso).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Jakarta" });
-const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" });
+const dateOf = (iso: string) => formatDate(iso);
+const timeOf = (iso: string) => formatTime(iso);
 
 function Avatar({ p, size = 24 }: { p: Person; size?: number }) {
   return p.avatar

@@ -6,6 +6,7 @@ import { loadReadingVerses, readingTitle } from "@/lib/readingText";
 import ActivityTimer from "@/components/home/ActivityTimer";
 import LectionaryView from "@/components/faith/LectionaryView";
 import { getLectionary } from "@/lib/mirifica";
+import { formatWeekdayDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Bacaan Hari Ini" };
@@ -32,7 +33,7 @@ export default async function TodayReadingPage() {
   const ownText = (label: string) =>
     label === "Bacaan I" ? ownLect?.bacaan1_text : label === "Bacaan II" ? ownLect?.bacaan2_text : label === "Injil" ? ownLect?.injil_text : label === "Mazmur" ? ownLect?.mazmur_text : null;
 
-  const today = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
+  const today = formatWeekdayDate(new Date());
 
   return (
     <div className="w-full max-w-2xl space-y-5 p-4 pb-8 md:p-6">
