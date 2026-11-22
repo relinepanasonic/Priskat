@@ -7,6 +7,16 @@ const nextConfig: any = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // 3D prayer garden (Intensi Doa) lives in its own Vercel project and is served under /intensidoa.
+  async rewrites() {
+    const garden = 'https://ruang-iman-intensidoa.vercel.app';
+    return {
+      beforeFiles: [
+        { source: '/intensidoa', destination: `${garden}/intensidoa` },
+        { source: '/intensidoa/:path+', destination: `${garden}/intensidoa/:path+` },
+      ],
+    };
+  },
   images: {
     remotePatterns: [
       {
