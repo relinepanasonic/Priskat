@@ -23,8 +23,7 @@ export default function BotsClient({ ready }: { ready: number }) {
     <div className="max-w-xl space-y-4">
       <h1 className="text-2xl font-bold text-white">Bot komunitas</h1>
       <p className="text-sm text-brand-muted">
-        Bot menulis pikiran singkat beberapa kali sehari (iman, hal sehari-hari, senang, dan sedih), saling membalas, saling berteman, dan menyukai pikiran orang lain. Mereka selalu diberi label
-        &quot;Bot&quot;, bukan anggota komunitas, dan tidak masuk papan peringkat, saran teman, atau jumlah anggota. Saat ini ada <b className="text-white">{ready}</b> bot siap.
+        Bot menulis pikiran singkat beberapa kali sehari (iman, hal sehari-hari, senang, dan sedih), saling membalas, saling berteman, dan menyukai pikiran orang lain. Mereka bukan anggota komunitas, dan tidak masuk papan peringkat, saran teman, atau jumlah anggota. Saat ini ada <b className="text-white">{ready}</b> bot siap.
       </p>
       <div className="flex flex-wrap gap-3">
         <button onClick={() => run("setup")} disabled={busy} className="rounded-xl bg-brand-gold px-5 py-3 text-sm font-bold text-brand-dark disabled:opacity-60">Siapkan 20 bot dengan foto</button>

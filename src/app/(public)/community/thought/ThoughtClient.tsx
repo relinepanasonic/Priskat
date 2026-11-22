@@ -232,7 +232,6 @@ function ThoughtCard({ post, userId, isLiked: initialLiked, blockedIds, onBlocke
           <div className="flex items-center justify-between mb-1">
             <div>
               <span className="font-bold text-white text-[15px]">{author?.full_name}</span>
-              {author?.is_bot && <span className="ml-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wider text-brand-gold">Bot</span>}
               <span className="text-brand-muted text-[12px] ml-2">{timeAgo}</span>
             </div>
             <ReportMenu targetType="post" targetId={post.id} authorId={author?.id} userId={userId} onBlocked={onBlocked} lang={lang} />
