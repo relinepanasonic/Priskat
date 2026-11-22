@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import HomeStreak from "./HomeStreak";
 import { BibleChallengeCard } from "@/components/game/BibleChallenge";
 import { NameText } from "@/components/game/Cosmetics";
@@ -11,6 +11,7 @@ import FeedClient from "@/components/social/FeedClient";
 import { formatDate } from "@/lib/utils";
 import { uploadImage, storagePath } from "@/lib/upload";
 import VinylPlayer from "./VinylPlayer";
+import ServiceTimeline from "./ServiceTimeline";
 import { createClient } from "@/lib/supabase/client";
 
 export default function HomeTabsClient({
@@ -31,6 +32,10 @@ export default function HomeTabsClient({
   pendingCommunities?: string[]
 }) {
   const [activeTab, setActiveTab] = useState<"Thought" | "Profile" | "Service">("Thought");
+  // A notification can open the "Pelayanan Saya" tab directly (?tab=service)
+  useEffect(() => {
+    try { if (new URLSearchParams(window.location.search).get("tab") === "service") setActiveTab("Service"); } catch { /* ignore */ }
+  }, []);
 
   const angkatan = profile.angkatan || "-";
   const city = profile.kota || "-";
@@ -337,6 +342,14 @@ export default function HomeTabsClient({
             <p className="text-xs text-brand-muted -mt-2">
               {isEn ? "Combined across all your communities." : "Digabung dari semua komunitasmu."}
             </p>
+
+            <ServiceTimeline userId={userId} isEn={isEn} />
+
+            {myCamps.length > 0 && (
+              <h3 className="pt-3 text-sm font-bold text-brand-gold uppercase tracking-wider flex items-center gap-2">
+                <Users className="h-4 w-4" /> {isEn ? "Active services" : "Pelayanan aktif"}
+              </h3>
+            )}
 
             {myCamps.length > 0 ? (
               <div className="space-y-3">

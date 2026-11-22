@@ -69,6 +69,35 @@ export async function POST(request: Request) {
     msg = r.status === "approved"
       ? { title: "Pendaftaranmu disetujui 🎟️", body: `Tiket QR untuk ${title} sudah siap. Ketuk untuk membukanya.`, url: `/acara/${r.event_id}`, channel: "chat" }
       : { title: "Pendaftaran belum disetujui", body: `Pendaftaranmu untuk ${title} belum bisa disetujui. Ketuk untuk melihat alasannya.`, url: `/acara/${r.event_id}`, channel: "chat" };
+  } else if (body.type === "timeline_tag" || body.type === "timeline_accepted") {
+    key = "timeline";
+    const { data: tv } = await db.from("timeline_events" as any).select("id, title, owner_id, starts_at").eq("id", id).maybeSingle();
+    const t = tv as { id: string; title: string; owner_id: string; starts_at: string } | null;
+    if (!t) return NextResponse.json({ ok: true, skipped: "no event" });
+    const { data: who } = await db.from("profiles").select("full_name, nama_panggilan").eq("id", user.id).maybeSingle();
+    const name = (who as any)?.nama_panggilan || (who as any)?.full_name || "Seseorang";
+    const seen = (globalThis as any).__tlPushSeen ?? ((globalThis as any).__tlPushSeen = new Map<string, number>());
+    const once = (k: string) => { if ((seen.get(k) ?? 0) > Date.now() - 3600_000) return false; seen.set(k, Date.now()); return true; };
+
+    if (body.type === "timeline_accepted") {
+      const { data: me } = await db.from("timeline_participants" as any).select("status").eq("event_id", id).eq("user_id", user.id).maybeSingle();
+      if ((me as any)?.status !== "accepted" || !once(`acc:${id}:${user.id}`)) return NextResponse.json({ ok: true, skipped: "nothing to send" });
+      target = t.owner_id;
+      msg = { title: "Ajakan kolaborasi diterima", body: `${name} ikut di "${t.title}".`, url: "/?tab=service", channel: "chat" };
+    } else {
+      // the person who tagged must be allowed to edit this event; send to everyone invited in the last 10 minutes
+      const { data: can } = await supabase.rpc("timeline_can_edit" as any, { p_event: id });
+      if (can !== true) return NextResponse.json({ ok: true, skipped: "not your event" });
+      const since = new Date(Date.now() - 10 * 60_000).toISOString();
+      const { data: inv } = await db.from("timeline_participants" as any).select("user_id").eq("event_id", id).eq("status", "invited").gte("invited_at", since);
+      const ids = ((inv as { user_id: string }[]) ?? []).map((x) => x.user_id).filter((u) => u !== user.id && once(`tag:${id}:${u}`));
+      if (ids.length === 0) return NextResponse.json({ ok: true, skipped: "nobody new" });
+      const { data: rows } = await db.from("push_tokens" as any).select("token").in("user_id", ids);
+      const tokens = ((rows as { token: string }[]) ?? []).map((r) => r.token);
+      const res = await sendPush(tokens, { title: "Kamu diajak berkolaborasi 🤝", body: `${name} menandai kamu di "${t.title}". Buka Beranda, Pelayanan Saya untuk menerima.`, url: "/?tab=service", channel: "chat" });
+      if (res.invalid.length) await db.from("push_tokens" as any).delete().in("token", res.invalid);
+      return NextResponse.json({ ok: true, sent: res.sent });
+    }
   } else if (body.type === "friend_request" || body.type === "friend_accepted") {
     key = "teman";
     const { data: fr } = await db.from("friendships" as any).select("requester_id, receiver_id, status, created_at").eq("id", id).maybeSingle();
