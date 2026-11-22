@@ -10,6 +10,7 @@ import AdminMemberEditDialog from "@/components/admin/AdminMemberEditDialog";
 import AdminMemberDeleteButton from "@/components/admin/AdminMemberDeleteButton";
 import JoinRequestsPanel, { type JoinRequestRow } from "@/components/admin/JoinRequestsPanel";
 import InviteUserButton from "@/components/admin/InviteUserButton";
+import AddMemberButton from "@/components/admin/AddMemberButton";
 import type { UserRole } from "@/lib/types/database.types";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +62,11 @@ export default async function CommunityMembersPage({ params }: { params: Promise
             {members.length} anggota{everyone ? " (seluruh member Ruang Iman)" : ""}
           </p>
         </div>
-        <InviteUserButton />
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Catholic Indonesia already has everyone; for the others, pick from all users. Invite is for people without an account. */}
+          {!everyone && <AddMemberButton communityId={community.id} communityName={community.name ?? "komunitas"} memberIds={members.map((m: any) => m.id)} />}
+          <InviteUserButton />
+        </div>
       </div>
 
       <JoinRequestsPanel requests={joinRequests} />
