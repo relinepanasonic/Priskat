@@ -31,6 +31,7 @@ const NAV = [
   { href: "/admin/prayers", label: "Prayers / Doa", icon: HandHeart },
   { href: "/admin/communities", label: "Community Center", icon: Network, superAdminOnly: true },
   { href: "/admin/database", label: "Database", icon: Database, founderOnly: true },
+  { href: "/admin/bots", label: "Bot komunitas", icon: Users, founderOnly: true },
   { href: "/admin/invite", label: "Invite Users", icon: HandHeart, superAdminOnly: true },
 ];
 

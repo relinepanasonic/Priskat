@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { botIdSet } from "@/lib/botIds";
 import { createClient } from "@/lib/supabase/server";
 import { sortCommunities } from "@/lib/community";
 import WelcomeClient from "./WelcomeClient";
@@ -43,8 +44,9 @@ export default async function WelcomePage() {
     .not("full_name", "is", null)
     .order("created_at", { ascending: false })
     .limit(60);
+  const bots = await botIdSet(supabase);
   const suggestions = ((people as any[]) ?? [])
-    .filter((p) => !exclude.has(p.id) && p.full_name)
+    .filter((p) => !exclude.has(p.id) && !bots.has(p.id) && p.full_name)
     .sort((a, b) => Number(!!b.avatar_url) - Number(!!a.avatar_url))
     .slice(0, 12);
 

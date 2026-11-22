@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { botCount } from "@/lib/botIds";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
 /**
@@ -12,7 +13,9 @@ export async function countCommunityMembers(
 ): Promise<number | null> {
   if (isCatholicIndonesia(c.name, c.slug)) {
     const { count, error } = await supabase.from("profiles").select("id", { count: "exact", head: true });
-    return error ? null : count;
+    if (error) return null;
+    const bots = await botCount(supabase);
+    return count == null ? count : Math.max(0, count - bots);
   }
   const m = await supabase.from("community_memberships" as any).select("user_id", { count: "exact", head: true }).eq("community_id", c.id);
   if (!m.error) return m.count;

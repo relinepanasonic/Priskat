@@ -30,7 +30,12 @@ export default async function ThoughtPage() {
 
   const likedPostIds: string[] = ((likes as any[]) || []).map((l: any) => l.post_id);
   const blockedIds: string[] = ((blocks as any[]) || []).map((b: any) => b.blocked_id);
-  const visiblePosts = (posts || []).filter((p: any) => !blockedIds.includes(p.author?.id));
+  // Which authors are bots (read separately, so the feed still works before the 111 SQL has been run)
+  const { data: botRows } = await supabase.from("profiles").select("id").eq("is_bot", true);
+  const botIds = new Set(((botRows as { id: string }[]) ?? []).map((b) => b.id));
+  const visiblePosts = (posts || [])
+    .filter((p: any) => !blockedIds.includes(p.author?.id))
+    .map((p: any) => (p.author ? { ...p, author: { ...p.author, is_bot: botIds.has(p.author.id) } } : p));
 
   return (
     <ThoughtClient

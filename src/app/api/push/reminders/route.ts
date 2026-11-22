@@ -5,6 +5,7 @@ import { REMINDER_SLOTS } from "@/lib/reminders";
 import { sendCgInvites } from "@/lib/cgInvites";
 import { getLectionary } from "@/lib/mirifica";
 import { jakartaParts } from "@/lib/bacaanHarian";
+import { runBotPosts } from "@/lib/botTick";
 
 /**
  * Called every 15 minutes by the Supabase cron job in supabase/087.
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
   }
 
   const db = createAdminClient();
+  // The community bots post a short thought at their hours (07, 12, 18 Jakarta); quiet if there are none
+  await runBotPosts(db).catch((e) => console.error("Bot post failed", e));
   // "See you at CG": one hour before a Connect Group meets (works for people without prayer reminders too)
   const cgSent = await sendCgInvites(db).catch((e) => { console.error("CG invites failed", e); return 0; });
 

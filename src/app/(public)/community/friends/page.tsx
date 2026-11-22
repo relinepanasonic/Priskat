@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { botIdSet } from "@/lib/botIds";
 import { createClient } from "@/lib/supabase/server";
 import FriendsClient from "./FriendsClient";
 import { getLanguage } from "@/lib/lang";
@@ -72,7 +73,8 @@ export default async function FriendsPage() {
     .limit(100);
 
   // Score each user for the 'Browsing' / 'Recommendations' tab
-  const scored = (allUsers || []).map((u: any) => {
+  const bots = await botIdSet(supabase);
+  const scored = (allUsers || []).filter((u: any) => !bots.has(u.id)).map((u: any) => {
     let score = 0;
     const badges: string[] = [];
     if (myProfile?.angkatan && u.angkatan === myProfile.angkatan) {
