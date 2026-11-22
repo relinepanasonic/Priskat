@@ -60,7 +60,7 @@ export function ChallengeClaimer({ book, chapter }: { book: number; chapter: num
     (async () => {
       const st = await loadStatus();
       if (cancelled || !st || st.done || st.book !== book || st.chapter !== chapter) return;
-      // a little after the reader has recorded the chapter (30 s of reading)
+      // a little after the reader has recorded the chapter (15 s of reading)
       let visibleMs = 0;
       let last = Date.now();
       timer = window.setInterval(async () => {

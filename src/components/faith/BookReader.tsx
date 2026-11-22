@@ -346,7 +346,7 @@ export default function BookReader({ verses, bookName, bookId, chapter, lang = "
         </Link>
       </div>
 
-      <ActivityTimer kind="bible" refId={`${bookId}:${chapter}`} seconds={30} />
+      <ActivityTimer kind="bible" refId={`${bookId}:${chapter}`} seconds={15} />
       <ChallengeClaimer book={bookId} chapter={chapter} />
       {/* ── MOBILE: full-width scrolling reader ── */}
       <div className="md:hidden w-full">
