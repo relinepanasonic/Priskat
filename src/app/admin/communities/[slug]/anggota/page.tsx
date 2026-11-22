@@ -11,6 +11,7 @@ import AdminMemberDeleteButton from "@/components/admin/AdminMemberDeleteButton"
 import JoinRequestsPanel, { type JoinRequestRow } from "@/components/admin/JoinRequestsPanel";
 import InviteUserButton from "@/components/admin/InviteUserButton";
 import AddMemberButton from "@/components/admin/AddMemberButton";
+import { botIdSet } from "@/lib/botIds";
 import type { UserRole } from "@/lib/types/database.types";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,9 @@ export default async function CommunityMembersPage({ params }: { params: Promise
       .order("created_at", { ascending: true });
     joinRequests = ((reqs as any[]) ?? []) as JoinRequestRow[];
   }
-  const members = data as any[];
+  // Bots are not community members
+  const botSet = await botIdSet(supabase);
+  const members = (data as any[]).filter((m) => !botSet.has(m.id));
 
   return (
     <div className="p-4 md:p-6">

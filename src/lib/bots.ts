@@ -110,7 +110,7 @@ export const BOT_THOUGHTS: string[] = [
 
 export const BOT_EMAIL_DOMAIN = "ruangiman-bot.invalid";
 /** Jakarta hours at which the bots post (one thought each time, if it has not happened yet today) */
-export const BOT_POST_HOURS = [7, 12, 18];
+export const BOT_POST_HOURS = [7, 9, 12, 15, 18, 21];
 
 export const avatarUrlFor = (seed: string) =>
   `https://api.dicebear.com/9.x/lorelei/png?seed=${encodeURIComponent(seed)}&size=400&backgroundColor=f1e3c2,e8d3a3,d9c08a,f5ead6`;

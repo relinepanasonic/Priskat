@@ -24,6 +24,7 @@ export async function POST(request: Request) {
   const db = createAdminClient();
 
   if (body.action === "post") return NextResponse.json(await runBotPosts(db, true));
+  if (body.action === "tidy") return NextResponse.json({ ok: true, log: await tidyBots(db) });
   if (body.action !== "setup") return NextResponse.json({ error: "unknown action" }, { status: 400 });
 
   const log: string[] = [];
@@ -80,5 +81,43 @@ export async function POST(request: Request) {
     made += 1;
   }
   log.push(`${made} bot baru dibuat`);
+  log.push(...(await tidyBots(db)));
   return NextResponse.json({ ok: true, log });
+}
+
+/**
+ * Bots are not community members: they leave every community (and the default one they start in), and they become
+ * friends with a few of each other so the conversations between them make sense. Safe to run again.
+ */
+async function tidyBots(db: ReturnType<typeof createAdminClient>): Promise<string[]> {
+  const log: string[] = [];
+  const { data: rows } = await db.from("profiles").select("id").eq("is_bot", true);
+  const ids = ((rows as { id: string }[]) ?? []).map((r) => r.id);
+  if (ids.length === 0) return ["belum ada bot"];
+
+  await db.from("community_memberships").delete().in("user_id", ids);
+  const { error: cErr } = await db.from("profiles").update({ community_id: null }).in("id", ids);
+  log.push(cErr ? `komunitas: ${cErr.message}` : `${ids.length} bot tidak lagi menjadi anggota komunitas`);
+
+  // each bot gets about four bot friends
+  const { data: existing } = await db.from("friendships").select("requester_id, receiver_id").in("requester_id", ids).in("receiver_id", ids);
+  const have = new Set(((existing as { requester_id: string; receiver_id: string }[]) ?? []).flatMap((f) => [`${f.requester_id}|${f.receiver_id}`, `${f.receiver_id}|${f.requester_id}`]));
+  const degree = new Map<string, number>(ids.map((i) => [i, 0]));
+  for (const k of have) degree.set(k.split("|")[0], (degree.get(k.split("|")[0]) ?? 0) + 0.5);
+  const add: { requester_id: string; receiver_id: string; status: string }[] = [];
+  for (const a of ids) {
+    const pool = ids.filter((b) => b !== a && !have.has(`${a}|${b}`)).sort(() => Math.random() - 0.5);
+    for (const b of pool) {
+      if ((degree.get(a) ?? 0) >= 4) break;
+      if ((degree.get(b) ?? 0) >= 6) continue;
+      add.push({ requester_id: a, receiver_id: b, status: "accepted" });
+      have.add(`${a}|${b}`); have.add(`${b}|${a}`);
+      degree.set(a, (degree.get(a) ?? 0) + 1); degree.set(b, (degree.get(b) ?? 0) + 1);
+    }
+  }
+  if (add.length) {
+    const { error } = await db.from("friendships").insert(add);
+    log.push(error ? `pertemanan: ${error.message}` : `${add.length} pertemanan antar bot dibuat`);
+  } else log.push("pertemanan antar bot sudah ada");
+  return log;
 }
