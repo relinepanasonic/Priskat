@@ -119,5 +119,21 @@ async function tidyBots(db: ReturnType<typeof createAdminClient>): Promise<strin
     const { error } = await db.from("friendships").insert(add);
     log.push(error ? `pertemanan: ${error.message}` : `${add.length} pertemanan antar bot dibuat`);
   } else log.push("pertemanan antar bot sudah ada");
+
+  // every bot is a friend of the founder (Nico Japar), so they show up in his friends list
+  const { data: founders } = await db.from("profiles").select("id, full_name").eq("role", "founder");
+  const list = (founders as { id: string; full_name: string | null }[]) ?? [];
+  const nico = list.find((f) => /nico\s*japar/i.test(f.full_name ?? "")) ?? list.find((f) => /nico/i.test(f.full_name ?? "")) ?? list[0];
+  if (!nico) {
+    log.push("akun founder tidak ditemukan");
+  } else {
+    const { data: fr } = await db.from("friendships").select("requester_id, receiver_id").or(`requester_id.eq.${nico.id},receiver_id.eq.${nico.id}`);
+    const linked = new Set(((fr as { requester_id: string; receiver_id: string }[]) ?? []).map((f) => (f.requester_id === nico.id ? f.receiver_id : f.requester_id)));
+    const toAdd = ids.filter((b) => b !== nico.id && !linked.has(b)).map((b) => ({ requester_id: b, receiver_id: nico.id, status: "accepted" }));
+    if (toAdd.length) {
+      const { error } = await db.from("friendships").insert(toAdd);
+      log.push(error ? `teman founder: ${error.message}` : `${toAdd.length} bot menjadi teman ${nico.full_name ?? "founder"}`);
+    } else log.push(`semua bot sudah berteman dengan ${nico.full_name ?? "founder"}`);
+  }
   return log;
 }
