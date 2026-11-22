@@ -3,6 +3,7 @@ import { Sunrise, CalendarCheck, ArrowRight, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getLanguage } from "@/lib/lang";
 import { getTodayReadings, jakartaParts } from "@/lib/bacaanHarian";
+import { TRADISI } from "@/lib/spiritualNames";
 import { getLectionary } from "@/lib/mirifica";
 import { readingTitle } from "@/lib/readingText";
 import PicCard from "@/components/faith/PicCard";
@@ -115,8 +116,9 @@ export default async function SpiritualLanding() {
         <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-brand-muted">{isId ? "Jelajahi" : "Explore"}</h2>
         <div className="grid grid-cols-2 gap-3">
           <PicCard tall href="/faith/bible" title={isId ? "Alkitab" : "Bible"} text={isId ? "Baca, cari, dan dengarkan" : "Read, search and listen"} image="/images/spiritual/alkitab.webp" />
-          <PicCard tall href="/faith/hidup-doa" title={isId ? "Hidup Doa" : "Prayer Life"} text={isId ? "Doa, Renungan, Kotbah Romo, SOS Doa" : "Prayers, Devotion, Homilies, SOS"} image="/images/spiritual/hidup-doa.webp" />
-          <PicCard tall href="/faith/devosi" title={isId ? "Devosi" : "Devotions"} text={isId ? "Rosario, Jalan Salib, Intensi Doa" : "Rosary, Stations, Intentions"} image="/images/spiritual/devosi.webp" />
+          <PicCard tall href="/faith/hidup-doa" title={isId ? "Hidup Doa" : "Prayer Life"} text={isId ? "Doa, Renungan, Kotbah Romo" : "Prayers, Devotion, Homilies"} image="/images/spiritual/hidup-doa.webp" />
+          <PicCard tall href="/faith/intensi" title={isId ? "Intensi Doa" : "Intentions"} text={isId ? "Intensi Doa dan SOS Doa" : "Prayer intentions and SOS"} image="/images/spiritual/intensi-doa.webp" />
+          <PicCard tall href="/faith/devosi" title={isId ? TRADISI.id.name : TRADISI.en.name} text={isId ? TRADISI.id.text : TRADISI.en.text} image="/images/spiritual/devosi.webp" />
           <PicCard tall href="/faith/prayers/ekaristi" title={isId ? "Ekaristi" : "Eucharist"} text={isId ? "Urutan & teks Misa" : "Order and texts of the Mass"} image="/images/spiritual/ekaristi.webp" />
         </div>
       </section>
