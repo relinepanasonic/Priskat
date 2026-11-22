@@ -7,7 +7,7 @@ import { localDay } from "@/lib/activity";
 import { useReadAloud } from "@/lib/readAloud";
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
-const WAIT = 30;
+const WAIT = 15;
 
 const fmtDay = (day: string) => {
   const [y, m, d] = day.split("-").map(Number);
