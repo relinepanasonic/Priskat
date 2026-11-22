@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPush } from "@/lib/push";
 import { REMINDER_SLOTS } from "@/lib/reminders";
 import { sendCgInvites } from "@/lib/cgInvites";
+import { getLectionary } from "@/lib/mirifica";
+import { jakartaParts } from "@/lib/bacaanHarian";
 
 /**
  * Called every 15 minutes by the Supabase cron job in supabase/087.
@@ -60,12 +62,27 @@ export async function POST(request: Request) {
   }
   if (due.size === 0) return NextResponse.json({ ok: true, sent: cgSent });
 
+  // "Santo dan Santa hari ini": the text comes from the day's celebration; no celebration = nothing to send
+  let santo: { title: string; body: string } | null = null;
+  if ([...due.values()].some((s) => s.some((x) => x.key === "santo"))) {
+    const jp = jakartaParts();
+    const lect = await getLectionary(jp.day, jp.month, jp.year).catch(() => null);
+    const names = (lect?.celebrations ?? []).filter(Boolean);
+    if (names.length) {
+      santo = {
+        title: `Hari ini: ${names[0]}`.slice(0, 90),
+        body: names.length > 1 ? names.slice(1).join(" · ").slice(0, 160) : "Ketuk untuk membaca riwayat singkatnya dan bacaan hari ini.",
+      };
+    }
+  }
+
   const { data: tokenRows } = await db.from("push_tokens" as any).select("token, user_id").in("user_id", [...due.keys()]);
   let sent = 0;
   const invalid: string[] = [];
   for (const t of (tokenRows as { token: string; user_id: string }[]) ?? []) {
     for (const slot of due.get(t.user_id) ?? []) {
-      const r = await sendPush([t.token], { title: slot.title, body: slot.body, url: slot.url });
+      if (slot.key === "santo" && !santo) continue;
+      const r = await sendPush([t.token], slot.key === "santo" && santo ? { ...santo, url: slot.url } : { title: slot.title, body: slot.body, url: slot.url });
       sent += r.sent;
       invalid.push(...r.invalid);
     }

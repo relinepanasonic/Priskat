@@ -63,6 +63,11 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
     title: "Peringkat mingguan sudah keluar", body: "Lihat posisimu dan lencana yang kamu dapat pekan ini.", url: "/leaderboard", auto: true,
   },
   {
+    // Text made each morning from the day's celebration (Komsos KWI) and its saints: see /api/push/reminders
+    key: "santo", label: "Santo dan Santa hari ini", desc: "Setiap pagi pukul 06.15",
+    times: ["06:15"], title: "", body: "", url: "/faith/saints", auto: true,
+  },
+  {
     key: "intensi", label: "Intensi doamu didoakan", desc: "Saat ada saudara seiman mendoakan intensimu",
     times: [], title: "", body: "", url: "/faith/intensi", event: true, auto: true,
   },

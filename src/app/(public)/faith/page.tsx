@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Sunrise, CalendarCheck, ArrowRight } from "lucide-react";
+import { Sunrise, CalendarCheck, ArrowRight, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getLanguage } from "@/lib/lang";
-import { getTodayReadings } from "@/lib/bacaanHarian";
+import { getTodayReadings, jakartaParts } from "@/lib/bacaanHarian";
+import { getLectionary } from "@/lib/mirifica";
 import { readingTitle } from "@/lib/readingText";
 import PicCard from "@/components/faith/PicCard";
 import VerseOfDayCard from "@/components/faith/VerseOfDayCard";
@@ -21,6 +22,8 @@ export default async function SpiritualLanding() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const jp = jakartaParts();
+  const lect = await getLectionary(jp.day, jp.month, jp.year);
   const [today, devotion] = await Promise.all([
     getTodayReadings(),
     user
@@ -53,7 +56,19 @@ export default async function SpiritualLanding() {
           </p>
           <ArrowRight className="h-4 w-4 text-brand-muted" />
         </div>
-        {today ? (
+        {lect ? (
+          <>
+            <p className="mt-2 text-sm text-brand-light">{[lect.title, ...lect.celebrations].filter(Boolean).join(" · ")}</p>
+            <ul className="mt-2.5 space-y-1.5">
+              {lect.items.filter((r) => r.kind !== "bait").map((r, i) => (
+                <li key={i} className="flex items-baseline gap-3">
+                  <span className="w-16 shrink-0 text-[10px] font-bold uppercase tracking-[0.15em] text-brand-muted">{r.kind === "mazmur" ? "Mazmur" : r.kind === "injil" ? "Injil" : r.label}</span>
+                  <span className="text-white" style={serif}>{r.ref}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : today ? (
           <>
             <p className="mt-2 text-sm text-brand-light">{today.celebration}</p>
             <ul className="mt-2.5 space-y-1.5">
@@ -68,6 +83,16 @@ export default async function SpiritualLanding() {
         ) : (
           <p className="mt-2 text-sm text-brand-muted">{isId ? "Ketuk untuk melihat bacaan Misa hari ini" : "Tap to see today's Mass readings"}</p>
         )}
+      </Link>
+
+      {/* Saints of the day */}
+      <Link href="/faith/saints" className="flex items-center gap-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4 transition-colors hover:bg-[#191c22]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gold/15 text-brand-gold"><Sparkles className="h-5 w-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-white">{isId ? "Santo dan Santa hari ini" : "Saints of the day"}</span>
+          <span className="block text-xs text-brand-muted">{isId ? "Kalender para kudus, bisa dilihat per tanggal" : "The calendar of saints, by date"}</span>
+        </span>
+        <ArrowRight className="h-4 w-4 shrink-0 text-brand-muted" />
       </Link>
 
       {/* Continue the devotion */}
