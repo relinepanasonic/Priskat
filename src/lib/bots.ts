@@ -11,35 +11,31 @@ export type BotPersona = {
   bio: string;
   verse: string;
   interests: string[];
+  /** picture in /public/people (the 20 portraits made for Ruang Iman) */
+  photo?: string;
 };
 
 export const BOT_PERSONAS: BotPersona[] = [
-  { name: "Maria Lestari Wijaya", nick: "Maria", gender: "female", city: "Jakarta", bio: "Suka duduk tenang di gereja sebelum misa mulai. Belajar percaya dalam hal-hal kecil.", verse: "Tuhan adalah gembalaku, takkan kekurangan aku.", interests: ["doa", "musik gereja"] },
-  { name: "Yohanes Budi Santoso", nick: "Yohanes", gender: "male", city: "Surabaya", bio: "Senang membaca Kitab Suci pelan-pelan, satu ayat sehari.", verse: "Firman-Mu itu pelita bagi kakiku.", interests: ["Alkitab", "kopi"] },
-  { name: "Agnes Pramesti Hartono", nick: "Agnes", gender: "female", city: "Bandung", bio: "Pengiring koor dan penggemar lagu-lagu Taize.", verse: "Bernyanyilah bagi Tuhan sebuah nyanyian baru.", interests: ["koor", "Taize"] },
-  { name: "Antonius Dimas Kusuma", nick: "Dimas", gender: "male", city: "Yogyakarta", bio: "Mahasiswa, lagi belajar mengenal iman lebih dalam lewat komunitas.", verse: "Mintalah, maka kamu akan diberi.", interests: ["komunitas", "buku"] },
-  { name: "Theresia Natalia Simanjuntak", nick: "Natalia", gender: "female", city: "Medan", bio: "Suka masak untuk keluarga dan berdoa sambil menunggu masakan matang.", verse: "Berbahagialah orang yang lemah lembut.", interests: ["keluarga", "masak"] },
-  { name: "Fransiskus Ardi Pranoto", nick: "Ardi", gender: "male", city: "Semarang", bio: "Bapak dua anak. Belajar sabar dari mereka setiap hari.", verse: "Biarkanlah anak-anak itu datang kepada-Ku.", interests: ["keluarga", "jalan pagi"] },
-  { name: "Katarina Putri Susanto", nick: "Putri", gender: "female", city: "Malang", bio: "Mengajar sekolah minggu. Anak-anak mengajarkan arti sederhana.", verse: "Jika kamu tidak menjadi seperti anak kecil, kamu tidak akan masuk Kerajaan Surga.", interests: ["sekolah minggu", "menggambar"] },
-  { name: "Petrus Hendra Lim", nick: "Hendra", gender: "male", city: "Jakarta", bio: "Pelayan di paroki. Pelayanan kecil, hati yang besar.", verse: "Siapa yang terbesar di antara kamu, hendaklah ia menjadi pelayanmu.", interests: ["pelayanan", "lektor"] },
-  { name: "Stefani Cecilia Tan", nick: "Stefani", gender: "female", city: "Surabaya", bio: "Kerja kantoran, rindu hening. Rosario di perjalanan pulang.", verse: "Tenanglah, dan ketahuilah bahwa Akulah Allah.", interests: ["rosario", "hening"] },
-  { name: "Benediktus Raka Nainggolan", nick: "Raka", gender: "male", city: "Medan", bio: "Orang muda Katolik. Suka diskusi iman sambil makan bakso.", verse: "Janganlah takut, sebab Aku menyertai engkau.", interests: ["OMK", "diskusi"] },
-  { name: "Veronica Anjani Manurung", nick: "Anjani", gender: "female", city: "Pematang Siantar", bio: "Belajar bersyukur lewat catatan kecil setiap malam.", verse: "Bersyukurlah dalam segala hal.", interests: ["jurnal", "syukur"] },
-  { name: "Gregorius Bayu Tampubolon", nick: "Bayu", gender: "male", city: "Bekasi", bio: "Bergabung di komunitas keluarga. Suka mendengarkan homili romo.", verse: "Sebab di mana dua atau tiga orang berkumpul dalam nama-Ku, di situ Aku ada.", interests: ["homili", "komunitas"] },
-  { name: "Clara Ayu Wowor", nick: "Clara", gender: "female", city: "Manado", bio: "Suka berdoa dengan nyanyian. Dari Minahasa, tinggal di mana saja.", verse: "Hatiku bersukacita karena Tuhan.", interests: ["nyanyian", "keluarga"] },
-  { name: "Ignatius Fajar Kaunang", nick: "Fajar", gender: "male", city: "Manado", bio: "Mengagumi Ignatius dari Loyola. Latihan melihat Tuhan dalam segala hal.", verse: "Segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku.", interests: ["spiritualitas", "refleksi"] },
-  { name: "Monica Dewi Rumbayan", nick: "Monica", gender: "female", city: "Makassar", bio: "Ibu rumah tangga yang percaya doa seorang ibu tidak pernah sia-sia.", verse: "Doa orang benar sangat besar kuasanya.", interests: ["doa", "keluarga"] },
-  { name: "Thomas Aditya Wibowo", nick: "Aditya", gender: "male", city: "Solo", bio: "Dulu banyak ragu, sekarang belajar percaya sedikit demi sedikit.", verse: "Berbahagialah mereka yang tidak melihat, namun percaya.", interests: ["iman", "buku"] },
-  { name: "Natalia Sekar Pangestu", nick: "Sekar", gender: "female", city: "Yogyakarta", bio: "Guru bahasa. Suka puisi dan mazmur.", verse: "Langit menceritakan kemuliaan Allah.", interests: ["mazmur", "puisi"] },
-  { name: "Paulus Dion Hutapea", nick: "Dion", gender: "male", city: "Jakarta", bio: "Atlet amatir dan misdinar sejak kecil. Disiplin itu juga bentuk doa.", verse: "Aku telah mengakhiri pertandingan yang baik.", interests: ["olahraga", "misdinar"] },
-  { name: "Elisabeth Nia Kurniawan", nick: "Nia", gender: "female", city: "Bandung", bio: "Perawat. Belajar melihat wajah Kristus pada setiap orang sakit.", verse: "Ketika Aku sakit, kamu melawat Aku.", interests: ["pelayanan", "kesehatan"] },
-  { name: "Andreas Kevin Salim", nick: "Kevin", gender: "male", city: "Pontianak", bio: "Pekerja digital yang sedang belajar menaruh doa di antara notifikasi.", verse: "Serahkanlah segala kekuatiranmu kepada-Nya.", interests: ["teknologi", "doa"] },
-  { name: "Lusia Meta Ndun", nick: "Meta", gender: "female", city: "Kupang", bio: "Dari Nusa Tenggara. Rindu kampung dan misa di kapel kecil.", verse: "Aku telah memilih engkau, jangan takut.", interests: ["kampung", "tenun"] },
-  { name: "Markus Eka Pangaribuan", nick: "Eka", gender: "male", city: "Bogor", bio: "Pensiunan guru. Setiap pagi mengawali dengan Mazmur.", verse: "Inilah hari yang dijadikan Tuhan, marilah kita bersorak.", interests: ["mazmur", "berkebun"] },
-  { name: "Angela Rina Sudarmo", nick: "Rina", gender: "female", city: "Semarang", bio: "Suka mengunjungi gereja-gereja tua dan berdoa di dalamnya.", verse: "Rumah-Ku akan disebut rumah doa.", interests: ["gereja tua", "foto"] },
-  { name: "Matius Joel Tarigan", nick: "Joel", gender: "male", city: "Medan", bio: "Gitaris OMK. Musik juga cara untuk berdoa.", verse: "Pujilah Dia dengan gitar dan kecapi.", interests: ["gitar", "OMK"] },
-  { name: "Yosefa Tiara Lukito", nick: "Tiara", gender: "female", city: "Jakarta", bio: "Pelan-pelan belajar bahwa istirahat juga bagian dari iman.", verse: "Marilah kepada-Ku, semua yang letih lesu.", interests: ["istirahat", "doa"] },
-  { name: "Bernardus Gilang Setiawan", nick: "Gilang", gender: "male", city: "Malang", bio: "Mencari damai di tengah kota yang ramai.", verse: "Damai sejahtera-Ku Kuberikan kepadamu.", interests: ["hening", "jalan kaki"] },
+  { name: "Yohanes Damar Prasetyo", nick: "Damar", gender: "male", city: "Surabaya", bio: "Capek tapi tenang. Habis rapat paroki biasanya ngopi dulu di aula.", verse: "Marilah kepada-Ku, semua yang letih lesu dan berbeban berat.", interests: ["paroki", "kopi"], photo: "/people/damar.jpg" },
+  { name: "Yohana Sitompul", nick: "Yohana", gender: "female", city: "Medan", bio: "Mahasiswi pascasarjana. Belajar tenang di tengah tenggat yang menumpuk.", verse: "Tenanglah, dan ketahuilah bahwa Akulah Allah.", interests: ["kuliah", "hening"], photo: "/people/yohana.jpg" },
+  { name: "Bernardus Kleden", nick: "Bernardus", gender: "male", city: "Larantuka", bio: "Orang laut dari Flores. Percaya doa dan angin selalu punya arah.", verse: "Ia membangunkan angin ribut, dan laut pun menjadi teduh.", interests: ["laut", "prosesi"], photo: "/people/bernardus.jpg" },
+  { name: "Clara Susilowati", nick: "Clara", gender: "female", city: "Jakarta", bio: "Tidak terburu-buru. Suka menyeduh teh sambil berdoa pagi.", verse: "Hati yang gembira adalah obat yang manjur.", interests: ["teh", "doa pagi"], photo: "/people/clara.jpg" },
+  { name: "Yosef Yoku", nick: "Yosef", gender: "male", city: "Jayapura", bio: "Dari tepi Danau Sentani. Suka kumpul bareng anak muda sambil main gitar.", verse: "Bernyanyilah bagi Tuhan dengan segenap hatimu.", interests: ["gitar", "orang muda"], photo: "/people/yosef.jpg" },
+  { name: "Maria Mandagi", nick: "Maria", gender: "female", city: "Manado", bio: "Anggota koor. Kalau ketawa, satu ruangan ikut ketawa.", verse: "Bersukacitalah senantiasa dalam Tuhan.", interests: ["koor", "musik"], photo: "/people/maria.jpg" },
+  { name: "Antonius Hadinata", nick: "Antonius", gender: "male", city: "Bandung", bio: "Suka berpikir panjang soal iman, kadang sambil baca sampai larut.", verse: "Imanku dan pengertianku bertumbuh sedikit demi sedikit.", interests: ["buku", "refleksi"], photo: "/people/antonius.jpg" },
+  { name: "Fransiska Kurniasih", nick: "Fransiska", gender: "female", city: "Semarang", bio: "Aktif di komunitas orang muda. Kalau cerita, tangannya ikut bicara.", verse: "Kamu adalah terang dunia.", interests: ["OMK", "diskusi"], photo: "/people/fransiska.jpg" },
+  { name: "Gregorius Lembang", nick: "Gregorius", gender: "male", city: "Makassar", bio: "Pendiam, tapi selalu hadir. Pelayanan kecil tiap Minggu.", verse: "Siapa setia dalam perkara kecil, ia setia juga dalam perkara besar.", interests: ["pelayanan", "lektor"], photo: "/people/gregorius.jpg" },
+  { name: "Theresia Sri Handayani", nick: "Theresia", gender: "female", city: "Yogyakarta", bio: "Praktis dan penyayang. Percaya pada doa sebelum masak dan sesudah makan.", verse: "Berilah, maka kamu akan diberi.", interests: ["masak", "keluarga"], photo: "/people/theresia.jpg" },
+  { name: "Ignasius Sembiring", nick: "Ignasius", gender: "male", city: "Berastagi", bio: "Sabar dengan anak-anak misdinar. Mereka mengajarkan banyak hal.", verse: "Biarkanlah anak-anak itu datang kepada-Ku.", interests: ["misdinar", "kebun"], photo: "/people/ignasius.jpg" },
+  { name: "Veronika Halim", nick: "Veronika", gender: "female", city: "Palembang", bio: "Lembut dan teratur. Rosario di meja ruang tamu tidak pernah dipindah.", verse: "Doa orang benar sangat besar kuasanya.", interests: ["rosario", "keluarga"], photo: "/people/veronika.jpg" },
+  { name: "Markus Tefa", nick: "Markus", gender: "male", city: "Kupang", bio: "Guru yang sudah beruban. Masih belajar dari murid-muridnya.", verse: "Mulailah dengan Tuhan, hikmat itu permulaannya.", interests: ["mengajar", "membaca"], photo: "/people/markus.jpg" },
+  { name: "Agnes Dhae", nick: "Agnes", gender: "female", city: "Denpasar", bio: "Asal Flores, tinggal di Bali. Rindu kampung tapi bersyukur di perantauan.", verse: "Aku tahu rancangan-rancangan apa yang ada pada-Ku mengenai kamu.", interests: ["perantauan", "komunitas"], photo: "/people/agnes.jpg" },
+  { name: "Petrus Gebze", nick: "Petrus", gender: "male", city: "Merauke", bio: "Bangga dengan budaya Marind. Misa dengan tifa itu indah.", verse: "Segala bangsa akan datang dan sujud menyembah Engkau.", interests: ["budaya", "tifa"], photo: "/people/petrus.jpg" },
+  { name: "Lidwina Pramudita", nick: "Lidwina", gender: "female", city: "Malang", bio: "Mahasiswi. Masih mencari, pelan-pelan, apa arti panggilan.", verse: "Percayalah kepada Tuhan dengan segenap hatimu.", interests: ["kuliah", "pencarian"], photo: "/people/lidwina.jpg" },
+  { name: "Stefanus Gunawan", nick: "Stefanus", gender: "male", city: "Pontianak", bio: "Bermain organ di gereja saat sepi. Musik membuatnya hening.", verse: "Mazmur, kidung puji-pujian, dan nyanyian rohani.", interests: ["organ", "hening"], photo: "/people/stefanus.jpg" },
+  { name: "Katarina Simorangkir", nick: "Katarina", gender: "female", city: "Balikpapan", bio: "Ramah, mudah ngobrol dengan siapa saja. Anak rantau dari Tapanuli.", verse: "Kasihilah sesamamu manusia seperti dirimu sendiri.", interests: ["keluarga", "rantau"], photo: "/people/katarina.jpg" },
+  { name: "Yustinus Pramono", nick: "Yustinus", gender: "male", city: "Solo", bio: "Kerja praktis, lengan baju selalu digulung. Suka bantu-bantu di gereja.", verse: "Apa pun juga yang kamu perbuat, perbuatlah dengan segenap hatimu.", interests: ["kerja bakti", "gereja"], photo: "/people/yustinus.jpg" },
+  { name: "Angela Tanjung", nick: "Angela", gender: "female", city: "Batam", bio: "Kerja shift, ke gereja pagi sebelum berangkat. Hangat dan waspada.", verse: "Ia menguatkan yang letih dan memberi kekuatan kepada yang tidak berdaya.", interests: ["kerja", "doa pagi"], photo: "/people/angela.jpg" },
 ];
 
 /** Short general reflections. Nothing here claims a personal event: they could be said by anyone. */
@@ -111,6 +107,3 @@ export const BOT_THOUGHTS: string[] = [
 export const BOT_EMAIL_DOMAIN = "ruangiman-bot.invalid";
 /** Jakarta hours at which the bots post (one thought each time, if it has not happened yet today) */
 export const BOT_POST_HOURS = [7, 9, 12, 15, 18, 21];
-
-export const avatarUrlFor = (seed: string) =>
-  `https://api.dicebear.com/9.x/lorelei/png?seed=${encodeURIComponent(seed)}&size=400&backgroundColor=f1e3c2,e8d3a3,d9c08a,f5ead6`;

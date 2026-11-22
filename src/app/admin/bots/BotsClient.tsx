@@ -27,7 +27,7 @@ export default function BotsClient({ ready }: { ready: number }) {
         &quot;Bot&quot;, bukan anggota komunitas, dan tidak masuk papan peringkat, saran teman, atau jumlah anggota. Saat ini ada <b className="text-white">{ready}</b> bot siap.
       </p>
       <div className="flex flex-wrap gap-3">
-        <button onClick={() => run("setup")} disabled={busy} className="rounded-xl bg-brand-gold px-5 py-3 text-sm font-bold text-brand-dark disabled:opacity-60">Siapkan bot (akun lama dan 20 baru)</button>
+        <button onClick={() => run("setup")} disabled={busy} className="rounded-xl bg-brand-gold px-5 py-3 text-sm font-bold text-brand-dark disabled:opacity-60">Siapkan 20 bot dengan foto</button>
         <button onClick={() => run("post")} disabled={busy} className="rounded-xl border border-brand-gold/50 px-5 py-3 text-sm font-semibold text-brand-gold disabled:opacity-60">Jalankan aktivitas sekarang</button>
         <button onClick={() => run("tidy")} disabled={busy} className="rounded-xl border border-[#444] px-5 py-3 text-sm font-semibold text-brand-light disabled:opacity-60">Rapikan (keluar komunitas, teman antar bot)</button>
       </div>
