@@ -228,12 +228,6 @@ export default function CommunitySlugLayout({
         </nav>
       </div>
 
-      {browseOnly && (
-        <p className="rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 py-3 text-xs leading-relaxed text-brand-light">
-          Kamu sedang melihat halaman umum komunitas ini. Camp, event, dan halaman lainnya terbuka untuk anggota. Gunakan tombol <b>gabung</b> di halaman Tentang ini untuk meminta bergabung.
-        </p>
-      )}
-
       {/* Main Content Area */}
       <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-x-hidden overflow-y-auto min-h-[500px] flex-1 flex flex-col relative">
         {children}
