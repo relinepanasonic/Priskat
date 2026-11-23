@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { resolveCommunity, sortCommunities } from "@/lib/community";
 import { formatDate } from "@/lib/utils";
+import { isCampSeries } from "@/lib/campTypes";
 
 export default function CampCrewPage() {
   const params = useParams();
@@ -168,6 +169,9 @@ export default function CampCrewPage() {
             <Link href={`/camp/${slug}/ongoing/${camp.id}`} key={camp.id}>
               <div className="bg-[#111] border border-[#333] hover:border-brand-gold/50 rounded-2xl p-6 transition-all hover:bg-[#15181e] group h-full flex flex-col cursor-pointer shadow-lg hover:shadow-brand-gold/10 relative">
 
+                {camp.banner_url && (
+                  <img src={camp.banner_url} alt="" className="mb-4 h-28 w-full rounded-xl object-cover" loading="lazy" />
+                )}
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-brand-gold/10 p-3 rounded-xl text-brand-gold">
                     <Tent className="w-6 h-6" />
@@ -178,10 +182,10 @@ export default function CampCrewPage() {
                 </div>
                 
                 <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">
-                  {camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name}
+                  {isCampSeries(camp.camp_name) ? camp.camp_name : (camp.custom_name || camp.camp_name)}
                 </h3>
                 <p className="text-brand-muted font-medium mb-2">
-                  {camp.camp_name !== "Other Event" ? `Angkatan ${camp.angkatan}` : "Custom Event"}
+                  {isCampSeries(camp.camp_name) ? `Angkatan ${camp.angkatan}` : (camp.camp_name === "Other Event" || camp.camp_name === "Other" ? "Event" : camp.camp_name)}
                 </p>
                 <p className="text-xs text-gray-500 mb-6 flex items-center gap-1">
                   Start Date: {camp.start_date ? formatDate(camp.start_date) : "Not set"}
@@ -198,7 +202,7 @@ export default function CampCrewPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          openCollab(camp, camp.camp_name === "Other Event" ? camp.custom_name : `${camp.camp_name} ${camp.angkatan}`);
+                          openCollab(camp, isCampSeries(camp.camp_name) ? `${camp.camp_name} ${camp.angkatan}` : (camp.custom_name || camp.camp_name));
                         }}
                         className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] transition-colors rounded"
                         title="Collaboration"

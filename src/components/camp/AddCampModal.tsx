@@ -1,35 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { X, Check } from "lucide-react";
-
-const EVENT_TYPES = ["Camp", "KKR", "Persekutuan Doa / Fellowship", "Konser", "Doa Bersama", "Rosario", "Jalan Salib", "Other"];
+import { uploadImage, storagePath } from "@/lib/upload";
+import { CAMP_EVENT_TYPES, isCampSeries } from "@/lib/campTypes";
+import { X, Check, ImagePlus } from "lucide-react";
 
 export default function AddCampModal({ isOpen, onClose, onSuccess, communityId = null }: { isOpen: boolean; onClose: () => void; onSuccess: () => void; communityId?: string | null }) {
   const [branches, setBranches] = useState<string[]>([]);
   const [branch, setBranch] = useState("");
-  const [eventType, setEventType] = useState("Camp");
-  const [campNameSel, setCampName] = useState("Pria Sejati");
-  // everything that is not a Camp is a one-off event with its own title
-  const campName = eventType === "Camp" ? campNameSel : "Other Event";
+  const [campType, setCampType] = useState<string>("Pria Sejati");
   const [angkatan, setAngkatan] = useState("");
   const [startDate, setStartDate] = useState("");
   const [customName, setCustomName] = useState("");
-  
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const series = isCampSeries(campType);
+
   const [ketuaUserId, setKetuaUserId] = useState<string | null>(null);
-  
+
   const [users, setUsers] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setEventType("Camp");
-      setCampName("Pria Sejati");
+      setCampType("Pria Sejati");
       setAngkatan("");
       setStartDate("");
       setCustomName("");
+      setBannerUrl("");
       setKetuaUserId(null);
       setErrorMsg(null);
       fetchBranches();
@@ -53,35 +55,51 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
     if (data) setUsers(data);
   };
 
-  const generatedTitle = campName === "Other Event" 
-    ? customName 
-    : `${campName} ${angkatan} - ${branch}`;
+  const generatedTitle = series
+    ? `${campType} ${angkatan} - ${branch}`
+    : customName;
+
+  const handleBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not signed in");
+      setBannerUrl(await uploadImage(file, "event-banners", storagePath(user.id, file.name)));
+    } catch {
+      setErrorMsg("Image upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
-    if (!branch || (!angkatan && campName !== "Other Event") || !startDate || !ketuaUserId) {
-      setErrorMsg("Please fill in all required fields (Branch, Event, Angkatan, Date, and Ketua)");
+    if (!branch || (series && !angkatan) || !startDate || !ketuaUserId) {
+      setErrorMsg("Please fill in all required fields (Branch, Type, Angkatan, Date, and Ketua)");
       return;
     }
-    if (campName === "Other Event" && !customName) {
+    if (!series && !customName) {
       setErrorMsg("Please provide an Event Title");
       return;
     }
-    
+
     setIsSaving(true);
     setErrorMsg(null);
     const supabase = createClient();
-    
+
     // 1. Create cohort
     const { data: cohort, error: cohortError } = await supabase
       .from("camp_cohorts")
       .insert({
         branch,
-        camp_name: campName,
-        angkatan: angkatan || "0",
+        camp_name: campType,
+        angkatan: series ? angkatan : "0",
         start_date: startDate,
         custom_name: generatedTitle,
-        event_type: eventType,
         community_id: communityId,
+        banner_url: bannerUrl || null,
       })
       .select("id")
       .single();
@@ -98,14 +116,14 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
       const { error: crewError } = await supabase.from("camp_crew").insert({
         cohort_id: cohort.id,
         branch,
-        camp: campName,
-        angkatan: angkatan || "0",
+        camp: campType,
+        angkatan: series ? angkatan : "0",
         name: ketuaUser.full_name,
         position: "Ketua",
         user_id: ketuaUserId,
         profile_id: ketuaUserId
       });
-      
+
       if (crewError) {
         setErrorMsg(crewError.message);
         setIsSaving(false);
@@ -129,20 +147,13 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="p-6 overflow-y-auto flex-1 space-y-5">
           {errorMsg && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">
               {errorMsg}
             </div>
           )}
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tipe Event</label>
-            <select value={eventType} onChange={e => setEventType(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
-              {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -151,22 +162,22 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
                 {branches.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
-            {eventType === "Camp" && <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp</label>
-              <select value={campNameSel} onChange={e => setCampName(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
-                <option value="Pria Sejati">Pria Sejati</option>
-                <option value="Bapa Sejati Katolik">Bapa Sejati Katolik</option>
-                <option value="Wanita Berhikmat">Wanita Berhikmat</option>
-                <option value="Youngman">Youngman</option>
-                <option value="Youngwoman">Youngwoman</option>
-                <option value="Patriot">Patriot</option>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp / Event Type</label>
+              <select value={campType} onChange={e => setCampType(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
+                {CAMP_EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-            </div>}
-            
-            {campName !== "Other Event" && (
+            </div>
+
+            {series ? (
               <div>
                 <label className="block text-xs font-semibold text-gray-400 mb-1.5">Angkatan</label>
                 <input value={angkatan} onChange={e => setAngkatan(e.target.value)} type="text" placeholder="e.g. 18" className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold" />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-semibold text-brand-gold mb-1.5">Event Title</label>
+                <input value={customName} onChange={e => setCustomName(e.target.value)} type="text" placeholder={`e.g. ${campType} Jabodetabek`} className="w-full bg-[#111] border border-brand-gold/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold" />
               </div>
             )}
 
@@ -175,13 +186,28 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
               <input value={startDate} onChange={e => setStartDate(e.target.value)} type="date" className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold [color-scheme:dark]" />
             </div>
           </div>
-          
-          {campName === "Other Event" && (
-            <div>
-              <label className="block text-xs font-semibold text-brand-gold mb-1.5">Custom Event Title</label>
-              <input value={customName} onChange={e => setCustomName(e.target.value)} type="text" placeholder={`e.g. ${eventType === "Other" ? "Jalan Pagi" : eventType} ...`} className="w-full bg-[#111] border border-brand-gold/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold" />
-            </div>
-          )}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-400">Banner (optional)</label>
+            {bannerUrl ? (
+              <div className="relative h-32 overflow-hidden rounded-xl border border-[#333]">
+                <Image src={bannerUrl} alt="Banner" fill className="object-cover" />
+                <button type="button" onClick={() => setBannerUrl("")} className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex h-24 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#333] hover:border-brand-gold/60">
+                {uploading ? <p className="text-sm text-gray-500">Uploading…</p> : (
+                  <>
+                    <ImagePlus className="mb-1 h-6 w-6 text-gray-500" />
+                    <p className="text-xs text-gray-500">Click to add a banner</p>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="sr-only" onChange={handleBanner} />
+              </label>
+            )}
+          </div>
 
           <div className="bg-[#111] p-4 rounded-xl border border-[#333]">
             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Generated Title</label>
@@ -194,8 +220,8 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
 
           <div>
             <label className="block text-xs font-semibold text-brand-gold mb-1.5">Assign Ketua</label>
-            <select 
-              value={ketuaUserId || ""} 
+            <select
+              value={ketuaUserId || ""}
               onChange={e => setKetuaUserId(e.target.value || null)}
               className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold"
             >
@@ -213,9 +239,9 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
           <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-gray-300 hover:text-white transition-colors">
             Cancel
           </button>
-          <button 
-            onClick={handleSave} 
-            disabled={isSaving}
+          <button
+            onClick={handleSave}
+            disabled={isSaving || uploading}
             className="bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
           >
             {isSaving ? "Saving..." : <><Check className="w-4 h-4" /> Save Camp</>}

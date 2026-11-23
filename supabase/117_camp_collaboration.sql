@@ -40,7 +40,7 @@ BEGIN
   IF p_user = auth.uid() THEN RAISE EXCEPTION 'Kamu sudah ada di camp ini.'; END IF;
   SELECT * INTO c FROM public.camp_cohorts WHERE id = p_cohort;
   IF NOT FOUND THEN RAISE EXCEPTION 'Camp tidak ditemukan.'; END IF;
-  ttl := CASE WHEN c.camp_name = 'Other Event' THEN coalesce(c.custom_name, 'Camp') ELSE c.camp_name || coalesce(' ' || c.angkatan::text, '') END;
+  ttl := coalesce(c.custom_name, c.camp_name || coalesce(' ' || c.angkatan::text, ''));
   SELECT id INTO ev FROM public.timeline_events WHERE camp_cohort_id = p_cohort AND owner_id = auth.uid() LIMIT 1;
   IF ev IS NULL THEN
     INSERT INTO public.timeline_events (owner_id, title, starts_at, notes, visibility, camp_cohort_id)
