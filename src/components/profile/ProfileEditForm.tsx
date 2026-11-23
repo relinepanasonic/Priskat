@@ -21,7 +21,6 @@ const schema = z.object({
   partner_id: z.string().optional(),
   favorite_verse: z.string().optional(),
   birthdate: z.string().optional(),
-  phone: z.string().regex(/^08[0-9]+$/, "Phone must start with 08").optional().or(z.literal("")),
   instagram: z.string().optional(),
   bio: z.string().max(300).optional(),
   skills: z.string().optional(),
@@ -57,7 +56,6 @@ export default function ProfileEditForm({
       partner_id: profile.partner_id ?? "",
       favorite_verse: profile.favorite_verse ?? "",
       birthdate: profile.birthdate ?? "",
-      phone: profile.phone ?? "",
         instagram: profile.instagram ?? "",
       bio: profile.bio ?? "",
       skills: profile.skills?.join(", ") ?? "",
@@ -119,7 +117,6 @@ export default function ProfileEditForm({
         partner_id: (data.relationship_status === "Couple" || data.relationship_status === "Marriage") ? (data.partner_id || null) : null,
         favorite_verse: data.favorite_verse,
         birthdate: data.birthdate || null,
-        phone: data.phone ?? "",
         bio: data.bio ?? "",
         skills: skillsArr,
         interests: interestsArr,
@@ -128,7 +125,8 @@ export default function ProfileEditForm({
       .eq("id", profile.id);
 
     if (updateError) {
-      setError(updateError.message);
+      setError(`Belum bisa disimpan: ${updateError.message}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -146,9 +144,11 @@ export default function ProfileEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, () => {
-      // Bring the first problem into view (a missing field used to fail silently far down the form)
-      window.setTimeout(() => document.querySelector("[data-field-error]")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    <form onSubmit={handleSubmit(onSubmit, (errs) => {
+      const labels: Record<string, string> = { full_name: "Nama lengkap", gender: "Jenis kelamin", bio: "Bio (maksimal 300 huruf)" };
+      const names = Object.keys(errs).map((k) => labels[k] ?? k);
+      setError(`Belum bisa disimpan. Periksa: ${names.join(", ")}.`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     })} className="space-y-6">
       {!profile.gender && (
         <div className="rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-3 text-sm leading-relaxed text-brand-light">
@@ -259,7 +259,7 @@ export default function ProfileEditForm({
       <div>
         <label className="mb-1 block text-sm font-medium text-[#5BA4FF]">Bio <span className="text-brand-muted font-normal">(max 300 chars)</span></label>
         <textarea {...register("bio")} rows={3} placeholder="Tell the community about yourselfâ€¦" className="w-full rounded-lg border border-brand-border px-4 py-2.5 text-sm focus:border-brand-blue focus:outline-none resize-none" />
-        {errors.bio && <p className="mt-1 text-xs text-red-600">{errors.bio.message}</p>}
+        {errors.bio && <p data-field-error className="mt-1 text-xs font-semibold text-red-400">{errors.bio.message}</p>}
       </div>
 
       <div>
