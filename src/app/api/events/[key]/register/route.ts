@@ -107,9 +107,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ key
     if ((count ?? 0) >= ev.capacity) return NextResponse.json({ error: "Maaf, kuota acara ini sudah penuh." }, { status: 409 });
   }
 
-  const status = settings.link_auto_approve === false ? "pending_review" : "approved";
+  // A paid event starts as "Belum bayar" with no QR; the Ketua, Wakil Ketua, Sekretaris or Bendahara mark it paid later.
+  // A free event is approved straight away (unless auto approve is off).
+  const price = Math.max(0, Number(settings.price) || 0);
+  const status = price > 0 ? "awaiting_payment" : settings.link_auto_approve === false ? "pending_review" : "approved";
   const row = {
-    event_id: ev.id, user_id: uid, full_name: name, phone, email, paroki, answers, status, amount: 0, source: "link",
+    event_id: ev.id, user_id: uid, full_name: name, phone, email, paroki, answers, status, amount: price, source: "link",
     decided_at: status === "approved" ? new Date().toISOString() : null, created_at: new Date().toISOString(),
     proof_path: null, reject_reason: null, checked_in_at: null, checked_in_by: null,
   };

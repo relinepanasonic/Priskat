@@ -1,54 +1,82 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image as ImageIcon, MessageCircle, Plus, QrCode, Trash2, UserRound, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image as ImageIcon, MessageCircle, Plus, QrCode, Trash2, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { rupiah, STATUS_LABEL, ticketLink, waLink, type EventGroup, type Registration } from "@/lib/eventReg";
+import { DEFAULT_WA_TEMPLATE, rupiah, renderWaTemplate, ticketLink, waLink, WA_PLACEHOLDERS, type EventGroup, type Registration } from "@/lib/eventReg";
+import { formatDate } from "@/lib/utils";
 import { useEventData } from "./useEventData";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
 
 const db = () => createClient() as any;
 const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
-const STATUS_STYLE: Record<string, string> = {
-  awaiting_payment: "bg-amber-500/15 text-amber-300",
-  pending_review: "bg-sky-500/15 text-sky-300",
-  approved: "bg-emerald-500/15 text-emerald-300",
-  rejected: "bg-red-500/15 text-red-300",
-  cancelled: "bg-white/10 text-gray-400",
-};
 
 type Crew = { id: string; name: string | null; position: string | null };
+type SortKey = "name" | "paroki" | "phone" | "group" | "status";
 
-/** Peserta: everybody who registered (also by the short link), the groups they are in, and a QR ticket to send by WhatsApp. */
-export default function PesertaSection({ eventId, eventTitle, crew }: { eventId: string; eventTitle: string; crew: Crew[] }) {
-  const { regs, groups, settings, loading, reload } = useEventData(eventId);
+/** Belum bayar until the Ketua, Wakil Ketua, Sekretaris or Bendahara marks it paid; Lunas shows the QR. */
+const isPaid = (r: Registration) => r.status === "approved";
+const statusText = (r: Registration) => (r.status === "approved" ? "Lunas" : r.status === "rejected" ? "Ditolak" : r.status === "cancelled" ? "Dibatalkan" : "Belum bayar");
+const STATUS_STYLE = (r: Registration) =>
+  r.status === "approved" ? "bg-emerald-500/15 text-emerald-300" : r.status === "rejected" || r.status === "cancelled" ? "bg-white/10 text-gray-400" : "bg-amber-500/15 text-amber-300";
+
+const COLS: [SortKey, string][] = [["name", "Nama"], ["paroki", "Paroki"], ["phone", "WhatsApp"], ["group", "Grup"], ["status", "Status"]];
+
+/** Peserta: everybody who registered, who has paid, their groups and QR ticket. Sortable from the column headers. */
+export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid }: { eventId: string; eventTitle: string; crew: Crew[]; canMarkPaid: boolean }) {
+  const { event, regs, groups, settings, loading, reload } = useEventData(eventId);
   const [filter, setFilter] = useState<"all" | "none" | string>("all");
   const [q, setQ] = useState("");
+  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [qr, setQr] = useState<Registration | null>(null);
   const [proof, setProof] = useState<{ url: string; name: string } | null>(null);
   const [showGroups, setShowGroups] = useState(false);
+  const [showWa, setShowWa] = useState(false);
   const [newGroup, setNewGroup] = useState("");
   const [copied, setCopied] = useState(false);
+  const [tpl, setTpl] = useState<string | null>(null);
+  const [tplMsg, setTplMsg] = useState<string | null>(null);
+
+  const template = tpl ?? settings?.wa_template ?? DEFAULT_WA_TEMPLATE;
 
   const counts = useMemo(() => ({
     all: regs.length,
-    approved: regs.filter((r) => r.status === "approved").length,
+    paid: regs.filter(isPaid).length,
+    unpaid: regs.filter((r) => !isPaid(r) && r.status !== "rejected" && r.status !== "cancelled").length,
     present: regs.filter((r) => r.checked_in_at).length,
     none: regs.filter((r) => !r.group_id).length,
   }), [regs]);
 
+  const groupOf = (id: string | null | undefined) => groups.find((g) => g.id === id);
+  const crewName = (id: string | null) => crew.find((c) => c.id === id)?.name ?? "";
+
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return regs.filter((r) =>
+    const list = regs.filter((r) =>
       (filter === "all" || (filter === "none" ? !r.group_id : r.group_id === filter)) &&
       (!t || r.full_name.toLowerCase().includes(t) || (r.phone ?? "").includes(t) || (r.paroki ?? "").toLowerCase().includes(t)),
     );
-  }, [regs, filter, q]);
-
-  const groupOf = (id: string | null | undefined) => groups.find((g) => g.id === id);
-  const crewName = (id: string | null) => crew.find((c) => c.id === id)?.name ?? "";
+    if (!sort) return list;
+    const val = (r: Registration) => {
+      switch (sort.key) {
+        case "name": return r.full_name;
+        case "paroki": return r.paroki ?? "";
+        case "phone": return r.phone ?? "";
+        case "group": return groups.find((g) => g.id === r.group_id)?.name ?? "";
+        default: return statusText(r);
+      }
+    };
+    const dir = sort.dir === "asc" ? 1 : -1;
+    // an empty value always goes last
+    return [...list].sort((a, b) => {
+      const x = val(a), y = val(b);
+      if (!x && y) return 1;
+      if (x && !y) return -1;
+      return x.localeCompare(y, "id", { numeric: true, sensitivity: "base" }) * dir;
+    });
+  }, [regs, filter, q, sort, groups]);
 
   async function run(id: string, fn: () => Promise<{ error: { message: string } | null }>) {
     setBusy(id); setError(null);
@@ -60,12 +88,20 @@ export default function PesertaSection({ eventId, eventTitle, crew }: { eventId:
   }
 
   const setGroup = (r: Registration, g: string) => run(r.id, () => db().rpc("set_registration_group", { p_reg: r.id, p_group: g || null }));
-  async function decide(r: Registration, approve: boolean) {
-    let reason = "";
-    if (!approve) { const x = window.prompt("Alasan penolakan (boleh dikosongkan):", ""); if (x === null) return; reason = x; }
-    const ok = await run(r.id, () => db().rpc("decide_registration", { p_reg: r.id, p_approve: approve, p_reason: reason }));
-    if (ok) void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "registration_decided", id: r.id }) }).catch(() => {});
+
+  async function setPaid(r: Registration, paid: boolean) {
+    const msg = paid
+      ? `Tandai ${r.full_name} sudah bayar${r.amount > 0 ? ` ${rupiah(r.amount)}` : ""}? ${r.amount > 0 ? "Uangnya dicatat sebagai pemasukan di Keuangan, dan " : ""}QR Code akan muncul.`
+      : `Kembalikan ${r.full_name} ke "Belum bayar"? Pemasukannya dihapus dari Keuangan dan QR Code disembunyikan.`;
+    if (!confirm(msg)) return;
+    const ok = await run(r.id, () => db().rpc("set_registration_paid", { p_reg: r.id, p_paid: paid }));
+    if (ok && paid) {
+      // QR ticket by email (needs the person's email), and the "your registration was decided" push
+      void fetch(`/api/events/${eventId}/notify-paid`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reg: r.id }) }).catch(() => {});
+      void fetch("/api/push/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "registration_decided", id: r.id }) }).catch(() => {});
+    }
   }
+
   async function viewProof(r: Registration) {
     if (!r.proof_path) return;
     const { data, error: err } = await createClient().storage.from("event-proofs").createSignedUrl(r.proof_path, 300);
@@ -90,22 +126,50 @@ export default function PesertaSection({ eventId, eventTitle, crew }: { eventId:
     void run(g.id, () => db().from("event_groups").delete().eq("id", g.id));
   };
 
-  const exportQuery = `all=1${filter === "all" ? "" : `&group=${filter}`}`;
-  const message = (r: Registration) => `Halo ${r.full_name}, ini tiket QR kamu untuk ${eventTitle}. Tunjukkan QR ini kepada panitia saat acara: ${ticketLink(r.ticket_code)}`;
+  // the WhatsApp message with the QR link: our default text, or the crew's own (never empty)
+  const message = (r: Registration) => renderWaTemplate(template, {
+    nama: r.full_name, event: eventTitle, link: ticketLink(r.ticket_code),
+    tanggal: event?.event_date ? formatDate(event.event_date) : "", lokasi: event?.location ?? "",
+  });
+  async function saveTemplate() {
+    const text = template.trim();
+    if (text.length < 10) { setTplMsg("Pesan tidak boleh kosong (minimal 10 huruf). Pakai tombol Kembalikan default kalau mau mulai lagi."); return; }
+    if (!text.includes("{link}")) { setTplMsg("Pesan harus memuat {link}, supaya peserta menerima QR-nya."); return; }
+    setTplMsg(null);
+    const { error: err } = await db().from("event_reg_settings").upsert({ event_id: eventId, wa_template: text === DEFAULT_WA_TEMPLATE ? null : text });
+    setTplMsg(err ? `Belum bisa menyimpan: ${err.message}` : "Pesan tersimpan.");
+    if (!err) { setTpl(null); await reload(); }
+  }
+  async function resetTemplate() {
+    const { error: err } = await db().from("event_reg_settings").upsert({ event_id: eventId, wa_template: null });
+    setTplMsg(err ? `Belum bisa menyimpan: ${err.message}` : "Kembali ke pesan default.");
+    if (!err) { setTpl(null); await reload(); }
+  }
 
   async function copy(text: string) {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* ignore */ }
   }
 
+  const exportQuery = `all=1${filter === "all" ? "" : `&group=${filter}`}`;
+  const toggleSort = (key: SortKey, dir: "asc" | "desc") => setSort((s) => (s && s.key === key && s.dir === dir ? null : { key, dir }));
+
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat peserta...</p>;
+
+  const Arrows = ({ k }: { k: SortKey }) => (
+    <span className="ml-1 inline-flex flex-col leading-none">
+      <button type="button" onClick={() => toggleSort(k, "asc")} aria-label={`Urutkan ${k} naik`} className={sort?.key === k && sort.dir === "asc" ? "text-brand-gold" : "text-gray-600 hover:text-white"}><ArrowUp className="h-3 w-3" /></button>
+      <button type="button" onClick={() => toggleSort(k, "desc")} aria-label={`Urutkan ${k} turun`} className={sort?.key === k && sort.dir === "desc" ? "text-brand-gold" : "text-gray-600 hover:text-white"}><ArrowDown className="h-3 w-3" /></button>
+    </span>
+  );
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-4 gap-2 text-center">
         {[
           { l: "Terdaftar", v: counts.all, c: "text-white" },
-          { l: "Disetujui", v: counts.approved, c: "text-emerald-300" },
-          { l: "Sudah hadir", v: counts.present, c: "text-brand-gold" },
+          { l: "Belum bayar", v: counts.unpaid, c: "text-amber-300" },
+          { l: "Lunas", v: counts.paid, c: "text-emerald-300" },
+          { l: "Hadir", v: counts.present, c: "text-brand-gold" },
         ].map((m) => (
           <div key={m.l} className="rounded-xl border border-[#2a2d35] bg-[#14171c] p-3">
             <p className={`text-2xl font-bold ${m.c}`}>{m.v}</p>
@@ -121,12 +185,12 @@ export default function PesertaSection({ eventId, eventTitle, crew }: { eventId:
         <a href={`/api/events/${eventId}/attendance?format=pdf&${exportQuery}`} className="flex items-center justify-center gap-2 rounded-xl border border-[#333] py-2.5 text-xs font-bold text-brand-light hover:bg-white/5"><FileText className="h-4 w-4" /> Unduh PDF</a>
       </div>
 
-      {/* Groups */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {[["all", "Semua", counts.all], ...groups.map((g) => [g.id, g.name, regs.filter((r) => r.group_id === g.id).length] as [string, string, number]), ["none", "Tanpa grup", counts.none]].map(([k, l, n]) => (
           <button key={String(k)} onClick={() => setFilter(String(k))} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${filter === k ? "bg-brand-gold text-brand-dark" : "border border-[#333] text-brand-muted"}`}>{l} {n}</button>
         ))}
         <button onClick={() => setShowGroups((v) => !v)} className="shrink-0 rounded-full border border-brand-gold/40 px-3 py-1.5 text-xs font-semibold text-brand-gold">{showGroups ? "Tutup grup" : "Kelola grup"}</button>
+        <button onClick={() => setShowWa((v) => !v)} className="shrink-0 rounded-full border border-emerald-500/40 px-3 py-1.5 text-xs font-semibold text-emerald-300">{showWa ? "Tutup pesan" : "Pesan WhatsApp"}</button>
       </div>
 
       {showGroups && (
@@ -154,31 +218,57 @@ export default function PesertaSection({ eventId, eventTitle, crew }: { eventId:
         </div>
       )}
 
+      {showWa && (
+        <div className="space-y-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">Pesan WhatsApp untuk peserta yang sudah lunas</p>
+          <textarea value={template} onChange={(e) => setTpl(e.target.value)} rows={7} className={`${input} resize-y rounded-2xl leading-relaxed`} />
+          <p className="text-[11px] leading-relaxed text-brand-muted">Isi yang akan diganti otomatis: {WA_PLACEHOLDERS.join("  ")}. Pesan tidak boleh kosong dan harus memuat {"{link}"}.</p>
+          {tplMsg && <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-brand-light">{tplMsg}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={saveTemplate} className="rounded-xl bg-brand-gold py-2.5 text-sm font-bold text-brand-dark">Simpan pesan</button>
+            <button onClick={resetTemplate} className="rounded-xl border border-[#333] py-2.5 text-sm font-semibold text-brand-light">Kembalikan default</button>
+          </div>
+        </div>
+      )}
+
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari nama, paroki, atau nomor HP" className={input} />
+
+      {/* phone: no column headers, so the sorting sits above the list */}
+      <div className="flex items-center gap-2 md:hidden">
+        <select value={sort?.key ?? ""} onChange={(e) => setSort(e.target.value ? { key: e.target.value as SortKey, dir: sort?.dir ?? "asc" } : null)} className="flex-1 rounded-lg border border-[#333] bg-[#14171c] px-3 py-2 text-xs text-white">
+          <option value="">Urutkan: terbaru</option>
+          {COLS.map(([k, l]) => <option key={k} value={k}>Urutkan: {l}</option>)}
+        </select>
+        <button type="button" disabled={!sort} onClick={() => sort && setSort({ ...sort, dir: sort.dir === "asc" ? "desc" : "asc" })} aria-label="Balik urutan" className="flex shrink-0 items-center gap-1 rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light disabled:opacity-40">
+          {sort?.dir === "desc" ? <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUp className="h-3.5 w-3.5" />} {sort?.dir === "desc" ? "Z-A" : "A-Z"}
+        </button>
+      </div>
+
       {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
       {shown.length === 0 ? (
         <div className="rounded-2xl border border-[#333] bg-[#1a1d24] p-8 text-center text-sm text-brand-muted">
           <UserRound className="mx-auto mb-2 h-8 w-8 text-gray-600" />
-          Belum ada peserta di sini.{!settings?.public_code && <> Buka tab Promosi untuk membuat link pendaftaran.</>}
+          Belum ada peserta di sini. Pakai tombol <b className="text-brand-gold">Link Peserta</b> untuk membagikan pendaftaran.
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
-          <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr] gap-3 border-b border-[#2a2d35] bg-black/20 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand-muted md:grid">
-            <span>Nama</span><span>Paroki</span><span>WhatsApp</span><span>Grup</span><span className="text-right">Aksi</span>
+          <div className="hidden grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr_1.3fr] gap-3 border-b border-[#2a2d35] bg-black/20 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand-muted md:grid">
+            {COLS.map(([k, l]) => <span key={k} className="flex items-center">{l}<Arrows k={k} /></span>)}
+            <span className="text-right">Aksi</span>
           </div>
           <ul className="divide-y divide-[#2a2d35]">
             {shown.map((r) => {
               const g = groupOf(r.group_id);
               return (
-                <li key={r.id} className="space-y-2.5 px-4 py-3 md:grid md:grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr] md:items-center md:gap-3 md:space-y-0">
+                <li key={r.id} className="space-y-2.5 px-4 py-3 md:grid md:grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr_1.3fr] md:items-center md:gap-3 md:space-y-0">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-white">{r.full_name}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 md:hidden">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE(r)}`}>{statusText(r)}</span>
                       {r.amount > 0 && <span className="text-[11px] text-brand-muted">{rupiah(r.amount)}</span>}
-                      {r.checked_in_at && <span className="text-[11px] font-semibold text-brand-gold">Hadir ✓</span>}
                     </div>
+                    {r.checked_in_at && <p className="mt-0.5 text-[11px] font-semibold text-brand-gold">Hadir ✓</p>}
                   </div>
                   <p className="truncate text-xs text-brand-light">{r.paroki || <span className="text-brand-muted">-</span>}</p>
                   <p className="truncate text-xs text-brand-light">{r.phone || <span className="text-brand-muted">-</span>}</p>
@@ -189,20 +279,24 @@ export default function PesertaSection({ eventId, eventTitle, crew }: { eventId:
                     </select>
                     {g?.facilitator_crew_id && <p className="mt-1 truncate text-[10px] text-brand-muted">Fasilitator: {crewName(g.facilitator_crew_id)}</p>}
                   </div>
+                  <div className="hidden md:block">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE(r)}`}>{statusText(r)}</span>
+                    {r.amount > 0 && <p className="mt-1 text-[11px] text-brand-muted">{rupiah(r.amount)}</p>}
+                  </div>
                   <div className="flex flex-wrap items-center gap-1.5 md:justify-end">
-                    {r.status === "approved" ? (
+                    {isPaid(r) ? (
                       <>
                         <button onClick={() => setQr(r)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-2.5 py-1.5 text-xs font-bold text-brand-dark"><QrCode className="h-3.5 w-3.5" /> QR</button>
                         <a href={waLink(r.phone, message(r))} target="_blank" rel="noopener noreferrer" aria-label="Kirim lewat WhatsApp" className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/50 px-2.5 py-1.5 text-xs font-bold text-emerald-300"><MessageCircle className="h-3.5 w-3.5" /> WA</a>
+                        {canMarkPaid && <button disabled={busy === r.id} onClick={() => setPaid(r, false)} className="rounded-lg px-2 py-1.5 text-[11px] font-semibold text-gray-400 underline hover:text-red-300 disabled:opacity-50">Batalkan</button>}
                       </>
                     ) : (
                       <>
                         {r.proof_path && <button onClick={() => viewProof(r)} className="inline-flex items-center gap-1 rounded-lg border border-[#333] px-2 py-1.5 text-xs font-semibold text-brand-light"><ImageIcon className="h-3.5 w-3.5" /> Bukti</button>}
-                        {(r.status === "pending_review" || r.status === "awaiting_payment" || r.status === "rejected") && (
-                          <button disabled={busy === r.id} onClick={() => decide(r, true)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-xs font-bold text-emerald-950 disabled:opacity-60"><Check className="h-3.5 w-3.5" /> Setujui</button>
-                        )}
-                        {(r.status === "pending_review" || r.status === "awaiting_payment") && (
-                          <button disabled={busy === r.id} onClick={() => decide(r, false)} className="inline-flex items-center gap-1 rounded-lg border border-red-500/50 px-2.5 py-1.5 text-xs font-bold text-red-300 disabled:opacity-60"><X className="h-3.5 w-3.5" /> Tolak</button>
+                        {canMarkPaid ? (
+                          <button disabled={busy === r.id} onClick={() => setPaid(r, true)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-xs font-bold text-emerald-950 disabled:opacity-60"><Check className="h-3.5 w-3.5" /> Tandai lunas</button>
+                        ) : (
+                          <span className="text-[11px] text-brand-muted" title="Hanya Ketua, Wakil Ketua, Sekretaris, dan Bendahara">Menunggu konfirmasi bendahara</span>
                         )}
                       </>
                     )}

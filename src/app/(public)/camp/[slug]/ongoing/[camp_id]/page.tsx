@@ -50,6 +50,9 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   
   const [user, setUser] = useState<any>(null);
   const [myProfile, setMyProfile] = useState<any>(null);
+  // who may change Belum bayar / Lunas: Ketua, Wakil Ketua, Sekretaris, Bendahara of this event (and site admins); the database checks it too
+  const canMarkPaid = ["founder", "superadmin", "admin"].includes(String(myProfile?.role ?? "").toLowerCase()) ||
+    crewMembers.some((c) => c.user_id && c.user_id === user?.id && ["ketua", "wakil ketua", "sekretaris", "sekertaris", "bendahara"].includes(String(c.position ?? "").trim().toLowerCase()));
 
   useEffect(() => {
     async function fetchData() {
@@ -58,7 +61,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
       setUser(user);
       
       if (user) {
-        const { data: profile } = await supabase.from("profiles").select("full_name, username").eq("id", user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("full_name, username, role").eq("id", user.id).single();
         if (profile) setMyProfile(profile);
       }
 
@@ -307,7 +310,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
 
       <div className="flex-1 p-4 md:p-6 pb-28 md:pb-6 overflow-y-auto flex flex-col">
         {activeTab === "peserta" && linkedEventId && (
-          <PesertaSection eventId={linkedEventId} eventTitle={linkedEventTitle} crew={crewMembers.map((c) => ({ id: c.id, name: c.name, position: c.position }))} />
+          <PesertaSection eventId={linkedEventId} eventTitle={linkedEventTitle} crew={crewMembers.map((c) => ({ id: c.id, name: c.name, position: c.position }))} canMarkPaid={canMarkPaid} />
         )}
         {activeTab === "qr" && linkedEventId && <QrSection eventId={linkedEventId} />}
         {activeTab === "promosi" && linkedEventId && <PromosiSection eventId={linkedEventId} />}

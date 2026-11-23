@@ -14,9 +14,9 @@ export default function GuestTicketView({
         <div className="flex items-start gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4">
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
           <div>
-            <p className="text-sm font-bold text-white">{pending ? "Pendaftaranmu sudah masuk" : "Pendaftaran berhasil"}</p>
+            <p className="text-sm font-bold text-white">{pending ? "Pendaftaranmu sudah masuk (belum bayar)" : "Pendaftaran berhasil"}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-brand-light">
-              {pending ? "Panitia akan memeriksa pendaftaranmu. QR Code muncul setelah disetujui." : "Terima kasih. Simpan QR Code di bawah ini."}
+              {pending ? "QR Code muncul setelah pembayaranmu dikonfirmasi panitia. Kami kabari lewat WhatsApp dan email." : "Terima kasih. Simpan QR Code di bawah ini."}
             </p>
           </div>
         </div>

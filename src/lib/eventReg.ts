@@ -21,6 +21,7 @@ export type RegSettings = {
   ticket_bg_url?: string | null;
   ticket_template?: string;
   ticket_gradient?: string;
+  wa_template?: string | null;
 };
 
 export type Registration = {
@@ -72,3 +73,10 @@ export const waPhone = (phone: string | null | undefined) => {
   return d.startsWith("0") ? `62${d.slice(1)}` : d.startsWith("62") ? d : d.length >= 9 ? d : "";
 };
 export const waLink = (phone: string | null | undefined, text: string) => `https://wa.me/${waPhone(phone)}?text=${encodeURIComponent(text)}`;
+
+/** The WhatsApp message that goes with a participant's QR once they have paid. The crew can edit it; it can never be empty. */
+export const DEFAULT_WA_TEMPLATE =
+  "Halo {nama}, terima kasih sudah mendaftar di {event}. Pembayaranmu sudah kami terima. 🙏\n\nIni tiket QR kamu: {link}\n\nMohon bawa QR Code ini saat hadir di acara ({tanggal}, {lokasi}) dan tunjukkan kepada panitia di pintu masuk. Tuhan memberkati!";
+export const WA_PLACEHOLDERS = ["{nama}", "{event}", "{tanggal}", "{lokasi}", "{link}"] as const;
+export const renderWaTemplate = (tpl: string, vars: { nama: string; event: string; tanggal: string; lokasi: string; link: string }) =>
+  tpl.replace(/\{(nama|event|tanggal|lokasi|link)\}/g, (_, k: keyof typeof vars) => vars[k] ?? "");
