@@ -59,7 +59,7 @@ export default async function AdminLayout({
       <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
         <CommunityCenterSidebar
           communities={communities}
-          canManageAll={!!isGlobalAdmin}
+          canManageAll={["founder", "superadmin"].includes(String(profile?.role ?? "").toLowerCase())}
           userName={profile?.nama_panggilan || profile?.full_name || "Admin"}
           avatarUrl={profile?.avatar_url ?? null}
         />

@@ -13,6 +13,8 @@ export default async function CommunityCenterPage() {
 
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   const globalAdmin = ["founder", "superadmin", "admin", "moderator"].includes(String(me?.role ?? "").toLowerCase());
+  // only the Founder and Superadmin may add or manage communities
+  const canAdd = ["founder", "superadmin"].includes(String(me?.role ?? "").toLowerCase());
 
   let list: LandingCommunity[] = [];
   if (globalAdmin) {
@@ -30,5 +32,5 @@ export default async function CommunityCenterPage() {
     if (list.length === 1) redirect(`/admin/communities/${list[0].slug || list[0].id}/dashboard`);
   }
 
-  return <CommunityLanding communities={list} canManage={globalAdmin} />;
+  return <CommunityLanding communities={list} canManage={canAdd} />;
 }

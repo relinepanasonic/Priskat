@@ -14,8 +14,9 @@ export default async function ManageCommunitiesPage() {
   if (!user) redirect("/login");
 
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  const globalAdmin = ["founder", "superadmin", "admin", "moderator"].includes(String(me?.role ?? "").toLowerCase());
-  if (!globalAdmin) redirect("/admin/communities");
+  // only the Founder and Superadmin may add or manage communities and their admins
+  const canAdd = ["founder", "superadmin"].includes(String(me?.role ?? "").toLowerCase());
+  if (!canAdd) redirect("/admin/communities");
 
   const { data: communityRows } = await supabase.from("communities").select("*").order("name");
   const communities = sortCommunities(communityRows);
@@ -28,7 +29,7 @@ export default async function ManageCommunitiesPage() {
         <Link href="/admin/communities" className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white">
           <ArrowLeft className="h-4 w-4" /> Community Center
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-white">Kelola komunitas dan admin</h1>
+        <h1 className="mt-2 text-2xl font-bold text-white">Add New Community</h1>
         <p className="mt-1 text-brand-muted">Tambah atau ubah komunitas, dan tentukan adminnya.</p>
       </div>
       <CommunityCenterClient initialCommunities={communities || []} initialAdmins={admins || []} allUsers={allUsers || []} />

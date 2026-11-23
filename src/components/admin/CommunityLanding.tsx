@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Settings2, Tent } from "lucide-react";
+import { ArrowRight, Plus, Tent } from "lucide-react";
 
 export type LandingCommunity = { id: string; name: string; slug: string | null; logo_url?: string | null };
 
@@ -19,7 +19,7 @@ export default function CommunityLanding({ communities, canManage }: { communiti
         </div>
         {canManage && (
           <Link href="/admin/communities/kelola-komunitas" className="inline-flex items-center gap-1.5 rounded-lg border border-brand-gold/40 px-3 py-2 text-xs font-semibold text-brand-gold hover:bg-brand-gold/10">
-            <Settings2 className="h-3.5 w-3.5" /> Kelola komunitas dan admin
+            <Plus className="h-3.5 w-3.5" /> Add New Community
           </Link>
         )}
       </div>
