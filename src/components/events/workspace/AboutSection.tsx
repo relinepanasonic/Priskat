@@ -5,14 +5,14 @@ import { DoorClosed, DoorOpen, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { fromJakartaInput, toJakartaInput } from "@/lib/utils";
 import { useEventData, type WorkspaceEvent } from "./useEventData";
-import { Card, Collapse, Field, inputCls } from "./ui";
+import { Collapse, Field, inputCls } from "./ui";
 import RegistrationSettings from "./RegistrationSettings";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
 import WaTemplate from "./WaTemplate";
 
 const db = () => createClient() as any;
 
-/** Tentang Event: the facts of the event, and the button that opens the registration. */
+/** Tentang Event: three boxes that open and close. Tentang Event, Pengaturan Pendaftaran, and Buka / Tutup Pendaftaran. */
 export default function AboutSection({ eventId }: { eventId: string }) {
   const { event, settings, loading, reload } = useEventData(eventId);
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat...</p>;
@@ -32,8 +32,9 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [toggling, setToggling] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showWa, setShowWa] = useState(false);
+  const [openTentang, setOpenTentang] = useState(true);
+  const [openSettings, setOpenSettings] = useState(false);
+  const [openDaftar, setOpenDaftar] = useState(false);
 
   const isOpen = settings?.open ?? false;
 
@@ -67,8 +68,9 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
   }
 
   return (
-    <div className="space-y-5">
-      <Card title="Tentang event" hint="Informasi ini dipakai di halaman pendaftaran, tiket, dan teks promosi.">
+    <div className="space-y-3">
+      {/* 1. Tentang Event */}
+      <Collapse title="Tentang Event" subtitle={title || "Nama, tagline, tempat, dan tanggal"} open={openTentang} onToggle={() => setOpenTentang((v) => !v)}>
         <Field label="Nama event">
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} className={inputCls} />
         </Field>
@@ -101,9 +103,19 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
         </div>
         {msg && <p className={`rounded-lg px-3 py-2 text-xs ${msg.ok ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>{msg.text}</p>}
         <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan"}</button>
-      </Card>
+      </Collapse>
 
-      <Card title="Pendaftaran">
+      {/* 2. Pengaturan Pendaftaran, with the WhatsApp message */}
+      <Collapse title="Pengaturan Pendaftaran" subtitle="Biaya, rekening, batas tanggal, pertanyaan, dan pesan WhatsApp" open={openSettings} onToggle={() => setOpenSettings((v) => !v)}>
+        <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />
+        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
+          <p className="text-sm font-bold text-white">Pesan WhatsApp peserta lunas</p>
+          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} />
+        </div>
+      </Collapse>
+
+      {/* 3. Open and close the registration */}
+      <Collapse title={isOpen ? "Pendaftaran dibuka" : "Pendaftaran ditutup"} subtitle={isOpen ? "Orang bisa mendaftar lewat Link Peserta" : "Buka pendaftaran supaya Link Peserta bisa dipakai"} open={openDaftar} onToggle={() => setOpenDaftar((v) => !v)}>
         <div className={`flex items-center gap-3 rounded-xl border p-3.5 ${isOpen ? "border-emerald-500/40 bg-emerald-500/10" : "border-[#333] bg-black/20"}`}>
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isOpen ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-gray-400"}`}>
             {isOpen ? <DoorOpen className="h-5 w-5" /> : <DoorClosed className="h-5 w-5" />}
@@ -118,14 +130,6 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
           {toggling ? "Menyimpan…" : isOpen ? "Tutup pendaftaran" : "Buka pendaftaran"}
         </button>
         <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" />
-      </Card>
-
-      <Collapse title="Pesan WhatsApp peserta lunas" subtitle="Teks yang dikirim bersama QR setelah pembayaran" open={showWa} onToggle={() => setShowWa((v) => !v)}>
-        <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} />
-      </Collapse>
-
-      <Collapse title="Pengaturan pendaftaran" subtitle="Biaya, rekening, batas tanggal, dan pertanyaan di formulir" open={showSettings} onToggle={() => setShowSettings((v) => !v)}>
-        <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />
       </Collapse>
     </div>
   );
