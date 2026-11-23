@@ -11,7 +11,9 @@ import type { Metadata } from "next";
 /** The link preview (WhatsApp, email, social): the event's name, when and where, and its banner. */
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
-  const fallback: Metadata = { title: "Daftar Event", description: "Daftar event Ruang Iman" };
+  // no event picture: our logo
+  const logo = { url: "https://apps.ruangiman.com/logo.png", width: 1000, height: 1000, alt: "Ruang Iman" };
+  const fallback: Metadata = { title: "Daftar Event", description: "Daftar event Ruang Iman", openGraph: { title: "Daftar Event", siteName: "Ruang Iman", images: [logo] }, twitter: { card: "summary", title: "Daftar Event", images: [logo.url] } };
   if (!isRegisterKey(code)) return fallback;
   const db = createAdminClient();
   const { data: st } = await db.from("event_reg_settings" as any).select("event_id").or(registerKeyFilter(code)).maybeSingle();
@@ -22,12 +24,13 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
   if (!e) return fallback;
   const when = e.event_date ? `${formatWeekdayDate(e.event_date)}, ${formatTime(e.event_date)} WIB` : "";
   const description = [when, e.location].filter(Boolean).join(" · ") || "Daftar dan dapatkan QR Code di Ruang Iman";
-  const images = e.banner_image_url ? [{ url: e.banner_image_url, width: 1080, height: 1350, alt: e.title }] : undefined;
+  // the event's picture first; our logo when the event has none
+  const images = [e.banner_image_url ? { url: e.banner_image_url, width: 1080, height: 1350, alt: e.title } : logo];
   return {
     title: e.title,
     description,
     openGraph: { title: e.title, description, siteName: "Ruang Iman", type: "website", images },
-    twitter: { card: images ? "summary_large_image" : "summary", title: e.title, description, images: images?.map((i) => i.url) },
+    twitter: { card: e.banner_image_url ? "summary_large_image" : "summary", title: e.title, description, images: images.map((i) => i.url) },
   };
 }
 
