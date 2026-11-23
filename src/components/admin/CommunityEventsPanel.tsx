@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarDays,
   ImagePlus,
@@ -9,6 +9,7 @@ import {
   MapPin,
   Megaphone,
   Newspaper,
+  Users,
   Trash2,
   X,
 } from "lucide-react";
@@ -46,6 +47,18 @@ export default function CommunityEventsPanel({
   communityId?: string | null;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [opening, setOpening] = useState<string | null>(null);
+
+  // Open the event's workspace (made the first time): crew, to do, meetings, chat and Keuangan
+  async function openWorkspace(eventId: string) {
+    setOpening(eventId);
+    const { data, error } = await createClient().rpc("event_workspace", { p_event: eventId });
+    setOpening(null);
+    if (error || !data) { alert(error?.message ?? "Workspace tidak bisa dibuka. Jalankan 120_event_workspace.sql dulu."); return; }
+    const m = pathname.match(/^\/(admin\/communities|camp)\/([^/]+)\//);
+    router.push(m?.[1] === "camp" ? `/camp/${m[2]}/ongoing/${data}` : `/admin/communities/${m?.[2] ?? ""}/promotion/workspace/${data}`);
+  }
   const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -250,6 +263,10 @@ export default function CommunityEventsPanel({
                 <a href={`/acara/${ev.id}`} className="mt-2 flex items-center justify-center rounded-lg bg-brand-gold px-3 py-2 text-xs font-bold text-brand-dark">
                   Pendaftaran, peserta, dan absensi
                 </a>
+                <button onClick={() => openWorkspace(ev.id)} disabled={opening === ev.id}
+                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-gold/40 px-3 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50">
+                  <Users className="h-3.5 w-3.5" /> {opening === ev.id ? "Membuka..." : "Tim, tugas, dan keuangan"}
+                </button>
               </div>
             </div>
           ))}

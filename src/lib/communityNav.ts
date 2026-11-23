@@ -1,4 +1,4 @@
-import { BadgeCheck, GraduationCap, CalendarDays, LayoutDashboard, Map, Tent, Users, UsersRound } from "lucide-react";
+import { BadgeCheck, GraduationCap, CalendarDays, LayoutDashboard, Map, Users, UsersRound } from "lucide-react";
 import { isCatholicFamilyMinistry } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
@@ -9,9 +9,7 @@ export function communityNav(base: string, community: { name?: string | null; sl
   return [
     { name: "Dashboard", href: `${base}/dashboard`, icon: LayoutDashboard },
     { name: "Anggota", href: `${base}/anggota`, icon: Users },
-    // Catholic Family Ministry also runs camps
-    ...(cfm ? [{ name: "Camp", href: `${base}/camp`, icon: Tent }] : []),
-    // Create the event first; its registration, attendance and promotion (poster) are part of it
+    // Camp and Event are one: Event. Registration, attendance, poster, crew, tasks and Keuangan are all part of it
     { name: "Event", href: `${base}/promotion`, icon: CalendarDays },
     ...(cfm ? [{ name: "Alumni", href: `${base}/alumni`, icon: GraduationCap }] : []),
     { name: "Connect Group", href: `${base}/connect-group`, icon: UsersRound },

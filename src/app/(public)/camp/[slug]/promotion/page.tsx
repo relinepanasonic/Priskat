@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import CommunityEventsPanel from "@/components/admin/CommunityEventsPanel";
 import { resolveCommunity } from "@/lib/community";
 import { formatDate } from "@/lib/utils";
+import CampDirectory from "@/components/camp/CampDirectory";
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +76,14 @@ export default async function CampPromotionPage({
 
   return (
     <div className="p-4 md:p-6">
-      <h2 className="mb-4 text-lg font-bold text-white">
-        Promotional{community?.name ? ` · ${community.name}` : ""}
-      </h2>
+      <h2 className="mb-4 text-lg font-bold text-white">Event</h2>
       <CommunityEventsPanel
         initialEvents={events || []}
         communityId={community?.id ?? null}
       />
+      <div className="mt-10 border-t border-[#2a2d35] pt-6">
+        <CampDirectory embedded />
+      </div>
     </div>
   );
 }

@@ -2,7 +2,10 @@
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet } from "lucide-react";
+import { usePathname } from "next/navigation";
+import CampFinance from "@/components/camp/CampFinance";
+import { isCampSeries } from "@/lib/campTypes";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -11,7 +14,8 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const camp_id = unwrappedParams.camp_id;
   const slug = unwrappedParams.slug;
 
-  const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew">("todo");
+  const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew" | "keuangan">("todo");
+  const inAdmin = usePathname().startsWith("/admin");
   const [camp, setCamp] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -255,10 +259,10 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   return (
     <div className="flex flex-col h-full bg-[#111]">
       <div className="p-6 border-b border-[#333] bg-[#1a1d24]">
-        <Link href={`/camp/${slug}/ongoing`} className="inline-flex items-center gap-2 text-brand-muted hover:text-brand-gold text-sm font-semibold mb-4 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to My Services
+        <Link href={inAdmin ? `/admin/communities/${slug}/promotion` : `/camp/${slug}/ongoing`} className="inline-flex items-center gap-2 text-brand-muted hover:text-brand-gold text-sm font-semibold mb-4 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> {inAdmin ? "Kembali ke Event" : "Back to My Services"}
         </Link>
-        <h1 className="text-2xl font-bold text-white mb-2">{camp.camp_name === "Other Event" ? camp.custom_name : camp.camp_name} {camp.camp_name !== "Other Event" && <span className="text-brand-gold">Angkatan {camp.angkatan}</span>}</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">{isCampSeries(camp.camp_name) ? camp.camp_name : (camp.custom_name || camp.camp_name)} {isCampSeries(camp.camp_name) && <span className="text-brand-gold">Angkatan {camp.angkatan}</span>}</h1>
         <p className="text-gray-400 text-sm">Service Dashboard for {camp.branch}</p>
       </div>
 
@@ -286,6 +290,12 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
           className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "crew" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
         >
           <Users className="w-4 h-4 flex-shrink-0" /> Crew
+        </button>
+        <button
+          onClick={() => setActiveTab("keuangan")}
+          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "keuangan" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
+        >
+          <Wallet className="w-4 h-4 flex-shrink-0" /> Keuangan
         </button>
       </div>
 
@@ -374,6 +384,8 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
             </div>
           </div>
         )}
+
+        {activeTab === "keuangan" && <CampFinance cohortId={camp_id} />}
 
         {activeTab === "todo" && (
           <div className="space-y-4">
