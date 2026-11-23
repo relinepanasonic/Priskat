@@ -178,11 +178,11 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
         ))}
       </div>
 
-      <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Buat link pendaftaran untuk peserta" />
-
-      <div className="grid grid-cols-2 gap-2">
-        <a href={`/api/events/${eventId}/attendance?format=xlsx&${exportQuery}`} className="flex items-center justify-center gap-2 rounded-xl border border-[#333] py-2.5 text-xs font-bold text-brand-light hover:bg-white/5"><FileSpreadsheet className="h-4 w-4" /> Unduh Excel</a>
-        <a href={`/api/events/${eventId}/attendance?format=pdf&${exportQuery}`} className="flex items-center justify-center gap-2 rounded-xl border border-[#333] py-2.5 text-xs font-bold text-brand-light hover:bg-white/5"><FileText className="h-4 w-4" /> Unduh PDF</a>
+      {/* three small buttons in one row: the link, the Excel list and the PDF list */}
+      <div className="grid grid-cols-3 gap-2">
+        <LinkPesertaButton compact run={() => getRegisterLink(eventId)} title="Buat link pendaftaran untuk peserta" />
+        <a href={`/api/events/${eventId}/attendance?format=xlsx&${exportQuery}`} className="flex items-center justify-center gap-1.5 rounded-lg border border-[#333] px-2 py-2 text-[11px] font-bold text-brand-light hover:bg-white/5"><FileSpreadsheet className="h-3.5 w-3.5" /> Excel</a>
+        <a href={`/api/events/${eventId}/attendance?format=pdf&${exportQuery}`} className="flex items-center justify-center gap-1.5 rounded-lg border border-[#333] px-2 py-2 text-[11px] font-bold text-brand-light hover:bg-white/5"><FileText className="h-3.5 w-3.5" /> PDF</a>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
