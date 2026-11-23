@@ -6,10 +6,8 @@ import {
   CalendarDays,
   ImagePlus,
   Loader2,
-  MapPin,
   Megaphone,
   Newspaper,
-  Users,
   Trash2,
   X,
 } from "lucide-react";
