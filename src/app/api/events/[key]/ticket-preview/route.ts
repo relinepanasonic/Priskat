@@ -16,15 +16,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const url = new URL(request.url);
   const [{ data: ev }, { data: st }] = await Promise.all([
     db.from("events").select("title").eq("id", eventId).maybeSingle(),
-    db.from("event_reg_settings" as any).select("ticket_size, ticket_bg_url").eq("event_id", eventId).maybeSingle(),
+    db.from("event_reg_settings" as any).select("ticket_size, ticket_bg_url, ticket_template, ticket_gradient").eq("event_id", eventId).maybeSingle(),
   ]);
-  const settings = st as { ticket_size?: string; ticket_bg_url?: string | null } | null;
+  const settings = st as { ticket_size?: string; ticket_bg_url?: string | null; ticket_template?: string; ticket_gradient?: string } | null;
   const bg = url.searchParams.get("bg") ?? settings?.ticket_bg_url ?? null;
   // only our own design bucket may be used as a background
   const okBg = bg && /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/event-designs\//.test(bg) ? bg : settings?.ticket_bg_url ?? null;
   const png = await ticketPng({
     name: "Nama Peserta", event: (ev as { title?: string } | null)?.title ?? "Event", code: "0123456789abcdef0123456789abcdef",
-    size: sizeOf(url.searchParams.get("size") ?? settings?.ticket_size), bgUrl: okBg,
+    size: sizeOf(url.searchParams.get("size") ?? settings?.ticket_size), bgUrl: url.searchParams.get("nobg") === "1" ? null : okBg,
+    template: url.searchParams.get("template") ?? settings?.ticket_template, gradient: url.searchParams.get("gradient") ?? settings?.ticket_gradient,
   });
   return new Response(new Uint8Array(png), { headers: { "Content-Type": "image/png", "Cache-Control": "no-store" } });
 }

@@ -2,10 +2,14 @@
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet } from "lucide-react";
+import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet, UserCheck, QrCode, Megaphone } from "lucide-react";
 import { usePathname } from "next/navigation";
 import CampFinance from "@/components/camp/CampFinance";
 import { isCampSeries } from "@/lib/campTypes";
+import { CREW_ROLES, isKnownRole, roleOrder } from "@/lib/crewRoles";
+import PesertaSection from "@/components/events/workspace/PesertaSection";
+import QrSection from "@/components/events/workspace/QrSection";
+import PromosiSection from "@/components/events/workspace/PromosiSection";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -14,10 +18,12 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const camp_id = unwrappedParams.camp_id;
   const slug = unwrappedParams.slug;
 
-  const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew" | "keuangan">("todo");
+  const [activeTab, setActiveTab] = useState<"peserta" | "qr" | "promosi" | "todo" | "meeting" | "chat" | "crew" | "keuangan">("peserta");
   const inAdmin = usePathname().startsWith("/admin");
   const [camp, setCamp] = useState<any>(null);
   const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
+  const [linkedEventTitle, setLinkedEventTitle] = useState("");
+  const [othersMode, setOthersMode] = useState(false);
   const [tasks, setTasks] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [chats, setChats] = useState<any[]>([]);
@@ -61,8 +67,11 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
       if (cohort) setCamp(cohort);
 
       // an event opened from the Event page: its registration and attendance page
-      const { data: ev } = await supabase.from("events").select("id").eq("cohort_id", camp_id).maybeSingle();
+      const { data: ev } = await supabase.from("events").select("id, title").eq("cohort_id", camp_id).maybeSingle();
       setLinkedEventId(ev?.id ?? null);
+      setLinkedEventTitle(ev?.title ?? "");
+      // a camp without an event has no participants, QR or promotion: start on the committee
+      if (!ev?.id) setActiveTab((t) => (t === "peserta" || t === "qr" || t === "promosi" ? "crew" : t));
 
       fetchTasks(supabase);
       fetchMeetings(supabase);
@@ -125,6 +134,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
     
     setNewCrewName("");
     setNewCrewPosition("");
+    setOthersMode(false);
     setNewCrewUserId("");
     fetchCrew(supabase);
   };
@@ -269,58 +279,50 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         </Link>
         <h1 className="text-2xl font-bold text-white mb-2">{isCampSeries(camp.camp_name) ? camp.camp_name : (camp.custom_name || camp.camp_name)} {isCampSeries(camp.camp_name) && <span className="text-brand-gold">Angkatan {camp.angkatan}</span>}</h1>
         <p className="text-gray-400 text-sm">Service Dashboard for {camp.branch}</p>
-        {linkedEventId && (
-          <Link href={`/acara/${linkedEventId}`} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-brand-gold/40 px-3 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold/10">
-            Pendaftaran dan absensi
-          </Link>
-        )}
       </div>
 
-      <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto">
-        <button 
-          onClick={() => setActiveTab("todo")}
-          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "todo" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
-        >
-          <CheckSquare className="w-4 h-4 flex-shrink-0" /> To Do
-        </button>
-        <button 
-          onClick={() => setActiveTab("meeting")}
-          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "meeting" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
-        >
-          <Calendar className="w-4 h-4 flex-shrink-0" /> Meetings
-        </button>
-        <button 
-          onClick={() => setActiveTab("chat")}
-          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "chat" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
-        >
-          <MessageSquare className="w-4 h-4 flex-shrink-0" /> Chat
-        </button>
-        <button 
-          onClick={() => setActiveTab("crew")}
-          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "crew" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
-        >
-          <Users className="w-4 h-4 flex-shrink-0" /> Crew
-        </button>
-        <button
-          onClick={() => setActiveTab("keuangan")}
-          className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "keuangan" ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
-        >
-          <Wallet className="w-4 h-4 flex-shrink-0" /> Keuangan
-        </button>
+      <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {[
+          ...(linkedEventId ? [
+            { id: "peserta", label: "Peserta", Icon: UserCheck },
+            { id: "qr", label: "QR & Absensi", Icon: QrCode },
+            { id: "promosi", label: "Promosi", Icon: Megaphone },
+          ] : []),
+          { id: "crew", label: "Panitia", Icon: Users },
+          { id: "meeting", label: "Meeting", Icon: Calendar },
+          { id: "todo", label: "To Do", Icon: CheckSquare },
+          { id: "chat", label: "Chat", Icon: MessageSquare },
+          { id: "keuangan", label: "Keuangan", Icon: Wallet },
+        ].map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id as typeof activeTab)}
+            aria-current={activeTab === id ? "page" : undefined}
+            className={`flex items-center gap-1.5 px-4 py-4 font-bold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === id ? "border-brand-gold text-brand-gold" : "border-transparent text-gray-400 hover:text-white"}`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" /> {label}
+          </button>
+        ))}
       </div>
 
       <div className="flex-1 p-4 md:p-6 pb-28 md:pb-6 overflow-y-auto flex flex-col">
+        {activeTab === "peserta" && linkedEventId && (
+          <PesertaSection eventId={linkedEventId} eventTitle={linkedEventTitle} crew={crewMembers.map((c) => ({ id: c.id, name: c.name, position: c.position }))} />
+        )}
+        {activeTab === "qr" && linkedEventId && <QrSection eventId={linkedEventId} />}
+        {activeTab === "promosi" && linkedEventId && <PromosiSection eventId={linkedEventId} />}
+
         {activeTab === "crew" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-white mb-4">Crew Members</h2>
+              <h2 className="text-lg font-bold text-white mb-4">Panitia</h2>
               {crewMembers.length === 0 ? (
                 <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-8 text-center text-gray-500">
                   No crew members yet. Add one below!
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {crewMembers.map(crew => (
+                  {[...crewMembers].sort((x, y) => roleOrder(x.position) - roleOrder(y.position) || String(x.name).localeCompare(String(y.name))).map(crew => (
                     <div key={crew.id} className="bg-[#1a1d24] border border-[#333] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-white text-sm truncate">{crew.name}</p>
@@ -334,6 +336,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                           onClick={() => {
                             setNewCrewName(crew.name);
                             setNewCrewPosition(crew.position);
+                            setOthersMode(!isKnownRole(crew.position));
                             setNewCrewUserId(crew.user_id || "");
                             setEditingCrewId(crew.id);
                           }}
@@ -357,7 +360,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
             </div>
 
             <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4">
-              <h3 className="text-md font-bold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-brand-gold" /> Add New Crew Member</h3>
+              <h3 className="text-md font-bold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-brand-gold" /> Tambah Panitia</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 mb-1.5">Name (or leave blank if linking)</label>
@@ -365,7 +368,17 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 mb-1.5">Position</label>
-                  <input value={newCrewPosition} onChange={e => setNewCrewPosition(e.target.value)} type="text" placeholder="e.g. Fasilitator" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  <select
+                    value={othersMode || (newCrewPosition && !isKnownRole(newCrewPosition)) ? "Others" : newCrewPosition}
+                    onChange={e => { if (e.target.value === "Others") { setOthersMode(true); setNewCrewPosition(""); } else { setOthersMode(false); setNewCrewPosition(e.target.value); } }}
+                    className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+                  >
+                    <option value="">-- Pilih jabatan --</option>
+                    {CREW_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  {(othersMode || (newCrewPosition && !isKnownRole(newCrewPosition))) && (
+                    <input value={newCrewPosition} onChange={e => setNewCrewPosition(e.target.value)} type="text" placeholder="Tulis jabatan" className="mt-2 w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 mb-1.5">Link Account (Optional)</label>

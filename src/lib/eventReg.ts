@@ -19,6 +19,8 @@ export type RegSettings = {
   welcome_text?: string | null;
   ticket_size?: "a5" | "card";
   ticket_bg_url?: string | null;
+  ticket_template?: string;
+  ticket_gradient?: string;
 };
 
 export type Registration = {
@@ -39,7 +41,10 @@ export type Registration = {
   email?: string | null;
   paroki?: string | null;
   source?: "account" | "link";
+  group_id?: string | null;
 };
+
+export type EventGroup = { id: string; event_id: string; name: string; facilitator_crew_id: string | null };
 
 export const SITE_URL = "https://apps.ruangiman.com";
 export const registerLink = (code: string) => `${SITE_URL}/e/${code}`;
@@ -59,3 +64,11 @@ export const rupiah = (n: number) => (n <= 0 ? "Gratis" : `Rp ${n.toLocaleString
 export const TICKET_PREFIX = "RIEVT:";
 export const ticketPayload = (code: string) => `${TICKET_PREFIX}${code}`;
 export const codeFromScan = (raw: string) => raw.trim().replace(/^RIEVT:/i, "").trim().toLowerCase();
+
+/** WhatsApp number as wa.me wants it (digits, Indonesian 08... becomes 628...). Empty when there is no number. */
+export const waPhone = (phone: string | null | undefined) => {
+  const d = (phone ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  return d.startsWith("0") ? `62${d.slice(1)}` : d.startsWith("62") ? d : d.length >= 9 ? d : "";
+};
+export const waLink = (phone: string | null | undefined, text: string) => `https://wa.me/${waPhone(phone)}?text=${encodeURIComponent(text)}`;

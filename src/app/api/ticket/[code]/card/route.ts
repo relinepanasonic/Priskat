@@ -14,12 +14,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ code
   if (!r || r.status !== "approved") return new Response("not found", { status: 404 });
   const [{ data: ev }, { data: st }] = await Promise.all([
     db.from("events").select("title").eq("id", r.event_id).maybeSingle(),
-    db.from("event_reg_settings" as any).select("ticket_size, ticket_bg_url").eq("event_id", r.event_id).maybeSingle(),
+    db.from("event_reg_settings" as any).select("ticket_size, ticket_bg_url, ticket_template, ticket_gradient").eq("event_id", r.event_id).maybeSingle(),
   ]);
-  const settings = st as { ticket_size?: string; ticket_bg_url?: string | null } | null;
+  const settings = st as { ticket_size?: string; ticket_bg_url?: string | null; ticket_template?: string; ticket_gradient?: string } | null;
   const url = new URL(request.url);
   const size = sizeOf(url.searchParams.get("size") ?? settings?.ticket_size);
-  const png = await ticketPng({ name: r.full_name, event: (ev as { title?: string } | null)?.title ?? "Event", code: code.toLowerCase(), size, bgUrl: settings?.ticket_bg_url });
+  const png = await ticketPng({ name: r.full_name, event: (ev as { title?: string } | null)?.title ?? "Event", code: code.toLowerCase(), size, bgUrl: settings?.ticket_bg_url, template: settings?.ticket_template, gradient: settings?.ticket_gradient });
   const safe = r.full_name.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "tiket";
   return new Response(new Uint8Array(png), {
     headers: {

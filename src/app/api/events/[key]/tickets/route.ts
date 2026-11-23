@@ -19,9 +19,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const url = new URL(request.url);
   const [{ data: ev }, { data: st }] = await Promise.all([
     db.from("events").select("title").eq("id", eventId).maybeSingle(),
-    db.from("event_reg_settings" as any).select("ticket_size, ticket_bg_url").eq("event_id", eventId).maybeSingle(),
+    db.from("event_reg_settings" as any).select("ticket_size, ticket_bg_url, ticket_template, ticket_gradient").eq("event_id", eventId).maybeSingle(),
   ]);
-  const settings = st as { ticket_size?: string; ticket_bg_url?: string | null } | null;
+  const settings = st as { ticket_size?: string; ticket_bg_url?: string | null; ticket_template?: string; ticket_gradient?: string } | null;
   const size = sizeOf(url.searchParams.get("size") ?? settings?.ticket_size);
   const ids = (url.searchParams.get("ids") ?? "").split(",").filter((x) => /^[0-9a-f-]{36}$/i.test(x));
 
@@ -37,7 +37,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const pdf = await PDFDocument.create();
   const title = (ev as { title?: string } | null)?.title ?? "Event";
   for (const r of list) {
-    const png = await ticketPng({ name: r.full_name, event: title, code: r.ticket_code, size, bgUrl: settings?.ticket_bg_url });
+    const png = await ticketPng({ name: r.full_name, event: title, code: r.ticket_code, size, bgUrl: settings?.ticket_bg_url, template: settings?.ticket_template, gradient: settings?.ticket_gradient });
     const img = await pdf.embedPng(png);
     const page = pdf.addPage([pw, ph]);
     page.drawImage(img, { x: 0, y: 0, width: pw, height: ph });

@@ -3,12 +3,14 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDate, formatDateTime } from "@/lib/utils";
-import type { RegField } from "@/lib/eventReg";
+import { STATUS_LABEL, type RegField, type RegStatus } from "@/lib/eventReg";
 
 export const maxDuration = 60;
 
 /**
- * Event admins: the attendance list as Excel (?format=xlsx) or PDF (?format=pdf).
+ * Event admins: the participant / attendance list as Excel (?format=xlsx) or PDF (?format=pdf).
+ * ?all=1 lists everyone who registered (with their status), otherwise only approved people. ?group=<id> or ?group=none keeps one group.
+ * Every row has the group and its Fasilitator.
  * Every row has the time the person was scanned in (Jakarta time, to the second) and which admin scanned them.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ key: string }> }) {
@@ -23,18 +25,39 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const url = new URL(request.url);
   const format = url.searchParams.get("format") === "pdf" ? "pdf" : "xlsx";
   const onlyPresent = url.searchParams.get("present") === "1";
+  const all = url.searchParams.get("all") === "1";
+  const groupFilter = url.searchParams.get("group");
 
   const db = createAdminClient();
-  const [{ data: ev }, { data: st }, { data: regs }] = await Promise.all([
-    db.from("events").select("title, event_date, location").eq("id", eventId).maybeSingle(),
+  let regQuery = db.from("event_registrations" as any).select("full_name, paroki, email, phone, answers, status, checked_in_at, checked_in_by, group_id").eq("event_id", eventId).order("full_name").limit(5000);
+  if (!all) regQuery = regQuery.eq("status", "approved");
+  const [{ data: ev }, { data: st }, { data: regs }, { data: grs }] = await Promise.all([
+    db.from("events").select("title, event_date, location, cohort_id").eq("id", eventId).maybeSingle(),
     db.from("event_reg_settings" as any).select("fields").eq("event_id", eventId).maybeSingle(),
-    db.from("event_registrations" as any).select("full_name, paroki, email, phone, answers, status, checked_in_at, checked_in_by").eq("event_id", eventId).eq("status", "approved").order("full_name").limit(5000),
+    regQuery,
+    db.from("event_groups" as any).select("id, name, facilitator_crew_id").eq("event_id", eventId).order("created_at"),
   ]);
   const event = (ev ?? {}) as { title?: string; event_date?: string; location?: string };
   const fields = (((st as { fields?: RegField[] } | null)?.fields) ?? []).filter((f) => f.type !== "photo");
-  type R = { full_name: string; paroki: string | null; email: string | null; phone: string | null; answers: Record<string, string>; checked_in_at: string | null; checked_in_by: string | null };
+  type R = { full_name: string; paroki: string | null; email: string | null; phone: string | null; answers: Record<string, string>; status: RegStatus; checked_in_at: string | null; checked_in_by: string | null; group_id: string | null };
   let rows = ((regs as unknown as R[]) ?? []);
   if (onlyPresent) rows = rows.filter((r) => r.checked_in_at);
+  if (groupFilter === "none") rows = rows.filter((r) => !r.group_id);
+  else if (groupFilter && /^[0-9a-f-]{36}$/i.test(groupFilter)) rows = rows.filter((r) => r.group_id === groupFilter);
+
+  // groups and the Fasilitator of each (a crew member of the event's workspace)
+  const groups = ((grs as unknown as { id: string; name: string; facilitator_crew_id: string | null }[]) ?? []);
+  const crewIds = groups.map((g) => g.facilitator_crew_id).filter(Boolean) as string[];
+  const crewNames = new Map<string, string>();
+  if (crewIds.length) {
+    const { data: cr } = await db.from("camp_crew").select("id, name").in("id", crewIds);
+    for (const c of (cr as { id: string; name: string | null }[]) ?? []) crewNames.set(c.id, c.name ?? "");
+  }
+  const groupName = (id: string | null) => groups.find((g) => g.id === id)?.name ?? "";
+  const facilitator = (id: string | null) => { const g = groups.find((x) => x.id === id); return g?.facilitator_crew_id ? crewNames.get(g.facilitator_crew_id) ?? "" : ""; };
+  // sorted by group (in the order the groups were made), then by name
+  const order = (id: string | null) => { const i = groups.findIndex((g) => g.id === id); return i < 0 ? 9999 : i; };
+  rows = [...rows].sort((a, b) => order(a.group_id) - order(b.group_id) || a.full_name.localeCompare(b.full_name));
 
   const adminIds = [...new Set(rows.map((r) => r.checked_in_by).filter(Boolean) as string[])];
   const names = new Map<string, string>();
@@ -50,9 +73,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const present = rows.filter((r) => r.checked_in_at).length;
   const safe = (event.title ?? "event").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "event";
 
-  const head = ["No", "Nama", "Paroki", "Email", "No WhatsApp", ...fields.map((f) => f.label), "Hadir", "Waktu masuk", "Discan oleh"];
+  const tailCount = all ? 4 : 3;
+  const head = ["No", "Nama", "Paroki", "Email", "No WhatsApp", "Grup", "Fasilitator", ...fields.map((f) => f.label), ...(all ? ["Status"] : []), "Hadir", "Waktu masuk", "Discan oleh"];
   const body = rows.map((r, i) => [
-    i + 1, r.full_name, r.paroki ?? "", r.email ?? "", r.phone ?? "", ...fields.map((f) => r.answers?.[f.key] ?? ""),
+    i + 1, r.full_name, r.paroki ?? "", r.email ?? "", r.phone ?? "", groupName(r.group_id), facilitator(r.group_id), ...fields.map((f) => r.answers?.[f.key] ?? ""),
+    ...(all ? [STATUS_LABEL[r.status] ?? r.status] : []),
     r.checked_in_at ? "Hadir" : "Belum", stamp(r.checked_in_at), r.checked_in_by ? names.get(r.checked_in_by) ?? "Admin" : "",
   ]);
 
@@ -68,7 +93,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
     h.font = { bold: true, color: { argb: "FFFFFFFF" } };
     h.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2A44" } };
     for (const b of body) ws.addRow(b);
-    ws.columns.forEach((c, i) => { c.width = [5, 28, 24, 28, 16][i] ?? (i >= head.length - 3 ? 22 : 20); });
+    ws.columns.forEach((c, i) => { c.width = [5, 28, 24, 28, 16, 18, 22][i] ?? (i >= head.length - tailCount ? 22 : 20); });
     ws.views = [{ state: "frozen", ySplit: 5 }];
     const buf = await wb.xlsx.writeBuffer();
     return new Response(new Uint8Array(buf as ArrayBuffer), {
@@ -82,8 +107,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const W = 841.9, H = 595.3, M = 28;
   // column widths in points (the extra questions share what is left)
-  const fixed = [24, 120, 90, 120, 74];
-  const tail = [40, 96, 90];
+  const fixed = [24, 105, 80, 105, 70, 70, 80];
+  const tail = all ? [66, 40, 96, 90] : [40, 96, 90];
   const extra = Math.max(0, fields.length);
   const left = W - 2 * M - fixed.reduce((a, b) => a + b, 0) - tail.reduce((a, b) => a + b, 0);
   const extraW = extra ? Math.max(40, left / extra) : 0;

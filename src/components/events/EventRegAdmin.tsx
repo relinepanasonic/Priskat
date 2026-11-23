@@ -192,7 +192,7 @@ export default function EventRegAdmin({
 }
 
 /** Scan tickets at the door. Green = welcome and attendance saved; amber = already scanned; red = not valid. */
-function ScanTab({ eventId, present, total, onDone }: { eventId: string; present: number; total: number; onDone: () => void }) {
+export function ScanTab({ eventId, present, total, onDone }: { eventId: string; present: number; total: number; onDone: () => void }) {
   const [res, setRes] = useState<ScanResult | null>(null);
   const [manual, setManual] = useState("");
   const [busy, setBusy] = useState(false);
@@ -239,7 +239,7 @@ function ScanTab({ eventId, present, total, onDone }: { eventId: string; present
 }
 
 /** Price, where to transfer, the deadline and the extra questions of the form. */
-function SettingsTab({ eventId, settings, onSaved }: { eventId: string; settings: RegSettings | null; onSaved: () => void }) {
+export function SettingsTab({ eventId, settings, onSaved, design = true }: { eventId: string; settings: RegSettings | null; onSaved: () => void; design?: boolean }) {
   const [open, setOpen] = useState(settings?.open ?? false);
   const [price, setPrice] = useState(String(settings?.price ?? 0));
   const [bank, setBank] = useState(settings?.bank_name ?? "");
@@ -334,6 +334,7 @@ function SettingsTab({ eventId, settings, onSaved }: { eventId: string; settings
         <input value={welcome} onChange={(e) => setWelcome(e.target.value)} maxLength={300} placeholder="Sapaan di formulir (kosong = Selamat datang pada Event ...)" className={input} />
       </div>
 
+      {design && (
       <div className="space-y-3 rounded-xl border border-[#333] p-3">
         <p className="text-xs font-bold uppercase tracking-wider text-brand-gold">Desain tiket untuk dicetak</p>
         <div className="grid grid-cols-2 gap-2">
@@ -351,6 +352,8 @@ function SettingsTab({ eventId, settings, onSaved }: { eventId: string; settings
           <img key={previewKey} src={`/api/events/${eventId}/ticket-preview?size=${ticketSize}${bgUrl ? `&bg=${encodeURIComponent(bgUrl)}` : ""}`} alt="Contoh tiket" className="mx-auto w-48 rounded-lg border border-[#333]" />
         ) : <p className="text-xs text-brand-muted">Simpan dulu, lalu contoh tiket muncul di sini.</p>}
       </div>
+
+      )}
 
       <div>
         <label className="mb-1 block text-xs text-brand-muted">Pendaftaran ditutup setelah tanggal (opsional)</label>
