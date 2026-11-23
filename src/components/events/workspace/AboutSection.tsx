@@ -8,6 +8,7 @@ import { useEventData, type WorkspaceEvent } from "./useEventData";
 import { Card, Collapse, Field, inputCls } from "./ui";
 import RegistrationSettings from "./RegistrationSettings";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
+import WaTemplate from "./WaTemplate";
 
 const db = () => createClient() as any;
 
@@ -32,6 +33,7 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [toggling, setToggling] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showWa, setShowWa] = useState(false);
 
   const isOpen = settings?.open ?? false;
 
@@ -117,6 +119,10 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
         </button>
         <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" />
       </Card>
+
+      <Collapse title="Pesan WhatsApp peserta lunas" subtitle="Teks yang dikirim bersama QR setelah pembayaran" open={showWa} onToggle={() => setShowWa((v) => !v)}>
+        <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} />
+      </Collapse>
 
       <Collapse title="Pengaturan pendaftaran" subtitle="Biaya, rekening, batas tanggal, dan pertanyaan di formulir" open={showSettings} onToggle={() => setShowSettings((v) => !v)}>
         <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image as ImageIcon, MessageCircle, Plus, QrCode, Trash2, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { DEFAULT_WA_TEMPLATE, rupiah, renderWaTemplate, ticketLink, waLink, WA_PLACEHOLDERS, type EventGroup, type Registration } from "@/lib/eventReg";
+import { DEFAULT_WA_TEMPLATE, rupiah, renderWaTemplate, ticketLink, waLink, type EventGroup, type Registration } from "@/lib/eventReg";
 import { formatDate } from "@/lib/utils";
 import { useEventData } from "./useEventData";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
@@ -33,13 +33,10 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
   const [qr, setQr] = useState<Registration | null>(null);
   const [proof, setProof] = useState<{ url: string; name: string } | null>(null);
   const [showGroups, setShowGroups] = useState(false);
-  const [showWa, setShowWa] = useState(false);
   const [newGroup, setNewGroup] = useState("");
   const [copied, setCopied] = useState(false);
-  const [tpl, setTpl] = useState<string | null>(null);
-  const [tplMsg, setTplMsg] = useState<string | null>(null);
 
-  const template = tpl ?? settings?.wa_template ?? DEFAULT_WA_TEMPLATE;
+  const template = settings?.wa_template ?? DEFAULT_WA_TEMPLATE;
 
   const counts = useMemo(() => ({
     all: regs.length,
@@ -131,21 +128,6 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
     nama: r.full_name, event: eventTitle, link: ticketLink(r.ticket_code),
     tanggal: event?.event_date ? formatDate(event.event_date) : "", lokasi: event?.location ?? "",
   });
-  async function saveTemplate() {
-    const text = template.trim();
-    if (text.length < 10) { setTplMsg("Pesan tidak boleh kosong (minimal 10 huruf). Pakai tombol Kembalikan default kalau mau mulai lagi."); return; }
-    if (!text.includes("{link}")) { setTplMsg("Pesan harus memuat {link}, supaya peserta menerima QR-nya."); return; }
-    setTplMsg(null);
-    const { error: err } = await db().from("event_reg_settings").upsert({ event_id: eventId, wa_template: text === DEFAULT_WA_TEMPLATE ? null : text });
-    setTplMsg(err ? `Belum bisa menyimpan: ${err.message}` : "Pesan tersimpan.");
-    if (!err) { setTpl(null); await reload(); }
-  }
-  async function resetTemplate() {
-    const { error: err } = await db().from("event_reg_settings").upsert({ event_id: eventId, wa_template: null });
-    setTplMsg(err ? `Belum bisa menyimpan: ${err.message}` : "Kembali ke pesan default.");
-    if (!err) { setTpl(null); await reload(); }
-  }
-
   async function copy(text: string) {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* ignore */ }
   }
@@ -190,7 +172,6 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
           <button key={String(k)} onClick={() => setFilter(String(k))} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${filter === k ? "bg-brand-gold text-brand-dark" : "border border-[#333] text-brand-muted"}`}>{l} {n}</button>
         ))}
         <button onClick={() => setShowGroups((v) => !v)} className="shrink-0 rounded-full border border-brand-gold/40 px-3 py-1.5 text-xs font-semibold text-brand-gold">{showGroups ? "Tutup grup" : "Kelola grup"}</button>
-        <button onClick={() => setShowWa((v) => !v)} className="shrink-0 rounded-full border border-emerald-500/40 px-3 py-1.5 text-xs font-semibold text-emerald-300">{showWa ? "Tutup pesan" : "Pesan WhatsApp"}</button>
       </div>
 
       {showGroups && (
@@ -215,19 +196,6 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
             </div>
           ))}
           {crew.length === 0 && <p className="text-xs text-amber-300">Fasilitator dipilih dari tab Panitia. Tambahkan panitia dulu.</p>}
-        </div>
-      )}
-
-      {showWa && (
-        <div className="space-y-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">Pesan WhatsApp untuk peserta yang sudah lunas</p>
-          <textarea value={template} onChange={(e) => setTpl(e.target.value)} rows={7} className={`${input} resize-y rounded-2xl leading-relaxed`} />
-          <p className="text-[11px] leading-relaxed text-brand-muted">Isi yang akan diganti otomatis: {WA_PLACEHOLDERS.join("  ")}. Pesan tidak boleh kosong dan harus memuat {"{link}"}.</p>
-          {tplMsg && <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-brand-light">{tplMsg}</p>}
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={saveTemplate} className="rounded-xl bg-brand-gold py-2.5 text-sm font-bold text-brand-dark">Simpan pesan</button>
-            <button onClick={resetTemplate} className="rounded-xl border border-[#333] py-2.5 text-sm font-semibold text-brand-light">Kembalikan default</button>
-          </div>
         </div>
       )}
 
