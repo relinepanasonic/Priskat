@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronsUpDown, LogOut, Settings2, Tent } from "lucide-react";
+import { Check, ChevronsUpDown, Home, LogOut, Settings2, Tent } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { communityNav } from "@/lib/communityNav";
 
@@ -49,7 +49,7 @@ export default function CommunityCenterSidebar({
     {/* Phone: the community switcher and the pages as a row of tabs (the sidebar below is for tablets and computers) */}
     <div className="sticky top-0 z-30 border-b border-[#333] bg-[#1a1d24] md:hidden">
       <div className="flex items-center gap-3 px-4 pt-3">
-        <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl" />
+        <Link href="/admin/communities" aria-label="Kembali ke Community Center" title="Community Center" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-gold/40 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20"><Home className="h-5 w-5" /></Link>
         <select
           value={current ? current.slug || current.id : ""}
           onChange={(e) => e.target.value && router.push(`/admin/communities/${e.target.value}/dashboard`)}
@@ -97,6 +97,11 @@ export default function CommunityCenterSidebar({
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        {pathname !== "/admin/communities" && (
+          <Link href="/admin/communities" className="flex items-center gap-2.5 rounded-xl border border-brand-gold/30 px-3 py-2.5 text-sm font-semibold text-brand-gold transition-colors hover:bg-brand-gold/10">
+            <Home className="h-4 w-4" /> Community Center
+          </Link>
+        )}
         {/* Workspace switcher: only the active community is shown, the rest are in the list */}
         <div ref={box} className="relative">
           <p className="mb-1.5 px-2 text-[11px] font-bold uppercase tracking-wider text-brand-muted">Komunitas saya</p>
