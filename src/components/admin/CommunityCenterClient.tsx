@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { createCommunity, updateCommunity, deleteCommunity, addCommunityAdmin, removeCommunityAdmin } from "@/app/actions/community";
 import { Plus, Trash2, Edit2, UserPlus, Shield, Settings } from "lucide-react";
@@ -8,9 +9,11 @@ import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
 
-export default function CommunityCenterClient({ initialCommunities, initialAdmins, allUsers }: { initialCommunities: any[], initialAdmins: any[], allUsers: any[] }) {
+export default function CommunityCenterClient({ initialCommunities, initialAdmins, allUsers, onlyNew = false }: { initialCommunities: any[], initialAdmins: any[], allUsers: any[], onlyNew?: boolean }) {
+  const router = useRouter();
   const [adminsOf, setAdminsOf] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+  // onlyNew: the page opens straight on the new community form, without the list of communities
+  const [isAdding, setIsAdding] = useState(onlyNew);
   const [editingCommunity, setEditingCommunity] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
   const supabase = createClient();
@@ -92,7 +95,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
     } else {
       const res = await createCommunity(formData);
       if (res.error) alert(res.error);
-      else setIsAdding(false);
+      else { setIsAdding(false); if (onlyNew) { router.push("/admin/communities"); router.refresh(); } }
     }
   }
 
@@ -122,14 +125,16 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
 
   return (
     <div className="space-y-8">
+      {!onlyNew && (
       <div className="flex justify-end">
         <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Community
         </Button>
       </div>
+      )}
 
       {/* Phone: 2 cards across, ~2.5 rows per screen */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
+      <div className={onlyNew ? "hidden" : "grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4"}>
         {initialCommunities.map(community => {
           const admins = initialAdmins.filter(a => a.community_id === community.id);
           return (
@@ -200,7 +205,7 @@ export default function CommunityCenterClient({ initialCommunities, initialAdmin
         </div>
       </Modal>
 
-      <Modal open={isAdding || !!editingCommunity} onClose={() => { setIsAdding(false); setEditingCommunity(null); }} title={editingCommunity ? "Edit Community" : "Create Community"}>
+      <Modal open={isAdding || !!editingCommunity} onClose={() => { setIsAdding(false); setEditingCommunity(null); if (onlyNew) router.push("/admin/communities"); }} title={editingCommunity ? "Edit Community" : "Create Community"}>
         <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <div>
             <label className="block text-sm text-brand-light mb-1">Name</label>

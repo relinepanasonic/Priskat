@@ -8,7 +8,10 @@ import { sortCommunities } from "@/lib/community";
 export const dynamic = "force-dynamic";
 
 /** Founder and super admins only: add, edit and delete communities, and set their admins. */
-export default async function ManageCommunitiesPage() {
+export default async function ManageCommunitiesPage({ searchParams }: { searchParams: Promise<{ semua?: string }> }) {
+  // "Add New Community" opens the new community form; ?semua=1 shows the list to edit, delete and set admins
+  const { semua } = await searchParams;
+  const onlyNew = semua !== "1";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -30,9 +33,9 @@ export default async function ManageCommunitiesPage() {
           <ArrowLeft className="h-4 w-4" /> Community Center
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-white">Add New Community</h1>
-        <p className="mt-1 text-brand-muted">Tambah atau ubah komunitas, dan tentukan adminnya.</p>
+        <p className="mt-1 text-brand-muted">{onlyNew ? "Isi data komunitas baru." : "Tambah atau ubah komunitas, dan tentukan adminnya."}</p>
       </div>
-      <CommunityCenterClient initialCommunities={communities || []} initialAdmins={admins || []} allUsers={allUsers || []} />
+      <CommunityCenterClient initialCommunities={communities || []} initialAdmins={admins || []} allUsers={allUsers || []} onlyNew={onlyNew} />
     </div>
   );
 }
