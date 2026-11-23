@@ -141,6 +141,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
               <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp / Event Type</label>
               <select value={campName} onChange={e => setCampName(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
                 <option value="Pria Sejati">Pria Sejati</option>
+                <option value="Bapa Sejati Katolik">Bapa Sejati Katolik</option>
                 <option value="Wanita Berhikmat">Wanita Berhikmat</option>
                 <option value="Youngman">Youngman</option>
                 <option value="Youngwoman">Youngwoman</option>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Tent, Users, ArrowRight, Trash2, FolderInput, X } from "lucide-react";
+import { Plus, Tent, Users, ArrowRight, Trash2, Handshake, X } from "lucide-react";
 import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -16,6 +16,11 @@ export default function CampCrewPage() {
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [communities, setCommunities] = useState<{ id: string; name: string }[]>([]);
   const [moveCamp, setMoveCamp] = useState<{ id: string; name: string } | null>(null);
+  const [collabTab, setCollabTab] = useState<"community" | "person">("community");
+  const [collabIds, setCollabIds] = useState<string[]>([]);
+  const [collabMsg, setCollabMsg] = useState("");
+  const [personQ, setPersonQ] = useState("");
+  const [personResults, setPersonResults] = useState<{ id: string; full_name: string | null; username: string | null }[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
@@ -56,7 +61,15 @@ export default function CampCrewPage() {
       .eq("community_id", community.id)
       .order("created_at", { ascending: false });
 
-    if (data) setCamps(data);
+    // camps other communities shared with this one (collaboration)
+    let shared: any[] = [];
+    const { data: collabs } = await supabase.from("camp_collaborations").select("cohort_id").eq("community_id", community.id);
+    const sharedIds = ((collabs as { cohort_id: string }[]) ?? []).map((r) => r.cohort_id);
+    if (sharedIds.length) {
+      const { data: sc } = await supabase.from("camp_cohorts").select("*, camp_crew(count)").in("id", sharedIds);
+      shared = ((sc as any[]) ?? []).map((c) => ({ ...c, _shared: true }));
+    }
+    if (data) setCamps([...data, ...shared]);
 
     const { data: comms } = await supabase
       .from("communities")
@@ -77,15 +90,41 @@ export default function CampCrewPage() {
     fetchCamps();
   };
 
-  const doMoveCamp = async (targetCommunityId: string) => {
+  const doCollabCommunity = async (targetCommunityId: string, add: boolean) => {
     if (!moveCamp) return;
     const supabase = createClient();
-    await supabase
-      .from("camp_cohorts")
-      .update({ community_id: targetCommunityId })
-      .eq("id", moveCamp.id);
-    setMoveCamp(null);
-    fetchCamps();
+    const { error } = await supabase.rpc("camp_collab_community", { p_cohort: moveCamp.id, p_community: targetCommunityId, p_add: add });
+    setCollabMsg(error ? error.message : add ? "Camp dibagikan ke komunitas itu." : "Kolaborasi dihapus.");
+    if (!error) {
+      setCollabIds((prev) => (add ? [...prev, targetCommunityId] : prev.filter((x) => x !== targetCommunityId)));
+      fetchCamps();
+    }
+  };
+
+  const openCollab = async (camp: any, name: string) => {
+    setMoveCamp({ id: camp.id, name });
+    setCollabTab("community");
+    setCollabMsg("");
+    setPersonQ("");
+    setPersonResults([]);
+    const supabase = createClient();
+    const { data } = await supabase.from("camp_collaborations").select("community_id").eq("cohort_id", camp.id);
+    setCollabIds(((data as { community_id: string }[]) ?? []).map((r) => r.community_id));
+  };
+
+  const searchPeople = async (q: string) => {
+    setPersonQ(q);
+    if (q.trim().length < 2) { setPersonResults([]); return; }
+    const supabase = createClient();
+    const { data } = await supabase.from("profiles").select("id, full_name, username").ilike("full_name", `%${q.trim()}%`).eq("is_bot", false).limit(8);
+    setPersonResults((data as { id: string; full_name: string | null; username: string | null }[]) ?? []);
+  };
+
+  const doCollabPerson = async (userId: string, name: string) => {
+    if (!moveCamp) return;
+    const supabase = createClient();
+    const { error } = await supabase.rpc("camp_collab_person", { p_cohort: moveCamp.id, p_user: userId });
+    setCollabMsg(error ? error.message : `Undangan dikirim ke ${name}. Camp muncul di Timeline Saya miliknya.`);
   };
 
   return (
@@ -154,26 +193,21 @@ export default function CampCrewPage() {
                     <span>Crew: <span className="text-white font-semibold">{camp.camp_crew?.[0]?.count || 0} members</span></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isSuperadmin && communities.length > 1 && (
+                    {isSuperadmin && !camp._shared && (
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setMoveCamp({
-                            id: camp.id,
-                            name:
-                              camp.camp_name === "Other Event"
-                                ? camp.custom_name
-                                : `${camp.camp_name} ${camp.angkatan}`,
-                          });
+                          openCollab(camp, camp.camp_name === "Other Event" ? camp.custom_name : `${camp.camp_name} ${camp.angkatan}`);
                         }}
                         className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] transition-colors rounded"
-                        title="Move to another community"
+                        title="Collaboration"
                       >
-                        <FolderInput className="w-4 h-4" />
+                        <Handshake className="w-4 h-4" />
                       </button>
                     )}
-                    {isSuperadmin && (
+                    {camp._shared && <span className="rounded-full border border-brand-gold/40 px-2 py-0.5 text-[10px] font-semibold text-brand-gold">Kolaborasi</span>}
+                    {isSuperadmin && !camp._shared && (
                       <button
                         onClick={(e) => handleDeleteCamp(e, camp.id)}
                         className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] transition-colors rounded"
@@ -203,30 +237,53 @@ export default function CampCrewPage() {
             className="w-full max-w-sm rounded-2xl border border-[#2a2d35] bg-[#16181d] p-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-[15px] font-bold text-white">Move camp</h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[15px] font-bold text-white">Collaboration</h3>
               <button onClick={() => setMoveCamp(null)} className="text-brand-muted hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <p className="mb-3 text-sm text-brand-muted">
-              Move <span className="text-white">{moveCamp.name}</span> to:
+              Share <span className="text-white">{moveCamp.name}</span> with:
             </p>
-            <div className="space-y-1.5">
-              {communities.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => doMoveCamp(c.id)}
-                  disabled={c.id === communityId}
-                  className="flex w-full items-center justify-between rounded-lg border border-[#333] px-3 py-2.5 text-left text-sm text-brand-light hover:bg-white/5 disabled:opacity-40"
-                >
-                  {c.name}
-                  {c.id === communityId && (
-                    <span className="text-[11px] text-brand-muted">current</span>
-                  )}
+            <div className="mb-3 grid grid-cols-2 gap-1 rounded-lg bg-black/30 p-1 text-xs font-semibold">
+              {(["community", "person"] as const).map((t) => (
+                <button key={t} onClick={() => { setCollabTab(t); setCollabMsg(""); }}
+                  className={"rounded-md px-3 py-2 " + (collabTab === t ? "bg-brand-gold text-brand-dark" : "text-brand-muted")}>
+                  {t === "community" ? "Another community" : "A person"}
                 </button>
               ))}
             </div>
+            {collabTab === "community" ? (
+              <div className="max-h-64 space-y-1.5 overflow-y-auto">
+                {communities.filter((c) => c.id !== communityId).map((c) => {
+                  const on = collabIds.includes(c.id);
+                  return (
+                    <button key={c.id} onClick={() => doCollabCommunity(c.id, !on)}
+                      className="flex w-full items-center justify-between rounded-lg border border-[#333] px-3 py-2.5 text-left text-sm text-brand-light hover:bg-white/5">
+                      {c.name}
+                      <span className={"text-[11px] " + (on ? "text-brand-gold" : "text-brand-muted")}>{on ? "Shared - tap to remove" : "Share"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div>
+                <input value={personQ} onChange={(e) => searchPeople(e.target.value)} placeholder="Search a name..."
+                  className="w-full rounded-lg border border-[#333] bg-[#111] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none" />
+                <div className="mt-2 max-h-52 space-y-1.5 overflow-y-auto">
+                  {personResults.map((p) => (
+                    <button key={p.id} onClick={() => doCollabPerson(p.id, p.full_name || p.username || "")}
+                      className="flex w-full items-center justify-between rounded-lg border border-[#333] px-3 py-2.5 text-left text-sm text-brand-light hover:bg-white/5">
+                      {p.full_name || p.username}
+                      <span className="text-[11px] text-brand-muted">Invite</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] text-brand-muted">The camp appears in their Timeline Saya as an invitation.</p>
+              </div>
+            )}
+            {collabMsg && <p className="mt-3 text-xs text-brand-gold">{collabMsg}</p>}
           </div>
         </div>
       )}
