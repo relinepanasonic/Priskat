@@ -37,16 +37,22 @@ export default function GuestTicketView({
           >
             <Download className="h-4 w-4" /> Unduh tiket
           </a>
-          <p className="mt-3 text-xs leading-relaxed text-brand-light">
-            <b className="text-white">Mohon bawa QR Code ini saat hadir di acara</b>, dicetak atau ditunjukkan dari ponselmu, dan tunjukkan kepada panitia di pintu masuk.
-          </p>
+          <div className="mt-5 space-y-2 border-t border-white/10 pt-4">
+            <p className="text-sm font-bold text-white">Mohon bawa QR Code ini saat hadir</p>
+            <p className="text-xs leading-relaxed text-brand-light">Boleh dicetak, atau tunjukkan dari ponselmu. Panitia akan memindainya di pintu masuk.</p>
+          </div>
         </div>
       )}
 
       {emailed && email && (
-        <p className="flex items-start gap-2 rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-brand-light">
-          <Mail className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /> Konfirmasi dan QR Code juga kami kirim ke <b className="text-white">{email}</b>. Cek folder Spam kalau belum terlihat.
-        </p>
+        <div className="flex gap-3 rounded-2xl border border-brand-gold/25 bg-white/[0.03] p-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gold/15 text-brand-gold"><Mail className="h-4 w-4" /></span>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs leading-relaxed text-brand-light">Konfirmasi dan QR Code juga kami kirim ke</p>
+            <p className="break-all text-sm font-semibold text-white">{email}</p>
+            <p className="text-[11px] text-brand-muted">Belum terlihat? Cek folder Spam.</p>
+          </div>
+        </div>
       )}
     </div>
   );

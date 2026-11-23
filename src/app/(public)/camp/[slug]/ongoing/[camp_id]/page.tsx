@@ -30,6 +30,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const [chats, setChats] = useState<any[]>([]);
   const [crewMembers, setCrewMembers] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [crewSearch, setCrewSearch] = useState("");
   const [newCrewName, setNewCrewName] = useState("");
   const [newCrewPosition, setNewCrewPosition] = useState("");
   const [newCrewUserId, setNewCrewUserId] = useState("");
@@ -97,7 +98,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   };
 
   const fetchAllUsers = async (supabase: any) => {
-    const { data } = await supabase.from("profiles").select("id, full_name, username").limit(500);
+    const { data } = await supabase.from("profiles").select("id, full_name, username").order("full_name").limit(5000);
     if (data) setAllUsers(data);
   };
 
@@ -334,8 +335,16 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                         <p className="font-semibold text-white text-sm truncate">{crew.name}</p>
                         <p className="text-brand-gold text-xs font-medium mt-0.5">{crew.position}</p>
                       </div>
-                      {crew.profiles && (
+                      {crew.profiles ? (
                         <span className="bg-[#222] px-2 py-1 rounded text-xs border border-[#444] text-gray-300 whitespace-nowrap flex-shrink-0">@{crew.profiles.username}</span>
+                      ) : (
+                        <a
+                          href={`https://wa.me/?text=${encodeURIComponent(`Shalom ${crew.name ?? ""}, kamu ditambahkan sebagai ${crew.position ?? "panitia"} di ${camp?.custom_name || camp?.camp_name || "acara ini"}. Unduh aplikasi Ruang Iman dan daftar dengan email ini supaya bisa ikut bertugas: https://apps.ruangiman.com`)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex-shrink-0 whitespace-nowrap rounded-lg border border-emerald-500/50 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/10"
+                        >
+                          Belum punya akun · Ajak
+                        </a>
                       )}
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button
@@ -387,17 +396,23 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Link Account (Optional)</label>
-                  <select 
-                    value={newCrewUserId} 
-                    onChange={e => setNewCrewUserId(e.target.value)}
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Akun Ruang Iman</label>
+                  <input value={crewSearch} onChange={e => setCrewSearch(e.target.value)} type="text" placeholder="Cari nama atau username" className="mb-2 w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  <select
+                    value={newCrewUserId}
+                    onChange={e => { setNewCrewUserId(e.target.value); const u = allUsers.find(x => x.id === e.target.value); if (u && !newCrewName) setNewCrewName(u.full_name ?? ""); }}
+                    size={newCrewUserId ? 1 : 5}
                     className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
                   >
-                    <option value="">-- No Account Connected --</option>
-                    {allUsers.map(u => (
-                      <option key={u.id} value={u.id}>{u.full_name} (@{u.username})</option>
-                    ))}
+                    <option value="">-- Belum punya akun Ruang Iman --</option>
+                    {allUsers
+                      .filter(u => { const q = crewSearch.trim().toLowerCase(); return !q || String(u.full_name ?? "").toLowerCase().includes(q) || String(u.username ?? "").toLowerCase().includes(q); })
+                      .slice(0, 300)
+                      .map(u => (
+                        <option key={u.id} value={u.id}>{u.full_name} (@{u.username})</option>
+                      ))}
                   </select>
+                  <p className="mt-1.5 text-[11px] text-brand-muted">{newCrewUserId ? "Terhubung ke akunnya. Ketua, Wakil Ketua, Sekretaris, dan Bendahara yang terhubung bisa menandai lunas." : "Belum punya akun? Simpan dulu, lalu klik Ajak di daftar panitia supaya mereka unduh Ruang Iman."}</p>
                 </div>
               </div>
               <div className="flex justify-between pt-2">

@@ -61,10 +61,16 @@ export function LinkPesertaButton({ run, title, compact = false }: { run: () => 
         {busy ? "Membuat..." : copied ? "Link disalin" : "Link Peserta"}
       </button>
       {link && !compact && (
-        <div className="flex items-center gap-2">
+        <div className="space-y-2">
           <a href={`https://wa.me/?text=${encodeURIComponent(`Daftar di sini: ${link}`)}`} target="_blank" rel="noopener noreferrer"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-500 py-2 text-xs font-bold text-emerald-950"><MessageCircle className="h-3.5 w-3.5" /> Bagikan ke WhatsApp</a>
-          <span className="min-w-0 flex-1 truncate text-[11px] text-brand-muted">{link.replace("https://", "")}</span>
+            className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-emerald-500 py-3 text-sm font-bold text-emerald-950 hover:bg-emerald-400">
+            <MessageCircle className="h-4 w-4" /> Bagikan ke WhatsApp
+          </a>
+          <div className="flex items-center gap-2 rounded-xl border border-[#333] bg-black/30 py-2 pl-3 pr-2">
+            <span className="min-w-0 flex-1 truncate text-xs text-brand-light">{link.replace("https://", "")}</span>
+            <button type="button" onClick={() => { void navigator.clipboard?.writeText(link).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1800); }}
+              className="shrink-0 rounded-lg bg-brand-gold/90 px-3 py-1.5 text-[11px] font-bold text-brand-dark">{copied ? "Tersalin" : "Salin"}</button>
+          </div>
         </div>
       )}
       {error && <p className="text-[11px] text-red-300">{error}</p>}
