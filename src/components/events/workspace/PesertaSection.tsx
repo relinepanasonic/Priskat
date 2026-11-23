@@ -5,6 +5,7 @@ import { Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image a
 import { createClient } from "@/lib/supabase/client";
 import { rupiah, STATUS_LABEL, ticketLink, waLink, type EventGroup, type Registration } from "@/lib/eventReg";
 import { useEventData } from "./useEventData";
+import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
 
 const db = () => createClient() as any;
 const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
@@ -112,6 +113,8 @@ export default function PesertaSection({ eventId, eventTitle, crew }: { eventId:
           </div>
         ))}
       </div>
+
+      <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Buat link pendaftaran untuk peserta" />
 
       <div className="grid grid-cols-2 gap-2">
         <a href={`/api/events/${eventId}/attendance?format=xlsx&${exportQuery}`} className="flex items-center justify-center gap-2 rounded-xl border border-[#333] py-2.5 text-xs font-bold text-brand-light hover:bg-white/5"><FileSpreadsheet className="h-4 w-4" /> Unduh Excel</a>

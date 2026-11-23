@@ -16,6 +16,7 @@ import Modal from "@/components/ui/Modal";
 import Link from "next/link";
 import { CAMP_SERIES, EVENT_KINDS, isCampSeries } from "@/lib/campTypes";
 import { Tent } from "lucide-react";
+import { LinkPesertaButton, getCampRegisterLink, getRegisterLink } from "@/components/events/workspace/LinkPeserta";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
 import { promoteEvent, deleteEvent } from "@/app/actions/events";
@@ -277,6 +278,7 @@ export default function CommunityEventsPanel({
                     className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark disabled:opacity-50">
                     {opening === ev.id ? "Membuka..." : "Enter"}
                   </button>
+                  <div className="flex-1"><LinkPesertaButton compact title="Link Peserta" run={() => getRegisterLink(ev.id)} /></div>
                   <button onClick={() => remove(ev.id)} aria-label="Hapus" className="flex shrink-0 items-center justify-center rounded-lg px-2 text-gray-500 hover:text-red-400">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -307,9 +309,12 @@ export default function CommunityEventsPanel({
                 <div className="shrink-0 space-y-2 p-3">
                   <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-white">{c.custom_name || c.camp_name}</h3>
                   <p className="truncate text-[11px] text-brand-muted">{series ? `Angkatan ${c.angkatan}` : c.branch}{c.start_date ? ` · ${fmt(c.start_date)}` : ""}</p>
-                  <Link href={`${campBase}/${c.id}`} className="flex items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">
-                    Enter
-                  </Link>
+                  <div className="flex gap-1.5">
+                    <Link href={`${campBase}/${c.id}`} className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">
+                      Enter
+                    </Link>
+                    <div className="flex-1"><LinkPesertaButton compact title="Link Peserta" run={() => getCampRegisterLink(c.id)} /></div>
+                  </div>
                 </div>
               </div>
             );
