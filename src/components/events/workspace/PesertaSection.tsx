@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image as ImageIcon, MessageCircle, Plus, QrCode, Trash2, UserRound } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image as ImageIcon, MessageCircle, Plus, QrCode, Trash2, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_WA_TEMPLATE, rupiah, renderWaTemplate, ticketLink, waLink, type EventGroup, type Registration } from "@/lib/eventReg";
 import { formatDate } from "@/lib/utils";
@@ -31,6 +31,8 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [qr, setQr] = useState<Registration | null>(null);
+  const [edit, setEdit] = useState<{ reg: Registration; name: string; paroki: string; phone: string; answers: Record<string, string> } | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
   const [proof, setProof] = useState<{ url: string; name: string } | null>(null);
   const [showGroups, setShowGroups] = useState(false);
   const [newGroup, setNewGroup] = useState("");
@@ -141,8 +143,37 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
   const fieldCols = (settings?.fields ?? []).filter((x) => x.type !== "photo");
   const allCols: [SortKey, string][] = [...COLS.slice(0, 3), ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string]), ...COLS.slice(3)];
   // one grid for the header and every row: name, paroki, WhatsApp, the questions, group, status, actions
-  const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(230px,1.4fr)"].join(" ");
-  const GRID_MIN = 170 + 120 + 120 + fieldCols.length * 120 + 120 + 96 + 230 + 40 * 2;
+  const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(250px,1.4fr)"].join(" ");
+  const GRID_MIN = 170 + 120 + 120 + fieldCols.length * 120 + 120 + 96 + 250 + 40 * 2;
+
+  function openEdit(r: Registration) {
+    const answers: Record<string, string> = {};
+    (settings?.fields ?? []).filter((x) => x.type !== "photo").forEach((x) => { answers[x.key] = String(r.answers?.[x.key] ?? ""); });
+    setEdit({ reg: r, name: r.full_name, paroki: r.paroki ?? "", phone: r.phone ?? "", answers });
+  }
+  async function saveEdit() {
+    if (!edit) return;
+    setEditBusy(true); setError(null);
+    const { error: err } = await db().rpc("update_registration_details", { p_reg: edit.reg.id, p_name: edit.name, p_paroki: edit.paroki, p_phone: edit.phone, p_answers: edit.answers });
+    setEditBusy(false);
+    if (err) { setError(err.message); return; }
+    setEdit(null);
+    await reload();
+  }
+  /** Rename a column, or remove it by clearing the name. The answers already given stay in the data. */
+  async function editColumn(key: string) {
+    const cur = (settings?.fields ?? []).find((x) => x.key === key);
+    if (!cur) return;
+    const label = window.prompt("Nama kolom (kosongkan untuk menghapus kolom ini):", cur.label);
+    if (label === null) return;
+    const next = label.trim()
+      ? (settings?.fields ?? []).map((x) => (x.key === key ? { ...x, label: label.trim() } : x))
+      : (settings?.fields ?? []).filter((x) => x.key !== key);
+    if (!label.trim() && !confirm(`Hapus kolom "${cur.label}"?`)) return;
+    const { error: err } = await db().from("event_reg_settings").upsert({ event_id: eventId, fields: next });
+    if (err) { setError(err.message); return; }
+    await reload();
+  }
 
   async function addColumn() {
     const label = window.prompt("Nama kolom baru (mis. Alamat, Pasangan, Ukuran baju):")?.trim();
@@ -226,7 +257,22 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
         </div>
       )}
 
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari nama, paroki, atau nomor HP" className={input} />
+      <div className="flex flex-wrap items-center gap-2">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari nama, paroki, HP" className={`${input} sm:max-w-[16rem]`} />
+        {(() => {
+          const g = groups.find((x) => x.id === filter);
+          if (!g) return null;
+          return (
+            <label className="flex flex-1 items-center gap-2 text-xs font-semibold text-brand-muted sm:flex-none">
+              <span className="shrink-0">Fasilitator {g.name}</span>
+              <select value={g.facilitator_crew_id ?? ""} onChange={(e) => void setFacilitator(g, e.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm font-normal text-white sm:w-56 sm:flex-none">
+                <option value="">-- Belum ada --</option>
+                {crew.filter((c) => /fasilitator/i.test(c.position ?? "") || c.id === g.facilitator_crew_id).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+          );
+        })()}
+      </div>
 
       {/* phone: no column headers, so the sorting sits above the list */}
       <div className="flex items-center gap-2 md:hidden">
@@ -251,7 +297,7 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
           <div style={{ minWidth: GRID_MIN }} className="md:min-w-0">
             {/* header: phone shows no headers (the sort is above the list) */}
             <div style={{ gridTemplateColumns: GRID }} className="hidden gap-3 border-b border-[#2a2d35] bg-black/20 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand-muted md:grid">
-              {allCols.map(([k, l]) => <span key={k} className="flex min-w-0 items-center"><span className="truncate">{l}</span><Arrows k={k} /></span>)}
+              {allCols.map(([k, l]) => <span key={k} className="flex min-w-0 items-center"><span className="truncate">{l}</span><Arrows k={k} />{k.startsWith("f:") && <button type="button" onClick={() => void editColumn(k.slice(2))} aria-label={`Ubah kolom ${l}`} title="Ubah atau hapus kolom" className="ml-1.5 shrink-0 text-gray-500 hover:text-brand-gold"><Pencil className="h-3 w-3" /></button>}</span>)}
               <span className="flex items-center justify-between gap-2 text-left">
                 <span>Aksi</span>
                 <button type="button" onClick={() => void addColumn()} className="shrink-0 rounded-md border border-brand-gold/40 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-brand-gold hover:bg-brand-gold/10">+ Kolom</button>
@@ -293,7 +339,6 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
                       {isPaid(r) ? (
                         <>
                           <button onClick={() => setQr(r)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-2.5 py-1.5 text-xs font-bold text-brand-dark"><QrCode className="h-3.5 w-3.5" /> QR</button>
-                          <a href={waLink(r.phone, message(r))} target="_blank" rel="noopener noreferrer" aria-label="Kirim lewat WhatsApp" className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/50 px-2.5 py-1.5 text-xs font-bold text-emerald-300"><MessageCircle className="h-3.5 w-3.5" /> WA</a>
                           {canMarkPaid && <button disabled={busy === r.id} onClick={() => setPaid(r, false)} className="rounded-lg px-2 py-1.5 text-[11px] font-semibold text-gray-400 underline hover:text-red-300 disabled:opacity-50">Batalkan</button>}
                         </>
                       ) : (
@@ -306,11 +351,36 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
                           )}
                         </>
                       )}
+                      <button onClick={() => openEdit(r)} aria-label={`Ubah data ${r.full_name}`} title="Ubah data" className="inline-flex items-center gap-1 rounded-lg border border-[#333] px-2.5 py-1.5 text-xs font-semibold text-brand-light hover:bg-white/5"><Pencil className="h-3.5 w-3.5" /> Edit</button>
                     </div>
                   </li>
                 );
               })}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {edit && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4" onClick={() => setEdit(null)}>
+          <div className="max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-2xl bg-[#1a1d24] p-5" onClick={(e) => e.stopPropagation()}>
+            <p className="text-base font-bold text-white">Ubah data peserta</p>
+            {([["Nama", "name"], ["Paroki", "paroki"], ["WhatsApp", "phone"]] as const).map(([label, key]) => (
+              <label key={key} className="block space-y-1.5">
+                <span className="text-xs font-semibold text-brand-light">{label}</span>
+                <input value={edit[key]} onChange={(e) => setEdit({ ...edit, [key]: e.target.value })} className={input} />
+              </label>
+            ))}
+            {fieldCols.map((x) => (
+              <label key={x.key} className="block space-y-1.5">
+                <span className="text-xs font-semibold text-brand-light">{x.label}</span>
+                <input value={edit.answers[x.key] ?? ""} onChange={(e) => setEdit({ ...edit, answers: { ...edit.answers, [x.key]: e.target.value } })} className={input} />
+              </label>
+            ))}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button onClick={() => setEdit(null)} className="rounded-xl border border-[#333] py-2.5 text-sm font-semibold text-brand-light">Batal</button>
+              <button onClick={saveEdit} disabled={editBusy} className="rounded-xl bg-brand-gold py-2.5 text-sm font-bold text-brand-dark disabled:opacity-60">{editBusy ? "Menyimpan…" : "Simpan"}</button>
+            </div>
           </div>
         </div>
       )}
