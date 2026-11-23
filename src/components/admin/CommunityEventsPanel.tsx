@@ -406,8 +406,8 @@ export default function CommunityEventsPanel({
                 }} className="text-xs text-red-300 underline">Hapus nama ini dari daftar</button>
               )}
               <div>
-                <label className="mb-1 block text-sm text-brand-light">Angkatan / edisi (opsional)</label>
-                <input value={edition} onChange={(e) => setEdition(e.target.value)} className="input-3d w-full text-sm" placeholder="Mis. 3 atau 2026" />
+                <label className="mb-1 block text-sm text-brand-light">Angkatan (optional)</label>
+                <input value={edition} onChange={(e) => setEdition(e.target.value)} className="input-3d w-full text-sm" placeholder="e.g. 3" />
               </div>
             </div>
           )}
