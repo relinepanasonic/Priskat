@@ -158,14 +158,15 @@ export default function CommunityEventsPanel({
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sign in again to upload.");
       const url = await uploadImage(
         file,
         "event-banners",
-        storagePath(user?.id ?? "anon", file.name)
+        storagePath(user.id, file.name)
       );
       setBanner(url);
-    } catch {
-      setError("Content upload failed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Content upload failed.");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -256,12 +257,10 @@ export default function CommunityEventsPanel({
               <div className="shrink-0 space-y-2 p-3">
                 <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-white">{ev.title}</h3>
                 <p className="truncate text-[11px] text-brand-muted">{fmt(ev.event_date)}</p>
-                <div className="flex gap-1.5">
-                  <a href={`/acara/${ev.id}`} className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">Daftar</a>
+                <div className="flex items-center gap-1.5">
                   <button onClick={() => openWorkspace(ev.id)} disabled={opening === ev.id}
-                    aria-label="Tim, tugas, dan keuangan" title="Tim, tugas, dan keuangan"
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-brand-gold/40 px-2 py-2 text-[11px] font-bold text-brand-gold disabled:opacity-50">
-                    <Users className="h-3.5 w-3.5" /> {opening === ev.id ? "..." : "Tim"}
+                    className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark disabled:opacity-50">
+                    {opening === ev.id ? "Membuka..." : "Enter"}
                   </button>
                   <button onClick={() => remove(ev.id)} aria-label="Hapus" className="flex shrink-0 items-center justify-center rounded-lg px-2 text-gray-500 hover:text-red-400">
                     <Trash2 className="h-3.5 w-3.5" />
@@ -291,7 +290,7 @@ export default function CommunityEventsPanel({
                   <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-white">{c.custom_name || c.camp_name}</h3>
                   <p className="truncate text-[11px] text-brand-muted">{series ? `Angkatan ${c.angkatan}` : c.branch}{c.start_date ? ` · ${fmt(c.start_date)}` : ""}</p>
                   <Link href={`${campBase}/${c.id}`} className="flex items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">
-                    Buka tim dan keuangan
+                    Enter
                   </Link>
                 </div>
               </div>

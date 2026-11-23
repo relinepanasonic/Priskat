@@ -17,6 +17,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const [activeTab, setActiveTab] = useState<"todo" | "meeting" | "chat" | "crew" | "keuangan">("todo");
   const inAdmin = usePathname().startsWith("/admin");
   const [camp, setCamp] = useState<any>(null);
+  const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [chats, setChats] = useState<any[]>([]);
@@ -58,6 +59,10 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
       // Fetch camp cohort
       const { data: cohort } = await supabase.from("camp_cohorts").select("*").eq("id", camp_id).single();
       if (cohort) setCamp(cohort);
+
+      // an event opened from the Event page: its registration and attendance page
+      const { data: ev } = await supabase.from("events").select("id").eq("cohort_id", camp_id).maybeSingle();
+      setLinkedEventId(ev?.id ?? null);
 
       fetchTasks(supabase);
       fetchMeetings(supabase);
@@ -264,6 +269,11 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         </Link>
         <h1 className="text-2xl font-bold text-white mb-2">{isCampSeries(camp.camp_name) ? camp.camp_name : (camp.custom_name || camp.camp_name)} {isCampSeries(camp.camp_name) && <span className="text-brand-gold">Angkatan {camp.angkatan}</span>}</h1>
         <p className="text-gray-400 text-sm">Service Dashboard for {camp.branch}</p>
+        {linkedEventId && (
+          <Link href={`/acara/${linkedEventId}`} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-brand-gold/40 px-3 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold/10">
+            Pendaftaran dan absensi
+          </Link>
+        )}
       </div>
 
       <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto">
