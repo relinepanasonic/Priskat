@@ -55,7 +55,7 @@ export function LinkPesertaButton({ run, title, compact = false, shareText }: { 
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>
       <button type="button" onClick={go} disabled={busy}
-        className={`flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-gold/40 font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50 ${compact ? "px-2 py-2 text-[11px]" : "px-3 py-2.5 text-sm"}`}
+        className={`flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-gold/40 font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50 ${compact ? "h-9 whitespace-nowrap px-2 text-[11px]" : "px-3 py-2.5 text-sm"}`}
         title={title}>
         {copied ? <Check className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
         {busy ? "Membuat..." : copied ? "Link disalin" : "Link Peserta"}

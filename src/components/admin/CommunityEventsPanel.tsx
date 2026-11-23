@@ -307,7 +307,7 @@ export default function CommunityEventsPanel({
                 <p className="truncate text-[11px] text-brand-muted">{fmt(ev.event_date)}</p>
                 <div className="flex items-center gap-1.5">
                   <button onClick={() => openWorkspace(ev.id)} disabled={opening === ev.id}
-                    className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark disabled:opacity-50">
+                    className="flex h-9 flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 text-[11px] font-bold text-brand-dark disabled:opacity-50">
                     {opening === ev.id ? "Membuka..." : "Enter"}
                   </button>
                   <div className="flex-1"><LinkPesertaButton compact title="Link Peserta" run={() => getRegisterLink(ev.id)} /></div>
@@ -342,7 +342,7 @@ export default function CommunityEventsPanel({
                   <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-white">{c.custom_name || c.camp_name}</h3>
                   <p className="truncate text-[11px] text-brand-muted">{series ? `Angkatan ${c.angkatan}` : c.branch}{c.start_date ? ` · ${fmt(c.start_date)}` : ""}</p>
                   <div className="flex gap-1.5">
-                    <Link href={`${campBase}/${c.id}`} className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">
+                    <Link href={`${campBase}/${c.id}`} className="flex h-9 flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 text-[11px] font-bold text-brand-dark">
                       Enter
                     </Link>
                     <div className="flex-1"><LinkPesertaButton compact title="Link Peserta" run={() => getCampRegisterLink(c.id)} /></div>
