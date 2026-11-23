@@ -288,8 +288,8 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
       <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {[
           ...(linkedEventId ? [
-            { id: "peserta", label: "Peserta", Icon: UserCheck },
             { id: "tentang", label: "Tentang", Icon: Info },
+            { id: "peserta", label: "Peserta", Icon: UserCheck },
             { id: "qr", label: "QR & Absensi", Icon: QrCode },
             { id: "promosi", label: "Promosi", Icon: Megaphone },
           ] : []),
