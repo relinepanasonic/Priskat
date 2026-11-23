@@ -30,7 +30,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const [chats, setChats] = useState<any[]>([]);
   const [crewMembers, setCrewMembers] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [crewSearch, setCrewSearch] = useState("");
+  const [crewFocus, setCrewFocus] = useState(false);
   const [newCrewName, setNewCrewName] = useState("");
   const [newCrewPosition, setNewCrewPosition] = useState("");
   const [newCrewUserId, setNewCrewUserId] = useState("");
@@ -376,10 +376,45 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
 
             <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4">
               <h3 className="text-md font-bold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-brand-gold" /> Tambah Panitia</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 mb-1.5">Name (or leave blank if linking)</label>
-                  <input value={newCrewName} onChange={e => setNewCrewName(e.target.value)} type="text" placeholder="Crew Name" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
+                  <div className="relative">
+                    {newCrewUserId && (
+                      <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-200">
+                        <span className="truncate">Terhubung ke @{allUsers.find(u => u.id === newCrewUserId)?.username ?? "akun"}</span>
+                        <button type="button" onClick={() => setNewCrewUserId("")} className="shrink-0 font-semibold text-emerald-200 hover:text-white">Lepas</button>
+                      </div>
+                    )}
+                    <input
+                      value={newCrewName}
+                      onChange={e => { setNewCrewName(e.target.value); setNewCrewUserId(""); }}
+                      onFocus={() => setCrewFocus(true)}
+                      onBlur={() => setTimeout(() => setCrewFocus(false), 150)}
+                      type="text"
+                      placeholder="Ketik nama, lalu pilih akunnya"
+                      autoComplete="off"
+                      className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
+                    />
+                    {crewFocus && !newCrewUserId && newCrewName.trim().length >= 2 && (() => {
+                      const q = newCrewName.trim().toLowerCase();
+                      const hits = allUsers.filter(u => String(u.full_name ?? "").toLowerCase().includes(q) || String(u.username ?? "").toLowerCase().includes(q)).slice(0, 6);
+                      return hits.length > 0 ? (
+                        <ul className="absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-[#333] bg-[#14171c] p-1 shadow-xl">
+                          {hits.map(u => (
+                            <li key={u.id}>
+                              <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setNewCrewUserId(u.id); setNewCrewName(u.full_name ?? ""); setCrewFocus(false); }}
+                                className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/5">
+                                <span className="truncate">{u.full_name}</span>
+                                <span className="shrink-0 text-xs text-brand-muted">@{u.username}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null;
+                    })()}
+                    <p className="mt-1.5 text-[11px] text-brand-muted">{newCrewUserId ? "Ketua, Wakil Ketua, Sekretaris, dan Bendahara yang terhubung bisa menandai lunas." : "Belum punya akun? Ketik namanya saja, lalu klik Ajak di daftar panitia."}</p>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 mb-1.5">Position</label>
@@ -394,25 +429,6 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
                   {(othersMode || (newCrewPosition && !isKnownRole(newCrewPosition))) && (
                     <input value={newCrewPosition} onChange={e => setNewCrewPosition(e.target.value)} type="text" placeholder="Tulis jabatan" className="mt-2 w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
                   )}
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Akun Ruang Iman</label>
-                  <input value={crewSearch} onChange={e => setCrewSearch(e.target.value)} type="text" placeholder="Cari nama atau username" className="mb-2 w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
-                  <select
-                    value={newCrewUserId}
-                    onChange={e => { setNewCrewUserId(e.target.value); const u = allUsers.find(x => x.id === e.target.value); if (u && !newCrewName) setNewCrewName(u.full_name ?? ""); }}
-                    size={newCrewUserId ? 1 : 5}
-                    className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-                  >
-                    <option value="">-- Belum punya akun Ruang Iman --</option>
-                    {allUsers
-                      .filter(u => { const q = crewSearch.trim().toLowerCase(); return !q || String(u.full_name ?? "").toLowerCase().includes(q) || String(u.username ?? "").toLowerCase().includes(q); })
-                      .slice(0, 300)
-                      .map(u => (
-                        <option key={u.id} value={u.id}>{u.full_name} (@{u.username})</option>
-                      ))}
-                  </select>
-                  <p className="mt-1.5 text-[11px] text-brand-muted">{newCrewUserId ? "Terhubung ke akunnya. Ketua, Wakil Ketua, Sekretaris, dan Bendahara yang terhubung bisa menandai lunas." : "Belum punya akun? Simpan dulu, lalu klik Ajak di daftar panitia supaya mereka unduh Ruang Iman."}</p>
                 </div>
               </div>
               <div className="flex justify-between pt-2">
