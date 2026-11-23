@@ -139,7 +139,7 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat peserta...</p>;
 
   const fieldCols = (settings?.fields ?? []).filter((x) => x.type !== "photo");
-  const allCols: [SortKey, string][] = [...COLS, ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string])];
+  const allCols: [SortKey, string][] = [...COLS.slice(0, 3), ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string]), ...COLS.slice(3)];
   // one grid for the header and every row: name, paroki, WhatsApp, the questions, group, status, actions
   const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(230px,1.4fr)"].join(" ");
   const GRID_MIN = 170 + 120 + 120 + fieldCols.length * 120 + 120 + 96 + 230 + 40 * 2;
@@ -156,12 +156,20 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
     await reload();
   }
 
-  const Arrows = ({ k }: { k: SortKey }) => (
-    <span className="ml-1 inline-flex flex-col leading-none">
-      <button type="button" onClick={() => toggleSort(k, "asc")} aria-label={`Urutkan ${k} naik`} className={sort?.key === k && sort.dir === "asc" ? "text-brand-gold" : "text-gray-600 hover:text-white"}><ArrowUp className="h-3 w-3" /></button>
-      <button type="button" onClick={() => toggleSort(k, "desc")} aria-label={`Urutkan ${k} turun`} className={sort?.key === k && sort.dir === "desc" ? "text-brand-gold" : "text-gray-600 hover:text-white"}><ArrowDown className="h-3 w-3" /></button>
-    </span>
-  );
+  const Arrows = ({ k }: { k: SortKey }) => {
+    const upOn = sort?.key === k && sort.dir === "asc";
+    const downOn = sort?.key === k && sort.dir === "desc";
+    return (
+      <span className="ml-1.5 inline-flex shrink-0 flex-col gap-[3px]">
+        <button type="button" onClick={() => toggleSort(k, "asc")} aria-label={`Urutkan ${k} naik`} className={upOn ? "text-brand-gold" : "text-[#5a6bb5] hover:text-[#8da0ee]"}>
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" aria-hidden><path d="M5 0 10 6H0z" /></svg>
+        </button>
+        <button type="button" onClick={() => toggleSort(k, "desc")} aria-label={`Urutkan ${k} turun`} className={downOn ? "text-brand-gold" : "text-[#5a6bb5] hover:text-[#8da0ee]"}>
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" aria-hidden><path d="M5 6 0 0h10z" /></svg>
+        </button>
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -210,11 +218,11 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-brand-muted">Fasilitator (PIC grup)</label>
               <select value={g.facilitator_crew_id ?? ""} onChange={(e) => void setFacilitator(g, e.target.value)} className={input}>
                 <option value="">-- Belum ada fasilitator --</option>
-                {crew.map((c) => <option key={c.id} value={c.id}>{c.name}{c.position ? ` (${c.position})` : ""}</option>)}
+                {crew.filter((c) => /fasilitator/i.test(c.position ?? "") || c.id === g.facilitator_crew_id).map((c) => <option key={c.id} value={c.id}>{c.name}{c.position && !/fasilitator/i.test(c.position) ? ` (${c.position})` : ""}</option>)}
               </select>
             </div>
           ))}
-          {crew.length === 0 && <p className="text-xs text-amber-300">Fasilitator dipilih dari tab Panitia. Tambahkan panitia dulu.</p>}
+          {!crew.some((c) => /fasilitator/i.test(c.position ?? "")) && <p className="text-xs text-amber-300">Belum ada Fasilitator. Tambahkan panitia dengan jabatan Fasilitator di tab Panitia, lalu pilih di sini.</p>}
         </div>
       )}
 
