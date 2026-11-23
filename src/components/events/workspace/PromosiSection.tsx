@@ -25,7 +25,7 @@ export default function PromosiSection({ eventId }: { eventId: string }) {
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat...</p>;
   if (!event) return <p className="py-10 text-center text-sm text-gray-500">Event tidak ditemukan.</p>;
 
-  const link = settings?.public_code ? registerLink(settings.public_code) : null;
+  const link = settings?.slug || settings?.public_code ? registerLink((settings.slug || settings.public_code) as string) : null;
   const when = event.event_date ? `${formatWeekdayDate(event.event_date)}, ${formatTime(event.event_date)} WIB` : "";
   // a ready text for WhatsApp and social media: name, tagline, when, where and the link
   const parts: (string | null | undefined | false)[] = [

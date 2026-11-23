@@ -258,7 +258,7 @@ export function SettingsTab({ eventId, settings, onSaved, design = true }: { eve
   const [uploading, setUploading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
-  const link = settings?.public_code ? registerLink(settings.public_code) : null;
+  const link = settings?.slug || settings?.public_code ? registerLink((settings.slug || settings.public_code) as string) : null;
 
   async function copyLink() {
     if (!link) return;

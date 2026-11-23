@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendRegistrationEmail } from "@/lib/eventMail";
-import type { RegField } from "@/lib/eventReg";
+import { isRegisterKey, registerKeyFilter, type RegField } from "@/lib/eventReg";
 
 export const maxDuration = 30;
 
@@ -24,7 +24,7 @@ const clean = (v: unknown, max: number) => String(v ?? "").replace(/[\u0000-\u00
 
 export async function POST(request: Request, { params }: { params: Promise<{ key: string }> }) {
   const { key: code } = await params;
-  if (!/^[0-9a-f]{6}$/i.test(code)) return NextResponse.json({ error: "Link tidak valid." }, { status: 400 });
+  if (!isRegisterKey(code)) return NextResponse.json({ error: "Link tidak valid." }, { status: 400 });
   const ip = (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
   if (tooMany(`ip:${ip}`, 15, 3600_000)) return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
 
@@ -44,7 +44,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ key
   if (tooMany(`mail:${email}`, 4, 3600_000)) return NextResponse.json({ error: "Email ini sudah mencoba beberapa kali. Coba lagi nanti." }, { status: 429 });
 
   const db = createAdminClient();
-  const { data: st } = await db.from("event_reg_settings" as any).select("*").eq("public_code", code.toLowerCase()).maybeSingle();
+  const { data: st } = await db.from("event_reg_settings" as any).select("*").or(registerKeyFilter(code)).maybeSingle();
   const settings = st as { event_id: string; open: boolean; link_open?: boolean; link_auto_approve?: boolean; deadline: string | null; fields: RegField[]; price: number } | null;
   if (!settings) return NextResponse.json({ error: "Link pendaftaran tidak ditemukan." }, { status: 404 });
   const { data: evRow } = await db.from("events").select("id, title, event_date, location, capacity, status").eq("id", settings.event_id).maybeSingle();

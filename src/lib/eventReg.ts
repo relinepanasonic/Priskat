@@ -14,6 +14,7 @@ export type RegSettings = {
   deadline: string | null;
   fields: RegField[];
   public_code?: string | null;
+  slug?: string | null;
   link_open?: boolean;
   link_auto_approve?: boolean;
   welcome_text?: string | null;
@@ -48,7 +49,12 @@ export type Registration = {
 export type EventGroup = { id: string; event_id: string; name: string; facilitator_crew_id: string | null };
 
 export const SITE_URL = "https://apps.ruangiman.com";
+/** The registration link: by the event's name (slug) when there is one, otherwise the old 6-letter code. */
 export const registerLink = (code: string) => `${SITE_URL}/e/${code}`;
+/** Accepts both a slug and a 6-letter code */
+export const isRegisterKey = (k: string) => /^[a-z0-9][a-z0-9-]{1,79}$/i.test(k);
+/** The lookup filter for a link key: the slug, or the old code */
+export const registerKeyFilter = (k: string) => (/^[0-9a-f]{6}$/i.test(k) ? `public_code.eq.${k.toLowerCase()}` : `slug.eq.${k.toLowerCase()},public_code.eq.${k.toLowerCase()}`);
 export const ticketLink = (code: string) => `${SITE_URL}/t/${code}`;
 
 export const STATUS_LABEL: Record<RegStatus, string> = {

@@ -3,7 +3,7 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import GuestRegisterForm from "@/components/events/GuestRegisterForm";
 import { formatWeekdayDate, formatTime } from "@/lib/utils";
-import type { RegField } from "@/lib/eventReg";
+import { isRegisterKey, registerKeyFilter, type RegField } from "@/lib/eventReg";
 
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
@@ -12,9 +12,9 @@ import type { Metadata } from "next";
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
   const fallback: Metadata = { title: "Daftar Event", description: "Daftar event Ruang Iman" };
-  if (!/^[0-9a-f]{6}$/i.test(code)) return fallback;
+  if (!isRegisterKey(code)) return fallback;
   const db = createAdminClient();
-  const { data: st } = await db.from("event_reg_settings" as any).select("event_id").eq("public_code", code.toLowerCase()).maybeSingle();
+  const { data: st } = await db.from("event_reg_settings" as any).select("event_id").or(registerKeyFilter(code)).maybeSingle();
   const eid = (st as { event_id?: string } | null)?.event_id;
   if (!eid) return fallback;
   const { data: ev } = await db.from("events").select("title, event_date, location, banner_image_url").eq("id", eid).maybeSingle();
@@ -34,9 +34,9 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
 /** The short registration link: /e/<code>. A clean page for guests: no menu, no login. */
 export default async function GuestEventPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  if (!/^[0-9a-f]{6}$/i.test(code)) notFound();
+  if (!isRegisterKey(code)) notFound();
   const db = createAdminClient();
-  const { data: st } = await db.from("event_reg_settings" as any).select("event_id, open, link_open, deadline, fields, welcome_text").eq("public_code", code.toLowerCase()).maybeSingle();
+  const { data: st } = await db.from("event_reg_settings" as any).select("event_id, open, link_open, deadline, fields, welcome_text").or(registerKeyFilter(code)).maybeSingle();
   const s = st as { event_id: string; open: boolean; link_open?: boolean; deadline: string | null; fields: RegField[]; welcome_text: string | null } | null;
   if (!s) notFound();
   const { data: ev } = await db.from("events").select("title, event_date, location, banner_image_url, status").eq("id", s.event_id).maybeSingle();
