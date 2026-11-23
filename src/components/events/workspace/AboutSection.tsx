@@ -9,6 +9,7 @@ import { Collapse, Field, inputCls } from "./ui";
 import RegistrationSettings from "./RegistrationSettings";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
 import WaTemplate from "./WaTemplate";
+import PromoContent from "./PromoContent";
 import { DEFAULT_WA_INVITE, DEFAULT_WA_TEMPLATE, renderWaTemplate } from "@/lib/eventReg";
 import { formatDate } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [toggling, setToggling] = useState(false);
   const [openTentang, setOpenTentang] = useState(true);
+  const [openPromo, setOpenPromo] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openDaftar, setOpenDaftar] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -87,7 +89,7 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
   return (
     <div className="space-y-3">
       {/* 1. Tentang Event */}
-      <Collapse title="Tentang Event" subtitle={title || "Nama, tagline, tempat, dan tanggal"} open={openTentang} onToggle={() => setOpenTentang((v) => !v)}>
+      <Collapse title="Detail Event" subtitle={title || "Nama, tagline, tempat, dan tanggal"} open={openTentang} onToggle={() => setOpenTentang((v) => !v)}>
         <Field label="Nama event">
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} className={inputCls} />
         </Field>
@@ -122,9 +124,44 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
         <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan"}</button>
       </Collapse>
 
-      {/* 2. Pengaturan Pendaftaran, with the WhatsApp message */}
+      {/* 2. Promotional Event: the text people read before they register, and up to 3 pictures */}
+      <Collapse title="Promotional Event" subtitle="Teks promosi dan foto yang dilihat orang sebelum mendaftar" open={openPromo} onToggle={() => setOpenPromo((v) => !v)}>
+        <PromoContent key={`${event.promo_text}-${(event.promo_images ?? []).length}`} event={event} reload={reload} />
+      </Collapse>
+
+      {/* 3. Pengaturan Pendaftaran */}
       <Collapse title="Pengaturan Pendaftaran" subtitle="Biaya, rekening, batas tanggal, dan pertanyaan di formulir" open={openSettings} onToggle={() => setOpenSettings((v) => !v)}>
         <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />
+      </Collapse>
+
+      {/* 4. Pendaftaran dibuka: the link, the messages, and the button to close at the bottom */}
+      <Collapse title={isOpen ? "Pendaftaran dibuka" : "Pendaftaran ditutup"} subtitle={isOpen ? "Orang bisa mendaftar lewat Link Peserta" : "Buka pendaftaran supaya Link Peserta bisa dipakai"} open={openDaftar} onToggle={() => setOpenDaftar((v) => !v)}>
+        <div className={`flex items-center gap-3 rounded-xl border p-3.5 ${isOpen ? "border-emerald-500/40 bg-emerald-500/10" : "border-[#333] bg-black/20"}`}>
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isOpen ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-gray-400"}`}>
+            {isOpen ? <DoorOpen className="h-5 w-5" /> : <DoorClosed className="h-5 w-5" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-white">{isOpen ? "Pendaftaran dibuka" : "Pendaftaran ditutup"}</p>
+            <p className="text-xs text-brand-muted">{isOpen ? "Orang bisa mendaftar lewat Link Peserta." : "Buka pendaftaran supaya Link Peserta bisa dipakai."}</p>
+          </div>
+        </div>
+        <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" shareText={shareText} />
+
+        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
+          <p className="text-sm font-bold text-white">Pesan ajakan mendaftar</p>
+          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_invite_template" def={DEFAULT_WA_INVITE} hint="Dikirim bersama Link Peserta. {nama} menjadi Saudara/i kalau dibagikan ke banyak orang." />
+        </div>
+        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
+          <p className="text-sm font-bold text-white">Pesan QR untuk peserta lunas</p>
+          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_template" def={DEFAULT_WA_TEMPLATE} hint="Dikirim ke peserta yang sudah lunas, berisi QR mereka." />
+        </div>
+
+        <div className="border-t border-[#2a2d35] pt-5">
+          <button onClick={toggleRegistration} disabled={toggling}
+            className={`w-full rounded-xl py-3.5 text-sm font-bold disabled:opacity-60 ${isOpen ? "border border-[#333] text-brand-light hover:bg-white/5" : "bg-brand-gold text-brand-dark hover:opacity-90"}`}>
+            {toggling ? "Menyimpan…" : isOpen ? "Tutup pendaftaran" : "Buka pendaftaran"}
+          </button>
+        </div>
       </Collapse>
 
       {isManager && (
@@ -136,33 +173,6 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
           <button onClick={() => void setClosed(!event.closed_at)} disabled={closing} className="rounded-xl border border-[#333] px-4 py-2.5 text-sm font-semibold text-brand-light hover:bg-white/5 disabled:opacity-60">{closing ? "Menyimpan..." : event.closed_at ? "Buka lagi" : "Tutup event"}</button>
         </div>
       )}
-
-      {/* 3. Open and close the registration */}
-      <Collapse title={isOpen ? "Pendaftaran dibuka" : "Pendaftaran ditutup"} subtitle={isOpen ? "Orang bisa mendaftar lewat Link Peserta" : "Buka pendaftaran supaya Link Peserta bisa dipakai"} open={openDaftar} onToggle={() => setOpenDaftar((v) => !v)}>
-        <div className={`flex items-center gap-3 rounded-xl border p-3.5 ${isOpen ? "border-emerald-500/40 bg-emerald-500/10" : "border-[#333] bg-black/20"}`}>
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isOpen ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-gray-400"}`}>
-            {isOpen ? <DoorOpen className="h-5 w-5" /> : <DoorClosed className="h-5 w-5" />}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-white">{isOpen ? "Pendaftaran dibuka" : "Pendaftaran ditutup"}</p>
-            <p className="text-xs text-brand-muted">{isOpen ? "Orang bisa mendaftar lewat Link Peserta." : "Buka pendaftaran supaya Link Peserta bisa dipakai."}</p>
-          </div>
-        </div>
-        <button onClick={toggleRegistration} disabled={toggling}
-          className={`w-full rounded-xl py-3.5 text-sm font-bold disabled:opacity-60 ${isOpen ? "border border-[#333] text-brand-light hover:bg-white/5" : "bg-brand-gold text-brand-dark hover:opacity-90"}`}>
-          {toggling ? "Menyimpan…" : isOpen ? "Tutup pendaftaran" : "Buka pendaftaran"}
-        </button>
-        <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" shareText={shareText} />
-
-        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
-          <p className="text-sm font-bold text-white">Pesan ajakan mendaftar</p>
-          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_invite_template" def={DEFAULT_WA_INVITE} hint="Dikirim bersama Link Peserta. {nama} menjadi Saudara/i kalau dibagikan ke banyak orang." />
-        </div>
-        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
-          <p className="text-sm font-bold text-white">Pesan QR untuk peserta lunas</p>
-          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_template" def={DEFAULT_WA_TEMPLATE} hint="Dikirim ke peserta yang sudah lunas, berisi QR mereka." />
-        </div>
-      </Collapse>
     </div>
   );
 }
