@@ -7,6 +7,19 @@ import { sortCommunities } from "@/lib/community";
 import { isCommunityCenterHost } from "@/lib/ccMode";
 import CommunityAdminGuard from "@/components/admin/CommunityAdminGuard";
 import type { Profile } from "@/lib/types/database.types";
+import type { Metadata } from "next";
+import InstallApp from "@/components/admin/InstallApp";
+
+/** On communitycenter.ruangiman.com the site is its own app: its own icon, name and install, different from Ruang Iman. */
+export async function generateMetadata(): Promise<Metadata> {
+  if (!(await isCommunityCenterHost())) return {};
+  return {
+    manifest: "/cc-manifest.json",
+    applicationName: "Community Center",
+    icons: { icon: [{ url: "/cc/favicon.png", sizes: "64x64", type: "image/png" }], apple: "/cc/apple-touch-icon.png" },
+    appleWebApp: { capable: true, title: "Community Center", statusBarStyle: "black-translucent" },
+  };
+}
 
 export default async function AdminLayout({
   children,
@@ -44,7 +57,8 @@ export default async function AdminLayout({
   }
 
   // The Community Center has its own sidebar: on communitycenter.ruangiman.com, and for community admins everywhere
-  const centerMode = (await isCommunityCenterHost()) || !isGlobalAdmin;
+  const onCcHost = await isCommunityCenterHost();
+  const centerMode = onCcHost || !isGlobalAdmin;
   if (centerMode) {
     type C = { id: string; name: string; slug: string | null };
     let communities: C[] = [];
@@ -64,6 +78,7 @@ export default async function AdminLayout({
           avatarUrl={profile?.avatar_url ?? null}
         />
         <CommunityAdminGuard />
+        {onCcHost && <InstallApp />}
         <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">
           <div className="min-h-full bg-[#1e2128] p-4 md:p-6 lg:p-8">
             {children}

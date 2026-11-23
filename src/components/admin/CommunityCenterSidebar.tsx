@@ -83,7 +83,7 @@ export default function CommunityCenterSidebar({
 
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-[#333] bg-[#1a1d24] md:flex">
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <Image src="/logo.png" alt="" width={36} height={36} className="rounded-lg" />
+        <Image src="/cc/logo.png" alt="" width={36} height={36} className="rounded-lg" />
         <div className="leading-tight">
           <p className="text-[10px] uppercase tracking-[0.2em] text-brand-muted">Ruang Iman</p>
           <p className="text-sm font-bold text-white">Community Center</p>
