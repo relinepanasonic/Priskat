@@ -11,6 +11,8 @@ import PesertaSection from "@/components/events/workspace/PesertaSection";
 import QrSection from "@/components/events/workspace/QrSection";
 import PromosiSection from "@/components/events/workspace/PromosiSection";
 import AboutSection from "@/components/events/workspace/AboutSection";
+import CrewSection from "@/components/events/workspace/CrewSection";
+import MeetingSection from "@/components/events/workspace/MeetingSection";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -320,129 +322,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         {activeTab === "promosi" && linkedEventId && <PromosiSection eventId={linkedEventId} />}
 
         {activeTab === "crew" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-white mb-4">Panitia</h2>
-              {crewMembers.length === 0 ? (
-                <div className="bg-[#1a1d24] border border-[#333] rounded-xl p-8 text-center text-gray-500">
-                  No crew members yet. Add one below!
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {[...crewMembers].sort((x, y) => roleOrder(x.position) - roleOrder(y.position) || String(x.name).localeCompare(String(y.name))).map(crew => (
-                    <div key={crew.id} className="bg-[#1a1d24] border border-[#333] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white text-sm truncate">{crew.name}</p>
-                        <p className="text-brand-gold text-xs font-medium mt-0.5">{crew.position}</p>
-                      </div>
-                      {crew.profiles ? (
-                        <span className="bg-[#222] px-2 py-1 rounded text-xs border border-[#444] text-gray-300 whitespace-nowrap flex-shrink-0">@{crew.profiles.username}</span>
-                      ) : (
-                        <a
-                          href={`https://wa.me/?text=${encodeURIComponent(`Shalom ${crew.name ?? ""}, kamu ditambahkan sebagai ${crew.position ?? "panitia"} di ${camp?.custom_name || camp?.camp_name || "acara ini"}. Unduh aplikasi Ruang Iman dan daftar dengan email ini supaya bisa ikut bertugas: https://apps.ruangiman.com`)}`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="flex-shrink-0 whitespace-nowrap rounded-lg border border-emerald-500/50 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/10"
-                        >
-                          Belum punya akun · Ajak
-                        </a>
-                      )}
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            setNewCrewName(crew.name);
-                            setNewCrewPosition(crew.position);
-                            setOthersMode(!isKnownRole(crew.position));
-                            setNewCrewUserId(crew.user_id || "");
-                            setEditingCrewId(crew.id);
-                          }}
-                          className="p-1.5 text-[#555] hover:text-brand-gold hover:bg-[#222] rounded transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCrew(crew.id)}
-                          className="p-1.5 text-[#555] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4">
-              <h3 className="text-md font-bold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-brand-gold" /> Tambah Panitia</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Name (or leave blank if linking)</label>
-                  <div className="relative">
-                    {newCrewUserId && (
-                      <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-200">
-                        <span className="truncate">Terhubung ke @{allUsers.find(u => u.id === newCrewUserId)?.username ?? "akun"}</span>
-                        <button type="button" onClick={() => setNewCrewUserId("")} className="shrink-0 font-semibold text-emerald-200 hover:text-white">Lepas</button>
-                      </div>
-                    )}
-                    <input
-                      value={newCrewName}
-                      onChange={e => { setNewCrewName(e.target.value); setNewCrewUserId(""); }}
-                      onFocus={() => setCrewFocus(true)}
-                      onBlur={() => setTimeout(() => setCrewFocus(false), 150)}
-                      type="text"
-                      placeholder="Ketik nama, lalu pilih akunnya"
-                      autoComplete="off"
-                      className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-                    />
-                    {crewFocus && !newCrewUserId && newCrewName.trim().length >= 2 && (() => {
-                      const q = newCrewName.trim().toLowerCase();
-                      const hits = allUsers.filter(u => String(u.full_name ?? "").toLowerCase().includes(q) || String(u.username ?? "").toLowerCase().includes(q)).slice(0, 6);
-                      return hits.length > 0 ? (
-                        <ul className="absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-[#333] bg-[#14171c] p-1 shadow-xl">
-                          {hits.map(u => (
-                            <li key={u.id}>
-                              <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setNewCrewUserId(u.id); setNewCrewName(u.full_name ?? ""); setCrewFocus(false); }}
-                                className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/5">
-                                <span className="truncate">{u.full_name}</span>
-                                <span className="shrink-0 text-xs text-brand-muted">@{u.username}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null;
-                    })()}
-                    <p className="mt-1.5 text-[11px] text-brand-muted">{newCrewUserId ? "Ketua, Wakil Ketua, Sekretaris, dan Bendahara yang terhubung bisa menandai lunas." : "Belum punya akun? Ketik namanya saja, lalu klik Ajak di daftar panitia."}</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Position</label>
-                  <select
-                    value={othersMode || (newCrewPosition && !isKnownRole(newCrewPosition)) ? "Others" : newCrewPosition}
-                    onChange={e => { if (e.target.value === "Others") { setOthersMode(true); setNewCrewPosition(""); } else { setOthersMode(false); setNewCrewPosition(e.target.value); } }}
-                    className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"
-                  >
-                    <option value="">-- Pilih jabatan --</option>
-                    {CREW_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  {(othersMode || (newCrewPosition && !isKnownRole(newCrewPosition))) && (
-                    <input value={newCrewPosition} onChange={e => setNewCrewPosition(e.target.value)} type="text" placeholder="Tulis jabatan" className="mt-2 w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-between pt-2">
-                {editingCrewId && (
-                  <button onClick={() => { setEditingCrewId(null); setNewCrewName(""); setNewCrewPosition(""); setNewCrewUserId(""); }} className="text-sm text-gray-400 hover:text-white px-4 py-2 rounded-lg border border-[#333] transition-colors">
-                    Cancel Edit
-                  </button>
-                )}
-                <button onClick={handleAddCrew} disabled={(!newCrewName && !newCrewUserId) || !newCrewPosition} className="ml-auto bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
-                  {editingCrewId ? "Save Changes" : "Add Crew Member"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <CrewSection cohortId={camp_id} camp={camp} crew={crewMembers} onChanged={() => fetchCrew(createClient())} />
         )}
 
         {activeTab === "keuangan" && <CampFinance cohortId={camp_id} />}
@@ -507,65 +387,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         )}
 
         {activeTab === "meeting" && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-white">Meetings & MoM</h2>
-              <button onClick={() => setIsAddingMeeting(!isAddingMeeting)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
-                <Plus className="w-4 h-4" /> Schedule Meeting
-              </button>
-            </div>
-
-            {isAddingMeeting && (
-              <div className="bg-[#111] border border-[#333] rounded-xl p-5 space-y-4 mb-6">
-                <h3 className="text-md font-bold text-white mb-2">New Meeting</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 mb-1.5">Meeting Title</label>
-                      <input value={newMeetingTitle} onChange={e => setNewMeetingTitle(e.target.value)} type="text" placeholder="e.g. Kickoff Meeting" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 mb-1.5">Date & Time</label>
-                      <input value={newMeetingDateTime} onChange={e => setNewMeetingDateTime(e.target.value)} type="datetime-local" className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5">Minutes of Meeting (Optional)</label>
-                    <textarea value={newMeetingMom} onChange={e => setNewMeetingMom(e.target.value)} rows={3} placeholder="Notes and MoM..." className="w-full bg-[#1a1d24] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"></textarea>
-                  </div>
-                </div>
-                <div className="flex justify-end pt-2">
-                  <button onClick={handleAddMeeting} disabled={!newMeetingTitle} className="bg-brand-gold text-brand-dark px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
-                    Save Meeting
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {meetings.length === 0 ? (
-              <p className="text-gray-500 italic">No meetings found.</p>
-            ) : (
-              meetings.map(meeting => (
-                <div key={meeting.id} className="bg-[#1a1d24] border border-[#333] p-5 rounded-xl space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-white text-lg">{meeting.title}</h3>
-                      <p className="text-brand-gold font-semibold text-sm mt-1">{formatMeetingDate(meeting.date_time)}</p>
-                    </div>
-                    <button onClick={() => addToCalendar(meeting)} className="bg-brand-surface border border-brand-border hover:bg-brand-gold hover:text-brand-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors">
-                      <CalendarPlus className="w-3 h-3" /> Add to Calendar
-                    </button>
-                  </div>
-                  {meeting.mom_text && (
-                    <div className="bg-[#111] p-4 rounded-lg border border-[#222]">
-                      <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Minutes of Meeting</h4>
-                      <p className="text-sm text-gray-300 whitespace-pre-wrap">{meeting.mom_text}</p>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+          <MeetingSection cohortId={camp_id} campTitle={camp?.custom_name || camp?.camp_name || ""} crew={crewMembers} />
         )}
 
         {activeTab === "chat" && (
