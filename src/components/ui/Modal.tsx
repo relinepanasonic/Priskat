@@ -49,7 +49,7 @@ export default function Modal({
   return (
     <dialog
       ref={dialogRef}
-      className={`w-full ${maxWidthClasses[maxWidth]} rounded-2xl bg-brand-surface p-0 shadow-2xl backdrop:bg-black/50 open:animate-none`}
+      className={`m-auto max-h-[92vh] w-[calc(100%-2rem)] ${maxWidthClasses[maxWidth]} rounded-2xl bg-brand-surface p-0 shadow-2xl backdrop:bg-black/50 open:animate-none`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

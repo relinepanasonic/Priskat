@@ -16,3 +16,6 @@ export const CAMP_EVENT_TYPES = [
 export function isCampSeries(type: string | null | undefined): boolean {
   return (CAMP_SERIES as readonly string[]).includes(type ?? "");
 }
+
+/** Tipe Event: the kind of gathering. A Camp then has a name from CAMP_SERIES (or Other); the rest are named by hand. */
+export const EVENT_KINDS = ["Camp", "KKR", "Persekutuan Doa / Fellowship", "Konser", "Doa Bersama", "Rosario", "Jalan Salib", "Other"] as const;

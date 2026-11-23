@@ -15,9 +15,8 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import AddCampModal from "@/components/camp/AddCampModal";
 import Link from "next/link";
-import { CAMP_EVENT_TYPES, isCampSeries } from "@/lib/campTypes";
+import { CAMP_SERIES, EVENT_KINDS, isCampSeries } from "@/lib/campTypes";
 import { Tent } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
@@ -68,7 +67,6 @@ export default function CommunityEventsPanel({
   const router = useRouter();
   const pathname = usePathname();
   const [opening, setOpening] = useState<string | null>(null);
-  const [addCampOpen, setAddCampOpen] = useState(false);
   const m0 = pathname.match(/^\/(admin\/communities|camp)\/([^/]+)\//);
   const campBase = m0?.[1] === "camp" ? `/camp/${m0[2]}/ongoing` : `/admin/communities/${m0?.[2] ?? ""}/promotion/workspace`;
 
@@ -98,13 +96,21 @@ export default function CommunityEventsPanel({
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [pushNews, setPushNews] = useState(true);
-  const [eventType, setEventType] = useState("Event");
+  const [eventType, setEventType] = useState<string>("Camp");
+  const [campName, setCampName] = useState<string>(CAMP_SERIES[0]);
+  const [angkatan, setAngkatan] = useState("");
+  // Camp with a known name: the name (and Angkatan) is the title; otherwise the typed name is
+  const campNamed = eventType === "Camp" && campName !== "Other";
+  const finalTitle = campNamed ? `${campName}${angkatan.trim() ? " " + angkatan.trim() : ""}` : title.trim();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
     setBanner("");
     setSizeNote(null);
     setTitle("");
+    setEventType("Camp");
+    setCampName(CAMP_SERIES[0]);
+    setAngkatan("");
     setDescription("");
     setEventDate("");
     setEndDate("");
@@ -169,12 +175,12 @@ export default function CommunityEventsPanel({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!title.trim() || description.trim().length < 10 || !eventDate || !location.trim()) {
+    if (finalTitle.length < 3 || description.trim().length < 10 || !eventDate || !location.trim()) {
       setError("Isi judul, deskripsi (minimal 10 huruf), waktu, dan lokasi.");
       return;
     }
     const fd = new FormData();
-    fd.append("title", title.trim());
+    fd.append("title", finalTitle);
     fd.append("description", description.trim());
     fd.append("event_date", eventDate);
     if (endDate) fd.append("end_date", endDate);
@@ -214,27 +220,16 @@ export default function CommunityEventsPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-brand-muted">
-          Buat event komunitas. Pendaftaran dan absensi diatur dari kartu event; promosi (poster) adalah bagian dari event.
-        </p>
-        <div className="flex shrink-0 gap-2">
-          {camps && (
-            <button type="button" onClick={() => setAddCampOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-brand-gold/40 px-3 py-2 text-sm font-semibold text-brand-gold hover:bg-brand-gold/10">
-              <Tent className="h-4 w-4" /> Tambah camp
-            </button>
-          )}
-          <Button
-            onClick={() => {
-              reset();
-              setOpen(true);
-            }}
-            className="flex items-center gap-2"
-          >
-            <CalendarDays className="h-4 w-4" /> Buat event
-          </Button>
-        </div>
+      <div className="flex justify-end">
+        <Button
+          onClick={() => {
+            reset();
+            setOpen(true);
+          }}
+          className="flex items-center gap-2"
+        >
+          <CalendarDays className="h-4 w-4" /> Buat event
+        </Button>
       </div>
 
       {initialEvents.length === 0 && (camps?.length ?? 0) === 0 ? (
@@ -305,32 +300,44 @@ export default function CommunityEventsPanel({
         </div>
       )}
 
-      {camps && (
-        <AddCampModal isOpen={addCampOpen} onClose={() => setAddCampOpen(false)} onSuccess={() => router.refresh()} communityId={communityId} />
-      )}
-
       <Modal open={open} onClose={() => setOpen(false)} title="Buat event">
         <form
           onSubmit={submit}
           className="max-h-[72vh] space-y-4 overflow-y-auto pr-2"
         >
           <div>
-            <label className="mb-1 block text-sm text-brand-light">Tipe</label>
+            <label className="mb-1 block text-sm text-brand-light">Tipe Event</label>
             <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="input-3d w-full text-sm">
-              <option value="Event">Event</option>
-              {CAMP_EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {EVENT_KINDS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm text-brand-light">Nama event</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="input-3d w-full text-sm"
-              placeholder="e.g. Family Retreat 2026"
-            />
-          </div>
+          {eventType === "Camp" && (
+            <div>
+              <label className="mb-1 block text-sm text-brand-light">Nama Event</label>
+              <select value={campName} onChange={(e) => setCampName(e.target.value)} className="input-3d w-full text-sm">
+                {CAMP_SERIES.map((t) => <option key={t} value={t}>{t}</option>)}
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          )}
+
+          {campNamed ? (
+            <div>
+              <label className="mb-1 block text-sm text-brand-light">Angkatan (optional)</label>
+              <input value={angkatan} onChange={(e) => setAngkatan(e.target.value)} className="input-3d w-full text-sm" placeholder="e.g. 58" />
+            </div>
+          ) : (
+            <div>
+              <label className="mb-1 block text-sm text-brand-light">{eventType === "Camp" || eventType === "Other" ? "Tulis nama event" : "Nama event"}</label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="input-3d w-full text-sm"
+                placeholder="e.g. Family Retreat 2026"
+              />
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-sm text-brand-light">
