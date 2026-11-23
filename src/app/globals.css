@@ -52,6 +52,11 @@
   }
 }
 
+/* Multi-line boxes are rectangles with rounded corners, not pills */
+textarea.input-3d {
+  border-radius: 1rem;
+}
+
 :root {
   --background: var(--color-brand-bg);
   --foreground: var(--color-brand-light);
