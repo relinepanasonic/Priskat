@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarDays,
@@ -104,8 +104,23 @@ export default function CommunityEventsPanel({
   const [campName, setCampName] = useState<string>(CAMP_SERIES[0]);
   const [angkatan, setAngkatan] = useState("");
   // Camp with a known name: the name (and Angkatan) is the title; otherwise the typed name is
-  const campNamed = eventType === "Camp" && campName !== "Other";
-  const finalTitle = campNamed ? `${campName}${angkatan.trim() ? " " + angkatan.trim() : ""}` : title.trim();
+  // Catholic Family Ministry (the page passes its camps) has a fixed list of camp names; every other community
+  // types its own names, and the ones it saves are offered next time
+  const isCfm = camps !== undefined;
+  const [saved, setSaved] = useState<{ id: string; name: string }[]>([]);
+  const [picked, setPicked] = useState("");
+  const [typed, setTyped] = useState("");
+  const [saveIt, setSaveIt] = useState(true);
+  const [edition, setEdition] = useState("");
+  const campNamed = isCfm && eventType === "Camp" && campName !== "Other";
+  const finalTitle = isCfm
+    ? (campNamed ? `${campName}${angkatan.trim() ? " " + angkatan.trim() : ""}` : title.trim())
+    : `${(picked || typed).trim()}${edition.trim() ? " " + edition.trim() : ""}`;
+
+  useEffect(() => {
+    if (isCfm || !communityId) return;
+    void (createClient() as any).from("community_event_names").select("id, name").eq("community_id", communityId).order("name").then(({ data }: { data: { id: string; name: string }[] | null }) => setSaved(data ?? []));
+  }, [isCfm, communityId, open]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -115,6 +130,10 @@ export default function CommunityEventsPanel({
     setEventType("Camp");
     setCampName(CAMP_SERIES[0]);
     setAngkatan("");
+    setPicked(saved[0]?.name ?? "");
+    setTyped("");
+    setSaveIt(true);
+    setEdition("");
     setDescription("");
     setEventDate("");
     setEndDate("");
@@ -207,6 +226,9 @@ export default function CommunityEventsPanel({
             "Could not save."
         );
         return;
+      }
+      if (!isCfm && communityId && !picked && typed.trim().length >= 3 && saveIt) {
+        await (createClient() as any).from("community_event_names").insert({ community_id: communityId, name: typed.trim() });
       }
       setOpen(false);
       reset();
@@ -334,7 +356,7 @@ export default function CommunityEventsPanel({
             </select>
           </div>
 
-          {eventType === "Camp" && (
+          {isCfm && eventType === "Camp" && (
             <div>
               <label className="mb-1 block text-sm text-brand-light">Nama Event</label>
               <select value={campName} onChange={(e) => setCampName(e.target.value)} className="input-3d w-full text-sm">
@@ -344,7 +366,7 @@ export default function CommunityEventsPanel({
             </div>
           )}
 
-          {campNamed ? (
+          {isCfm && (campNamed ? (
             <div>
               <label className="mb-1 block text-sm text-brand-light">Angkatan (optional)</label>
               <input value={angkatan} onChange={(e) => setAngkatan(e.target.value)} className="input-3d w-full text-sm" placeholder="e.g. 58" />
@@ -358,6 +380,35 @@ export default function CommunityEventsPanel({
                 className="input-3d w-full text-sm"
                 placeholder="e.g. Family Retreat 2026"
               />
+            </div>
+          ))}
+          {!isCfm && (
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-sm text-brand-light">Nama Event</label>
+                <select value={picked} onChange={(e) => setPicked(e.target.value)} className="input-3d w-full text-sm">
+                  <option value="">+ Tulis nama baru</option>
+                  {saved.map((n) => <option key={n.id} value={n.name}>{n.name}</option>)}
+                </select>
+              </div>
+              {picked === "" ? (
+                <div>
+                  <input value={typed} onChange={(e) => setTyped(e.target.value)} className="input-3d w-full text-sm" placeholder="Mis. Camp Sukses Sejati Katolik" />
+                  <label className="mt-2 flex items-center gap-2 text-xs text-brand-muted">
+                    <input type="checkbox" checked={saveIt} onChange={(e) => setSaveIt(e.target.checked)} className="accent-[#D6B072]" />
+                    Simpan nama ini, supaya lain kali tinggal dipilih
+                  </label>
+                </div>
+              ) : (
+                <button type="button" onClick={async () => {
+                  const row = saved.find((n) => n.name === picked);
+                  if (row && confirm(`Hapus "${picked}" dari daftar nama?`)) { await (createClient() as any).from("community_event_names").delete().eq("id", row.id); setSaved(saved.filter((n) => n.id !== row.id)); setPicked(""); }
+                }} className="text-xs text-red-300 underline">Hapus nama ini dari daftar</button>
+              )}
+              <div>
+                <label className="mb-1 block text-sm text-brand-light">Angkatan / edisi (opsional)</label>
+                <input value={edition} onChange={(e) => setEdition(e.target.value)} className="input-3d w-full text-sm" placeholder="Mis. 3 atau 2026" />
+              </div>
             </div>
           )}
 
