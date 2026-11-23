@@ -24,6 +24,7 @@ export default function CommunityCenterSidebar({
   const tabs = useRef<HTMLElement>(null);
   const m = pathname.match(/^\/admin\/communities\/([^/]+)/);
   const current = m ? communities.find((c) => (c.slug || c.id) === m[1]) ?? null : null;
+  const inWorkspace = /\/promotion\/workspace\//.test(pathname);
   const nav = current ? communityNav(`/admin/communities/${current.slug || current.id}`, current) : [];
 
   // Close the list when you tap outside it or move to another page
@@ -60,27 +61,30 @@ export default function CommunityCenterSidebar({
         </select>
         <button onClick={signOut} aria-label="Keluar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white"><LogOut className="h-5 w-5" /></button>
       </div>
-      <nav
-        ref={tabs}
-        aria-label="Halaman Community Center"
-        className="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]"
-      >
-        {current && nav.map((t) => {
-          const on = pathname.startsWith(t.href);
-          return (
-            <Link key={t.href} href={t.href} aria-current={on ? "page" : undefined}
-              className={`flex h-10 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${on ? "bg-brand-gold text-brand-dark" : "bg-white/5 text-gray-300"}`}>
-              <t.icon className="h-4 w-4" /> {t.name}
+      {/* inside one event the community's pages are hidden: the event has its own tabs and a Kembali button */}
+      {!inWorkspace && (
+        <nav
+          ref={tabs}
+          aria-label="Halaman Community Center"
+          className="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]"
+        >
+          {current && nav.map((t) => {
+            const on = pathname.startsWith(t.href);
+            return (
+              <Link key={t.href} href={t.href} aria-current={on ? "page" : undefined}
+                className={`flex h-10 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${on ? "bg-brand-gold text-brand-dark" : "bg-white/5 text-gray-300"}`}>
+                <t.icon className="h-4 w-4" /> {t.name}
+              </Link>
+            );
+          })}
+          {canManageAll && (
+            <Link href="/admin/communities/kelola-komunitas" className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/5 px-4 pr-7 text-sm font-semibold text-gray-300">
+              <Settings2 className="h-4 w-4" /> Kelola
             </Link>
-          );
-        })}
-        {canManageAll && (
-          <Link href="/admin/communities/kelola-komunitas" className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/5 px-4 pr-7 text-sm font-semibold text-gray-300">
-            <Settings2 className="h-4 w-4" /> Kelola
-          </Link>
-        )}
-        {!current && communities.length > 0 && <span className="py-2 text-xs text-brand-muted">Pilih komunitas di atas.</span>}
-      </nav>
+          )}
+          {!current && communities.length > 0 && <span className="py-2 text-xs text-brand-muted">Pilih komunitas di atas.</span>}
+        </nav>
+      )}
     </div>
 
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-[#333] bg-[#1a1d24] md:flex">
