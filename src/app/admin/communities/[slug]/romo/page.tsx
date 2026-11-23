@@ -25,7 +25,7 @@ export default async function CommunityClergyPage({ params }: { params: Promise<
   );
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="md:p-6">
       <div className="mb-5">
         <h2 className="text-lg font-bold text-white">Romo</h2>
         <p className="text-sm text-brand-muted">Beri gelar Romo, Uskup, Diakon, Frater, Suster atau Bruder kepada anggota. Lencananya tampil di profil mereka.</p>
