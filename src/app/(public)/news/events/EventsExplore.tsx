@@ -31,6 +31,7 @@ export type PremiumBanner = {
   image_url: string;
   link_url: string | null;
   title: string | null;
+  format?: "running" | "portrait" | null;
 };
 
 /* ---------------------------------------------------------------- helpers --- */
@@ -166,12 +167,14 @@ function Row({
 export default function EventsExplore({
   events,
   banners = [],
+  promos = [],
   myCity,
   myCommunityId,
   myCommunityName,
 }: {
   events: ExploreEvent[];
   banners?: PremiumBanner[];
+  promos?: PremiumBanner[];
   myCity: string | null;
   myCommunityId: string | null;
   myCommunityName: string | null;
@@ -298,6 +301,23 @@ export default function EventsExplore({
           }
           @keyframes premiumScroll { to { transform: translateX(-50%); } }
         `}</style>
+
+      {/* events that are being promoted: portrait cards, 4:5 like the event posters */}
+      {promos.length > 0 && (
+        <section className="mt-5">
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-white"><Megaphone className="h-4 w-4 text-brand-gold" /> Sedang dipromosikan</h2>
+          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {promos.map((b) => (
+              <a key={b.id} href={b.link_url || undefined} target={b.link_url ? "_blank" : undefined} rel={b.link_url ? "noreferrer" : undefined}
+                className="relative aspect-[4/5] w-40 shrink-0 overflow-hidden rounded-xl border border-[#2a2d35] bg-[#111] sm:w-44">
+                <Image src={b.image_url} alt={b.title || "Event"} fill sizes="176px" className="object-cover" />
+                <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/85">Promosi</span>
+                {b.title && <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pb-2 pt-8 text-[11px] font-semibold leading-tight text-white">{b.title}</span>}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">

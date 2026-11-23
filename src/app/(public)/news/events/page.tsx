@@ -42,18 +42,22 @@ export default async function NewsEventsPage() {
 
   const events = (rows ?? []) as ExploreEvent[];
 
-  const { data: bannerRows } = await supabase
-    .from("premium_banners")
-    .select("id, image_url, link_url, title")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
-  const banners = (bannerRows ?? []) as PremiumBanner[];
+  // running = the wide strip on top, portrait = the cards of events that are being promoted (134 SQL adds the format)
+  let bannerRows: PremiumBanner[] | null = null;
+  const withFormat = await supabase.from("premium_banners").select("id, image_url, link_url, title, format").eq("is_active", true).order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+  if (!withFormat.error) bannerRows = withFormat.data as PremiumBanner[];
+  else {
+    const plain = await supabase.from("premium_banners").select("id, image_url, link_url, title").eq("is_active", true).order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    bannerRows = (plain.data ?? []) as PremiumBanner[];
+  }
+  const banners = (bannerRows ?? []).filter((b) => b.format !== "portrait");
+  const promos = (bannerRows ?? []).filter((b) => b.format === "portrait");
 
   return (
     <EventsExplore
       events={events}
       banners={banners}
+      promos={promos}
       myCity={myCity}
       myCommunityId={myCommunityId}
       myCommunityName={myCommunityName}

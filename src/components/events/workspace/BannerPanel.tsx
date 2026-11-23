@@ -61,7 +61,7 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
     setBusy(false);
     if (error) { setMsg({ ok: false, text: error.message }); return; }
     setImage(""); setTitle(""); setLink("");
-    setMsg({ ok: true, text: "Banner dibuat. Sekarang tayang di Beranda Event." });
+    setMsg({ ok: true, text: "Banner dibuat. Sekarang tayang di Event, bagian Sedang dipromosikan." });
     await load();
   }
 
@@ -100,11 +100,11 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
         {banner ? (
           <div className="space-y-3 rounded-xl border border-[#2a2d35] p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={banner.image_url} alt={banner.title ?? "Banner"} className="max-h-56 w-full rounded-lg bg-black/30 object-contain" />
+            <img src={banner.image_url} alt={banner.title ?? "Banner"} className="mx-auto aspect-[4/5] w-44 rounded-xl bg-black/30 object-cover" />
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-white">{banner.title || event?.title}</p>
-                <p className={`text-xs font-semibold ${banner.is_active ? "text-emerald-300" : "text-gray-400"}`}>{banner.is_active ? "Tayang di Beranda Event" : "Dimatikan"}</p>
+                <p className={`text-xs font-semibold ${banner.is_active ? "text-emerald-300" : "text-gray-400"}`}>{banner.is_active ? "Tayang di Event" : "Dimatikan"}</p>
               </div>
               <div className="flex gap-2">
                 <button disabled={busy} onClick={() => void manage(banner.is_active ? "off" : "on")} className="rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/5 disabled:opacity-50">{banner.is_active ? "Matikan" : "Nyalakan"}</button>
@@ -114,10 +114,10 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
           </div>
         ) : (
           <div className="space-y-3 rounded-xl border border-dashed border-[#444] p-3.5">
-            <p className="text-xs leading-relaxed text-brand-muted">Gambar mendatar (mis. 1200 x 600). Banner tayang di Beranda Event untuk semua pengguna Ruang Iman.</p>
+            <p className="text-xs leading-relaxed text-brand-muted">Gambar potret 4:5 (mis. 1080 x 1350), sama seperti poster event. Tayang di bagian "Sedang dipromosikan" di Event untuk semua pengguna Ruang Iman.</p>
             {image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={image} alt="Banner" className="max-h-48 w-full rounded-lg bg-black/30 object-contain" />
+              <img src={image} alt="Banner" className="mx-auto aspect-[4/5] w-40 rounded-xl bg-black/30 object-cover" />
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#333] py-3 text-sm font-semibold text-brand-light hover:bg-white/5 ${uploading ? "opacity-60" : ""}`}>
