@@ -33,7 +33,9 @@ export async function POST(request: Request) {
   const bots = (botRows as { id: string; full_name: string | null }[]) ?? [];
 
   // The 20 people with a portrait in /public/people. Bots that already are one of them stay as they are.
-  const have = new Set(bots.map((b) => b.full_name));
+  // A real test account that already carries one of these names (e.g. Damar) counts as taken, so no second copy is made
+  const { data: named } = await db.from("profiles").select("full_name").in("full_name", BOT_PERSONAS.map((p) => p.name));
+  const have = new Set([...bots.map((b) => b.full_name), ...((named as { full_name: string }[]) ?? []).map((r) => r.full_name)]);
   const missing = BOT_PERSONAS.filter((p) => !have.has(p.name));
   const personaNames = new Set(BOT_PERSONAS.map((p) => p.name));
   // accounts that should become one of them: the old test accounts, and bots made with an earlier set of names
