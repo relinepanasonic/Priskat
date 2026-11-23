@@ -33,7 +33,7 @@ export async function getCampRegisterLink(cohortId: string): Promise<string> {
 }
 
 /** The "Link Peserta" button: copies the magic link and shares it to WhatsApp. */
-export function LinkPesertaButton({ run, title, compact = false }: { run: () => Promise<string>; title: string; compact?: boolean }) {
+export function LinkPesertaButton({ run, title, compact = false, shareText }: { run: () => Promise<string>; title: string; compact?: boolean; shareText?: (link: string) => string }) {
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -62,7 +62,7 @@ export function LinkPesertaButton({ run, title, compact = false }: { run: () => 
       </button>
       {link && !compact && (
         <div className="space-y-2">
-          <a href={`https://wa.me/?text=${encodeURIComponent(`Daftar di sini: ${link}`)}`} target="_blank" rel="noopener noreferrer"
+          <a href={`https://wa.me/?text=${encodeURIComponent(shareText ? shareText(link) : `Daftar di sini: ${link}`)}`} target="_blank" rel="noopener noreferrer"
             className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-emerald-500 py-3 text-sm font-bold text-emerald-950 hover:bg-emerald-400">
             <MessageCircle className="h-4 w-4" /> Bagikan ke WhatsApp
           </a>

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sizeOf, ticketPng } from "@/lib/eventTicket";
+import { ticketExtras } from "@/lib/ticketData";
 
 /** Event admins: how a ticket will look with the saved design (or the one passed as ?bg=...), with a sample name. */
 export async function GET(request: Request, { params }: { params: Promise<{ key: string }> }) {
@@ -22,7 +23,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const bg = url.searchParams.get("bg") ?? settings?.ticket_bg_url ?? null;
   // only our own design bucket may be used as a background
   const okBg = bg && /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/event-designs\//.test(bg) ? bg : settings?.ticket_bg_url ?? null;
-  const png = await ticketPng({
+  const extras = await ticketExtras(db, eventId);
+  const png = await ticketPng({ group: extras.groups.values().next().value ?? "Grup 1", logoUrl: extras.logoUrl,
     name: "Nama Peserta", event: (ev as { title?: string } | null)?.title ?? "Event", code: "0123456789abcdef0123456789abcdef",
     size: sizeOf(url.searchParams.get("size") ?? settings?.ticket_size), bgUrl: url.searchParams.get("nobg") === "1" ? null : okBg,
     template: url.searchParams.get("template") ?? settings?.ticket_template, gradient: url.searchParams.get("gradient") ?? settings?.ticket_gradient,

@@ -8,13 +8,13 @@ export const TICKET_SIZES = {
 export type TicketSize = keyof typeof TICKET_SIZES;
 export const sizeOf = (v: string | null | undefined): TicketSize => (v === "card" ? "card" : "a5");
 
-/** Five layouts. They are used with a background picture or with one of the gradients below. */
+/** Five layouts, like real ID cards: Klasik (name and QR in a panel), Foto Atas, Blok Warna, Gelap, Poster. A framed photo needs no transparent background. */
 export const TICKET_TEMPLATES = [
   { id: "klasik", label: "Klasik" },
-  { id: "modern", label: "Modern" },
+  { id: "foto", label: "Foto Atas" },
+  { id: "blok", label: "Blok Warna" },
   { id: "gelap", label: "Gelap" },
-  { id: "tengah", label: "Tengah" },
-  { id: "polos", label: "Polos" },
+  { id: "poster", label: "Poster" },
 ] as const;
 export type TicketTemplate = (typeof TICKET_TEMPLATES)[number]["id"];
 export const templateOf = (v: string | null | undefined): TicketTemplate => (TICKET_TEMPLATES.find((t) => t.id === v)?.id ?? "klasik");

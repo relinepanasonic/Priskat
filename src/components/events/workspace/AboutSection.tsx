@@ -9,6 +9,8 @@ import { Collapse, Field, inputCls } from "./ui";
 import RegistrationSettings from "./RegistrationSettings";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
 import WaTemplate from "./WaTemplate";
+import { DEFAULT_WA_INVITE, DEFAULT_WA_TEMPLATE, renderWaTemplate } from "@/lib/eventReg";
+import { formatDate } from "@/lib/utils";
 
 const db = () => createClient() as any;
 
@@ -37,6 +39,10 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
   const [openDaftar, setOpenDaftar] = useState(false);
 
   const isOpen = settings?.open ?? false;
+  // the invitation text: the saved one, or ours, filled in with this event
+  const shareText = (link: string) => renderWaTemplate(settings?.wa_invite_template ?? DEFAULT_WA_INVITE, {
+    nama: "Saudara/i", event: event.title, tanggal: event.event_date ? formatDate(event.event_date) : "", lokasi: event.location ?? "", link,
+  });
 
   async function save() {
     setMsg(null);
@@ -106,12 +112,8 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
       </Collapse>
 
       {/* 2. Pengaturan Pendaftaran, with the WhatsApp message */}
-      <Collapse title="Pengaturan Pendaftaran" subtitle="Biaya, rekening, batas tanggal, pertanyaan, dan pesan WhatsApp" open={openSettings} onToggle={() => setOpenSettings((v) => !v)}>
+      <Collapse title="Pengaturan Pendaftaran" subtitle="Biaya, rekening, batas tanggal, dan pertanyaan di formulir" open={openSettings} onToggle={() => setOpenSettings((v) => !v)}>
         <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />
-        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
-          <p className="text-sm font-bold text-white">Pesan WhatsApp peserta lunas</p>
-          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} />
-        </div>
       </Collapse>
 
       {/* 3. Open and close the registration */}
@@ -129,7 +131,16 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
           className={`w-full rounded-xl py-3.5 text-sm font-bold disabled:opacity-60 ${isOpen ? "border border-[#333] text-brand-light hover:bg-white/5" : "bg-brand-gold text-brand-dark hover:opacity-90"}`}>
           {toggling ? "Menyimpan…" : isOpen ? "Tutup pendaftaran" : "Buka pendaftaran"}
         </button>
-        <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" />
+        <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" shareText={shareText} />
+
+        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
+          <p className="text-sm font-bold text-white">Pesan ajakan mendaftar</p>
+          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_invite_template" def={DEFAULT_WA_INVITE} hint="Dikirim bersama Link Peserta. {nama} menjadi Saudara/i kalau dibagikan ke banyak orang." />
+        </div>
+        <div className="space-y-3 border-t border-[#2a2d35] pt-5">
+          <p className="text-sm font-bold text-white">Pesan QR untuk peserta lunas</p>
+          <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_template" def={DEFAULT_WA_TEMPLATE} hint="Dikirim ke peserta yang sudah lunas, berisi QR mereka." />
+        </div>
       </Collapse>
     </div>
   );

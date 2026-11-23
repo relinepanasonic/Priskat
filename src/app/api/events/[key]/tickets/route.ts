@@ -2,6 +2,7 @@ import { PDFDocument } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sizeOf, ticketPng, TICKET_SIZES } from "@/lib/eventTicket";
+import { guestPhoto, ticketExtras } from "@/lib/ticketData";
 
 export const maxDuration = 60;
 
@@ -25,10 +26,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const size = sizeOf(url.searchParams.get("size") ?? settings?.ticket_size);
   const ids = (url.searchParams.get("ids") ?? "").split(",").filter((x) => /^[0-9a-f-]{36}$/i.test(x));
 
-  let q = db.from("event_registrations" as any).select("full_name, ticket_code").eq("event_id", eventId).eq("status", "approved").order("full_name").limit(400);
+  let q = db.from("event_registrations" as any).select("full_name, ticket_code, group_id, answers").eq("event_id", eventId).eq("status", "approved").order("full_name").limit(400);
   if (ids.length) q = q.in("id", ids);
   const { data: regs } = await q;
-  const list = (regs as { full_name: string; ticket_code: string }[]) ?? [];
+  const list = (regs as { full_name: string; ticket_code: string; group_id: string | null; answers: Record<string, string> | null }[]) ?? [];
+  const extras = await ticketExtras(db, eventId);
   if (!list.length) return new Response("Belum ada peserta yang disetujui.", { status: 404 });
 
   const { mm } = TICKET_SIZES[size];
@@ -37,7 +39,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   const pdf = await PDFDocument.create();
   const title = (ev as { title?: string } | null)?.title ?? "Event";
   for (const r of list) {
-    const png = await ticketPng({ name: r.full_name, event: title, code: r.ticket_code, size, bgUrl: settings?.ticket_bg_url, template: settings?.ticket_template, gradient: settings?.ticket_gradient });
+    const photo = await guestPhoto(db, r.answers);
+    const png = await ticketPng({ group: r.group_id ? extras.groups.get(r.group_id) : null, photo, logoUrl: extras.logoUrl, name: r.full_name, event: title, code: r.ticket_code, size, bgUrl: settings?.ticket_bg_url, template: settings?.ticket_template, gradient: settings?.ticket_gradient });
     const img = await pdf.embedPng(png);
     const page = pdf.addPage([pw, ph]);
     page.drawImage(img, { x: 0, y: 0, width: pw, height: ph });

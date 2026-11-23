@@ -23,6 +23,7 @@ export type RegSettings = {
   ticket_template?: string;
   ticket_gradient?: string;
   wa_template?: string | null;
+  wa_invite_template?: string | null;
 };
 
 export type Registration = {
@@ -86,3 +87,7 @@ export const DEFAULT_WA_TEMPLATE =
 export const WA_PLACEHOLDERS = ["{nama}", "{event}", "{tanggal}", "{lokasi}", "{link}"] as const;
 export const renderWaTemplate = (tpl: string, vars: { nama: string; event: string; tanggal: string; lokasi: string; link: string }) =>
   tpl.replace(/\{(nama|event|tanggal|lokasi|link)\}/g, (_, k: keyof typeof vars) => vars[k] ?? "");
+
+/** The invitation to register, shared with the registration link. {nama} becomes "Saudara/i" when it goes to a group. */
+export const DEFAULT_WA_INVITE =
+  "Hi {nama}, ini pendaftaran acara {event}, tanggal {tanggal} di {lokasi}. Daftar pakai link ini ya: {link}";

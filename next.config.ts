@@ -7,6 +7,10 @@ const nextConfig: any = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // the ticket drawing reads these files on the server
+  outputFileTracingIncludes: {
+    '/api/**': ['./src/assets/fonts/**', './public/logo.png'],
+  },
   images: {
     remotePatterns: [
       {
