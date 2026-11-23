@@ -6,7 +6,30 @@ import { formatWeekdayDate, formatTime } from "@/lib/utils";
 import type { RegField } from "@/lib/eventReg";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Daftar Event" };
+import type { Metadata } from "next";
+
+/** The link preview (WhatsApp, email, social): the event's name, when and where, and its banner. */
+export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const { code } = await params;
+  const fallback: Metadata = { title: "Daftar Event", description: "Daftar event Ruang Iman" };
+  if (!/^[0-9a-f]{6}$/i.test(code)) return fallback;
+  const db = createAdminClient();
+  const { data: st } = await db.from("event_reg_settings" as any).select("event_id").eq("public_code", code.toLowerCase()).maybeSingle();
+  const eid = (st as { event_id?: string } | null)?.event_id;
+  if (!eid) return fallback;
+  const { data: ev } = await db.from("events").select("title, event_date, location, banner_image_url").eq("id", eid).maybeSingle();
+  const e = ev as { title: string; event_date: string | null; location: string | null; banner_image_url: string | null } | null;
+  if (!e) return fallback;
+  const when = e.event_date ? `${formatWeekdayDate(e.event_date)}, ${formatTime(e.event_date)} WIB` : "";
+  const description = [when, e.location].filter(Boolean).join(" · ") || "Daftar dan dapatkan QR Code di Ruang Iman";
+  const images = e.banner_image_url ? [{ url: e.banner_image_url, width: 1080, height: 1350, alt: e.title }] : undefined;
+  return {
+    title: e.title,
+    description,
+    openGraph: { title: e.title, description, siteName: "Ruang Iman", type: "website", images },
+    twitter: { card: images ? "summary_large_image" : "summary", title: e.title, description, images: images?.map((i) => i.url) },
+  };
+}
 
 /** The short registration link: /e/<code>. A clean page for guests: no menu, no login. */
 export default async function GuestEventPage({ params }: { params: Promise<{ code: string }> }) {
