@@ -207,7 +207,6 @@ export default function CommunityEventsPanel({
       setError("Isi judul, deskripsi (minimal 10 huruf), waktu, dan lokasi.");
       return;
     }
-    if (!ketua) { setError("Pilih Ketua event dulu. Setiap event harus punya satu Ketua."); return; }
     const fd = new FormData();
     fd.append("title", finalTitle);
     fd.append("description", description.trim());
@@ -368,9 +367,9 @@ export default function CommunityEventsPanel({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-brand-light">Ketua event (wajib)</label>
-            <UserPicker value={ketua} onChange={setKetua} placeholder="Cari nama anggota yang akan jadi Ketua" />
-            <p className="mt-1 text-[11px] text-brand-muted">Ketua mengurus Tentang event dan panitianya selama event berjalan. Setelah event ditutup, ia kembali ke levelnya di komunitas.</p>
+            <label className="mb-1 block text-sm text-brand-light">Ketua event (opsional)</label>
+            <UserPicker value={ketua} onChange={setKetua} placeholder="Cari pengguna Ruang Iman yang akan jadi Ketua" />
+            <p className="mt-1 text-[11px] text-brand-muted">Pilih dari pengguna Ruang Iman. Boleh dikosongkan dan dipilih nanti di tab Panitia. Ketua mengurus Tentang event dan panitianya selama event berjalan, lalu kembali ke levelnya di komunitas setelah event ditutup.</p>
           </div>
 
           {isCfm && eventType === "Camp" && (
