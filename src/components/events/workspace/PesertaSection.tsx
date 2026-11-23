@@ -12,7 +12,7 @@ const db = () => createClient() as any;
 const input = "w-full rounded-lg border border-[#333] bg-[#14171c] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none";
 
 type Crew = { id: string; name: string | null; position: string | null };
-type SortKey = "name" | "paroki" | "phone" | "group" | "status";
+type SortKey = string; // "name" | "paroki" | "phone" | "group" | "status" | "f:<question key>"
 
 /** Belum bayar until the Ketua, Wakil Ketua, Sekretaris or Bendahara marks it paid; Lunas shows the QR. */
 const isPaid = (r: Registration) => r.status === "approved";
@@ -62,7 +62,8 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
         case "paroki": return r.paroki ?? "";
         case "phone": return r.phone ?? "";
         case "group": return groups.find((g) => g.id === r.group_id)?.name ?? "";
-        default: return statusText(r);
+        case "status": return statusText(r);
+        default: return String(r.answers?.[sort.key.slice(2)] ?? "");
       }
     };
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -137,6 +138,24 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
 
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat peserta...</p>;
 
+  const fieldCols = (settings?.fields ?? []).filter((x) => x.type !== "photo");
+  const allCols: [SortKey, string][] = [...COLS, ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string])];
+  // one grid for the header and every row: name, paroki, WhatsApp, the questions, group, status, actions
+  const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(230px,1.4fr)"].join(" ");
+  const GRID_MIN = 170 + 120 + 120 + fieldCols.length * 120 + 120 + 96 + 230 + 40 * 2;
+
+  async function addColumn() {
+    const label = window.prompt("Nama kolom baru (mis. Alamat, Pasangan, Ukuran baju):")?.trim();
+    if (!label) return;
+    const keys = (settings?.fields ?? []).map((x) => x.key);
+    let n = (settings?.fields?.length ?? 0) + 1;
+    while (keys.includes(`q${n}`)) n++;
+    const next = [...(settings?.fields ?? []), { key: `q${n}`, label, type: "text", required: false }];
+    const { error: err } = await db().from("event_reg_settings").upsert({ event_id: eventId, fields: next });
+    if (err) { setError(err.message); return; }
+    await reload();
+  }
+
   const Arrows = ({ k }: { k: SortKey }) => (
     <span className="ml-1 inline-flex flex-col leading-none">
       <button type="button" onClick={() => toggleSort(k, "asc")} aria-label={`Urutkan ${k} naik`} className={sort?.key === k && sort.dir === "asc" ? "text-brand-gold" : "text-gray-600 hover:text-white"}><ArrowUp className="h-3 w-3" /></button>
@@ -205,7 +224,7 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
       <div className="flex items-center gap-2 md:hidden">
         <select value={sort?.key ?? ""} onChange={(e) => setSort(e.target.value ? { key: e.target.value as SortKey, dir: sort?.dir ?? "asc" } : null)} className="flex-1 rounded-lg border border-[#333] bg-[#14171c] px-3 py-2 text-xs text-white">
           <option value="">Urutkan: terbaru</option>
-          {COLS.map(([k, l]) => <option key={k} value={k}>Urutkan: {l}</option>)}
+          {allCols.map(([k, l]) => <option key={k} value={k}>Urutkan: {l}</option>)}
         </select>
         <button type="button" disabled={!sort} onClick={() => sort && setSort({ ...sort, dir: sort.dir === "asc" ? "desc" : "asc" })} aria-label="Balik urutan" className="flex shrink-0 items-center gap-1 rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light disabled:opacity-40">
           {sort?.dir === "desc" ? <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUp className="h-3.5 w-3.5" />} {sort?.dir === "desc" ? "Z-A" : "A-Z"}
@@ -220,59 +239,71 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
           Belum ada peserta di sini. Pakai tombol <b className="text-brand-gold">Link Peserta</b> untuk membagikan pendaftaran.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
-          <div className="hidden grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr_1.3fr] gap-3 border-b border-[#2a2d35] bg-black/20 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand-muted md:grid">
-            {COLS.map(([k, l]) => <span key={k} className="flex items-center">{l}<Arrows k={k} /></span>)}
-            <span className="text-right">Aksi</span>
-          </div>
-          <ul className="divide-y divide-[#2a2d35]">
-            {shown.map((r) => {
-              const g = groupOf(r.group_id);
-              return (
-                <li key={r.id} className="space-y-2.5 px-4 py-3 md:grid md:grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr_1.3fr] md:items-center md:gap-3 md:space-y-0">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">{r.full_name}</p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 md:hidden">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE(r)}`}>{statusText(r)}</span>
-                      {r.amount > 0 && <span className="text-[11px] text-brand-muted">{rupiah(r.amount)}</span>}
+        <div className="overflow-x-auto rounded-2xl border border-[#2a2d35] bg-[#14171c]">
+          <div style={{ minWidth: GRID_MIN }} className="md:min-w-0">
+            {/* header: phone shows no headers (the sort is above the list) */}
+            <div style={{ gridTemplateColumns: GRID }} className="hidden gap-3 border-b border-[#2a2d35] bg-black/20 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand-muted md:grid">
+              {allCols.map(([k, l]) => <span key={k} className="flex min-w-0 items-center"><span className="truncate">{l}</span><Arrows k={k} /></span>)}
+              <span className="flex items-center justify-between gap-2 text-left">
+                <span>Aksi</span>
+                <button type="button" onClick={() => void addColumn()} className="shrink-0 rounded-md border border-brand-gold/40 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-brand-gold hover:bg-brand-gold/10">+ Kolom</button>
+              </span>
+            </div>
+            <ul className="divide-y divide-[#2a2d35]">
+              {shown.map((r) => {
+                const g = groupOf(r.group_id);
+                return (
+                  <li key={r.id} style={{ gridTemplateColumns: GRID }} className="space-y-2.5 px-4 py-3 md:grid md:items-center md:gap-3 md:space-y-0">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-white">{r.full_name}</p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 md:hidden">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE(r)}`}>{statusText(r)}</span>
+                        {r.amount > 0 && <span className="text-[11px] text-brand-muted">{rupiah(r.amount)}</span>}
+                      </div>
+                      {r.checked_in_at && <p className="mt-0.5 text-[11px] font-semibold text-brand-gold">Hadir ✓</p>}
                     </div>
-                    {r.checked_in_at && <p className="mt-0.5 text-[11px] font-semibold text-brand-gold">Hadir ✓</p>}
-                  </div>
-                  <p className="truncate text-xs text-brand-light">{r.paroki || <span className="text-brand-muted">-</span>}</p>
-                  <p className="truncate text-xs text-brand-light">{r.phone || <span className="text-brand-muted">-</span>}</p>
-                  <div className="min-w-0">
-                    <select value={r.group_id ?? ""} onChange={(e) => void setGroup(r, e.target.value)} disabled={busy === r.id || groups.length === 0} className="w-full rounded-lg border border-[#333] bg-[#0f1216] px-2 py-1.5 text-xs text-white disabled:opacity-50">
-                      <option value="">{groups.length ? "Tanpa grup" : "Belum ada grup"}</option>
-                      {groups.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
-                    </select>
-                    {g?.facilitator_crew_id && <p className="mt-1 truncate text-[10px] text-brand-muted">Fasilitator: {crewName(g.facilitator_crew_id)}</p>}
-                  </div>
-                  <div className="hidden md:block">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE(r)}`}>{statusText(r)}</span>
-                    {r.amount > 0 && <p className="mt-1 text-[11px] text-brand-muted">{rupiah(r.amount)}</p>}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 md:justify-end">
-                    {isPaid(r) ? (
-                      <>
-                        <button onClick={() => setQr(r)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-2.5 py-1.5 text-xs font-bold text-brand-dark"><QrCode className="h-3.5 w-3.5" /> QR</button>
-                        <a href={waLink(r.phone, message(r))} target="_blank" rel="noopener noreferrer" aria-label="Kirim lewat WhatsApp" className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/50 px-2.5 py-1.5 text-xs font-bold text-emerald-300"><MessageCircle className="h-3.5 w-3.5" /> WA</a>
-                        {canMarkPaid && <button disabled={busy === r.id} onClick={() => setPaid(r, false)} className="rounded-lg px-2 py-1.5 text-[11px] font-semibold text-gray-400 underline hover:text-red-300 disabled:opacity-50">Batalkan</button>}
-                      </>
-                    ) : (
-                      <>
-                        {r.proof_path && <button onClick={() => viewProof(r)} className="inline-flex items-center gap-1 rounded-lg border border-[#333] px-2 py-1.5 text-xs font-semibold text-brand-light"><ImageIcon className="h-3.5 w-3.5" /> Bukti</button>}
-                        {canMarkPaid ? (
-                          <button disabled={busy === r.id} onClick={() => setPaid(r, true)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-xs font-bold text-emerald-950 disabled:opacity-60"><Check className="h-3.5 w-3.5" /> Tandai lunas</button>
-                        ) : (
-                          <span className="text-[11px] text-brand-muted" title="Hanya Ketua, Wakil Ketua, Sekretaris, dan Bendahara">Menunggu konfirmasi bendahara</span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    <p className="truncate text-xs text-brand-light">{r.paroki || <span className="text-brand-muted">-</span>}</p>
+                    <p className="truncate text-xs text-brand-light">{r.phone || <span className="text-brand-muted">-</span>}</p>
+                    {fieldCols.map((x) => (
+                      <p key={x.key} className="truncate text-xs text-brand-light" title={String(r.answers?.[x.key] ?? "")}>
+                        <span className="text-brand-muted md:hidden">{x.label}: </span>
+                        {String(r.answers?.[x.key] ?? "").trim() || <span className="text-brand-muted">-</span>}
+                      </p>
+                    ))}
+                    <div className="min-w-0">
+                      <select value={r.group_id ?? ""} onChange={(e) => void setGroup(r, e.target.value)} disabled={busy === r.id || groups.length === 0} className="w-full rounded-lg border border-[#333] bg-[#0f1216] px-2 py-1.5 text-xs text-white disabled:opacity-50">
+                        <option value="">{groups.length ? "Tanpa grup" : "Belum ada grup"}</option>
+                        {groups.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                      </select>
+                      {g?.facilitator_crew_id && <p className="mt-1 truncate text-[10px] text-brand-muted">Fasilitator: {crewName(g.facilitator_crew_id)}</p>}
+                    </div>
+                    <div className="hidden md:block">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE(r)}`}>{statusText(r)}</span>
+                      {r.amount > 0 && <p className="mt-1 text-[11px] text-brand-muted">{rupiah(r.amount)}</p>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {isPaid(r) ? (
+                        <>
+                          <button onClick={() => setQr(r)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-2.5 py-1.5 text-xs font-bold text-brand-dark"><QrCode className="h-3.5 w-3.5" /> QR</button>
+                          <a href={waLink(r.phone, message(r))} target="_blank" rel="noopener noreferrer" aria-label="Kirim lewat WhatsApp" className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/50 px-2.5 py-1.5 text-xs font-bold text-emerald-300"><MessageCircle className="h-3.5 w-3.5" /> WA</a>
+                          {canMarkPaid && <button disabled={busy === r.id} onClick={() => setPaid(r, false)} className="rounded-lg px-2 py-1.5 text-[11px] font-semibold text-gray-400 underline hover:text-red-300 disabled:opacity-50">Batalkan</button>}
+                        </>
+                      ) : (
+                        <>
+                          {r.proof_path && <button onClick={() => viewProof(r)} className="inline-flex items-center gap-1 rounded-lg border border-[#333] px-2 py-1.5 text-xs font-semibold text-brand-light"><ImageIcon className="h-3.5 w-3.5" /> Bukti</button>}
+                          {canMarkPaid ? (
+                            <button disabled={busy === r.id} onClick={() => setPaid(r, true)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-xs font-bold text-emerald-950 disabled:opacity-60"><Check className="h-3.5 w-3.5" /> Tandai lunas</button>
+                          ) : (
+                            <span className="text-[11px] text-brand-muted" title="Hanya Ketua, Wakil Ketua, Sekretaris, dan Bendahara">Menunggu konfirmasi bendahara</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       )}
 
