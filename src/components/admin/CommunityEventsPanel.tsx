@@ -65,6 +65,11 @@ export default function CommunityEventsPanel({
   const router = useRouter();
   const pathname = usePathname();
   const [opening, setOpening] = useState<string | null>(null);
+  const [view, setView] = useState<"active" | "finished">("active");
+  // An event (or camp) is finished one day after its end, or its start when it has no end
+  const isDone = (iso: string | null | undefined) => !!iso && new Date(iso).getTime() + 86400000 < Date.now();
+  const shownEvents = initialEvents.filter((ev) => isDone(ev.end_date || ev.event_date) === (view === "finished"));
+  const shownCamps = (camps ?? []).filter((c) => isDone(c.start_date) === (view === "finished"));
   const m0 = pathname.match(/^\/(admin\/communities|camp)\/([^/]+)\//);
   const campBase = m0?.[1] === "camp" ? `/camp/${m0[2]}/ongoing` : `/admin/communities/${m0?.[2] ?? ""}/promotion/workspace`;
 
@@ -231,13 +236,22 @@ export default function CommunityEventsPanel({
         </Button>
       </div>
 
-      {initialEvents.length === 0 && (camps?.length ?? 0) === 0 ? (
+      <div className="flex gap-1 rounded-xl bg-black/30 p-1 text-sm font-semibold sm:w-fit">
+        {(["active", "finished"] as const).map((v) => (
+          <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v}
+            className={`flex-1 rounded-lg px-4 py-2 sm:flex-none ${view === v ? "bg-brand-gold text-brand-dark" : "text-brand-muted hover:text-white"}`}>
+            {v === "active" ? "Active" : "Finished"}
+          </button>
+        ))}
+      </div>
+
+      {shownEvents.length + shownCamps.length === 0 ? (
         <div className="rounded-xl border border-[#333] bg-[#15181e] p-10 text-center text-sm text-gray-500">
-          Belum ada event. Tekan <span className="text-brand-gold">Buat event</span> untuk membuatnya.
+          {view === "active" ? <>Belum ada event yang aktif. Tekan <span className="text-brand-gold">Buat event</span> untuk membuatnya.</> : "Belum ada event yang selesai."}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {initialEvents.map((ev) => (
+          {shownEvents.map((ev) => (
             <div key={ev.id} className="flex aspect-[4/5] flex-col overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
               <div className="relative min-h-0 flex-1 bg-[#15181e]">
                 {ev.banner_image_url ? (
@@ -248,8 +262,11 @@ export default function CommunityEventsPanel({
                     <CalendarDays className="h-8 w-8" />
                   </div>
                 )}
-                <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
+                <span className="absolute left-2 top-2 max-w-[calc(100%-5.5rem)] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
                   {ev.event_type || "Event"}
+                </span>
+                <span className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${view === "active" ? "bg-emerald-500 text-white" : "bg-gray-600 text-white"}`}>
+                  {view === "active" ? "Active" : "Finished"}
                 </span>
               </div>
               <div className="shrink-0 space-y-2 p-3">
@@ -267,7 +284,7 @@ export default function CommunityEventsPanel({
               </div>
             </div>
           ))}
-          {(camps ?? []).map((c) => {
+          {shownCamps.map((c) => {
             const series = isCampSeries(c.camp_name);
             return (
               <div key={c.id} className="flex aspect-[4/5] flex-col overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
@@ -280,8 +297,11 @@ export default function CommunityEventsPanel({
                       <Tent className="h-8 w-8" />
                     </div>
                   )}
-                  <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
+                  <span className="absolute left-2 top-2 max-w-[calc(100%-5.5rem)] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
                     {c.camp_name || "Camp"}
+                  </span>
+                  <span className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${view === "active" ? "bg-emerald-500 text-white" : "bg-gray-600 text-white"}`}>
+                    {view === "active" ? "Active" : "Finished"}
                   </span>
                 </div>
                 <div className="shrink-0 space-y-2 p-3">
