@@ -3,8 +3,9 @@ import { CalendarDays, ExternalLink, MapPin, Ticket } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import GuestRegisterForm from "@/components/events/GuestRegisterForm";
 import EventLandingCta from "@/components/events/EventLandingCta";
+import EventShare from "@/components/events/EventShare";
 import { formatWeekdayDate, formatTime } from "@/lib/utils";
-import { isRegisterKey, registerKeyFilter, rupiah, type RegField } from "@/lib/eventReg";
+import { isRegisterKey, registerKeyFilter, registerLink, rupiah, type RegField } from "@/lib/eventReg";
 
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
@@ -69,8 +70,12 @@ export default async function GuestEventPage({ params, searchParams }: { params:
   const photos = (e.promo_images ?? []).filter(Boolean).slice(0, 3);
   const sameDay = e.end_date && e.event_date && formatWeekdayDate(e.end_date) === formatWeekdayDate(e.event_date);
 
+  // what is shared: the name, the tagline, when and where, and this page's link
+  const shareText = [`*${e.title}*`, e.tagline, "", e.event_date ? `📅 ${formatWeekdayDate(e.event_date)}, ${formatTime(e.event_date)} WIB` : "", e.location ? `📍 ${e.location}` : "", "", `Info dan pendaftaran: ${registerLink(code.toLowerCase())}`]
+    .filter((x): x is string => typeof x === "string").join("\n").replace(/\n{3,}/g, "\n\n");
+
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md space-y-5 bg-[#121417] px-4 pb-32 pt-6 text-white">
+    <main className="mx-auto min-h-screen w-full max-w-md space-y-5 bg-[#121417] px-4 pb-56 pt-6 text-white">
       <p className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-brand-gold">Ruang Iman</p>
 
       {e.banner_image_url && (
@@ -110,7 +115,7 @@ export default async function GuestEventPage({ params, searchParams }: { params:
         </section>
       )}
 
-      <EventLandingCta closed={closed} startOpen={daftar === "1"}>
+      <EventLandingCta closed={closed} startOpen={daftar === "1"} share={<EventShare text={shareText} />}>
         <GuestRegisterForm code={code.toLowerCase()} eventTitle={e.title} welcome={welcome} fields={s.fields ?? []} />
       </EventLandingCta>
     </main>
