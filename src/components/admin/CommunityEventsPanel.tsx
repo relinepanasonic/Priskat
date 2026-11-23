@@ -20,7 +20,7 @@ import { LinkPesertaButton, getCampRegisterLink, getRegisterLink } from "@/compo
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
 import { promoteEvent, deleteEvent } from "@/app/actions/events";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, fromJakartaInput } from "@/lib/utils";
 
 type EventRow = {
   id: string;
@@ -187,8 +187,8 @@ export default function CommunityEventsPanel({
     const fd = new FormData();
     fd.append("title", finalTitle);
     fd.append("description", description.trim());
-    fd.append("event_date", eventDate);
-    if (endDate) fd.append("end_date", endDate);
+    fd.append("event_date", fromJakartaInput(eventDate));
+    if (endDate) fd.append("end_date", fromJakartaInput(endDate));
     fd.append("location", location.trim());
     if (city.trim()) fd.append("city", city.trim());
     if (communityId) fd.append("community_id", communityId);

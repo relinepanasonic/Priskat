@@ -56,3 +56,16 @@ export function truncate(str: string, maxLen: number): string {
   if (str.length <= maxLen) return str;
   return str.slice(0, maxLen).trimEnd() + "…";
 }
+
+/** An ISO time as the value of a datetime-local input, in Jakarta time ("2026-11-27T13:00"). */
+export function toJakartaInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Date(d.getTime() + 7 * 3600_000).toISOString().slice(0, 16);
+}
+
+/** The value of a datetime-local input, typed in Jakarta time, as an ISO time with its offset. */
+export function fromJakartaInput(local: string): string {
+  return local ? `${local.length === 16 ? `${local}:00` : local}+07:00` : "";
+}

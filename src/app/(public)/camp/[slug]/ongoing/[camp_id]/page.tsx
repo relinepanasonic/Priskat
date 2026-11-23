@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet, UserCheck, QrCode, Megaphone } from "lucide-react";
+import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet, UserCheck, QrCode, Megaphone, Info } from "lucide-react";
 import { usePathname } from "next/navigation";
 import CampFinance from "@/components/camp/CampFinance";
 import { isCampSeries } from "@/lib/campTypes";
@@ -10,6 +10,7 @@ import { CREW_ROLES, isKnownRole, roleOrder } from "@/lib/crewRoles";
 import PesertaSection from "@/components/events/workspace/PesertaSection";
 import QrSection from "@/components/events/workspace/QrSection";
 import PromosiSection from "@/components/events/workspace/PromosiSection";
+import AboutSection from "@/components/events/workspace/AboutSection";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -18,7 +19,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const camp_id = unwrappedParams.camp_id;
   const slug = unwrappedParams.slug;
 
-  const [activeTab, setActiveTab] = useState<"peserta" | "qr" | "promosi" | "todo" | "meeting" | "chat" | "crew" | "keuangan">("peserta");
+  const [activeTab, setActiveTab] = useState<"peserta" | "tentang" | "qr" | "promosi" | "todo" | "meeting" | "chat" | "crew" | "keuangan">("peserta");
   const inAdmin = usePathname().startsWith("/admin");
   const [camp, setCamp] = useState<any>(null);
   const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
       setLinkedEventId(ev?.id ?? null);
       setLinkedEventTitle(ev?.title ?? "");
       // a camp without an event has no participants, QR or promotion: start on the committee
-      if (!ev?.id) setActiveTab((t) => (t === "peserta" || t === "qr" || t === "promosi" ? "crew" : t));
+      if (!ev?.id) setActiveTab((t) => (t === "peserta" || t === "tentang" || t === "qr" || t === "promosi" ? "crew" : t));
 
       fetchTasks(supabase);
       fetchMeetings(supabase);
@@ -288,6 +289,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         {[
           ...(linkedEventId ? [
             { id: "peserta", label: "Peserta", Icon: UserCheck },
+            { id: "tentang", label: "Tentang", Icon: Info },
             { id: "qr", label: "QR & Absensi", Icon: QrCode },
             { id: "promosi", label: "Promosi", Icon: Megaphone },
           ] : []),
@@ -312,6 +314,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         {activeTab === "peserta" && linkedEventId && (
           <PesertaSection eventId={linkedEventId} eventTitle={linkedEventTitle} crew={crewMembers.map((c) => ({ id: c.id, name: c.name, position: c.position }))} canMarkPaid={canMarkPaid} />
         )}
+        {activeTab === "tentang" && linkedEventId && <AboutSection eventId={linkedEventId} />}
         {activeTab === "qr" && linkedEventId && <QrSection eventId={linkedEventId} />}
         {activeTab === "promosi" && linkedEventId && <PromosiSection eventId={linkedEventId} />}
 

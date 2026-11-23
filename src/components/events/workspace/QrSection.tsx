@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ScanTab } from "@/components/events/EventRegAdmin";
 import { TICKET_GRADIENTS, TICKET_TEMPLATES, gradientOf, sizeOf, templateOf, type TicketSize } from "@/lib/ticketDesign";
 import { useEventData } from "./useEventData";
+import { Collapse } from "./ui";
 
 const db = () => createClient() as any;
 
@@ -21,6 +22,7 @@ export default function QrSection({ eventId }: { eventId: string }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [designOpen, setDesignOpen] = useState(false);
 
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat...</p>;
 
@@ -63,11 +65,13 @@ export default function QrSection({ eventId }: { eventId: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="space-y-3">
-        <button onClick={() => setScanning(true)} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-gold py-5 text-lg font-bold text-brand-dark hover:opacity-90">
-          <ScanLine className="h-6 w-6" /> Scan QR
+      <div className="flex flex-col items-center gap-3 py-2">
+        <button onClick={() => setScanning(true)} aria-label="Scan QR"
+          className="flex aspect-square w-52 flex-col items-center justify-center gap-3 rounded-3xl bg-brand-gold text-brand-dark shadow-lg transition hover:opacity-90 active:scale-[0.98] sm:w-60">
+          <ScanLine className="h-16 w-16" strokeWidth={1.6} />
+          <span className="text-lg font-bold">Scan QR</span>
         </button>
-        <p className="text-center text-sm text-brand-light">Hadir <b className="text-brand-gold">{present}</b> dari <b className="text-white">{approved}</b> peserta yang disetujui</p>
+        <p className="text-center text-sm text-brand-light">Hadir <b className="text-brand-gold">{present}</b> dari <b className="text-white">{approved}</b> peserta yang lunas</p>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4">
@@ -85,8 +89,7 @@ export default function QrSection({ eventId }: { eventId: string }) {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4">
-        <p className="text-xs font-bold uppercase tracking-wider text-brand-gold">Desain QR lanyard</p>
+      <Collapse title="Bikin Kartu Peserta" subtitle="Template, warna latar, dan gambar untuk kartu QR" open={designOpen} onToggle={() => setDesignOpen((v) => !v)}>
 
         <div>
           <p className="mb-2 text-xs font-semibold text-brand-muted">Template</p>
@@ -127,7 +130,7 @@ export default function QrSection({ eventId }: { eventId: string }) {
 
         {msg && <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-brand-light">{msg}</p>}
         <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan desain"}</button>
-      </div>
+      </Collapse>
 
       {scanning && (
         <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/90 p-4">

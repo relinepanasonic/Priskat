@@ -10,6 +10,10 @@ export type WorkspaceEvent = {
   event_date: string;
   banner_image_url: string | null;
   location: string | null;
+  tagline: string | null;
+  end_date: string | null;
+  maps_url: string | null;
+  cohort_id: string | null;
   promo_status: "draft" | "active" | "closed";
   capacity: number | null;
 };
@@ -25,7 +29,7 @@ export function useEventData(eventId: string) {
   const load = useCallback(async () => {
     const db = createClient() as any;
     const [e, r, g, s] = await Promise.all([
-      db.from("events").select("id, title, event_date, location, banner_image_url, promo_status, capacity").eq("id", eventId).maybeSingle(),
+      db.from("events").select("id, title, tagline, event_date, end_date, location, maps_url, cohort_id, banner_image_url, promo_status, capacity").eq("id", eventId).maybeSingle(),
       db.from("event_registrations").select("*").eq("event_id", eventId).order("created_at", { ascending: false }).limit(2000),
       db.from("event_groups").select("*").eq("event_id", eventId).order("created_at", { ascending: true }),
       db.from("event_reg_settings").select("*").eq("event_id", eventId).maybeSingle(),
