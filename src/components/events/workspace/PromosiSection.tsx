@@ -15,11 +15,12 @@ const STATUSES = [
   { id: "closed", label: "Promosi selesai", on: "border-amber-400 bg-amber-500/15 text-amber-200" },
 ] as const;
 
-/** Promosi in two levels: the banner in the app, and the WhatsApp broadcast. Both open and close. */
+/** Promosi in three boxes that open and close: 1. upload the photo, 2. the link, 3. the WhatsApp broadcast. */
 export default function PromosiSection({ eventId }: { eventId: string }) {
   const { event, settings, loading, reload } = useEventData(eventId);
   const [busy, setBusy] = useState(false);
-  const [openBanner, setOpenBanner] = useState(true);
+  const [openFoto, setOpenFoto] = useState(true);
+  const [openLink, setOpenLink] = useState(false);
   const [openWa, setOpenWa] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,13 +51,18 @@ export default function PromosiSection({ eventId }: { eventId: string }) {
       </div>
       {error && <p className="text-xs text-red-300">{error}</p>}
 
-      <PromoLinks key={`${settings?.default_link}-${settings?.external_link}`} eventId={eventId} settings={settings} onSaved={() => void reload()} />
-
-      <Collapse title="Banner di Aplikasi" subtitle="1 banner gratis untuk setiap event, lalu banner tambahan atau Running Banner" open={openBanner} onToggle={() => setOpenBanner((v) => !v)}>
+      {/* 1. the picture */}
+      <Collapse title="1. Upload foto" subtitle="Banner gratis di aplikasi (1 per event), lalu banner tambahan atau Running Banner" open={openFoto} onToggle={() => setOpenFoto((v) => !v)}>
         <BannerPanel key={`${settings?.default_link}-${settings?.external_link}`} eventId={eventId} />
       </Collapse>
 
-      <Collapse title="WhatsApp Broadcast" subtitle="Template pesan siap pakai untuk panitia: ajakan, pembayaran, QR, pengingat, terima kasih" open={openWa} onToggle={() => setOpenWa((v) => !v)}>
+      {/* 2. where people are sent */}
+      <Collapse title="2. Link URL" subtitle="Link pendaftaran Ruang Iman, link lain (Google Form), dan mana yang jadi default" open={openLink} onToggle={() => setOpenLink((v) => !v)}>
+        <PromoLinks eventId={eventId} settings={settings} onSaved={() => void reload()} />
+      </Collapse>
+
+      {/* 3. the messages */}
+      <Collapse title="3. WA Broadcast" subtitle="Template pesan siap pakai untuk panitia: ajakan, pembayaran, QR, pengingat, terima kasih" open={openWa} onToggle={() => setOpenWa((v) => !v)}>
         <BroadcastPanel key={`${settings?.default_link}-${settings?.external_link}`} eventId={eventId} />
       </Collapse>
     </div>

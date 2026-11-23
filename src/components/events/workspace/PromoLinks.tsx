@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { registerLink, type RegSettings } from "@/lib/eventReg";
-import { Card, inputCls } from "./ui";
+import { inputCls } from "./ui";
 import { getRegisterLink } from "./LinkPeserta";
 
 /**
@@ -50,7 +50,8 @@ export default function PromoLinks({ eventId, settings, onSaved }: { eventId: st
   );
 
   return (
-    <Card title="Link untuk promosi" hint="Banner dan pesan WhatsApp memakai link yang kamu pilih sebagai default.">
+    <div className="space-y-4">
+      <p className="text-xs leading-relaxed text-brand-muted">Banner dan pesan WhatsApp memakai link yang kamu pilih sebagai default.</p>
       <Option id="ruangiman" title="Pendaftaran Ruang Iman" hint="Peserta mendaftar di Ruang Iman, dapat QR Code, dan masuk ke daftar Peserta.">
         <p className="truncate rounded-lg bg-black/30 px-3 py-2 text-xs text-brand-light">{own ? own.replace("https://", "") : "Dibuat otomatis saat kamu menyimpan."}</p>
       </Option>
@@ -59,6 +60,6 @@ export default function PromoLinks({ eventId, settings, onSaved }: { eventId: st
       </Option>
       {msg && <p className={`rounded-lg px-3 py-2 text-xs ${msg.ok ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>{msg.text}</p>}
       <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-2.5 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan..." : "Simpan link"}</button>
-    </Card>
+    </div>
   );
 }
