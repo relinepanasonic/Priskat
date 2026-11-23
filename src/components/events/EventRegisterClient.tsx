@@ -37,7 +37,10 @@ export default function EventRegisterClient({
   async function register(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setError(null);
-    const { error: err } = await db().rpc("register_for_event", { p_event: eventId, p_name: name, p_phone: phone, p_answers: answers });
+    // photo questions are only asked on the short registration link; here they are skipped
+    const sent = { ...answers };
+    for (const f of settings?.fields ?? []) if (f.type === "photo") sent[f.key] = "(foto menyusul)";
+    const { error: err } = await db().rpc("register_for_event", { p_event: eventId, p_name: name, p_phone: phone, p_answers: sent });
     setBusy(false);
     if (err) { setError(err.message); return; }
     router.refresh();
@@ -170,7 +173,7 @@ export default function EventRegisterClient({
         <label className="mb-1 block text-sm font-medium text-brand-light">Nomor HP (WhatsApp)</label>
         <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="08123456789" className={input} />
       </div>
-      {(settings!.fields ?? []).map((f) => (
+      {(settings!.fields ?? []).filter((f) => f.type !== "photo").map((f) => (
         <div key={f.key}>
           <label className="mb-1 block text-sm font-medium text-brand-light">{f.label}{f.required && " *"}</label>
           {f.type === "select" ? (
