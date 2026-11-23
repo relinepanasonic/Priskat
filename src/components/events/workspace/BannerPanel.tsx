@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, ImagePlus, Loader2, Megaphone, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
-import { registerLink, rupiah } from "@/lib/eventReg";
+import { promoLink, rupiah } from "@/lib/eventReg";
 import { BANNER_OFFERS } from "@/lib/bannerPrices";
 import { formatDate } from "@/lib/utils";
 import { useEventData } from "./useEventData";
@@ -40,7 +40,8 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
   }, [eventId]);
   useEffect(() => { void load(); }, [load]);
 
-  const regLink = settings?.slug || settings?.public_code ? registerLink((settings?.slug || settings?.public_code) as string) : "";
+  // the default promotion link: our registration, or the second link, as the event chose
+  const regLink = promoLink(settings);
 
   async function upload(file: File) {
     setUploading(true); setMsg(null);
@@ -72,6 +73,16 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
     const { error } = await db().rpc("manage_event_banner", { p_banner: banner.id, p_action: action });
     setBusy(false);
     if (error) { setMsg({ ok: false, text: error.message }); return; }
+    await load();
+  }
+
+  async function useDefaultLink() {
+    if (!banner) return;
+    setBusy(true); setMsg(null);
+    const { error } = await db().rpc("set_event_banner_link", { p_banner: banner.id, p_link: regLink });
+    setBusy(false);
+    if (error) { setMsg({ ok: false, text: error.message }); return; }
+    setMsg({ ok: true, text: "Banner sekarang mengarah ke link default." });
     await load();
   }
 
@@ -107,6 +118,7 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
                 <p className={`text-xs font-semibold ${banner.is_active ? "text-emerald-300" : "text-gray-400"}`}>{banner.is_active ? "Tayang di Event" : "Dimatikan"}</p>
               </div>
               <div className="flex gap-2">
+                {regLink && banner.link_url !== regLink && <button disabled={busy} onClick={() => void useDefaultLink()} className="rounded-lg border border-brand-gold/40 px-3 py-2 text-xs font-semibold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50">Pakai link default</button>}
                 <button disabled={busy} onClick={() => void manage(banner.is_active ? "off" : "on")} className="rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/5 disabled:opacity-50">{banner.is_active ? "Matikan" : "Nyalakan"}</button>
                 <button disabled={busy} onClick={() => void manage("delete")} aria-label="Hapus banner" className="rounded-lg border border-red-500/40 px-3 py-2 text-red-300 hover:bg-red-500/10 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
               </div>
@@ -131,7 +143,7 @@ export default function BannerPanel({ eventId }: { eventId: string }) {
             )}
             {image && <button type="button" onClick={() => setImage("")} className="text-xs font-semibold text-red-300 underline">Ganti gambar</button>}
             <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder={`Judul (kosong = ${event?.title ?? "nama event"})`} className={inputCls} />
-            <input value={link} onChange={(e) => setLink(e.target.value)} placeholder={regLink ? "Link tujuan (kosong = link pendaftaran)" : "Link tujuan (opsional)"} className={inputCls} />
+            <input value={link} onChange={(e) => setLink(e.target.value)} placeholder={regLink ? "Link tujuan (kosong = link default promosi)" : "Link tujuan (opsional)"} className={inputCls} />
             <button onClick={create} disabled={busy || !image} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-50">{busy ? "Membuat..." : "Buat banner gratis"}</button>
           </div>
         )}

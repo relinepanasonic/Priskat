@@ -24,6 +24,8 @@ export type RegSettings = {
   ticket_gradient?: string;
   wa_template?: string | null;
   wa_invite_template?: string | null;
+  external_link?: string | null;
+  default_link?: "ruangiman" | "external" | null;
 };
 
 export type Registration = {
@@ -91,3 +93,13 @@ export const renderWaTemplate = (tpl: string, vars: { nama: string; event: strin
 /** The invitation to register, shared with the registration link. {nama} becomes "Saudara/i" when it goes to a group. */
 export const DEFAULT_WA_INVITE =
   "Hi {nama}, ini pendaftaran acara {event}, tanggal {tanggal} di {lokasi}. Daftar pakai link ini ya: {link}";
+
+/**
+ * The link used in promotion (banner, WhatsApp broadcast): our own registration link, or the second link
+ * (a Google Form or another app), whichever the event chose as its default.
+ */
+export function promoLink(s: { slug?: string | null; public_code?: string | null; external_link?: string | null; default_link?: string | null } | null | undefined): string {
+  const own = s?.slug || s?.public_code ? registerLink((s.slug || s.public_code) as string) : "";
+  const ext = (s?.external_link ?? "").trim();
+  return s?.default_link === "external" && ext ? ext : own || ext;
+}

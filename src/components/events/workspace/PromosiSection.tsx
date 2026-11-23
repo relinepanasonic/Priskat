@@ -7,6 +7,7 @@ import { useEventData } from "./useEventData";
 import { Collapse } from "./ui";
 import BannerPanel from "./BannerPanel";
 import BroadcastPanel from "./BroadcastPanel";
+import PromoLinks from "./PromoLinks";
 
 const STATUSES = [
   { id: "draft", label: "Belum dipromosikan", on: "border-gray-400 bg-gray-500/20 text-white" },
@@ -16,7 +17,7 @@ const STATUSES = [
 
 /** Promosi in two levels: the banner in the app, and the WhatsApp broadcast. Both open and close. */
 export default function PromosiSection({ eventId }: { eventId: string }) {
-  const { event, loading, reload } = useEventData(eventId);
+  const { event, settings, loading, reload } = useEventData(eventId);
   const [busy, setBusy] = useState(false);
   const [openBanner, setOpenBanner] = useState(true);
   const [openWa, setOpenWa] = useState(false);
@@ -49,12 +50,14 @@ export default function PromosiSection({ eventId }: { eventId: string }) {
       </div>
       {error && <p className="text-xs text-red-300">{error}</p>}
 
+      <PromoLinks key={`${settings?.default_link}-${settings?.external_link}`} eventId={eventId} settings={settings} onSaved={() => void reload()} />
+
       <Collapse title="Banner di Aplikasi" subtitle="1 banner gratis untuk setiap event, lalu banner tambahan atau Running Banner" open={openBanner} onToggle={() => setOpenBanner((v) => !v)}>
-        <BannerPanel eventId={eventId} />
+        <BannerPanel key={`${settings?.default_link}-${settings?.external_link}`} eventId={eventId} />
       </Collapse>
 
       <Collapse title="WhatsApp Broadcast" subtitle="Template pesan siap pakai untuk panitia: ajakan, pembayaran, QR, pengingat, terima kasih" open={openWa} onToggle={() => setOpenWa((v) => !v)}>
-        <BroadcastPanel eventId={eventId} />
+        <BroadcastPanel key={`${settings?.default_link}-${settings?.external_link}`} eventId={eventId} />
       </Collapse>
     </div>
   );

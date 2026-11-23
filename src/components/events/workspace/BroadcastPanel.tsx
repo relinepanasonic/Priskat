@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, Copy, MessageCircle, Users } from "lucide-react";
-import { registerLink, rupiah, ticketLink, waLink, type Registration } from "@/lib/eventReg";
+import { promoLink, rupiah, ticketLink, waLink, type Registration } from "@/lib/eventReg";
 import { formatWeekdayDate, formatTime } from "@/lib/utils";
 import { useEventData } from "./useEventData";
 import { inputCls } from "./ui";
@@ -63,7 +63,7 @@ export default function BroadcastPanel({ eventId }: { eventId: string }) {
   if (loading) return <p className="py-6 text-center text-sm text-gray-500">Memuat...</p>;
   if (!event) return <p className="py-6 text-center text-sm text-gray-500">Event tidak ditemukan.</p>;
 
-  const link = settings?.slug || settings?.public_code ? registerLink((settings.slug || settings.public_code) as string) : "";
+  const link = promoLink(settings);
   const rek = [settings?.bank_name, settings?.bank_account, settings?.bank_holder ? `a.n. ${settings.bank_holder}` : ""].filter(Boolean).join(" ") || "(isi rekening di Pengaturan Pendaftaran)";
   const fill = (tpl: string, r?: Registration) => tpl.replace(/\{(\w+)\}/g, (_, k: string) => {
     switch (k) {
