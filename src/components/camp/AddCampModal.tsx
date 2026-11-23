@@ -4,10 +4,15 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { X, Check } from "lucide-react";
 
+const EVENT_TYPES = ["Camp", "KKR", "Persekutuan Doa / Fellowship", "Konser", "Doa Bersama", "Rosario", "Jalan Salib", "Other"];
+
 export default function AddCampModal({ isOpen, onClose, onSuccess, communityId = null }: { isOpen: boolean; onClose: () => void; onSuccess: () => void; communityId?: string | null }) {
   const [branches, setBranches] = useState<string[]>([]);
   const [branch, setBranch] = useState("");
-  const [campName, setCampName] = useState("Pria Sejati");
+  const [eventType, setEventType] = useState("Camp");
+  const [campNameSel, setCampName] = useState("Pria Sejati");
+  // everything that is not a Camp is a one-off event with its own title
+  const campName = eventType === "Camp" ? campNameSel : "Other Event";
   const [angkatan, setAngkatan] = useState("");
   const [startDate, setStartDate] = useState("");
   const [customName, setCustomName] = useState("");
@@ -20,6 +25,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
 
   useEffect(() => {
     if (isOpen) {
+      setEventType("Camp");
       setCampName("Pria Sejati");
       setAngkatan("");
       setStartDate("");
@@ -53,7 +59,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
 
   const handleSave = async () => {
     if (!branch || (!angkatan && campName !== "Other Event") || !startDate || !ketuaUserId) {
-      setErrorMsg("Please fill in all required fields (Branch, Camp, Angkatan, Date, and Ketua)");
+      setErrorMsg("Please fill in all required fields (Branch, Event, Angkatan, Date, and Ketua)");
       return;
     }
     if (campName === "Other Event" && !customName) {
@@ -74,6 +80,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
         angkatan: angkatan || "0",
         start_date: startDate,
         custom_name: generatedTitle,
+        event_type: eventType,
         community_id: communityId,
       })
       .select("id")
@@ -130,6 +137,13 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
             </div>
           )}
 
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tipe Event</label>
+            <select value={eventType} onChange={e => setEventType(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
+              {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1.5">Branch</label>
@@ -137,18 +151,17 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
                 {branches.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp / Event Type</label>
-              <select value={campName} onChange={e => setCampName(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
+            {eventType === "Camp" && <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Camp</label>
+              <select value={campNameSel} onChange={e => setCampName(e.target.value)} className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
                 <option value="Pria Sejati">Pria Sejati</option>
                 <option value="Bapa Sejati Katolik">Bapa Sejati Katolik</option>
                 <option value="Wanita Berhikmat">Wanita Berhikmat</option>
                 <option value="Youngman">Youngman</option>
                 <option value="Youngwoman">Youngwoman</option>
                 <option value="Patriot">Patriot</option>
-                <option value="Other Event">Other Event...</option>
               </select>
-            </div>
+            </div>}
             
             {campName !== "Other Event" && (
               <div>
@@ -166,7 +179,7 @@ export default function AddCampModal({ isOpen, onClose, onSuccess, communityId =
           {campName === "Other Event" && (
             <div>
               <label className="block text-xs font-semibold text-brand-gold mb-1.5">Custom Event Title</label>
-              <input value={customName} onChange={e => setCustomName(e.target.value)} type="text" placeholder="e.g. Jalan Pagi, Persekutuan Doa..." className="w-full bg-[#111] border border-brand-gold/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold" />
+              <input value={customName} onChange={e => setCustomName(e.target.value)} type="text" placeholder={`e.g. ${eventType === "Other" ? "Jalan Pagi" : eventType} ...`} className="w-full bg-[#111] border border-brand-gold/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold" />
             </div>
           )}
 
