@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Pencil, Check, Copy, Download, ExternalLink, FileSpreadsheet, FileText, Image as ImageIcon, MessageCircle, Plus, QrCode, Trash2, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_WA_TEMPLATE, rupiah, renderWaTemplate, ticketLink, waLink, type EventGroup, type Registration } from "@/lib/eventReg";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { useEventData } from "./useEventData";
 import { LinkPesertaButton, getRegisterLink } from "./LinkPeserta";
 
@@ -20,7 +20,7 @@ const statusText = (r: Registration) => (r.status === "approved" ? "Lunas" : r.s
 const STATUS_STYLE = (r: Registration) =>
   r.status === "approved" ? "bg-emerald-500/15 text-emerald-300" : r.status === "rejected" || r.status === "cancelled" ? "bg-white/10 text-gray-400" : "bg-amber-500/15 text-amber-300";
 
-const COLS: [SortKey, string][] = [["name", "Nama"], ["paroki", "Paroki"], ["phone", "WhatsApp"], ["group", "Grup"], ["status", "Status"]];
+const COLS: [SortKey, string][] = [["name", "Nama"], ["paroki", "Paroki"], ["phone", "WhatsApp"], ["email", "Email"], ["hadir", "Waktu hadir"], ["group", "Grup"], ["status", "Status"]];
 
 /** Peserta: everybody who registered, who has paid, their groups and QR ticket. Sortable from the column headers. */
 export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid }: { eventId: string; eventTitle: string; crew: Crew[]; canMarkPaid: boolean }) {
@@ -64,6 +64,8 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
         case "paroki": return r.paroki ?? "";
         case "phone": return r.phone ?? "";
         case "group": return groups.find((g) => g.id === r.group_id)?.name ?? "";
+        case "email": return r.email ?? "";
+        case "hadir": return r.checked_in_at ?? "";
         case "status": return statusText(r);
         default: return String(r.answers?.[sort.key.slice(2)] ?? "");
       }
@@ -141,10 +143,10 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat peserta...</p>;
 
   const fieldCols = (settings?.fields ?? []).filter((x) => x.type !== "photo");
-  const allCols: [SortKey, string][] = [...COLS.slice(0, 3), ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string]), ...COLS.slice(3)];
+  const allCols: [SortKey, string][] = [...COLS.slice(0, 4), ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string]), ...COLS.slice(4)];
   // one grid for the header and every row: name, paroki, WhatsApp, the questions, group, status, actions
-  const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(250px,1.4fr)"].join(" ");
-  const GRID_MIN = 170 + 120 + 120 + fieldCols.length * 120 + 120 + 96 + 250 + 40 * 2;
+  const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", "minmax(170px,1.2fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(150px,1fr)", "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(250px,1.4fr)"].join(" ");
+  const GRID_MIN = 170 + 120 + 120 + 170 + fieldCols.length * 120 + 150 + 120 + 96 + 250 + 40 * 2;
 
   function openEdit(r: Registration) {
     const answers: Record<string, string> = {};
@@ -318,12 +320,14 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
                     </div>
                     <p className="truncate text-xs text-brand-light">{r.paroki || <span className="text-brand-muted">-</span>}</p>
                     <p className="truncate text-xs text-brand-light">{r.phone || <span className="text-brand-muted">-</span>}</p>
+                    <p className="truncate text-xs text-brand-light" title={r.email ?? ""}>{r.email || <span className="text-brand-muted">-</span>}</p>
                     {fieldCols.map((x) => (
                       <p key={x.key} className="truncate text-xs text-brand-light" title={String(r.answers?.[x.key] ?? "")}>
                         <span className="text-brand-muted md:hidden">{x.label}: </span>
                         {String(r.answers?.[x.key] ?? "").trim() || <span className="text-brand-muted">-</span>}
                       </p>
                     ))}
+                    <p className="truncate text-xs text-brand-light">{r.checked_in_at ? <span className="font-semibold text-brand-gold">{formatDateTime(r.checked_in_at)}</span> : <span className="text-brand-muted">Belum hadir</span>}</p>
                     <div className="min-w-0">
                       <select value={r.group_id ?? ""} onChange={(e) => void setGroup(r, e.target.value)} disabled={busy === r.id || groups.length === 0} className="w-full rounded-lg border border-[#333] bg-[#0f1216] px-2 py-1.5 text-xs text-white disabled:opacity-50">
                         <option value="">{groups.length ? "Tanpa grup" : "Belum ada grup"}</option>
