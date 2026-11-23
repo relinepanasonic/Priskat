@@ -4,10 +4,10 @@ import { resolveCommunity } from "@/lib/community";
 import ConnectGroupsClient from "@/components/community/ConnectGroupsClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Connect Group" };
+export const metadata = { title: "Komsel" };
 
 /**
- * Connect Group for the PIC and pengurus of a group (they are not admins, so they cannot open the admin area).
+ * Komsel for the PIC and pengurus of a group (they are not admins, so they cannot open the admin area).
  * The database only returns the groups they lead; community admins see all of them here too.
  */
 export default async function ConnectGroupMemberPage({ params }: { params: Promise<{ slug: string }> }) {

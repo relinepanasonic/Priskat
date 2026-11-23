@@ -93,7 +93,7 @@ export default function CommunitySlugLayout({
           if (ok) member = true;
         }
         if (alive) { setCanPromote(ok); setIsMember(member); }
-        // PIC or pengurus of a Connect Group in this community
+        // PIC or pengurus of a Komsel in this community
         if (community) {
           const { data: lead } = await supabase
             .from("connect_group_members" as any)
@@ -132,7 +132,7 @@ export default function CommunitySlugLayout({
     isCFM
       ? { name: "Camp", href: `/camp/${slug}/crew`, icon: Tent }
       : { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
-    ...(canPromote || leadsCg ? [{ name: "Connect Group", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
+    ...(canPromote || leadsCg ? [{ name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
     { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
   ];
 

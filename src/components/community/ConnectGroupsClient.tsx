@@ -38,7 +38,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 );
 
 /**
- * Connect Groups of one community: the list, a group's anggota, and its event log.
+ * Komsel of one community: the list, a group's anggota, and its event log.
  * Community admins manage everything; the PIC and pengurus of a group manage its anggota and log.
  * The database (RLS) decides what each person may see, this screen only hides what they cannot use.
  */
@@ -100,7 +100,7 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
     const myLogs = logs.filter((l) => l.cg_id === open.id);
     return (
       <div className="space-y-4 p-4 md:p-6">
-        <button onClick={() => setOpenId(null)} className="flex items-center gap-1 text-sm text-brand-muted hover:text-white"><ChevronLeft className="h-4 w-4" /> Semua Connect Group</button>
+        <button onClick={() => setOpenId(null)} className="flex items-center gap-1 text-sm text-brand-muted hover:text-white"><ChevronLeft className="h-4 w-4" /> Semua Komsel</button>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-white">{open.name}</h2>
@@ -258,7 +258,7 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
     <div className="space-y-4 p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white">Connect Group</h2>
+          <h2 className="text-xl font-bold text-white">Komsel</h2>
           <p className="text-sm text-brand-muted">{communityName} · {groups.length} CG</p>
         </div>
         {isAdmin && (
@@ -273,7 +273,7 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
 
       <div className="space-y-2.5 md:hidden">
         {groups.length === 0 && (
-          <div className="rounded-xl border border-[#2a2d35] px-3 py-10 text-center text-sm text-brand-muted"><Users className="mx-auto mb-2 h-6 w-6" />{isAdmin ? "Belum ada Connect Group. Tekan Tambah CG." : "Kamu belum menjadi PIC atau pengurus Connect Group."}</div>
+          <div className="rounded-xl border border-[#2a2d35] px-3 py-10 text-center text-sm text-brand-muted"><Users className="mx-auto mb-2 h-6 w-6" />{isAdmin ? "Belum ada Komsel. Tekan Tambah CG." : "Kamu belum menjadi PIC atau pengurus Komsel."}</div>
         )}
         {groups.map((g, i) => (
           <button key={g.id} onClick={() => { setOpenId(g.id); setView("anggota"); setError(null); }} className="block w-full rounded-2xl border border-[#2a2d35] bg-[#14171c] p-3.5 text-left transition-colors active:bg-white/5">
@@ -293,7 +293,7 @@ export default function ConnectGroupsClient({ communityId, communityName, isAdmi
           </tr></thead>
           <tbody>
             {groups.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-10 text-center text-sm text-brand-muted"><Users className="mx-auto mb-2 h-6 w-6" />{isAdmin ? "Belum ada Connect Group. Tekan Tambah CG." : "Kamu belum menjadi PIC atau pengurus Connect Group."}</td></tr>
+              <tr><td colSpan={7} className="px-3 py-10 text-center text-sm text-brand-muted"><Users className="mx-auto mb-2 h-6 w-6" />{isAdmin ? "Belum ada Komsel. Tekan Tambah CG." : "Kamu belum menjadi PIC atau pengurus Komsel."}</td></tr>
             )}
             {groups.map((g, i) => (
               <tr key={g.id} onClick={() => { setOpenId(g.id); setView("anggota"); setError(null); }} className="cursor-pointer border-t border-[#2a2d35] transition-colors hover:bg-white/5">
@@ -334,7 +334,7 @@ function CGForm({ communityId, cg, onClose, onSaved }: { communityId: string; cg
   }
 
   return (
-    <Modal title={cg ? "Ubah Connect Group" : "Tambah Connect Group"} onClose={onClose}>
+    <Modal title={cg ? "Ubah Komsel" : "Tambah Komsel"} onClose={onClose}>
       <Field label="Nama CG"><input className={input} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} /></Field>
       <Field label="Alamat"><textarea className={input} rows={2} value={v.address} onChange={(e) => setV({ ...v, address: e.target.value })} /></Field>
       <div className="grid grid-cols-2 gap-3">

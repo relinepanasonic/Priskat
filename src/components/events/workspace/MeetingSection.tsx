@@ -13,7 +13,7 @@ type Crew = { position: string | null };
 const db = () => createClient() as any;
 
 /** Meeting: schedule it for everybody, the leaders (Petinggi) or one team; push it and share it by WhatsApp. */
-export default function MeetingSection({ cohortId, campTitle, crew }: { cohortId: string; campTitle: string; crew: Crew[] }) {
+export default function MeetingSection({ cohortId, campTitle, crew, canLead }: { cohortId: string; campTitle: string; crew: Crew[]; canLead: boolean }) {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
@@ -94,12 +94,12 @@ export default function MeetingSection({ cohortId, campTitle, crew }: { cohortId
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-bold text-white">Meeting</h2>
-        <button onClick={() => setAdding((v) => !v)} className="flex items-center gap-2 rounded-lg bg-brand-gold px-4 py-2 text-sm font-bold text-brand-dark hover:opacity-90"><Plus className="h-4 w-4" /> Jadwalkan rapat</button>
+        {canLead && <button onClick={() => setAdding((v) => !v)} className="flex items-center gap-2 rounded-lg bg-brand-gold px-4 py-2 text-sm font-bold text-brand-dark hover:opacity-90"><Plus className="h-4 w-4" /> Jadwalkan rapat</button>}
       </div>
 
       {msg && <p className={`rounded-lg px-3 py-2 text-xs ${msg.ok ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>{msg.text}</p>}
 
-      {adding && (
+      {adding && canLead && (
         <section className="space-y-4 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4 md:p-5">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Judul rapat"><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mis. Rapat persiapan" className={inputCls} /></Field>
@@ -142,7 +142,7 @@ export default function MeetingSection({ cohortId, campTitle, crew }: { cohortId
               {m.mom_text && <p className="whitespace-pre-wrap rounded-xl bg-black/30 p-3.5 text-sm text-gray-300">{m.mom_text}</p>}
               <div className="flex flex-wrap gap-2">
                 <a href={`https://wa.me/?text=${encodeURIComponent(shareText(m))}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-emerald-950"><MessageCircle className="h-3.5 w-3.5" /> Bagikan ke WhatsApp</a>
-                <button disabled={busy === m.id} onClick={() => void resend(m)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/5 disabled:opacity-50"><Bell className="h-3.5 w-3.5" /> {m.notified_at ? "Kirim notifikasi lagi" : "Kirim notifikasi"}</button>
+                {canLead && <button disabled={busy === m.id} onClick={() => void resend(m)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/5 disabled:opacity-50"><Bell className="h-3.5 w-3.5" /> {m.notified_at ? "Kirim notifikasi lagi" : "Kirim notifikasi"}</button>}
                 <button onClick={() => calendar(m)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] px-3 py-2 text-xs font-semibold text-brand-light hover:bg-white/5"><CalendarPlus className="h-3.5 w-3.5" /> Kalender</button>
               </div>
             </article>

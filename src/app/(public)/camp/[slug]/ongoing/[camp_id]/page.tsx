@@ -11,7 +11,7 @@ import PesertaSection from "@/components/events/workspace/PesertaSection";
 import QrSection from "@/components/events/workspace/QrSection";
 import PromosiSection from "@/components/events/workspace/PromosiSection";
 import AboutSection from "@/components/events/workspace/AboutSection";
-import CrewSection from "@/components/events/workspace/CrewSection";
+import CrewSection, { type MyLevel } from "@/components/events/workspace/CrewSection";
 import MeetingSection from "@/components/events/workspace/MeetingSection";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
@@ -26,6 +26,11 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const [camp, setCamp] = useState<any>(null);
   const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
   const [linkedEventTitle, setLinkedEventTitle] = useState("");
+  // my level in this workspace: manager (community admin), ketua, tinggi, pic, crew
+  const [level, setLevel] = useState<MyLevel>({ role: null, division: null });
+  // Ketua, Panitia Tinggi and community admins run the event; a PIC leads a division
+  const isLead = level.role === "manager" || level.role === "ketua" || level.role === "tinggi";
+  const canLead = isLead || level.role === "pic";
   const [othersMode, setOthersMode] = useState(false);
   const [tasks, setTasks] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -72,6 +77,11 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
       // Fetch camp cohort
       const { data: cohort } = await supabase.from("camp_cohorts").select("*").eq("id", camp_id).single();
       if (cohort) setCamp(cohort);
+      const { data: lv } = await supabase.rpc("cohort_my_role" as any, { p_cohort: camp_id });
+      const mine = (lv as MyLevel | null) ?? { role: null, division: null };
+      setLevel(mine);
+      // the crew and PIC start on the committee; the event tabs are for the Ketua, Panitia Tinggi and admins
+      if (mine.role === "crew" || mine.role === "pic" || mine.role === null) setActiveTab((t) => (t === "peserta" || t === "tentang" || t === "qr" || t === "promosi" || t === "keuangan" ? "crew" : t));
 
       // an event opened from the Event page: its registration and attendance page
       const { data: ev } = await supabase.from("events").select("id, title").eq("cohort_id", camp_id).maybeSingle();
@@ -290,7 +300,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
 
       <div className="flex border-b border-[#333] bg-[#1a1d24] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {[
-          ...(linkedEventId ? [
+          ...(linkedEventId && isLead ? [
             { id: "tentang", label: "Tentang", Icon: Info },
             { id: "peserta", label: "Peserta", Icon: UserCheck },
             { id: "qr", label: "QR & Absensi", Icon: QrCode },
@@ -300,7 +310,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
           { id: "meeting", label: "Meeting", Icon: Calendar },
           { id: "todo", label: "To Do", Icon: CheckSquare },
           { id: "chat", label: "Chat", Icon: MessageSquare },
-          { id: "keuangan", label: "Keuangan", Icon: Wallet },
+          ...(isLead ? [{ id: "keuangan", label: "Keuangan", Icon: Wallet }] : []),
         ].map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -317,23 +327,23 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         {activeTab === "peserta" && linkedEventId && (
           <PesertaSection eventId={linkedEventId} eventTitle={linkedEventTitle} crew={crewMembers.map((c) => ({ id: c.id, name: c.name, position: c.position }))} canMarkPaid={canMarkPaid} />
         )}
-        {activeTab === "tentang" && linkedEventId && <AboutSection eventId={linkedEventId} />}
+        {activeTab === "tentang" && linkedEventId && <AboutSection eventId={linkedEventId} isManager={level.role === "manager"} />}
         {activeTab === "qr" && linkedEventId && <QrSection eventId={linkedEventId} />}
         {activeTab === "promosi" && linkedEventId && <PromosiSection eventId={linkedEventId} />}
 
         {activeTab === "crew" && (
-          <CrewSection cohortId={camp_id} camp={camp} crew={crewMembers} onChanged={() => fetchCrew(createClient())} />
+          <CrewSection cohortId={camp_id} eventId={linkedEventId} camp={camp} crew={crewMembers} level={level} onChanged={() => fetchCrew(createClient())} />
         )}
 
-        {activeTab === "keuangan" && <CampFinance cohortId={camp_id} />}
+        {activeTab === "keuangan" && isLead && <CampFinance cohortId={camp_id} />}
 
         {activeTab === "todo" && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold text-white">Tasks & Deadlines</h2>
-              <button onClick={() => setIsAddingTask(!isAddingTask)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
+              {canLead && <button onClick={() => setIsAddingTask(!isAddingTask)} className="bg-brand-gold text-brand-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
                 <Plus className="w-4 h-4" /> Add Task
-              </button>
+              </button>}
             </div>
 
             {isAddingTask && (
@@ -387,7 +397,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         )}
 
         {activeTab === "meeting" && (
-          <MeetingSection cohortId={camp_id} campTitle={camp?.custom_name || camp?.camp_name || ""} crew={crewMembers} />
+          <MeetingSection cohortId={camp_id} campTitle={camp?.custom_name || camp?.camp_name || ""} crew={crewMembers} canLead={canLead} />
         )}
 
         {activeTab === "chat" && (

@@ -15,15 +15,15 @@ import { formatDate } from "@/lib/utils";
 const db = () => createClient() as any;
 
 /** Tentang Event: three boxes that open and close. Tentang Event, Pengaturan Pendaftaran, and Buka / Tutup Pendaftaran. */
-export default function AboutSection({ eventId }: { eventId: string }) {
+export default function AboutSection({ eventId, isManager = false }: { eventId: string; isManager?: boolean }) {
   const { event, settings, loading, reload } = useEventData(eventId);
   if (loading) return <p className="py-10 text-center text-sm text-gray-500">Memuat...</p>;
   if (!event) return <p className="py-10 text-center text-sm text-gray-500">Event tidak ditemukan.</p>;
   // the form starts from what is saved; it is mounted again after every save so it always shows the saved values
-  return <AboutForm key={event.title + event.event_date + (event.end_date ?? "")} event={event} eventId={eventId} settings={settings} reload={reload} />;
+  return <AboutForm key={event.title + event.event_date + (event.end_date ?? "")} event={event} eventId={eventId} settings={settings} reload={reload} isManager={isManager} />;
 }
 
-function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent; eventId: string; settings: ReturnType<typeof useEventData>["settings"]; reload: () => Promise<void> }) {
+function AboutForm({ event, eventId, settings, reload, isManager }: { event: WorkspaceEvent; eventId: string; settings: ReturnType<typeof useEventData>["settings"]; reload: () => Promise<void>; isManager: boolean }) {
   const [title, setTitle] = useState(event.title);
   const [tagline, setTagline] = useState(event.tagline ?? "");
   const [target, setTarget] = useState(event.capacity != null ? String(event.capacity) : "");
@@ -37,6 +37,7 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
   const [openTentang, setOpenTentang] = useState(true);
   const [openSettings, setOpenSettings] = useState(false);
   const [openDaftar, setOpenDaftar] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const isOpen = settings?.open ?? false;
   // the invitation text: the saved one, or ours, filled in with this event
@@ -62,6 +63,16 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
     setBusy(false);
     if (error) { setMsg({ ok: false, text: `Belum bisa menyimpan: ${error.message}` }); return; }
     setMsg({ ok: true, text: "Tersimpan." });
+    await reload();
+  }
+
+  // closing the event ends the Ketua level and the other event powers; only a community admin does this
+  async function setClosed(closed: boolean) {
+    if (closed && !confirm("Tutup event ini? Level Ketua, Panitia Tinggi, dan PIC berakhir; mereka kembali ke level di komunitas.")) return;
+    setClosing(true); setMsg(null);
+    const { error } = await db().rpc("close_event", { p_event: eventId, p_closed: closed });
+    setClosing(false);
+    if (error) { setMsg({ ok: false, text: error.message }); return; }
     await reload();
   }
 
@@ -115,6 +126,16 @@ function AboutForm({ event, eventId, settings, reload }: { event: WorkspaceEvent
       <Collapse title="Pengaturan Pendaftaran" subtitle="Biaya, rekening, batas tanggal, dan pertanyaan di formulir" open={openSettings} onToggle={() => setOpenSettings((v) => !v)}>
         <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />
       </Collapse>
+
+      {isManager && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-white">{event.closed_at ? "Event sudah ditutup" : "Event berjalan"}</p>
+            <p className="text-xs text-brand-muted">{event.closed_at ? "Level Ketua, Panitia Tinggi, dan PIC sudah berakhir." : "Ditutup otomatis 7 hari setelah event selesai, atau tutup sekarang."}</p>
+          </div>
+          <button onClick={() => void setClosed(!event.closed_at)} disabled={closing} className="rounded-xl border border-[#333] px-4 py-2.5 text-sm font-semibold text-brand-light hover:bg-white/5 disabled:opacity-60">{closing ? "Menyimpan..." : event.closed_at ? "Buka lagi" : "Tutup event"}</button>
+        </div>
+      )}
 
       {/* 3. Open and close the registration */}
       <Collapse title={isOpen ? "Pendaftaran dibuka" : "Pendaftaran ditutup"} subtitle={isOpen ? "Orang bisa mendaftar lewat Link Peserta" : "Buka pendaftaran supaya Link Peserta bisa dipakai"} open={openDaftar} onToggle={() => setOpenDaftar((v) => !v)}>

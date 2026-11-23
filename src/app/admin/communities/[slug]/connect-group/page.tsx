@@ -5,7 +5,7 @@ import ConnectGroupsClient from "@/components/community/ConnectGroupsClient";
 
 export const dynamic = "force-dynamic";
 
-/** Community Center → Connect Group. The layout above already limits this to community admins. */
+/** Community Center → Komsel. The layout above already limits this to community admins. */
 export default async function ConnectGroupAdminPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();

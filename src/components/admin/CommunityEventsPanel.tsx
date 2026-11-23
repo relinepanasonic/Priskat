@@ -15,6 +15,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Link from "next/link";
 import { CAMP_SERIES, EVENT_KINDS, isCampSeries } from "@/lib/campTypes";
+import UserPicker, { type PickedUser } from "@/components/events/workspace/UserPicker";
 import { Tent } from "lucide-react";
 import { LinkPesertaButton, getCampRegisterLink, getRegisterLink } from "@/components/events/workspace/LinkPeserta";
 import { createClient } from "@/lib/supabase/client";
@@ -112,6 +113,8 @@ export default function CommunityEventsPanel({
   const [typed, setTyped] = useState("");
   const [saveIt, setSaveIt] = useState(true);
   const [edition, setEdition] = useState("");
+  // every event gets one Ketua when an admin makes it
+  const [ketua, setKetua] = useState<PickedUser | null>(null);
   const campNamed = isCfm && eventType === "Camp" && campName !== "Other";
   const finalTitle = isCfm
     ? (campNamed ? `${campName}${angkatan.trim() ? " " + angkatan.trim() : ""}` : title.trim())
@@ -134,6 +137,7 @@ export default function CommunityEventsPanel({
     setTyped("");
     setSaveIt(true);
     setEdition("");
+    setKetua(null);
     setDescription("");
     setEventDate("");
     setEndDate("");
@@ -203,6 +207,7 @@ export default function CommunityEventsPanel({
       setError("Isi judul, deskripsi (minimal 10 huruf), waktu, dan lokasi.");
       return;
     }
+    if (!ketua) { setError("Pilih Ketua event dulu. Setiap event harus punya satu Ketua."); return; }
     const fd = new FormData();
     fd.append("title", finalTitle);
     fd.append("description", description.trim());
@@ -226,6 +231,12 @@ export default function CommunityEventsPanel({
             "Could not save."
         );
         return;
+      }
+      // the Ketua leads the event while it runs
+      const newId = (res as { eventId?: string | null })?.eventId;
+      if (newId && ketua) {
+        const { error: kErr } = await (createClient() as any).rpc("assign_event_ketua", { p_event: newId, p_user: ketua.id });
+        if (kErr) { setError(`Event dibuat, tapi Ketua belum terpasang: ${kErr.message}. Buka event, tab Panitia, lalu tambahkan Ketua.`); router.refresh(); return; }
       }
       if (!isCfm && communityId && !picked && typed.trim().length >= 3 && saveIt) {
         await (createClient() as any).from("community_event_names").insert({ community_id: communityId, name: typed.trim() });
@@ -354,6 +365,12 @@ export default function CommunityEventsPanel({
             <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="input-3d w-full text-sm">
               {EVENT_KINDS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-brand-light">Ketua event (wajib)</label>
+            <UserPicker value={ketua} onChange={setKetua} placeholder="Cari nama anggota yang akan jadi Ketua" />
+            <p className="mt-1 text-[11px] text-brand-muted">Ketua mengurus Tentang event dan panitianya selama event berjalan. Setelah event ditutup, ia kembali ke levelnya di komunitas.</p>
           </div>
 
           {isCfm && eventType === "Camp" && (

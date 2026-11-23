@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendPush } from "@/lib/push";
 
 /**
- * "See you at CG!": one hour before a Connect Group meets, everyone in the group who has the app gets a
+ * "See you at CG!": one hour before a Komsel meets, everyone in the group who has the app gets a
  * friendly invitation. Called by the 15-minute reminder job. Event times are Jakarta time (WIB).
  */
 const WIB = 7 * 3600_000;
@@ -10,7 +10,7 @@ const WIB = 7 * 3600_000;
 const TEMPLATES: ((cg: string, time: string) => { title: string; body: string })[] = [
   (cg, time) => ({ title: "Sebentar lagi kita kumpul! 🎉", body: `${cg} mulai jam ${time}, tinggal 1 jam lagi. Yuk datang, kami menunggu senyummu! 😄` }),
   (cg, time) => ({ title: "Siap seru-seruan bareng? 🤗", body: `${cg} jam ${time}. Ada saudara seiman yang kangen ngobrol denganmu, jangan sampai ketinggalan ya!` }),
-  (cg, time) => ({ title: "1 jam lagi Connect Group! ✨", body: `${cg} dimulai jam ${time}. Bawa semangat dan hati yang gembira, kita bertumbuh bersama! 🙌` }),
+  (cg, time) => ({ title: "1 jam lagi Komsel! ✨", body: `${cg} dimulai jam ${time}. Bawa semangat dan hati yang gembira, kita bertumbuh bersama! 🙌` }),
   (cg, time) => ({ title: "Waktunya berkumpul! 🥳", body: `${cg} jam ${time}. Tuhan sudah menyiapkan sukacita buat kita, sampai ketemu sebentar lagi! 💛` }),
 ];
 
@@ -45,7 +45,7 @@ export async function sendCgInvites(db: SupabaseClient): Promise<number> {
   const people = [...new Set(due.flatMap((g) => g.members.map((m) => m.user_id).filter((x): x is string => !!x)))];
   if (people.length === 0) return 0;
 
-  // Respect a person's switch ("Ajakan Connect Group"); nobody who never chose is skipped
+  // Respect a person's switch ("Ajakan Komsel"); nobody who never chose is skipped
   const [{ data: prefs }, { data: tokens }] = await Promise.all([
     db.from("prayer_reminders").select("user_id, slots").in("user_id", people),
     db.from("push_tokens").select("token, user_id").in("user_id", people),
