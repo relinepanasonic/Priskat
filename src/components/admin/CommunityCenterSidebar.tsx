@@ -73,7 +73,7 @@ export default function CommunityCenterSidebar({
           </Link>
         )}
         {canManageAll && (
-          <Link href="/admin/communities" className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white/5 px-3.5 py-2 text-sm font-semibold text-gray-300">
+          <Link href="/admin/communities/kelola-komunitas" className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white/5 px-3.5 py-2 text-sm font-semibold text-gray-300">
             <Settings2 className="h-4 w-4" /> Kelola
           </Link>
         )}
@@ -154,7 +154,7 @@ export default function CommunityCenterSidebar({
         {!current && communities.length > 0 && <p className="px-2 text-xs leading-relaxed text-brand-muted">Pilih komunitas di atas untuk membuka Community Center-nya.</p>}
 
         {canManageAll && (
-          <Link href="/admin/communities" className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${pathname === "/admin/communities" ? "bg-white/10 text-brand-gold" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}>
+          <Link href="/admin/communities/kelola-komunitas" className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${pathname === "/admin/communities/kelola-komunitas" ? "bg-white/10 text-brand-gold" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}>
             <Settings2 className="h-4 w-4" /> Kelola komunitas dan admin
           </Link>
         )}
