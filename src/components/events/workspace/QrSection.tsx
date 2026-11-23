@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileSpreadsheet, FileText, Image as ImageIcon, Printer, ScanLine, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ScanTab } from "@/components/events/EventRegAdmin";
-import { TICKET_GRADIENTS, TICKET_TEMPLATES, gradientOf, sizeOf, templateOf, type TicketSize } from "@/lib/eventTicket";
+import { TICKET_GRADIENTS, TICKET_TEMPLATES, gradientOf, sizeOf, templateOf, type TicketSize } from "@/lib/ticketDesign";
 import { useEventData } from "./useEventData";
 
 const db = () => createClient() as any;
