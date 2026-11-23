@@ -57,7 +57,7 @@ export default async function CommunityMembersPage({ params }: { params: Promise
   const members = (data as any[]).filter((m) => !botSet.has(m.id));
 
   return (
-    <div className="md:p-6">
+    <div className="p-4 md:p-6">
       <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
           <h2 className="text-lg font-bold text-white">Anggota</h2>

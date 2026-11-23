@@ -36,19 +36,25 @@ export default async function CommunityHubLayout({
   const sidebar = (await isCommunityCenterHost()) || !globalAdmin;
   const publicSlug = community.slug || community.id;
 
+  // The Community Center has its own top bar / sidebar with the community and its pages: nothing is repeated here,
+  // and the pages bring their own padding
+  if (sidebar) {
+    return (
+      <div className="-m-4 md:m-0">
+        <div className="overflow-hidden md:rounded-2xl md:border md:border-[#333] md:bg-[#1a1d24]">{children}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          {!sidebar && (
-            <>
-              <Link href="/admin/communities" className="flex items-center gap-1 text-sm text-brand-muted transition-colors hover:text-white">
-                <ChevronLeft className="h-4 w-4" />
-                Semua komunitas
-              </Link>
-              <span className="text-[#333]">|</span>
-            </>
-          )}
+          <Link href="/admin/communities" className="flex items-center gap-1 text-sm text-brand-muted transition-colors hover:text-white">
+            <ChevronLeft className="h-4 w-4" />
+            Semua komunitas
+          </Link>
+          <span className="text-[#333]">|</span>
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-brand-muted">Community Center</p>
             <h1 className="text-xl font-bold text-white">{community.name}</h1>
@@ -62,7 +68,7 @@ export default async function CommunityHubLayout({
         </Link>
       </div>
 
-      <div className={sidebar ? "md:hidden" : ""}>
+      <div>
         <CommunityHubTabs slug={publicSlug} name={community.name} />
       </div>
 

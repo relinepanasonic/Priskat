@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronsUpDown, ExternalLink, LogOut, Settings2, Tent } from "lucide-react";
+import { Check, ChevronsUpDown, LogOut, Settings2, Tent } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { communityNav } from "@/lib/communityNav";
 
@@ -21,6 +21,7 @@ export default function CommunityCenterSidebar({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const tabs = useRef<HTMLElement>(null);
   const m = pathname.match(/^\/admin\/communities\/([^/]+)/);
   const current = m ? communities.find((c) => (c.slug || c.id) === m[1]) ?? null : null;
   const nav = current ? communityNav(`/admin/communities/${current.slug || current.id}`, current) : [];
@@ -33,6 +34,8 @@ export default function CommunityCenterSidebar({
     return () => document.removeEventListener("mousedown", away);
   }, [open]);
   useEffect(() => setOpen(false), [pathname]);
+  // phone: keep the open page's tab in view
+  useEffect(() => { tabs.current?.querySelector<HTMLElement>("[aria-current]")?.scrollIntoView({ inline: "center", block: "nearest" }); }, [pathname]);
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -44,40 +47,39 @@ export default function CommunityCenterSidebar({
     <>
     {/* Phone: the community switcher and the pages as a row of tabs (the sidebar below is for tablets and computers) */}
     <div className="sticky top-0 z-30 border-b border-[#333] bg-[#1a1d24] md:hidden">
-      <div className="flex items-center gap-2 px-3 pt-3">
-        <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" />
+      <div className="flex items-center gap-3 px-4 pt-3">
+        <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl" />
         <select
           value={current ? current.slug || current.id : ""}
           onChange={(e) => e.target.value && router.push(`/admin/communities/${e.target.value}/dashboard`)}
           aria-label="Pilih komunitas"
-          className="min-w-0 flex-1 truncate rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3 py-2.5 text-sm font-semibold text-white focus:outline-none"
+          className="h-11 min-w-0 flex-1 truncate rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3 text-sm font-semibold text-white focus:outline-none"
         >
           <option value="" disabled>Pilih komunitas</option>
           {communities.map((c) => <option key={c.id} value={c.slug || c.id}>{c.name}</option>)}
         </select>
-        <button onClick={signOut} aria-label="Keluar" className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white"><LogOut className="h-5 w-5" /></button>
+        <button onClick={signOut} aria-label="Keluar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white"><LogOut className="h-5 w-5" /></button>
       </div>
-      <nav className="flex gap-1.5 overflow-x-auto px-3 py-2.5" aria-label="Halaman Community Center">
+      <nav
+        ref={tabs}
+        aria-label="Halaman Community Center"
+        className="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]"
+      >
         {current && nav.map((t) => {
           const on = pathname.startsWith(t.href);
           return (
             <Link key={t.href} href={t.href} aria-current={on ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold ${on ? "bg-brand-gold text-brand-dark" : "bg-white/5 text-gray-300"}`}>
+              className={`flex h-10 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${on ? "bg-brand-gold text-brand-dark" : "bg-white/5 text-gray-300"}`}>
               <t.icon className="h-4 w-4" /> {t.name}
             </Link>
           );
         })}
-        {current && (
-          <Link href={`/camp/${current.slug || current.id}`} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-gold/30 px-3.5 py-2 text-sm font-semibold text-brand-gold">
-            <ExternalLink className="h-4 w-4" /> Halaman komunitas
-          </Link>
-        )}
         {canManageAll && (
-          <Link href="/admin/communities/kelola-komunitas" className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white/5 px-3.5 py-2 text-sm font-semibold text-gray-300">
+          <Link href="/admin/communities/kelola-komunitas" className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/5 px-4 pr-7 text-sm font-semibold text-gray-300">
             <Settings2 className="h-4 w-4" /> Kelola
           </Link>
         )}
-        {!current && communities.length > 0 && <span className="px-1 py-2 text-xs text-brand-muted">Pilih komunitas di atas.</span>}
+        {!current && communities.length > 0 && <span className="py-2 text-xs text-brand-muted">Pilih komunitas di atas.</span>}
       </nav>
     </div>
 
@@ -145,9 +147,6 @@ export default function CommunityCenterSidebar({
                 );
               })}
             </nav>
-            <Link href={`/camp/${current.slug || current.id}`} className="mt-3 flex items-center gap-2 rounded-lg border border-brand-gold/30 px-3 py-2 text-xs font-semibold text-brand-gold hover:bg-brand-gold/10">
-              <ExternalLink className="h-3.5 w-3.5" /> Halaman komunitas
-            </Link>
           </div>
         )}
 
