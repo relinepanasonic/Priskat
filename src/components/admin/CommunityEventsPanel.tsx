@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import AddCampModal from "@/components/camp/AddCampModal";
+import Link from "next/link";
+import { CAMP_EVENT_TYPES, isCampSeries } from "@/lib/campTypes";
+import { Tent } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage, storagePath } from "@/lib/upload";
 import { promoteEvent, deleteEvent } from "@/app/actions/events";
@@ -31,6 +35,18 @@ type EventRow = {
   banner_image_url: string | null;
   status: string;
   created_at: string;
+  event_type?: string | null;
+};
+
+/** A camp (camp_cohorts) that has no event of its own; shown in the same list. */
+export type CampCard = {
+  id: string;
+  branch: string | null;
+  camp_name: string | null;
+  angkatan: string | null;
+  custom_name: string | null;
+  start_date: string | null;
+  banner_url: string | null;
 };
 
 const fmt = (iso: string) => formatDateTime(iso);
@@ -42,13 +58,19 @@ const POSTER_H = 1350; // 4:5
 export default function CommunityEventsPanel({
   initialEvents,
   communityId = null,
+  camps,
 }: {
   initialEvents: EventRow[];
   communityId?: string | null;
+  /** Camp Directory communities: camps are listed with the events, in one list */
+  camps?: CampCard[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const [opening, setOpening] = useState<string | null>(null);
+  const [addCampOpen, setAddCampOpen] = useState(false);
+  const m0 = pathname.match(/^\/(admin\/communities|camp)\/([^/]+)\//);
+  const campBase = m0?.[1] === "camp" ? `/camp/${m0[2]}/ongoing` : `/admin/communities/${m0?.[2] ?? ""}/promotion/workspace`;
 
   // Open the event's workspace (made the first time): crew, to do, meetings, chat and Keuangan
   async function openWorkspace(eventId: string) {
@@ -76,6 +98,7 @@ export default function CommunityEventsPanel({
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [pushNews, setPushNews] = useState(true);
+  const [eventType, setEventType] = useState("Event");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -161,6 +184,7 @@ export default function CommunityEventsPanel({
     if (mapsUrl.trim()) fd.append("maps_url", mapsUrl.trim());
     if (banner) fd.append("banner_image_url", banner);
     if (pushNews) fd.append("push_to_news", "on");
+    fd.append("event_type", eventType);
 
     startTransition(async () => {
       const res = await promoteEvent(fd);
@@ -194,83 +218,95 @@ export default function CommunityEventsPanel({
         <p className="text-sm text-brand-muted">
           Buat event komunitas. Pendaftaran dan absensi diatur dari kartu event; promosi (poster) adalah bagian dari event.
         </p>
-        <Button
-          onClick={() => {
-            reset();
-            setOpen(true);
-          }}
-          className="flex items-center gap-2"
-        >
-          <CalendarDays className="h-4 w-4" /> Buat event
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          {camps && (
+            <button type="button" onClick={() => setAddCampOpen(true)}
+              className="flex items-center gap-2 rounded-lg border border-brand-gold/40 px-3 py-2 text-sm font-semibold text-brand-gold hover:bg-brand-gold/10">
+              <Tent className="h-4 w-4" /> Tambah camp
+            </button>
+          )}
+          <Button
+            onClick={() => {
+              reset();
+              setOpen(true);
+            }}
+            className="flex items-center gap-2"
+          >
+            <CalendarDays className="h-4 w-4" /> Buat event
+          </Button>
+        </div>
       </div>
 
-      {initialEvents.length === 0 ? (
+      {initialEvents.length === 0 && (camps?.length ?? 0) === 0 ? (
         <div className="rounded-xl border border-[#333] bg-[#15181e] p-10 text-center text-sm text-gray-500">
           Belum ada event. Tekan <span className="text-brand-gold">Buat event</span> untuk membuatnya.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {initialEvents.map((ev) => (
-            <div
-              key={ev.id}
-              className="card-3d relative flex gap-4 p-4"
-            >
-              <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-[#15181e]">
+            <div key={ev.id} className="flex aspect-[4/5] flex-col overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
+              <div className="relative min-h-0 flex-1 bg-[#15181e]">
                 {ev.banner_image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={ev.banner_image_url}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={ev.banner_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-gray-600">
-                    <CalendarDays className="h-6 w-6" />
+                    <CalendarDays className="h-8 w-8" />
                   </div>
                 )}
+                <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
+                  {ev.event_type || "Event"}
+                </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="truncate font-bold text-white">{ev.title}</h3>
-                  <button
-                    onClick={() => remove(ev.id)}
-                    className="p-1 text-gray-500 hover:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
+              <div className="shrink-0 space-y-2 p-3">
+                <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-white">{ev.title}</h3>
+                <p className="truncate text-[11px] text-brand-muted">{fmt(ev.event_date)}</p>
+                <div className="flex gap-1.5">
+                  <a href={`/acara/${ev.id}`} className="flex flex-1 items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">Daftar</a>
+                  <button onClick={() => openWorkspace(ev.id)} disabled={opening === ev.id}
+                    aria-label="Tim, tugas, dan keuangan" title="Tim, tugas, dan keuangan"
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-brand-gold/40 px-2 py-2 text-[11px] font-bold text-brand-gold disabled:opacity-50">
+                    <Users className="h-3.5 w-3.5" /> {opening === ev.id ? "..." : "Tim"}
+                  </button>
+                  <button onClick={() => remove(ev.id)} aria-label="Hapus" className="flex shrink-0 items-center justify-center rounded-lg px-2 text-gray-500 hover:text-red-400">
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-brand-muted">
-                  <CalendarDays className="h-3.5 w-3.5" /> {fmt(ev.event_date)}
-                </p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-brand-muted">
-                  <MapPin className="h-3.5 w-3.5" />
-                  <span className="truncate">{ev.location}</span>
-                  {ev.maps_url && (
-                    <a
-                      href={ev.maps_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-brand-gold hover:underline"
-                    >
-                      map
-                    </a>
-                  )}
-                </p>
-                <span className="mt-2 inline-block rounded-full bg-brand-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-gold">
-                  {ev.status}
-                </span>
-                <a href={`/acara/${ev.id}`} className="mt-2 flex items-center justify-center rounded-lg bg-brand-gold px-3 py-2 text-xs font-bold text-brand-dark">
-                  Pendaftaran, peserta, dan absensi
-                </a>
-                <button onClick={() => openWorkspace(ev.id)} disabled={opening === ev.id}
-                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-gold/40 px-3 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50">
-                  <Users className="h-3.5 w-3.5" /> {opening === ev.id ? "Membuka..." : "Tim, tugas, dan keuangan"}
-                </button>
               </div>
             </div>
           ))}
+          {(camps ?? []).map((c) => {
+            const series = isCampSeries(c.camp_name);
+            return (
+              <div key={c.id} className="flex aspect-[4/5] flex-col overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
+                <div className="relative min-h-0 flex-1 bg-[#15181e]">
+                  {c.banner_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.banner_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-gray-600">
+                      <Tent className="h-8 w-8" />
+                    </div>
+                  )}
+                  <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
+                    {c.camp_name || "Camp"}
+                  </span>
+                </div>
+                <div className="shrink-0 space-y-2 p-3">
+                  <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-white">{c.custom_name || c.camp_name}</h3>
+                  <p className="truncate text-[11px] text-brand-muted">{series ? `Angkatan ${c.angkatan}` : c.branch}{c.start_date ? ` · ${fmt(c.start_date)}` : ""}</p>
+                  <Link href={`${campBase}/${c.id}`} className="flex items-center justify-center rounded-lg bg-brand-gold px-2 py-2 text-[11px] font-bold text-brand-dark">
+                    Buka tim dan keuangan
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      )}
+
+      {camps && (
+        <AddCampModal isOpen={addCampOpen} onClose={() => setAddCampOpen(false)} onSuccess={() => router.refresh()} communityId={communityId} />
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="Buat event">
@@ -278,6 +314,14 @@ export default function CommunityEventsPanel({
           onSubmit={submit}
           className="max-h-[72vh] space-y-4 overflow-y-auto pr-2"
         >
+          <div>
+            <label className="mb-1 block text-sm text-brand-light">Tipe</label>
+            <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="input-3d w-full text-sm">
+              <option value="Event">Event</option>
+              {CAMP_EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
           <div>
             <label className="mb-1 block text-sm text-brand-light">Nama event</label>
             <input

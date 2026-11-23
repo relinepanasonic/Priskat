@@ -90,6 +90,7 @@ const promoSchema = z.object({
   maps_url: z.string().url().optional().or(z.literal("")),
   banner_image_url: z.string().optional(),
   push_to_news: z.string().optional(), // checkbox -> "on" | undefined
+  event_type: z.string().max(60).optional(),
 });
 
 export async function promoteEvent(formData: FormData) {
@@ -116,6 +117,7 @@ export async function promoteEvent(formData: FormData) {
       community_id: d.community_id || null,
       maps_url: d.maps_url || null,
       banner_image_url: d.banner_image_url || null,
+      event_type: d.event_type?.trim() || "Event",
       status: "published",
     })
     .select("id")

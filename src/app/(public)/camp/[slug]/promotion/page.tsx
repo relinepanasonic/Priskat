@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import CommunityEventsPanel from "@/components/admin/CommunityEventsPanel";
+import CommunityEventsPanel, { type CampCard } from "@/components/admin/CommunityEventsPanel";
 import { resolveCommunity } from "@/lib/community";
 import { formatDate } from "@/lib/utils";
-import CampDirectory from "@/components/camp/CampDirectory";
+import { isCatholicFamilyMinistry } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +39,24 @@ export default async function CampPromotionPage({
   const { data: events } = await supabase
     .from("events")
     .select(
-      "id, title, description, event_date, end_date, location, maps_url, banner_image_url, status, created_at"
+      "id, title, description, event_date, end_date, location, maps_url, banner_image_url, status, created_at, cohort_id, event_type"
     )
     .eq("community_id", community.id)
     .order("event_date", { ascending: false })
     .limit(50);
+
+  // Catholic Family Ministry: camps and events are one list; camps without an event are listed too
+  const cfm = isCatholicFamilyMinistry(community.name, community.slug);
+  let camps: CampCard[] | undefined;
+  if (cfm) {
+    const { data: cohorts } = await supabase
+      .from("camp_cohorts")
+      .select("id, branch, camp_name, angkatan, custom_name, start_date, banner_url")
+      .eq("community_id", community.id)
+      .order("created_at", { ascending: false });
+    const linked = new Set(((events as any[]) ?? []).map((e) => e.cohort_id).filter(Boolean));
+    camps = ((cohorts as CampCard[]) ?? []).filter((c) => !linked.has(c.id));
+  }
 
   if (!canPromote) {
     const list = (events as any[]) ?? [];
@@ -78,12 +91,10 @@ export default async function CampPromotionPage({
     <div className="p-4 md:p-6">
       <h2 className="mb-4 text-lg font-bold text-white">Event</h2>
       <CommunityEventsPanel
-        initialEvents={events || []}
+        initialEvents={(events as any) || []}
         communityId={community?.id ?? null}
+        camps={camps}
       />
-      <div className="mt-10 border-t border-[#2a2d35] pt-6">
-        <CampDirectory embedded />
-      </div>
     </div>
   );
 }
