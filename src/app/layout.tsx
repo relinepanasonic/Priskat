@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
+import UpNavigation from "@/components/native/UpNavigation";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ruangiman.app"),
@@ -51,6 +52,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen bg-brand-cream antialiased">
         <SupabaseProvider session={session}>
+          <UpNavigation />
           {children}
         </SupabaseProvider>
       </body>

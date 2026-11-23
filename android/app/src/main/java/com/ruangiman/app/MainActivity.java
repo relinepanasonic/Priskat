@@ -11,6 +11,8 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
+import androidx.activity.OnBackPressedCallback;
+
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
 
@@ -28,6 +30,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         createChatChannel();
+        handleBackAsUp();
 
         // No internet: show our own "Tidak ada koneksi" screen with a retry button
         // instead of Android's grey "Webpage not available" page
@@ -36,6 +39,29 @@ public class MainActivity extends BridgeActivity {
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 super.onReceivedError(view, request, error);
                 if (request.isForMainFrame()) showOffline(view, request.getUrl().toString());
+            }
+        });
+    }
+
+    /**
+     * The phone's Back button climbs ONE step up the page ladder (Beranda > section > page > sub page) instead of
+     * leaving the app or walking through the browser history, which can go in circles. The web page decides:
+     * window.__ruangUp() answers "up" when it moved up (or asked to press once more) and "exit" on Beranda.
+     */
+    private void handleBackAsUp() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                final WebView view = bridge != null ? bridge.getWebView() : null;
+                if (view == null) { moveTaskToBack(true); return; }
+                view.evaluateJavascript(
+                    "(function(){try{return window.__ruangUp?window.__ruangUp():'exit'}catch(e){return 'exit'}})()",
+                    value -> {
+                        // the answer arrives as a JSON string: "up" or "exit"
+                        if (value != null && value.contains("up")) return;
+                        moveTaskToBack(true);
+                    }
+                );
             }
         });
     }

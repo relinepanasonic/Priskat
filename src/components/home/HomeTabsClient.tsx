@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { registerUp } from "@/components/native/UpNavigation";
 import HomeStreak from "./HomeStreak";
 import { BibleChallengeCard } from "@/components/game/BibleChallenge";
 import { NameText } from "@/components/game/Cosmetics";
@@ -36,6 +37,11 @@ export default function HomeTabsClient({
   useEffect(() => {
     try { if (new URLSearchParams(window.location.search).get("tab") === "service") setActiveTab("Service"); } catch { /* ignore */ }
   }, []);
+
+  // the phone's Back button: from another tab of Beranda it returns to the first tab before anything else
+  const tabRef = useRef(activeTab);
+  useEffect(() => { tabRef.current = activeTab; }, [activeTab]);
+  useEffect(() => registerUp(() => { if (tabRef.current !== "Thought") { setActiveTab("Thought"); return true; } return false; }), []);
 
   const angkatan = profile.angkatan || "-";
   const city = profile.kota || "-";
