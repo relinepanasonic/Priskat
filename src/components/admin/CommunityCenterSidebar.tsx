@@ -62,7 +62,7 @@ export default function CommunityCenterSidebar({
         <button onClick={signOut} aria-label="Keluar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white"><LogOut className="h-5 w-5" /></button>
       </div>
       {/* inside one event the community's pages are hidden: the event has its own tabs and a Kembali button */}
-      {!inWorkspace && (
+      {!inWorkspace && current && (
         <nav
           ref={tabs}
           aria-label="Halaman Community Center"
@@ -77,12 +77,6 @@ export default function CommunityCenterSidebar({
               </Link>
             );
           })}
-          {canManageAll && (
-            <Link href="/admin/communities/kelola-komunitas" className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/5 px-4 pr-7 text-sm font-semibold text-gray-300">
-              <Settings2 className="h-4 w-4" /> Add Community
-            </Link>
-          )}
-          {!current && communities.length > 0 && <span className="py-2 text-xs text-brand-muted">Pilih komunitas di atas.</span>}
         </nav>
       )}
     </div>
