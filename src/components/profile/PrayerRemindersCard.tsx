@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Smartphone, Volume2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AUTO_KEYS, CHOOSABLE_SLOTS, DEFAULT_SLOTS } from "@/lib/reminders";
 
@@ -15,13 +15,20 @@ export const PUSH_CONSENT_KEY = "push-consent";
 export default function PrayerRemindersCard({ userId, onSaved }: { userId: string; onSaved?: () => void }) {
   const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS);
   const [loaded, setLoaded] = useState(false);
+  // how the two kinds of notification announce themselves: with the tone, or only vibrate
+  const [prayerMode, setPrayerMode] = useState<"sound" | "vibrate">("sound");
+  const [chatMode, setChatMode] = useState<"sound" | "vibrate">("sound");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const { data } = await createClient().from("prayer_reminders" as any).select("slots").eq("user_id", userId).maybeSingle();
+      const supabase = createClient();
+      let { data, error } = await supabase.from("prayer_reminders" as any).select("slots, prayer_mode, chat_mode").eq("user_id", userId).maybeSingle();
+      if (error) ({ data } = await supabase.from("prayer_reminders" as any).select("slots").eq("user_id", userId).maybeSingle()); // before 137_notification_sound_mode.sql
       if (data && (data as any).slots) setSlots((data as any).slots);
+      if ((data as any)?.prayer_mode === "vibrate") setPrayerMode("vibrate");
+      if ((data as any)?.chat_mode === "vibrate") setChatMode("vibrate");
       setLoaded(true);
     })();
   }, [userId]);
@@ -32,13 +39,15 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
     setSaving(true);
     setMsg(null);
     const supabase = createClient();
-    const { error } = await supabase.from("prayer_reminders" as any).upsert({
+    const row = {
       user_id: userId,
       // the automatic notifications (weekly result, streak, chat ...) are always included
       slots: [...new Set([...slots.filter((k) => !AUTO_KEYS.includes(k)), ...AUTO_KEYS])],
       tz_offset: -new Date().getTimezoneOffset(),
       updated_at: new Date().toISOString(),
-    });
+    };
+    let { error } = await supabase.from("prayer_reminders" as any).upsert({ ...row, prayer_mode: prayerMode, chat_mode: chatMode });
+    if (error) ({ error } = await supabase.from("prayer_reminders" as any).upsert(row)); // the choice of sound or vibrate needs 137_notification_sound_mode.sql
     if (error) { setSaving(false); setMsg("Belum bisa menyimpan. Coba lagi sebentar lagi."); return; }
 
     // Ask for notification permission (Android app). Old app versions without the plugin just keep the choice.
@@ -110,6 +119,13 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
         );
       })}
 
+      <div className="space-y-2.5 rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3.5">
+        <p className="text-sm font-semibold text-white">Bunyi notifikasi</p>
+        <ModeRow label="Pengingat doa" hint="Lonceng gereja" mode={prayerMode} onMode={setPrayerMode} tone="/sounds/church-bell.mp3" />
+        <ModeRow label="Pesan dan teman" hint="Nada pesan" mode={chatMode} onMode={setChatMode} tone="/sounds/chat.mp3" />
+        <p className="text-[11px] leading-relaxed text-brand-muted">Kabar otomatis lain (hasil mingguan, apimu, Santo hari ini, dan sebagainya) berbunyi dengan nada Ruang Iman, atau getar atau senyap, sesuai pengaturan HP-mu.</p>
+      </div>
+
       <button
         type="button"
         onClick={save}
@@ -127,6 +143,24 @@ export default function PrayerRemindersCard({ userId, onSaved }: { userId: strin
         Tidak aktifkan
       </button>
       {msg && <p className="rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-brand-light">{msg}</p>}
+    </div>
+  );
+}
+
+/** Two buttons: with the tone, or only vibrate. The speaker button also plays the tone once. */
+function ModeRow({ label, hint, mode, onMode, tone }: { label: string; hint: string; mode: "sound" | "vibrate"; onMode: (m: "sound" | "vibrate") => void; tone: string }) {
+  const play = () => { try { void new Audio(tone).play(); } catch { /* ignore */ } };
+  const btn = (on: boolean) => `flex h-10 w-12 items-center justify-center rounded-xl border transition ${on ? "border-brand-gold bg-brand-gold text-brand-dark" : "border-[#444] text-gray-300 hover:bg-white/5"}`;
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-sm text-white">{label}</p>
+        <p className="text-[11px] text-brand-muted">{mode === "sound" ? hint : "Getar saja, tanpa suara"}</p>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <button type="button" aria-label={`${label}: dengan suara`} aria-pressed={mode === "sound"} onClick={() => { onMode("sound"); play(); }} className={btn(mode === "sound")}><Volume2 className="h-5 w-5" /></button>
+        <button type="button" aria-label={`${label}: getar saja`} aria-pressed={mode === "vibrate"} onClick={() => { onMode("vibrate"); try { navigator.vibrate?.(200); } catch { /* ignore */ } }} className={btn(mode === "vibrate")}><Smartphone className="h-5 w-5" /></button>
+      </div>
     </div>
   );
 }

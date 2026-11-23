@@ -65,7 +65,7 @@ export async function sendCgInvites(db: SupabaseClient): Promise<number> {
       if (!m.user_id || off.has(m.user_id)) continue;
       // PIC and pengurus open their group; ordinary anggota just open the community
       const url = m.role !== "anggota" && where ? `/camp/${where}/connect-group` : "/camp";
-      const r = await sendPush(tokensOf.get(m.user_id) ?? [], { ...msg, url });
+      const r = await sendPush(tokensOf.get(m.user_id) ?? [], { ...msg, url, channel: "auto" });
       sent += r.sent;
       invalid.push(...r.invalid);
     }

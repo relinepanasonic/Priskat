@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   for (const t of (tokenRows as { token: string; user_id: string }[]) ?? []) {
     for (const slot of due.get(t.user_id) ?? []) {
       if (slot.key === "santo" && !santo) continue;
-      const r = await sendPush([t.token], slot.key === "santo" && santo ? { ...santo, url: slot.url } : { title: slot.title, body: slot.body, url: slot.url });
+      const r = await sendPush([t.token], slot.key === "santo" && santo ? { ...santo, url: slot.url, channel: "auto" } : { title: slot.title, body: slot.body, url: slot.url, channel: slot.auto ? "auto" : "prayer" });
       sent += r.sent;
       invalid.push(...r.invalid);
     }

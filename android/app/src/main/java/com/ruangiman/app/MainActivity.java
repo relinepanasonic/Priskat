@@ -30,6 +30,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         createChatChannel();
+        createToneChannels();
         handleBackAsUp();
 
         // No internet: show our own "Tidak ada koneksi" screen with a retry button
@@ -64,6 +65,50 @@ public class MainActivity extends BridgeActivity {
                 );
             }
         });
+    }
+
+    /**
+     * One channel per way a notification can sound. Android fixes a channel's sound when it is made, so "with sound"
+     * and "vibrate only" are two channels and the server picks one for each person (their choice in the app):
+     *   prayer_sound / prayer_vibrate : prayer reminders (church bell)
+     *   chat_sound / chat_vibrate     : chat and friends (chat tone)
+     *   auto                          : the automatic ones, with the chat tone; the phone decides: tone when it rings,
+     *                                   vibration when it is on vibrate, nothing when it is silent
+     */
+    private void createToneChannels() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        try {
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm == null) return;
+            makeChannel(nm, "prayer_sound", "Pengingat doa (dengan suara)", "Lonceng gereja untuk pengingat doa", "church_bell");
+            makeChannel(nm, "prayer_vibrate", "Pengingat doa (getar saja)", "Pengingat doa tanpa suara, hanya getar", null);
+            makeChannel(nm, "chat_sound", "Pesan dan teman (dengan suara)", "Nada pesan untuk chat dan ajakan pertemanan", "chat_tone");
+            makeChannel(nm, "chat_vibrate", "Pesan dan teman (getar saja)", "Chat dan ajakan pertemanan tanpa suara, hanya getar", null);
+            makeChannel(nm, "auto", "Notifikasi otomatis", "Kabar otomatis. Nada, getar, atau senyap mengikuti pengaturan HP.", "chat_tone");
+        } catch (Exception ignored) {
+            // the default channel keeps working
+        }
+    }
+
+    private void makeChannel(NotificationManager nm, String id, String name, String description, String rawSound) {
+        NotificationChannel ch = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+        ch.setDescription(description);
+        if (rawSound != null) {
+            int res = getResources().getIdentifier(rawSound, "raw", getPackageName());
+            if (res != 0) {
+                Uri sound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/" + res);
+                AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+                ch.setSound(sound, attrs);
+            }
+        } else {
+            ch.setSound(null, null); // vibrate only
+        }
+        ch.enableVibration(true);
+        ch.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+        nm.createNotificationChannel(ch);
     }
 
     /** Chat and friend notifications get their own channel with the Ruang Iman chime (like a messaging app's tone). */

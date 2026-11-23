@@ -1,4 +1,5 @@
 import { createSign } from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Firebase Cloud Messaging (HTTP v1). Needs FIREBASE_SERVICE_ACCOUNT: the service
 // account JSON from Firebase Console → Project settings → Service accounts.
@@ -64,8 +65,31 @@ async function accessToken(sa: ServiceAccount) {
   return cached.token;
 }
 
-/** channel: "chat" = the Ruang Iman chime (chat and friends); default "messages". Older app builds without "chat" fall back to Android's default channel. */
-export type PushMessage = { title: string; body: string; url?: string; channel?: "messages" | "chat" };
+/**
+ * channel:
+ *   "prayer" = prayer reminders and "chat" = chat and friends: each person chooses sound or vibrate only (prayer_reminders.prayer_mode / chat_mode)
+ *   "auto"   = the automatic ones: the app's tone, and the phone decides (tone, vibrate or silent by its own setting)
+ *   "messages" (default) = the plain channel
+ * Older app builds do not have the newer channels; Android then falls back to its default channel.
+ */
+export type PushMessage = { title: string; body: string; url?: string; channel?: "messages" | "chat" | "prayer" | "auto" };
+
+/** Each token's choice for "prayer" or "chat": sound (default) or vibrate only. */
+async function modesFor(tokens: string[], kind: "chat" | "prayer"): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  try {
+    const db = createAdminClient() as any;
+    const { data: tk } = await db.from("push_tokens").select("token, user_id").in("token", tokens);
+    const owner = new Map<string, string>(((tk as { token: string; user_id: string }[]) ?? []).map((r) => [r.token, r.user_id]));
+    const ids = [...new Set(owner.values())];
+    if (ids.length === 0) return out;
+    const { data: pr, error } = await db.from("prayer_reminders").select(`user_id, ${kind}_mode`).in("user_id", ids);
+    if (error) return out; // 137_notification_sound_mode.sql not run yet: everybody gets sound
+    const mode = new Map<string, string>(((pr as Record<string, string>[]) ?? []).map((r) => [r.user_id, r[`${kind}_mode`]]));
+    for (const [token, uid] of owner) out.set(token, mode.get(uid) ?? "sound");
+  } catch { /* everybody gets sound */ }
+  return out;
+}
 
 /** Sends to each token; returns the tokens FCM says are no longer valid. */
 export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ sent: number; invalid: string[]; errors: string[]; configured: boolean }> {
@@ -77,6 +101,13 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
   const invalid: string[] = [];
   let sent = 0;
 
+  const modes = msg.channel === "chat" || msg.channel === "prayer" ? await modesFor(tokens, msg.channel) : null;
+  const channelOf = (token: string) => {
+    if (msg.channel === "auto") return "auto";
+    if (msg.channel === "chat" || msg.channel === "prayer") return `${msg.channel}_${modes?.get(token) === "vibrate" ? "vibrate" : "sound"}`;
+    return "messages";
+  };
+
   await Promise.all(tokens.map(async (token) => {
     const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
       method: "POST",
@@ -86,7 +117,7 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
           token,
           notification: { title: msg.title, body: msg.body },
           data: { url: msg.url ?? "/" },
-          android: { priority: "high", notification: { channel_id: msg.channel ?? "messages", color: "#D6B072" } },
+          android: { priority: "high", notification: { channel_id: channelOf(token), color: "#D6B072" } },
         },
       }),
     });

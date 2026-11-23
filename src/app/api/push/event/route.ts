@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const db = createAdminClient();
   let target: string | null = null;
   let key = "";
-  let msg: { title: string; body: string; url: string; channel?: "chat" } | null = null;
+  let msg: { title: string; body: string; url: string; channel?: "chat" | "auto" } | null = null;
 
   if (body.type === "intention_prayed") {
     key = "intensi";
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       title: "Intensi doamu didoakan 🙏",
       body: intention.prayed_count === 1 ? "Seorang saudara seiman mendoakan intensimu." : `${intention.prayed_count} orang sudah mendoakan intensimu.`,
       url: "/faith/intensi",
+      channel: "auto",
     };
   } else if (body.type === "join_decided") {
     key = "komunitas";
@@ -49,8 +50,8 @@ export async function POST(request: Request) {
     target = r.user_id;
     const name = r.community?.name ?? "komunitas";
     msg = r.status === "approved"
-      ? { title: `Selamat datang di ${name}`, body: "Permintaan bergabungmu disetujui.", url: "/camp" }
-      : { title: "Permintaan bergabung", body: `Permintaanmu ke ${name} belum disetujui.`, url: "/camp" };
+      ? { title: `Selamat datang di ${name}`, body: "Permintaan bergabungmu disetujui.", url: "/camp", channel: "auto" }
+      : { title: "Permintaan bergabung", body: `Permintaanmu ke ${name} belum disetujui.`, url: "/camp", channel: "auto" };
   } else if (body.type === "registration_decided") {
     key = "acara";
     // only the admin of the event, and only for a decision made just now
