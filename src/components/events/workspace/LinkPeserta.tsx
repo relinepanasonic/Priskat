@@ -33,7 +33,7 @@ export async function getCampRegisterLink(cohortId: string): Promise<string> {
 }
 
 /** The "Link Peserta" button: copies the magic link and shares it to WhatsApp. */
-export function LinkPesertaButton({ run, title, compact = false, shareText }: { run: () => Promise<string>; title: string; compact?: boolean; shareText?: (link: string) => string }) {
+export function LinkPesertaButton({ run, title, compact = false, shareText, beside }: { run: () => Promise<string>; title: string; compact?: boolean; shareText?: (link: string) => string; beside?: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -54,12 +54,15 @@ export function LinkPesertaButton({ run, title, compact = false, shareText }: { 
 
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>
+      <div className={beside ? "grid grid-cols-2 gap-2" : undefined}>
       <button type="button" onClick={go} disabled={busy}
         className={`flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-gold/40 font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50 ${compact ? "h-9 whitespace-nowrap px-2 text-[11px]" : "px-3 py-2.5 text-sm"}`}
         title={title}>
         {copied ? <Check className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
         {busy ? "Membuat..." : copied ? "Link disalin" : "Link Peserta"}
       </button>
+      {beside}
+      </div>
       {link && !compact && (
         <div className="space-y-2">
           <a href={`https://wa.me/?text=${encodeURIComponent(shareText ? shareText(link) : `Daftar di sini: ${link}`)}`} target="_blank" rel="noopener noreferrer"

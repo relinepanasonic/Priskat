@@ -145,7 +145,14 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
             <p className="text-xs text-brand-muted">{isOpen ? "Orang bisa mendaftar lewat Link Peserta." : "Buka pendaftaran supaya Link Peserta bisa dipakai."}</p>
           </div>
         </div>
-        <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" shareText={shareText} />
+        <LinkPesertaButton run={() => getRegisterLink(eventId)} title="Link pendaftaran untuk peserta" shareText={shareText}
+          beside={
+            <button onClick={toggleRegistration} disabled={toggling}
+              className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold disabled:opacity-60 ${isOpen ? "border border-red-500/40 text-red-300 hover:bg-red-500/10" : "bg-brand-gold text-brand-dark hover:opacity-90"}`}>
+              {isOpen ? <DoorClosed className="h-3.5 w-3.5" /> : <DoorOpen className="h-3.5 w-3.5" />}
+              {toggling ? "Menyimpan…" : isOpen ? "Tutup pendaftaran" : "Buka pendaftaran"}
+            </button>
+          } />
 
         <div className="space-y-3 border-t border-[#2a2d35] pt-5">
           <p className="text-sm font-bold text-white">Pesan ajakan mendaftar</p>
@@ -156,12 +163,6 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
           <WaTemplate eventId={eventId} settings={settings} onSaved={() => void reload()} field="wa_template" def={DEFAULT_WA_TEMPLATE} hint="Dikirim ke peserta yang sudah lunas, berisi QR mereka." />
         </div>
 
-        <div className="border-t border-[#2a2d35] pt-5">
-          <button onClick={toggleRegistration} disabled={toggling}
-            className={`w-full rounded-xl py-3.5 text-sm font-bold disabled:opacity-60 ${isOpen ? "border border-[#333] text-brand-light hover:bg-white/5" : "bg-brand-gold text-brand-dark hover:opacity-90"}`}>
-            {toggling ? "Menyimpan…" : isOpen ? "Tutup pendaftaran" : "Buka pendaftaran"}
-          </button>
-        </div>
       </Collapse>
 
       {isManager && (
