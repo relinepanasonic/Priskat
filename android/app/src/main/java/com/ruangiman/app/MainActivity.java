@@ -3,6 +3,7 @@ package com.ruangiman.app;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
@@ -37,11 +38,49 @@ public class MainActivity extends BridgeActivity {
         // instead of Android's grey "Webpage not available" page
         bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
             @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Tell the web app this native build supports Facebook-style rich push notifications
+                view.evaluateJavascript("window.__RUANG_RICH_PUSH__ = true;", null);
+                deliverPendingUrl(view);
+            }
+
+            @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 super.onReceivedError(view, request, error);
                 if (request.isForMainFrame()) showOffline(view, request.getUrl().toString());
             }
         });
+
+        captureRichUrl(getIntent());
+    }
+
+    private String pendingRichUrl = null;
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        captureRichUrl(intent);
+        WebView view = bridge != null ? bridge.getWebView() : null;
+        if (view != null) deliverPendingUrl(view);
+    }
+
+    private void captureRichUrl(Intent intent) {
+        if (intent == null) return;
+        String u = intent.getStringExtra("ruang_url");
+        if (u != null && u.startsWith("/")) {
+            pendingRichUrl = u;
+            intent.removeExtra("ruang_url");
+        }
+    }
+
+    private void deliverPendingUrl(WebView view) {
+        if (pendingRichUrl == null) return;
+        String target = pendingRichUrl;
+        pendingRichUrl = null;
+        String js = "(function(){var p=" + JSONObject.quote(target) + ";if(window.location.pathname+window.location.search!==p){window.location.assign(p);}})();";
+        view.evaluateJavascript(js, null);
     }
 
     /**

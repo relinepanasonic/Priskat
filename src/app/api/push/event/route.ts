@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const db = createAdminClient();
   let target: string | null = null;
   let key = "";
-  let msg: { title: string; body: string; url: string; channel?: "chat" | "auto" } | null = null;
+  let msg: Parameters<typeof sendPush>[1] | null = null;
 
   if (body.type === "intention_prayed") {
     key = "intensi";
@@ -55,8 +55,8 @@ export async function POST(request: Request) {
   } else if (body.type === "registration_decided") {
     key = "acara";
     // only the admin of the event, and only for a decision made just now
-    const { data: rr } = await db.from("event_registrations" as any).select("event_id, user_id, status, decided_at, event:events!event_id(title)").eq("id", id).maybeSingle();
-    const r = rr as { event_id: string; user_id: string; status: string; decided_at: string | null; event: { title: string } | null } | null;
+    const { data: rr } = await db.from("event_registrations" as any).select("event_id, user_id, status, decided_at, event:events!event_id(title, banner_image_url)").eq("id", id).maybeSingle();
+    const r = rr as { event_id: string; user_id: string; status: string; decided_at: string | null; event: { title: string; banner_image_url: string | null } | null } | null;
     const { data: adm } = r ? await supabase.rpc("event_admin_of" as any, { p_event: r.event_id }) : { data: false };
     if (adm !== true || !r || !r.decided_at || Date.now() - new Date(r.decided_at).getTime() > 10 * 60_000 || !["approved", "rejected"].includes(r.status)) {
       return NextResponse.json({ ok: true, skipped: "not decided by you just now" });
@@ -67,9 +67,23 @@ export async function POST(request: Request) {
     seen.set(dedupe, Date.now());
     target = r.user_id;
     const title = r.event?.title ?? "acara";
+    const banner = r.event?.banner_image_url ?? null;
     msg = r.status === "approved"
-      ? { title: "Pendaftaranmu disetujui 🎟️", body: `Tiket QR untuk ${title} sudah siap. Ketuk untuk membukanya.`, url: `/acara/${r.event_id}`, channel: "chat" }
-      : { title: "Pendaftaran belum disetujui", body: `Pendaftaranmu untuk ${title} belum bisa disetujui. Ketuk untuk melihat alasannya.`, url: `/acara/${r.event_id}`, channel: "chat" };
+      ? {
+          title: "Pendaftaranmu disetujui 🎟️",
+          body: `Tiket QR untuk ${title} sudah siap. Ketuk untuk membukanya.`,
+          url: `/acara/${r.event_id}`,
+          channel: "chat",
+          image: banner,
+          actions: [{ label: "Lihat Tiket QR", url: `/acara/${r.event_id}` }],
+        }
+      : {
+          title: "Pendaftaran belum disetujui",
+          body: `Pendaftaranmu untuk ${title} belum bisa disetujui. Ketuk untuk melihat alasannya.`,
+          url: `/acara/${r.event_id}`,
+          channel: "chat",
+          image: banner,
+        };
   } else if (body.type === "timeline_tag" || body.type === "timeline_accepted") {
     key = "timeline";
     const { data: tv } = await db.from("timeline_events" as any).select("id, title, owner_id, starts_at").eq("id", id).maybeSingle();
@@ -112,11 +126,34 @@ export async function POST(request: Request) {
     if ((seen.get(dedupe) ?? 0) > Date.now() - 3600_000) return NextResponse.json({ ok: true, skipped: "already sent" });
     seen.set(dedupe, Date.now());
     target = accepted ? f.requester_id : f.receiver_id;
-    const { data: who } = await db.from("profiles").select("full_name, nama_panggilan").eq("id", user.id).maybeSingle();
+    const { data: who } = await db.from("profiles").select("full_name, nama_panggilan, avatar_url").eq("id", user.id).maybeSingle();
     const name = (who as any)?.nama_panggilan || (who as any)?.full_name || "Seseorang";
+    const avatar = (who as any)?.avatar_url ?? null;
     msg = accepted
-      ? { title: "Ajakan pertemananmu diterima 🤝", body: `${name} sekarang berteman denganmu.`, url: "/community/friends", channel: "chat" }
-      : { title: "Ajakan pertemanan 🙋", body: `${name} mengajakmu berteman di Ruang Iman.`, url: "/community/friends", channel: "chat" };
+      ? {
+          title: "Ajakan pertemananmu diterima 🤝",
+          body: `${name} sekarang berteman denganmu.`,
+          url: `/community/friends?u=${user.id}`,
+          channel: "chat",
+          avatar,
+          image: avatar,
+          actions: [
+            { label: "Kirim Pesan", url: `/community/messages?u=${user.id}` },
+            { label: "Lihat Profil", url: `/community/friends?u=${user.id}` },
+          ],
+        }
+      : {
+          title: "Ajakan pertemanan 🙋",
+          body: `${name} mengajakmu berteman di Ruang Iman.`,
+          url: "/community/friends",
+          channel: "chat",
+          avatar,
+          image: avatar,
+          actions: [
+            { label: "Terima", url: "/community/friends" },
+            { label: "Lihat Profil", url: `/community/friends?u=${user.id}` },
+          ],
+        };
   } else {
     return NextResponse.json({ error: "unknown type" }, { status: 400 });
   }

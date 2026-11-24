@@ -4,6 +4,7 @@ import { sendPush } from "@/lib/push";
 import { REMINDER_SLOTS } from "@/lib/reminders";
 import { sendCgInvites } from "@/lib/cgInvites";
 import { sendEventPhotoNudges } from "@/lib/eventPhotoNudges";
+import { sendFriendSuggestions } from "@/lib/friendSuggestions";
 import { getLectionary } from "@/lib/mirifica";
 import { jakartaParts } from "@/lib/bacaanHarian";
 import { runBotPosts } from "@/lib/botTick";
@@ -25,7 +26,9 @@ export async function POST(request: Request) {
   const cgSent0 = await sendCgInvites(db).catch((e) => { console.error("CG invites failed", e); return 0; });
   // "Take the picture": while an event is on, attendees with the app are invited to add photos to the album (at the start, then every 3 hours)
   const photoSent = await sendEventPhotoNudges(db).catch((e) => { console.error("Event photo nudges failed", e); return 0; });
-  const cgSent = cgSent0 + photoSent;
+  // Facebook-style friend suggestion notifications (once per 3 days at 19:00 WIB)
+  const friendSent = await sendFriendSuggestions(db).catch((e) => { console.error("Friend suggestions failed", e); return 0; });
+  const cgSent = cgSent0 + photoSent + friendSent;
 
   const { data: rows } = await db.from("prayer_reminders" as any).select("user_id, slots, tz_offset");
   const people = ((rows as { user_id: string; slots: string[] | null; tz_offset: number | null }[]) ?? []).filter((r) => r.slots?.length);

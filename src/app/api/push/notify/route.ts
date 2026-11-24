@@ -20,8 +20,9 @@ export async function POST(request: Request) {
   let url = "/community/messages";
   let title = "";
 
-  const { data: author } = await db.from("profiles").select("full_name, nama_panggilan").eq("id", record.author_id).maybeSingle();
+  const { data: author } = await db.from("profiles").select("full_name, nama_panggilan, avatar_url").eq("id", record.author_id).maybeSingle();
   const authorName = (author as any)?.nama_panggilan || (author as any)?.full_name || "Seseorang";
+  const authorAvatar = (author as any)?.avatar_url ?? null;
 
   if (table === "dm_messages" && record.thread_id) {
     const { data: thread } = await db.from("dm_threads" as any).select("user_a, user_b").eq("id", record.thread_id).maybeSingle();
@@ -49,7 +50,14 @@ export async function POST(request: Request) {
   const { data: rows } = await db.from("push_tokens" as any).select("token").in("user_id", recipients);
   const tokens = ((rows as any[]) ?? []).map((r) => r.token);
   const body = record.content.length > 140 ? `${record.content.slice(0, 137)}…` : record.content;
-  const { sent, invalid } = await sendPush(tokens, { title, body, url, channel: "chat" });
+  const { sent, invalid } = await sendPush(tokens, {
+    title,
+    body,
+    url,
+    channel: "chat",
+    avatar: authorAvatar,
+    actions: [{ label: "Balas", url }],
+  });
 
   if (invalid.length) await db.from("push_tokens" as any).delete().in("token", invalid);
   return NextResponse.json({ ok: true, sent });

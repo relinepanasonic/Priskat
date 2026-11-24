@@ -65,14 +65,34 @@ async function accessToken(sa: ServiceAccount) {
   return cached.token;
 }
 
+export type PushAction = { label: string; url: string };
+
 /**
  * channel:
  *   "prayer" = prayer reminders and "chat" = chat and friends: each person chooses sound or vibrate only (prayer_reminders.prayer_mode / chat_mode)
  *   "auto"   = the automatic ones: the app's tone, and the phone decides (tone, vibrate or silent by its own setting)
  *   "messages" (default) = the plain channel
- * Older app builds do not have the newer channels; Android then falls back to its default channel.
+ *
+ * Rich fields (Facebook-style notification):
+ *   image   = Big picture preview URL (HTTPS). Works on ALL builds (FCM native BigPicture) + Build 12+ custom renderer.
+ *   avatar  = Circular avatar URL (HTTPS) shown beside the title/body on Build 12+ and in-app banner.
+ *   actions = Up to 2 bottom action buttons (e.g. "Tambah Teman", "Lihat Profil") on Build 12+ and in-app banner.
  */
-export type PushMessage = { title: string; body: string; url?: string; channel?: "messages" | "chat" | "prayer" | "auto" };
+export type PushMessage = {
+  title: string;
+  body: string;
+  url?: string;
+  channel?: "messages" | "chat" | "prayer" | "auto";
+  image?: string | null;
+  avatar?: string | null;
+  actions?: PushAction[];
+};
+
+const safeHttpsUrl = (u?: string | null): string | null => {
+  if (!u) return null;
+  const trimmed = u.trim();
+  return /^https:\/\/.+/i.test(trimmed) ? trimmed : null;
+};
 
 /** Each token's choice for "prayer" or "chat": sound (default) or vibrate only. */
 async function modesFor(tokens: string[], kind: "chat" | "prayer"): Promise<Map<string, string>> {
@@ -91,6 +111,20 @@ async function modesFor(tokens: string[], kind: "chat" | "prayer"): Promise<Map<
   return out;
 }
 
+/** Which tokens are on Android Build 12+ (can render custom circular avatar + big picture + action buttons). */
+async function richCapableTokens(tokens: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  try {
+    const db = createAdminClient() as any;
+    const { data, error } = await db.from("push_tokens").select("token, rich_supported").in("token", tokens);
+    if (error) return out; // 144_rich_push.sql not run yet
+    for (const r of (data as { token: string; rich_supported?: boolean }[]) ?? []) {
+      if (r.rich_supported) out.add(r.token);
+    }
+  } catch { /* fallback to standard FCM notification */ }
+  return out;
+}
+
 /** Sends to each token; returns the tokens FCM says are no longer valid. */
 export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ sent: number; invalid: string[]; errors: string[]; configured: boolean }> {
   const sa = serviceAccount();
@@ -101,7 +135,16 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
   const invalid: string[] = [];
   let sent = 0;
 
-  const modes = msg.channel === "chat" || msg.channel === "prayer" ? await modesFor(tokens, msg.channel) : null;
+  const image = safeHttpsUrl(msg.image);
+  const avatar = safeHttpsUrl(msg.avatar);
+  const actions = (msg.actions ?? []).slice(0, 2);
+  const hasRichExtras = Boolean(avatar || actions.length > 0);
+
+  const [modes, richSet] = await Promise.all([
+    msg.channel === "chat" || msg.channel === "prayer" ? modesFor(tokens, msg.channel) : Promise.resolve(null),
+    hasRichExtras ? richCapableTokens(tokens) : Promise.resolve(new Set<string>()),
+  ]);
+
   const channelOf = (token: string) => {
     if (msg.channel === "auto") return "auto";
     if (msg.channel === "chat" || msg.channel === "prayer") return `${msg.channel}_${modes?.get(token) === "vibrate" ? "vibrate" : "sound"}`;
@@ -109,17 +152,49 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
   };
 
   await Promise.all(tokens.map(async (token) => {
+    const channelId = channelOf(token);
+    const useCustomRich = hasRichExtras && richSet.has(token);
+    const dataPayload: Record<string, string> = {
+      url: msg.url ?? "/",
+      title: msg.title,
+      body: msg.body,
+      channel_id: channelId,
+    };
+    if (image) dataPayload.image = image;
+    if (avatar) dataPayload.avatar = avatar;
+    if (actions.length) dataPayload.actions = JSON.stringify(actions);
+
+    let fcmMessage: Record<string, unknown>;
+    if (useCustomRich) {
+      // Build 12+: data-only message so RuangMessagingService.onMessageReceived() always runs in background
+      // and renders the circular avatar + big picture + bottom action buttons (Facebook style).
+      dataPayload.rich = "1";
+      fcmMessage = {
+        token,
+        data: dataPayload,
+        android: { priority: "high" },
+      };
+    } else {
+      // Legacy builds (<= Build 11) & simple notifications: standard FCM notification with native BigPicture image.
+      const bigPic = image ?? avatar;
+      const notificationBlock: Record<string, string> = { title: msg.title, body: msg.body };
+      const androidNotification: Record<string, string> = { channel_id: channelId, color: "#D6B072" };
+      if (bigPic) {
+        notificationBlock.image = bigPic;
+        androidNotification.image = bigPic;
+      }
+      fcmMessage = {
+        token,
+        notification: notificationBlock,
+        data: dataPayload,
+        android: { priority: "high", notification: androidNotification },
+      };
+    }
+
     const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
       method: "POST",
       headers: { Authorization: `Bearer ${auth}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: {
-          token,
-          notification: { title: msg.title, body: msg.body },
-          data: { url: msg.url ?? "/" },
-          android: { priority: "high", notification: { channel_id: channelOf(token), color: "#D6B072" } },
-        },
-      }),
+      body: JSON.stringify({ message: fcmMessage }),
     });
     if (res.ok) { sent++; return; }
     const text = await res.text();

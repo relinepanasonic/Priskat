@@ -2,10 +2,28 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookmarkCheck, Camera, ChevronLeft, ChevronRight, Download, ImagePlus, Loader2, Share2, Tag, Trash2, X, Search, Lock } from "lucide-react";
+import {
+  ArrowLeft,
+  BookmarkCheck,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ImagePlus,
+  Loader2,
+  Lock,
+  ScanEye,
+  Search,
+  Share2,
+  Sparkles,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
 import { photoUrl, type AlbumPerson, type AlbumPhoto, type AlbumTag } from "@/lib/albumPhoto";
+import { measureSharpness } from "@/lib/blurDetect";
 import { formatWeekdayDate } from "@/lib/utils";
 import AlbumShare from "@/components/album/AlbumShare";
 
@@ -15,9 +33,11 @@ type Props = {
   initialPhotos: AlbumPhoto[]; initialTags: AlbumTag[]; people: AlbumPerson[]; initialCover: string | null; openPhoto: string | null;
 };
 
+const AUTO_BLUR_KEY = "album-auto-blur-v1";
+
 /**
- * The album of one event. Camera and upload buttons while the event is on; a grid of everyone's photos;
- * a viewer to tag people (tap the picture, like Instagram), make a photo my album cover, share it or save it.
+ * The album of one event. Camera during the event, gallery uploads any time; automatic blur detection & removal
+ * keeps the album sharp; Instagram-style tap-to-tag, custom cover, share or download.
  */
 export default function AlbumClient({ event, me, isAdmin, isAttendee, open, initialPhotos, initialTags, people, initialCover, openPhoto }: Props) {
   const db = () => createClient() as any;
@@ -33,8 +53,30 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
   const [pending, setPending] = useState<{ x: number; y: number } | null>(null);
   const [q, setQ] = useState("");
   const [sharing, setSharing] = useState(false);
+
+  // Automatic blur filter (on by default) + existing-album blur scanner
+  const [autoBlur, setAutoBlur] = useState(true);
+  const [rejectedBlur, setRejectedBlur] = useState<{ file: File; score: number }[]>([]);
+  const [blurryIds, setBlurryIds] = useState<Map<string, number>>(new Map());
+  const [scanDone, setScanDone] = useState(false);
+
   const camera = useRef<HTMLInputElement>(null);
   const gallery = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(AUTO_BLUR_KEY);
+      if (saved === "0") setAutoBlur(false);
+    } catch { /* ignore */ }
+  }, []);
+
+  function toggleAutoBlur() {
+    setAutoBlur((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(AUTO_BLUR_KEY, next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
   const nameOf = useMemo(() => {
     const m = new Map(people.map((p) => [p.user_id, p.name]));
@@ -47,24 +89,88 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
   const canUpload = isAttendee; // from the phone gallery: any time
   const canCamera = isAttendee && open; // the camera: only while the event is on
 
-  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2200); return () => clearTimeout(t); }, [toast]);
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2600); return () => clearTimeout(t); }, [toast]);
   useEffect(() => { setTagMode(false); setPending(null); setQ(""); }, [view]);
 
-  async function addFiles(files: FileList | null) {
+  async function uploadSingle(file: File): Promise<AlbumPhoto> {
+    const small = await imageCompression(file, {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1600,
+      initialQuality: 0.75,
+      useWebWorker: true,
+      fileType: "image/webp",
+    });
+    const path = `${event.id}/${crypto.randomUUID()}.webp`;
+    const up = await db().storage.from("event-photos").upload(path, small, { contentType: "image/webp" });
+    if (up.error) throw new Error("Foto belum bisa diunggah. Coba lagi.");
+    const { data, error: e } = await db()
+      .from("event_photos")
+      .insert({ event_id: event.id, uploader_id: me, path })
+      .select("id, event_id, uploader_id, path, created_at")
+      .single();
+    if (e || !data) {
+      await db().storage.from("event-photos").remove([path]);
+      throw new Error("Foto belum tersimpan.");
+    }
+    return data as AlbumPhoto;
+  }
+
+  async function addFiles(files: FileList | null, skipBlurCheck = false) {
     if (!files || !files.length) return;
     setError(null);
+    if (!skipBlurCheck) setRejectedBlur([]);
     const list = Array.from(files).slice(0, 30);
     let done = 0;
-    for (const file of list) {
-      setProgress(`Mengunggah ${done + 1} dari ${list.length}…`);
+    const skipped: { file: File; score: number }[] = [];
+
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
       try {
-        const small = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1600, initialQuality: 0.75, useWebWorker: true, fileType: "image/webp" });
-        const path = `${event.id}/${crypto.randomUUID()}.webp`;
-        const up = await db().storage.from("event-photos").upload(path, small, { contentType: "image/webp" });
-        if (up.error) throw new Error("Foto belum bisa diunggah. Coba lagi.");
-        const { data, error: e } = await db().from("event_photos").insert({ event_id: event.id, uploader_id: me, path }).select("id, event_id, uploader_id, path, created_at").single();
-        if (e || !data) { await db().storage.from("event-photos").remove([path]); throw new Error("Foto belum tersimpan."); }
-        setPhotos((p) => [data as AlbumPhoto, ...p]);
+        if (autoBlur && !skipBlurCheck) {
+          setProgress(`Memeriksa ketajaman foto ${i + 1} dari ${list.length}…`);
+          const res = await measureSharpness(file);
+          if (res.blurry) {
+            skipped.push({ file, score: res.score });
+            continue;
+          }
+        }
+        setProgress(`Mengunggah ${done + 1} dari ${list.length - skipped.length}…`);
+        const saved = await uploadSingle(file);
+        setPhotos((p) => [saved, ...p]);
+        done++;
+      } catch (err) {
+        setError((err as Error).message);
+        break;
+      }
+    }
+
+    setProgress(null);
+    if (skipped.length) setRejectedBlur(skipped);
+    if (done && skipped.length) {
+      setToast(`${done} foto disimpan · ${skipped.length} foto buram otomatis dihapus`);
+    } else if (done) {
+      setToast(done === 1 ? "Foto ditambahkan" : `${done} foto ditambahkan`);
+    } else if (skipped.length) {
+      setToast(
+        skipped.length === 1
+          ? "Foto terdeteksi buram dan otomatis dihapus"
+          : `${skipped.length} foto buram otomatis dihapus`,
+      );
+    }
+    if (camera.current) camera.current.value = "";
+    if (gallery.current) gallery.current.value = "";
+  }
+
+  async function keepRejectedBlurry() {
+    if (rejectedBlur.length === 0) return;
+    const toKeep = rejectedBlur;
+    setRejectedBlur([]);
+    let done = 0;
+    for (let i = 0; i < toKeep.length; i++) {
+      setProgress(`Mengunggah ${i + 1} dari ${toKeep.length}…`);
+      try {
+        const saved = await uploadSingle(toKeep[i].file);
+        setPhotos((p) => [saved, ...p]);
         done++;
       } catch (err) {
         setError((err as Error).message);
@@ -72,9 +178,65 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
       }
     }
     setProgress(null);
-    if (done) setToast(done === 1 ? "Foto ditambahkan" : `${done} foto ditambahkan`);
-    if (camera.current) camera.current.value = "";
-    if (gallery.current) gallery.current.value = "";
+    if (done) setToast(done === 1 ? "Foto tetap diunggah" : `${done} foto tetap diunggah`);
+  }
+
+  /** Scan existing photos in the album (all for admins, own photos for attendees) and auto-flag blurry ones. */
+  async function scanAlbumForBlur() {
+    const targets = isAdmin ? photos : photos.filter((p) => p.uploader_id === me);
+    if (targets.length === 0) {
+      setToast("Belum ada foto milikmu untuk diperiksa.");
+      return;
+    }
+    setError(null);
+    setScanDone(false);
+    const found = new Map<string, number>();
+    for (let i = 0; i < targets.length; i++) {
+      setProgress(`Memeriksa ketajaman album ${i + 1} / ${targets.length}…`);
+      const res = await measureSharpness(photoUrl(targets[i].path));
+      if (res.blurry) found.set(targets[i].id, res.score);
+    }
+    setProgress(null);
+    setBlurryIds(found);
+    setScanDone(true);
+    if (found.size === 0) {
+      setToast("Semua foto terlihat tajam ✨");
+    } else {
+      setToast(`Ditemukan ${found.size} foto buram`);
+    }
+  }
+
+  async function deleteAllBlurry() {
+    if (blurryIds.size === 0) return;
+    const targets = photos.filter((p) => blurryIds.has(p.id));
+    if (targets.length === 0) return;
+    setBusy("clean-blur");
+    setError(null);
+    let removed = 0;
+    const removedIds = new Set<string>();
+    const paths: string[] = [];
+
+    for (let i = 0; i < targets.length; i++) {
+      setProgress(`Menghapus foto buram ${i + 1} / ${targets.length}…`);
+      const { error: e } = await db().from("event_photos").delete().eq("id", targets[i].id);
+      if (!e) {
+        removedIds.add(targets[i].id);
+        paths.push(targets[i].path);
+        removed++;
+      }
+    }
+    if (paths.length) {
+      await db().storage.from("event-photos").remove(paths);
+    }
+
+    setPhotos((prev) => prev.filter((p) => !removedIds.has(p.id)));
+    setTags((prev) => prev.filter((t) => !removedIds.has(t.photo_id)));
+    if (cover && removedIds.has(cover)) setCover(null);
+    setBlurryIds(new Map());
+    setScanDone(false);
+    setProgress(null);
+    setBusy(null);
+    setToast(`${removed} foto buram dihapus dari album`);
   }
 
   async function makeCover() {
@@ -141,23 +303,55 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
 
   const taggable = people.filter((p) => !photoTags.some((t) => t.user_id === p.user_id) && p.name.toLowerCase().includes(q.trim().toLowerCase()));
   const mine = (p: AlbumPhoto) => p.uploader_id === me;
+  const canScanAny = isAdmin ? photos.length > 0 : photos.some(mine);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-3 pb-10 pt-4 md:px-6">
       <Link href="/album" className="mb-3 inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white"><ArrowLeft className="h-4 w-4" /> Semua album</Link>
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-white">{event.title}</h1>
-        <p className="text-xs text-brand-muted">{formatWeekdayDate(event.date)} · {photos.length} foto</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-white">{event.title}</h1>
+          <p className="text-xs text-brand-muted">{formatWeekdayDate(event.date)} · {photos.length} foto</p>
+        </div>
+        {canScanAny && (
+          <button
+            type="button"
+            onClick={() => void scanAlbumForBlur()}
+            disabled={!!progress || busy === "clean-blur"}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-[#14171c] px-3 py-2 text-xs font-semibold text-brand-light transition hover:border-brand-gold/40 hover:text-white disabled:opacity-50"
+          >
+            <ScanEye className="h-3.5 w-3.5 text-brand-gold" />
+            Cek Foto Buram
+          </button>
+        )}
       </div>
 
       {canUpload ? (
         <>
-          <div className="mb-3 grid grid-cols-2 gap-2.5">
+          <div className="mb-2.5 grid grid-cols-2 gap-2.5">
             <button onClick={() => camera.current?.click()} disabled={!!progress || !canCamera} className="flex items-center justify-center gap-2 rounded-xl bg-brand-gold py-3.5 text-sm font-bold text-brand-dark disabled:opacity-40"><Camera className="h-5 w-5" /> Kamera</button>
             <button onClick={() => gallery.current?.click()} disabled={!!progress} className="flex items-center justify-center gap-2 rounded-xl border border-brand-gold/50 py-3.5 text-sm font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-60"><ImagePlus className="h-5 w-5" /> Unggah foto</button>
             <input ref={camera} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => void addFiles(e.target.files)} />
             <input ref={gallery} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => void addFiles(e.target.files)} />
           </div>
+
+          {/* Auto-filter blurry photos toggle */}
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[#2a2d35] bg-[#14171c] px-3.5 py-2.5">
+            <div className="flex items-center gap-2 text-xs">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
+              <span className="text-brand-light">Auto-hapus foto buram saat memotret / unggah</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoBlur}
+              onClick={toggleAutoBlur}
+              className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${autoBlur ? "bg-brand-gold" : "bg-[#333]"}`}
+            >
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${autoBlur ? "left-[18px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
           {!canCamera && <p className="mb-4 flex items-start gap-2 text-[11px] leading-relaxed text-brand-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-gold" /> Kamera hanya aktif selama event berlangsung. Foto dari galeri HP tetap bisa diunggah kapan saja.</p>}
         </>
       ) : (
@@ -166,6 +360,51 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
           Album ini untuk peserta event.
         </p>
       )}
+
+      {/* Rejected blurry photos notice with optional override */}
+      {rejectedBlur.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3.5 py-2.5 text-xs">
+          <span className="text-amber-200">
+            <b>{rejectedBlur.length} foto buram</b> otomatis dihapus agar album tetap tajam.
+          </span>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => void keepRejectedBlurry()} className="font-semibold text-brand-gold underline underline-offset-2">
+              Tetap unggah
+            </button>
+            <button type="button" onClick={() => setRejectedBlur([])} aria-label="Tutup" className="text-amber-200/70 hover:text-white">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Existing album scan results banner */}
+      {scanDone && blurryIds.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-3.5 py-3 text-xs">
+          <span className="text-red-200">
+            Ditemukan <b>{blurryIds.size} foto buram</b> di album ini (ditandai badge merah).
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void deleteAllBlurry()}
+              disabled={busy === "clean-blur"}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 font-bold text-white transition hover:bg-red-600 disabled:opacity-60"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Hapus Semua ({blurryIds.size})
+            </button>
+            <button
+              type="button"
+              onClick={() => { setBlurryIds(new Map()); setScanDone(false); }}
+              className="rounded-lg border border-white/15 px-2.5 py-1.5 text-gray-300 hover:text-white"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
+
       {progress && <p className="mb-3 flex items-center gap-2 rounded-xl bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold"><Loader2 className="h-4 w-4 animate-spin" /> {progress}</p>}
       {error && <p className="mb-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
@@ -173,14 +412,26 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
         <p className="rounded-2xl border border-[#2a2d35] bg-[#14171c] px-6 py-12 text-center text-sm text-brand-muted">Belum ada foto. Jadi yang pertama mengabadikan momen ini.</p>
       ) : (
         <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
-          {photos.map((p) => (
-            <button key={p.id} onClick={() => setView(p.id)} className="relative aspect-square overflow-hidden rounded-md bg-[#14171c]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photoUrl(p.path)} alt="" loading="lazy" className="h-full w-full object-cover" />
-              {cover === p.id && <span className="absolute left-1 top-1 rounded-full bg-brand-gold p-1 text-brand-dark"><BookmarkCheck className="h-3 w-3" /></span>}
-              {tags.some((t) => t.photo_id === p.id && t.user_id === me) && <span className="absolute bottom-1 right-1 rounded-full bg-black/70 p-1 text-white"><Tag className="h-3 w-3" /></span>}
-            </button>
-          ))}
+          {photos.map((p) => {
+            const isBlurry = blurryIds.has(p.id);
+            return (
+              <button
+                key={p.id}
+                onClick={() => setView(p.id)}
+                className={`relative aspect-square overflow-hidden rounded-md bg-[#14171c] ${isBlurry ? "ring-2 ring-red-500" : ""}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoUrl(p.path)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                {cover === p.id && <span className="absolute left-1 top-1 rounded-full bg-brand-gold p-1 text-brand-dark"><BookmarkCheck className="h-3 w-3" /></span>}
+                {isBlurry && (
+                  <span className="absolute right-1 top-1 rounded-full bg-red-600/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow">
+                    Buram
+                  </span>
+                )}
+                {tags.some((t) => t.photo_id === p.id && t.user_id === me) && <span className="absolute bottom-1 right-1 rounded-full bg-black/70 p-1 text-white"><Tag className="h-3 w-3" /></span>}
+              </button>
+            );
+          })}
         </div>
       )}
 
