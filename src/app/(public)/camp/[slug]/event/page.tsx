@@ -23,7 +23,11 @@ type EventRow = {
 
 const fmt = (d: string | null) => (d ? formatWeekdayDate(d) : "");
 
-/** Events of a community: 2-column compact cards on phones, refined 3-4 column portrait poster gallery on PC. */
+/**
+ * Events of a community:
+ *   - Phone (< md): compact 2-column vertical portrait cards
+ *   - PC (md+): luxury horizontal editorial cards (full uncropped poster on left + balanced info & CTA on right)
+ */
 export default async function CommunityEventsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const { supabase, community, canEdit } = await getCommunityPageContext(slug);
@@ -47,22 +51,36 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
   const card = (e: EventRow, dim = false) => (
     <article
       key={e.id}
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12151b] transition-all duration-300 md:hover:-translate-y-1 md:hover:border-brand-gold/45 md:hover:shadow-xl md:hover:shadow-black/50 ${
+      className={`group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12151b] transition-all duration-300 md:h-[268px] md:flex-row md:hover:-translate-y-0.5 md:hover:border-brand-gold/45 md:hover:shadow-2xl md:hover:shadow-black/50 ${
         dim ? "opacity-75 hover:opacity-100" : ""
       }`}
     >
-      {/* Keep full 4:5 portrait poster on BOTH phone and PC so posters are never squashed or cropped */}
-      <Link href={`/acara/${e.id}`} className="relative block aspect-[4/5] w-full overflow-hidden bg-[#0c0e13]">
+      {/* Poster: vertical 4:5 on phone; crisp uncropped side poster with ambient blur backdrop on PC */}
+      <Link
+        href={`/acara/${e.id}`}
+        className="relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-[#0c0e13] md:aspect-auto md:h-full md:w-[205px]"
+      >
         {e.banner_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={e.banner_image_url}
-            alt={e.title}
-            className="h-full w-full object-cover transition-transform duration-500 md:group-hover:scale-[1.04]"
-            loading="lazy"
-          />
+          <>
+            {/* Blurred ambient fill on PC so non-4:5 posters never get cropped or show hard black bars */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={e.banner_image_url}
+              alt=""
+              aria-hidden
+              className="hidden md:block absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-xl"
+              loading="lazy"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={e.banner_image_url}
+              alt={e.title}
+              className="relative h-full w-full object-cover transition-transform duration-500 md:object-contain md:p-1.5 md:group-hover:scale-[1.03]"
+              loading="lazy"
+            />
+          </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(214,176,114,0.12),rgba(12,14,19,1)_70%)]">
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(214,176,114,0.14),rgba(12,14,19,1)_72%)]">
             {logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -76,64 +94,66 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
             )}
           </div>
         )}
-        {/* Subtle vignette + status badge on PC */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#12151b] via-[#12151b]/40 to-transparent" />
         {dim && (
-          <span className="absolute left-2.5 top-2.5 rounded-full border border-white/15 bg-black/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-300 backdrop-blur-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-full border border-white/15 bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-300 backdrop-blur-sm">
             Selesai
           </span>
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col p-2.5 md:p-4">
-        <Link href={`/acara/${e.id}`} className="block">
-          <h3
-            className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors md:text-base md:group-hover:text-brand-gold"
-            style={serif}
-          >
-            {e.title}
-          </h3>
-        </Link>
+      {/* Content */}
+      <div className="flex min-w-0 flex-1 flex-col p-2.5 md:p-5">
+        <div className="min-w-0">
+          <Link href={`/acara/${e.id}`} className="block">
+            <h3
+              className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors md:text-lg md:group-hover:text-brand-gold"
+              style={serif}
+            >
+              {e.title}
+            </h3>
+          </Link>
 
-        {e.event_date && (
-          <p className="mt-1.5 flex items-start gap-1.5 text-[11px] font-semibold md:text-xs" style={{ color: GOLD }}>
-            <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span className="leading-snug">
-              {fmt(e.event_date)}
-              {e.end_date && e.end_date.slice(0, 10) !== e.event_date.slice(0, 10) ? ` – ${fmt(e.end_date)}` : ""}
-            </span>
-          </p>
-        )}
+          {e.event_date && (
+            <p className="mt-1.5 flex items-start gap-1.5 text-[11px] font-semibold md:mt-2 md:text-xs" style={{ color: GOLD }}>
+              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span className="leading-snug">
+                {fmt(e.event_date)}
+                {e.end_date && e.end_date.slice(0, 10) !== e.event_date.slice(0, 10) ? ` – ${fmt(e.end_date)}` : ""}
+              </span>
+            </p>
+          )}
 
-        {e.location && (
-          <p className="mt-1 flex items-start gap-1.5 text-[11px] text-brand-muted md:text-xs">
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            {e.maps_url ? (
-              <a
-                href={e.maps_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="line-clamp-1 inline-flex items-center gap-1 underline underline-offset-2 hover:text-white"
-              >
+          {e.location && (
+            <p className="mt-1 flex items-start gap-1.5 text-[11px] text-brand-muted md:text-xs">
+              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              {e.maps_url ? (
+                <a
+                  href={e.maps_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-w-0 items-center gap-1 underline underline-offset-2 hover:text-white"
+                >
+                  <span className="truncate">{e.location}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              ) : (
                 <span className="truncate">{e.location}</span>
-                <ExternalLink className="h-3 w-3 shrink-0" />
-              </a>
-            ) : (
-              <span className="line-clamp-1">{e.location}</span>
-            )}
-          </p>
-        )}
+              )}
+            </p>
+          )}
 
-        {e.description && (
-          <p className="mt-2 hidden line-clamp-2 text-xs leading-relaxed text-gray-400 md:block">
-            {e.description}
-          </p>
-        )}
+          {/* NOTE: md:line-clamp-3 (NOT md:block, which overrides -webkit-box and breaks clamping!) */}
+          {e.description && (
+            <p className="mt-2.5 hidden text-xs leading-relaxed text-gray-400 md:line-clamp-3">
+              {e.description}
+            </p>
+          )}
+        </div>
 
-        <div className="mt-auto pt-3">
+        <div className="mt-auto pt-3 md:pt-4">
           <Link
             href={`/acara/${e.id}`}
-            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition md:text-xs ${
+            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition md:w-fit md:px-4 md:py-2 md:text-xs ${
               dim
                 ? "border border-white/15 bg-white/5 text-brand-light hover:border-brand-gold/40 hover:text-white"
                 : "bg-brand-gold text-brand-dark shadow-sm shadow-brand-gold/15 hover:bg-brand-gold-hover"
@@ -191,7 +211,7 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
                   Akan Datang ({upcoming.length})
                 </h3>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-4 xl:grid-cols-2 xl:gap-5">
                 {upcoming.map((e) => card(e))}
               </div>
             </section>
@@ -204,7 +224,7 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
                   Sudah Berlalu ({past.length})
                 </h3>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-4 xl:grid-cols-2 xl:gap-5">
                 {past.map((e) => card(e, true))}
               </div>
             </section>

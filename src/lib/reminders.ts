@@ -48,7 +48,7 @@ export const REMINDER_SLOTS: ReminderSlot[] = [
   {
     key: "tebus", label: "Tebus Hari", desc: "Pukul 00.00, hanya jika kemarin belum membaca atau berdoa",
     times: ["00:00"],
-    title: "Kemarin terlewat", body: "Tidak apa-apa. Buka Ruang Iman dan Tebus Hari dengan membaca satu ayat Alkitab 🙏", url: "/",
+    title: "Tuhan menunggumu dengan kasih 🕯️", body: "Hari kemarin mungkin padat dan melelahkan. Mari luangkan sejenak bersama Firman Tuhan dan tebus harimu hari ini ✨", url: "/",
     onlyIfMissedYesterday: true, auto: true,
   },
   {
