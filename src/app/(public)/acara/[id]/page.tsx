@@ -8,6 +8,9 @@ import { formatWeekdayDate, formatTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+/** Managing an event happens in the Community Center */
+const CC = "https://communitycenter.ruangiman.com";
+
 const GOLD = "#D6B072";
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
@@ -54,7 +57,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
     profile = p.data as { full_name: string | null } | null;
     phone = (priv.data as { phone?: string } | null)?.phone ?? "";
   }
-  const manageHref = event.community?.slug ? `/admin/communities/${event.community.slug}/acara/${event.id}` : `/admin/events/${event.id}/registrasi`;
+  const manageHref = event.community?.slug ? `${CC}/admin/communities/${event.community.slug}/promotion` : `/admin/events/${event.id}/registrasi`;
   const full = event.capacity != null && taken >= event.capacity && !reg;
 
   return (
@@ -88,7 +91,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
 
       {canManage && (
         <Link href={manageHref} className="flex items-center justify-center gap-2 rounded-xl border border-brand-gold/40 bg-brand-gold/10 py-3 text-sm font-semibold text-brand-gold">
-          <Settings2 className="h-4 w-4" /> Kelola pendaftaran, peserta, dan absensi
+          <Settings2 className="h-4 w-4" /> Kelola di Community Center
         </Link>
       )}
 

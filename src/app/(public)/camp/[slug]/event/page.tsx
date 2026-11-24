@@ -82,12 +82,12 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
           <h2 className="mt-1 text-2xl font-semibold text-white" style={serif}>Kegiatan {community.name}</h2>
         </div>
         {canEdit && (
-          <Link
-            href={`/admin/communities/${community.slug || community.id}/event`}
+          <a
+            href={`https://communitycenter.ruangiman.com/admin/communities/${community.slug || community.id}/promotion`}
             className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark"
           >
             <Plus className="h-4 w-4" /> Tambah event
-          </Link>
+          </a>
         )}
       </div>
 

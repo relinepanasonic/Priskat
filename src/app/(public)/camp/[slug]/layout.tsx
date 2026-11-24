@@ -122,18 +122,14 @@ export default function CommunitySlugLayout({
     { name: "Galeri", href: `/camp/${slug}/galeri`, icon: Images },
     { name: "Peta Keuskupan", href: `/camp/${slug}/peta`, icon: Map },
     { name: "Jadwal Misa", href: `/news/schedule?cm=${slug}`, icon: Calendar },
-    ...(canPromote ? [{ name: "Promotional", href: `/camp/${slug}/promotion`, icon: Megaphone }] : []),
   ];
 
-  // Default template for every new community
+  // The community page is for its members: about, events, and (for the leader of a Komsel) the Komsel.
+  // Everything an admin manages (camps, events, Komsel, coverage, members, promotion) is in the Community Center.
   const tabs = isCI ? ciTabs : [
     { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
-    // Catholic Family Ministry runs camps; every other community uses events
-    isCFM
-      ? { name: "Camp", href: `/camp/${slug}/crew`, icon: Tent }
-      : { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
-    ...(canPromote || leadsCg ? [{ name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
-    { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
+    { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
+    ...(leadsCg && !canPromote ? [{ name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
   ];
 
   const browseOnly = !isCI && isMember === false;
@@ -184,13 +180,13 @@ export default function CommunitySlugLayout({
         <span className="text-[#333]">|</span>
         <h1 className="text-lg font-bold text-white tracking-wider">{heading}</h1>
         {canPromote && (
-          <Link
-            href={`/admin/communities/${slug}`}
+          <a
+            href={`https://communitycenter.ruangiman.com/admin/communities/${slug}/dashboard`}
             className="ml-auto flex items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold"
           >
             <Settings className="h-3.5 w-3.5" />
             Community Center
-          </Link>
+          </a>
         )}
       </div>
 

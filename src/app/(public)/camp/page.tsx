@@ -55,13 +55,13 @@ export default async function CommunityListingPage() {
         </div>
         {/* Phones have no sidebar, so admins get the Community Center here */}
         {(isSuperAdmin || myAdminCommunityIds.length > 0) && (
-          <Link
-            href="/admin/communities"
+          <a
+            href="https://communitycenter.ruangiman.com/admin/communities"
             className="md:hidden flex shrink-0 items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold active:scale-95"
           >
             <Settings className="h-4 w-4" />
             Community Center
-          </Link>
+          </a>
         )}
       </div>
 
