@@ -99,14 +99,14 @@ GRANT EXECUTE ON FUNCTION public.my_albums() TO authenticated;
 -- 3b) the people of an album (for tags and names): approved registrants, only for people who may see the album
 CREATE OR REPLACE FUNCTION public.event_album_people(p_event uuid)
 RETURNS TABLE (user_id uuid, name text, avatar_url text)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT p.id, COALESCE(NULLIF(p.nama_panggilan, ''), p.full_name, 'Peserta'), p.avatar_url
   FROM public.profiles p
   WHERE public.event_attendee(p_event)
     AND (p.id IN (SELECT r.user_id FROM public.event_registrations r WHERE r.event_id = p_event AND r.status = 'approved')
          OR p.id IN (SELECT ph.uploader_id FROM public.event_photos ph WHERE ph.event_id = p_event))
   ORDER BY 2;
-$;
+$$;
 GRANT EXECUTE ON FUNCTION public.event_album_people(uuid) TO authenticated;
 
 -- 4) the photos themselves: a public bucket with unguessable paths (<event id>/<random>.webp); the list of photos is protected above
