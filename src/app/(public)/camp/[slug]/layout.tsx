@@ -168,22 +168,22 @@ export default function CommunitySlugLayout({
   };
 
   return (
-    <div className="flex h-full w-full flex-col space-y-3 pb-28 pt-3 font-sans md:space-y-4 md:p-8 md:pb-8">
+    <div className="mx-auto flex w-full max-w-6xl flex-col space-y-3 pb-28 pt-3 font-sans md:space-y-5 md:px-8 md:py-7">
       {/* Back button + Community name */}
       <div className="flex items-center gap-3 px-4 md:px-0">
         <Link
           href="/camp"
-          className="flex items-center gap-1 text-brand-muted hover:text-white text-sm transition-colors"
+          className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 text-sm text-brand-muted transition-colors hover:border-white/10 hover:bg-white/5 hover:text-white md:border-white/10 md:bg-[#1a1d24] md:px-3 md:py-1.5"
         >
           <ChevronLeft className="h-4 w-4" />
           Back
         </Link>
-        <span className="text-[#333]">|</span>
-        <h1 className="text-lg font-bold text-white tracking-wider">{heading}</h1>
+        <span className="text-[#333] md:hidden">|</span>
+        <h1 className="truncate text-lg font-bold tracking-wide text-white md:text-2xl" style={{ fontFamily: "'Lora', Georgia, serif" }}>{heading}</h1>
         {canPromote && (
           <a
             href={`https://communitycenter.ruangiman.com/admin/communities/${slug}/dashboard`}
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold"
+            className="ml-auto flex shrink-0 items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold transition hover:bg-brand-gold hover:text-brand-dark md:px-4 md:py-2"
           >
             <Settings className="h-3.5 w-3.5" />
             Community Center
@@ -192,8 +192,12 @@ export default function CommunitySlugLayout({
       </div>
 
       {/* Tabs Navigation */}
-      <div className="overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-        <nav data-community-tabs className="flex space-x-2 min-w-max" aria-label="Tabs">
+      <div className="overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
+        <nav
+          data-community-tabs
+          className="flex min-w-max gap-1.5 md:inline-flex md:rounded-xl md:border md:border-white/10 md:bg-[#161920] md:p-1.5"
+          aria-label="Tabs"
+        >
           {shownTabs.map((tab) => {
             const isActive = pathname.startsWith(tab.href);
             const Icon = tab.icon;
@@ -201,14 +205,11 @@ export default function CommunitySlugLayout({
               <Link
                 key={tab.name}
                 href={tab.href}
-                className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all
-                  ${
-                    isActive
-                      ? "bg-brand-gold text-brand-dark shadow-md"
-                      : "text-brand-muted hover:text-white hover:bg-[#1a1d24] border border-transparent hover:border-[#333]"
-                  }
-                `}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all md:px-4 md:py-2 ${
+                  isActive
+                    ? "bg-brand-gold text-brand-dark shadow-md shadow-brand-gold/20"
+                    : "border border-transparent text-brand-muted hover:bg-white/5 hover:text-white"
+                }`}
                 aria-current={isActive ? "page" : undefined}
               >
                 <Icon
@@ -223,8 +224,12 @@ export default function CommunitySlugLayout({
         </nav>
       </div>
 
-      {/* Main Content Area */}
-      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto md:min-h-[500px] md:rounded-2xl md:border md:border-[#333] md:bg-[#1a1d24] md:shadow-xl">
+      {/* Main Content Area — single smooth scroll on PC (no nested inner scrollbar) */}
+      <div
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        className="relative flex flex-1 flex-col overflow-x-hidden md:min-h-[540px] md:rounded-3xl md:border md:border-white/10 md:bg-[#161920] md:shadow-2xl md:shadow-black/40"
+      >
         {children}
       </div>
     </div>

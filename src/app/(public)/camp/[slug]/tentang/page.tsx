@@ -98,18 +98,18 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         </div>
         <p className="relative mt-4 max-w-3xl whitespace-pre-line text-[15px] leading-[1.75] text-[#EAE5D9]/90 md:mt-6 md:text-base md:leading-relaxed">{c.description || (everyone ? ABOUT_FALLBACK.description : "Belum ada deskripsi komunitas.")}</p>
 
-        {/* One row of actions: join (when it applies) and share, the same height */}
-        <div className="relative mt-5 flex items-stretch gap-2.5">
+        {/* One row of actions: full-width on phone, sleek compact buttons on PC */}
+        <div className="relative mt-5 flex items-stretch gap-2.5 md:mt-6 md:inline-flex md:items-center md:gap-3">
           {showJoin && (user ? (
             <JoinCommunityButton
               community={{ id: community.id, name: community.name ?? "", join_mode: (c.join_mode ?? "request") as "open" | "request" | "closed", join_fields: c.join_fields ?? null }}
               status={joinStatus}
-              className="flex-1 justify-center !rounded-xl !px-4 !py-3 text-center !text-sm"
+              className="flex-1 justify-center !rounded-xl !px-4 !py-3 text-center !text-sm md:flex-none md:!px-6"
             />
           ) : (
-            <Link href="/login" className="flex flex-1 items-center justify-center rounded-xl bg-brand-gold px-4 py-3 text-center text-sm font-bold text-brand-dark">Masuk untuk bergabung</Link>
+            <Link href="/login" className="flex flex-1 items-center justify-center rounded-xl bg-brand-gold px-4 py-3 text-center text-sm font-bold text-brand-dark md:flex-none md:px-6">Masuk untuk bergabung</Link>
           ))}
-          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} className="flex-1 justify-center" />
+          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} className="flex-1 justify-center md:flex-none md:px-6" />
         </div>
         {showJoin && user && (
           <p className="relative mt-2 text-[11px] text-brand-muted">{c.join_mode === "open" ? "Terbuka untuk semua." : "Permintaanmu akan ditinjau oleh admin komunitas."}</p>

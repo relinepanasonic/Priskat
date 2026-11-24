@@ -48,7 +48,7 @@ export default async function CommunityListingPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Community</h1>
