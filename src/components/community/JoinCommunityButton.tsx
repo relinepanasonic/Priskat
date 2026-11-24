@@ -75,7 +75,7 @@ export default function JoinCommunityButton({
         disabled={busy}
         className={`rounded-full bg-brand-gold px-3 py-1.5 text-xs font-bold text-brand-dark transition active:scale-95 disabled:opacity-60 ${className}`}
       >
-        {busy ? "…" : needsForm ? "Ajukan bergabung" : "Gabung"}
+        {busy ? "…" : "Bergabung"}
       </button>
 
       {open && typeof document !== "undefined" && createPortal(

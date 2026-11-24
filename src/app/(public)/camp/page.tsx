@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Users, Lock, Globe, ArrowRight, Settings, BadgeCheck } from "lucide-react";
 import { sortCommunities } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
-import JoinCommunityButton from "@/components/community/JoinCommunityButton";
+import { getLanguage } from "@/lib/lang";
 import { MemberCountSafe } from "@/lib/memberCounts";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +11,7 @@ export const metadata = { title: "Community" };
 
 export default async function CommunityListingPage() {
   const supabase = await createClient();
+  const lang = await getLanguage();
 
   const { data: communityRows } = await supabase
     .from("communities")
@@ -127,14 +128,9 @@ export default async function CommunityListingPage() {
                   <Users className="h-3 w-3 md:h-4 md:w-4" />
                   {memberCounts[c.id] ?? c.member_count}
                 </span>
-                {joinable ? (
-                  <JoinCommunityButton
-                    community={{ id: c.id, name: c.name, join_mode: c.join_mode, join_fields: c.join_fields }}
-                    status={pending ? "pending" : "none"}
-                  />
-                ) : hasAccess ? (
+                {hasAccess ? (
                   <Link href={`/camp/${c.slug || c.id}`} className="flex items-center gap-1 text-xs font-bold text-brand-gold md:text-sm">
-                    {isMember ? "Enter" : "Lihat"} <ArrowRight className="h-3.5 w-3.5" />
+                    {lang === "id" ? "Masuk" : "Enter"} <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 ) : (
                   <span className="flex items-center gap-1 text-xs font-bold text-gray-500 md:text-sm"><Lock className="h-3 w-3" /> Private</span>

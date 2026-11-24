@@ -98,7 +98,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           ) : (
             <Link href="/login" className="flex flex-1 items-center justify-center rounded-xl bg-brand-gold px-4 py-3 text-center text-sm font-bold text-brand-dark">Masuk untuk bergabung</Link>
           ))}
-          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} className={showJoin ? "" : "flex-1 justify-center"} />
+          <ShareCommunityButton name={community.name ?? ""} slug={community.slug || community.id} className="flex-1 justify-center" />
         </div>
         {showJoin && user && (
           <p className="relative mt-2 text-[11px] text-brand-muted">{c.join_mode === "open" ? "Terbuka untuk semua." : "Permintaanmu akan ditinjau oleh admin komunitas."}</p>
