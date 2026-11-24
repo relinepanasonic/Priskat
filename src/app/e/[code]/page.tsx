@@ -48,8 +48,8 @@ export default async function GuestEventPage({ params, searchParams }: { params:
   const { daftar } = await searchParams;
   if (!isRegisterKey(code)) notFound();
   const db = createAdminClient();
-  const { data: st } = await db.from("event_reg_settings" as any).select("event_id, open, link_open, deadline, fields, welcome_text, price").or(registerKeyFilter(code)).maybeSingle();
-  const s = st as { event_id: string; open: boolean; link_open?: boolean; deadline: string | null; fields: RegField[]; welcome_text: string | null; price: number } | null;
+  const { data: st } = await db.from("event_reg_settings" as any).select("*").or(registerKeyFilter(code)).maybeSingle();
+  const s = st as { event_id: string; open: boolean; link_open?: boolean; deadline: string | null; fields: RegField[]; welcome_text: string | null; price: number; bank_name?: string | null; bank_account?: string | null; bank_holder?: string | null; payment_note?: string | null; treasurer_wa?: string | null } | null;
   if (!s) notFound();
 
   type Ev = { title: string; tagline?: string | null; event_date: string | null; end_date?: string | null; location: string | null; maps_url?: string | null; banner_image_url: string | null; status: string; description?: string | null; capacity?: number | null; promo_text?: string | null; promo_images?: string[] | null };
@@ -118,7 +118,7 @@ export default async function GuestEventPage({ params, searchParams }: { params:
       )}
 
       <EventLandingCta closed={closed} startOpen={daftar === "1"} share={<EventShare text={shareText} />}>
-        <GuestRegisterForm code={code.toLowerCase()} eventId={s.event_id} event={{ title: e.title, start: e.event_date, end: e.end_date ?? null, location: e.location, url: registerLink(code.toLowerCase()) }} eventTitle={e.title} welcome={welcome} fields={s.fields ?? []} />
+        <GuestRegisterForm payment={{ amount: s.price ?? 0, bank: s.bank_name ?? null, account: s.bank_account ?? null, holder: s.bank_holder ?? null, note: s.payment_note ?? null, treasurerWa: s.treasurer_wa ?? null }} code={code.toLowerCase()} eventId={s.event_id} event={{ title: e.title, start: e.event_date, end: e.end_date ?? null, location: e.location, url: registerLink(code.toLowerCase()) }} eventTitle={e.title} welcome={welcome} fields={s.fields ?? []} />
       </EventLandingCta>
     </main>
   );

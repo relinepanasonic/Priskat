@@ -104,6 +104,12 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
     }
   }
 
+  async function deleteReg(r: Registration) {
+    const paidNote = isPaid(r) && r.amount > 0 ? " Pemasukannya di Keuangan juga dihapus." : "";
+    if (!confirm(`Hapus ${r.full_name} dari daftar peserta?${paidNote} Ini tidak bisa dibatalkan.`)) return;
+    await run(r.id, () => db().rpc("delete_event_registration", { p_reg: r.id }));
+  }
+
   async function viewProof(r: Registration) {
     if (!r.proof_path) return;
     const { data, error: err } = await createClient().storage.from("event-proofs").createSignedUrl(r.proof_path, 300);
@@ -358,6 +364,7 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
                         </>
                       )}
                       <button onClick={() => openEdit(r)} aria-label={`Ubah data ${r.full_name}`} title="Ubah data" className="inline-flex items-center gap-1 rounded-lg border border-[#333] px-2.5 py-1.5 text-xs font-semibold text-brand-light hover:bg-white/5"><Pencil className="h-3.5 w-3.5" /> Edit</button>
+                      <button disabled={busy === r.id} onClick={() => void deleteReg(r)} aria-label={`Hapus ${r.full_name}`} title="Hapus peserta" className="inline-flex items-center rounded-lg border border-[#333] p-1.5 text-gray-500 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"><Trash2 className="h-3.5 w-3.5" /></button>
                     </div>
                   </li>
                 );

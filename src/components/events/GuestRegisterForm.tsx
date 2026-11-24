@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import PaymentInfo from "@/components/events/PaymentInfo";
 import GuestTicketView from "@/components/events/GuestTicketView";
 import type { RegField } from "@/lib/eventReg";
 import type { TicketEvent } from "@/components/events/GuestTicketView";
@@ -16,7 +17,7 @@ type Done = { code: string; name: string; email: string; emailed: boolean; alrea
  * "Selamat datang pada Event ...": name, paroki, email, WhatsApp and the admin's own questions.
  * Sends the form to the server, which makes the Ruang Iman account, and then shows the QR ticket.
  */
-export default function GuestRegisterForm({ code, eventId, eventTitle, welcome, fields, event }: { code: string; eventId: string; eventTitle: string; welcome: string; fields: RegField[]; event?: TicketEvent }) {
+export default function GuestRegisterForm({ code, eventId, eventTitle, welcome, fields, event, payment }: { code: string; eventId: string; eventTitle: string; welcome: string; fields: RegField[]; event?: TicketEvent; payment?: { amount: number; bank: string | null; account: string | null; holder: string | null; note: string | null; treasurerWa: string | null } }) {
   // two doors: sign in with a Ruang Iman account, or register as a guest (an account is made from the email)
   const [mode, setMode] = useState<"choose" | "guest">("choose");
   const [v, setV] = useState({ name: "", paroki: "", email: "", phone: "" });
@@ -61,7 +62,7 @@ export default function GuestRegisterForm({ code, eventId, eventTitle, welcome, 
     return (
       <div className="space-y-3">
         {done.already && <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">Emailmu sudah terdaftar di acara ini. Ini tiketmu.</p>}
-        <GuestTicketView code={done.code} name={done.name} eventTitle={eventTitle} justRegistered={!done.already} emailed={done.emailed} email={done.email} pending={!done.approved} event={event} promoteApp />
+        <GuestTicketView code={done.code} name={done.name} eventTitle={eventTitle} justRegistered={!done.already} emailed={done.emailed} email={done.email} pending={!done.approved} event={event} promoteApp extra={payment && payment.amount > 0 ? <PaymentInfo amount={payment.amount} bank={payment.bank} account={payment.account} holder={payment.holder} note={payment.note} treasurerWa={payment.treasurerWa} name={done.name} eventTitle={eventTitle} /> : undefined} />
       </div>
     );
   }
@@ -71,7 +72,7 @@ export default function GuestRegisterForm({ code, eventId, eventTitle, welcome, 
       <div className="space-y-4 rounded-3xl border border-[#2a2d35] bg-[#1a1d24] p-5">
         <h2 className="text-xl font-bold leading-snug text-white" style={serif}>{welcome}</h2>
         <p className="text-sm text-brand-light">Pilih cara mendaftar:</p>
-        <a href={`/login?next=/acara/${eventId}`} className="block w-full rounded-xl bg-brand-gold py-3.5 text-center text-[15px] font-bold text-brand-dark active:scale-[0.99]">Punya Akun Ruang Iman</a>
+        <a href={`/acara/${eventId}`} className="block w-full rounded-xl bg-brand-gold py-3.5 text-center text-[15px] font-bold text-brand-dark active:scale-[0.99]">Punya Akun Ruang Iman</a>
         <button type="button" onClick={() => setMode("guest")} className="block w-full rounded-xl border border-brand-gold/50 py-3.5 text-[15px] font-bold text-brand-gold hover:bg-brand-gold/10 active:scale-[0.99]">Daftar sebagai Guest</button>
         <p className="text-center text-[11px] leading-relaxed text-brand-muted">Guest cukup isi nama, paroki, email, dan WhatsApp. Kami membuatkan akun Ruang Iman-mu otomatis.</p>
       </div>

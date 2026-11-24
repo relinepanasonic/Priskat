@@ -6,6 +6,7 @@ import Link from "next/link";
 import imageCompression from "browser-image-compression";
 import { CheckCircle2, Clock, Copy, Upload, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { waNumber } from "@/components/events/PaymentInfo";
 import TicketQr from "@/components/events/TicketQr";
 import { rupiah, STATUS_LABEL, type RegSettings, type Registration } from "@/lib/eventReg";
 
@@ -136,6 +137,10 @@ export default function EventRegisterClient({
               {busy ? "Mengunggah…" : reg.status === "pending_review" ? "Ganti foto bukti transfer" : "Unggah bukti transfer"}
               <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) void sendProof(f); e.target.value = ""; }} />
             </label>
+            {settings.treasurer_wa && (
+              <a href={`https://wa.me/${waNumber(settings.treasurer_wa)}?text=${encodeURIComponent(`Halo, saya ${reg.full_name}. Saya sudah transfer ${rupiah(reg.amount)} untuk ${eventTitle}. Ini bukti transfer saya.`)}`} target="_blank" rel="noopener noreferrer"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-emerald-950">Kirim bukti ke WhatsApp Bendahara</a>
+            )}
           </div>
         )}
 

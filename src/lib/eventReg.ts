@@ -10,6 +10,7 @@ export type RegSettings = {
   bank_name: string | null;
   bank_account: string | null;
   bank_holder: string | null;
+  treasurer_wa?: string | null;
   payment_note: string | null;
   deadline: string | null;
   fields: RegField[];

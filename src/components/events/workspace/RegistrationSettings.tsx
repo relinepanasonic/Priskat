@@ -13,6 +13,7 @@ export default function RegistrationSettings({ eventId, settings, onSaved }: { e
   const [acct, setAcct] = useState(settings?.bank_account ?? "");
   const [holder, setHolder] = useState(settings?.bank_holder ?? "");
   const [note, setNote] = useState(settings?.payment_note ?? "");
+  const [wa, setWa] = useState(settings?.treasurer_wa ?? "");
   const [deadline, setDeadline] = useState(settings?.deadline ?? "");
   const [welcome, setWelcome] = useState(settings?.welcome_text ?? "");
   const [linkOpen, setLinkOpen] = useState(settings?.link_open ?? true);
@@ -26,12 +27,12 @@ export default function RegistrationSettings({ eventId, settings, onSaved }: { e
 
   async function save() {
     setMsg(null);
-    if (paid && (!bank.trim() || !acct.trim() || !holder.trim())) { setMsg("Isi nama bank, nomor rekening, dan nama pemilik untuk acara berbayar."); return; }
+    if (paid && (!bank.trim() || !acct.trim() || !holder.trim() || !wa.trim())) { setMsg("Isi nama bank, nomor rekening, nama pemilik, dan WhatsApp Bendahara untuk acara berbayar."); return; }
     setBusy(true);
     const clean = fields.filter((f) => f.label.trim()).map((f, i) => ({ ...f, key: f.key || `q${i + 1}`, options: f.type === "select" ? (f.options ?? []).filter(Boolean) : undefined }));
     const { error } = await (createClient() as any).from("event_reg_settings").upsert({
       event_id: eventId, price: Math.max(0, Math.round(Number(price) || 0)),
-      bank_name: bank.trim() || null, bank_account: acct.trim() || null, bank_holder: holder.trim() || null, payment_note: note.trim() || null,
+      bank_name: bank.trim() || null, bank_account: acct.trim() || null, bank_holder: holder.trim() || null, treasurer_wa: wa.trim() || null, payment_note: note.trim() || null,
       deadline: deadline || null, welcome_text: welcome.trim() || null, link_open: linkOpen, link_auto_approve: autoApprove, fields: clean,
       updated_at: new Date().toISOString(),
     });
@@ -46,7 +47,7 @@ export default function RegistrationSettings({ eventId, settings, onSaved }: { e
         <input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} className={inputCls} />
       </Field>
 
-      {paid && (
+      {(
         <div className="space-y-3 rounded-xl border border-brand-gold/30 bg-brand-gold/5 p-3.5">
           <p className="text-xs font-bold uppercase tracking-wider text-brand-gold">Transfer manual</p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -54,6 +55,7 @@ export default function RegistrationSettings({ eventId, settings, onSaved }: { e
             <Field label="Nomor rekening"><input value={acct} onChange={(e) => setAcct(e.target.value)} inputMode="numeric" className={inputCls} /></Field>
           </div>
           <Field label="Nama pemilik rekening"><input value={holder} onChange={(e) => setHolder(e.target.value)} className={inputCls} /></Field>
+          <Field label="WhatsApp Bendahara" hint="Tempat peserta mengirim bukti transfer. Contoh 08123456789. Wajib diisi kalau acara berbayar."><input value={wa} onChange={(e) => setWa(e.target.value)} inputMode="tel" placeholder="08123456789" className={inputCls} /></Field>
           <Field label="Catatan untuk peserta (opsional)"><textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Mis. kode berita transfer" className={`${inputCls} rounded-2xl`} /></Field>
         </div>
       )}

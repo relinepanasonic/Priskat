@@ -25,8 +25,8 @@ const serif = { fontFamily: "'Lora', Georgia, serif" };
 
 /** The ticket on screen: the person's name with the QR code, a download button, and the reminder to bring it. */
 export default function GuestTicketView({
-  code, name, eventTitle, justRegistered, emailed, email, pending, event, promoteApp,
-}: { code: string; name: string; eventTitle: string; justRegistered?: boolean; emailed?: boolean; email?: string; pending?: boolean; event?: TicketEvent; promoteApp?: boolean }) {
+  code, name, eventTitle, justRegistered, emailed, email, pending, event, promoteApp, extra,
+}: { code: string; name: string; eventTitle: string; justRegistered?: boolean; emailed?: boolean; email?: string; pending?: boolean; event?: TicketEvent; promoteApp?: boolean; extra?: React.ReactNode }) {
   const cal = event ? calendarLinks(event) : null;
   return (
     <div className="space-y-4">
@@ -41,6 +41,8 @@ export default function GuestTicketView({
           </div>
         </div>
       )}
+
+      {pending && extra}
 
       {!pending && (
         <div className="rounded-3xl border border-brand-gold/30 bg-[#1a1d24] p-5 text-center">
