@@ -52,10 +52,10 @@ export default async function GuestEventPage({ params, searchParams }: { params:
   const s = st as { event_id: string; open: boolean; link_open?: boolean; deadline: string | null; fields: RegField[]; welcome_text: string | null; price: number } | null;
   if (!s) notFound();
 
-  type Ev = { title: string; tagline?: string | null; event_date: string | null; end_date?: string | null; location: string | null; maps_url?: string | null; banner_image_url: string | null; status: string; promo_text?: string | null; promo_images?: string[] | null };
+  type Ev = { title: string; tagline?: string | null; event_date: string | null; end_date?: string | null; location: string | null; maps_url?: string | null; banner_image_url: string | null; status: string; description?: string | null; capacity?: number | null; promo_text?: string | null; promo_images?: string[] | null };
   // the promotional columns come with 136_event_promo_content.sql; before that the page still works
   let e: Ev | null = null;
-  const full = await db.from("events").select("title, tagline, event_date, end_date, location, maps_url, banner_image_url, status, promo_text, promo_images").eq("id", s.event_id).maybeSingle();
+  const full = await db.from("events").select("title, tagline, description, capacity, event_date, end_date, location, maps_url, banner_image_url, status, promo_text, promo_images").eq("id", s.event_id).maybeSingle();
   if (!full.error) e = full.data as Ev | null;
   else {
     const plain = await db.from("events").select("title, event_date, location, banner_image_url, status").eq("id", s.event_id).maybeSingle();
@@ -97,8 +97,10 @@ export default async function GuestEventPage({ params, searchParams }: { params:
           <p className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
             <span>{e.location}{e.maps_url && <> <a href={e.maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand-gold underline underline-offset-2">Buka peta <ExternalLink className="h-3 w-3" /></a></>}</span></p>
         )}
-        <p className="flex items-start gap-3"><Ticket className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>{rupiah(s.price ?? 0)} per orang</span></p>
+        <p className="flex items-start gap-3"><Ticket className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>{rupiah(s.price ?? 0)} per orang{e.capacity != null ? ` · Kuota ${e.capacity} orang` : ""}</span></p>
       </section>
+
+      {paragraphs.length === 0 && e.description && <p className="whitespace-pre-line text-[15px] leading-relaxed text-gray-200">{e.description}</p>}
 
       {paragraphs.length > 0 && (
         <section className="space-y-3.5">

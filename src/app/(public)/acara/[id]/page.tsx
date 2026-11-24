@@ -34,6 +34,12 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
     banner_image_url: string | null; capacity: number | null; status: string; community_id: string | null; community: { name: string; slug: string | null } | null;
   } | null;
   if (!event) notFound();
+  // the same content as the event link (/e/...): tagline, promotional text and photos (136 SQL; the page still works before it)
+  let promo: { tagline: string | null; promo_text: string | null; promo_images: string[] | null } = { tagline: null, promo_text: null, promo_images: null };
+  const pr = await supabase.from("events").select("tagline, promo_text, promo_images").eq("id", id).maybeSingle();
+  if (!pr.error && pr.data) promo = pr.data as typeof promo;
+  const paragraphs = (promo.promo_text ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  const photos = (promo.promo_images ?? []).filter(Boolean).slice(0, 3);
 
   let settings: RegSettings | null = null;
   let reg: Registration | null = null;
@@ -68,12 +74,13 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
 
       {event.banner_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={event.banner_image_url} alt="" className="h-48 w-full rounded-2xl object-cover" />
+        <img src={event.banner_image_url} alt="" className="max-h-[30rem] w-full rounded-2xl object-cover" />
       )}
 
       <div>
         {event.community && <p className="text-[11px] font-bold uppercase tracking-[0.25em]" style={{ color: GOLD }}>{event.community.name}</p>}
         <h1 className="mt-1 text-2xl font-bold text-white" style={serif}>{event.title}</h1>
+        {promo.tagline && <p className="mt-1 text-base font-medium leading-snug" style={{ color: GOLD }}>{promo.tagline}</p>}
         <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold" style={{ color: GOLD }}>
           <CalendarDays className="h-4 w-4" /> {fmt(event.event_date)}, {fmtTime(event.event_date)}
         </p>
@@ -86,8 +93,23 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         {event.capacity != null && (
           <p className="mt-1 flex items-center gap-1.5 text-xs text-brand-muted"><Users className="h-3.5 w-3.5" /> Kuota {event.capacity} orang</p>
         )}
-        {event.description && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-300">{event.description}</p>}
+        {paragraphs.length === 0 && event.description && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-300">{event.description}</p>}
       </div>
+
+      {paragraphs.length > 0 && (
+        <section className="space-y-3.5">
+          {paragraphs.map((p, i) => <p key={i} className="text-[15px] leading-relaxed text-gray-200">{p}</p>)}
+        </section>
+      )}
+
+      {photos.length > 0 && (
+        <section className={photos.length === 1 ? "" : "-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"}>
+          {photos.map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={src} src={src} alt={`${event.title} ${i + 1}`} className={photos.length === 1 ? "w-full rounded-2xl object-cover" : "aspect-[4/5] w-60 shrink-0 snap-center rounded-2xl object-cover"} />
+          ))}
+        </section>
+      )}
 
       {canManage && (
         <Link href={manageHref} className="flex items-center justify-center gap-2 rounded-xl border border-brand-gold/40 bg-brand-gold/10 py-3 text-sm font-semibold text-brand-gold">
