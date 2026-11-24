@@ -39,7 +39,9 @@ export default function LoginPage() {
       setError(friendlyAuthError(error.message));
       return;
     }
-    router.push("/");
+    // /login?next=/acara/<id> brings the person back to that page (only paths inside the app)
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(next && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/");
     router.refresh();
   }
 

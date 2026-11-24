@@ -118,7 +118,7 @@ export default async function GuestEventPage({ params, searchParams }: { params:
       )}
 
       <EventLandingCta closed={closed} startOpen={daftar === "1"} share={<EventShare text={shareText} />}>
-        <GuestRegisterForm code={code.toLowerCase()} eventTitle={e.title} welcome={welcome} fields={s.fields ?? []} />
+        <GuestRegisterForm code={code.toLowerCase()} eventId={s.event_id} event={{ title: e.title, start: e.event_date, end: e.end_date ?? null, location: e.location, url: registerLink(code.toLowerCase()) }} eventTitle={e.title} welcome={welcome} fields={s.fields ?? []} />
       </EventLandingCta>
     </main>
   );

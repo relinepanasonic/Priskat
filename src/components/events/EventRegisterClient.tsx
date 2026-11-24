@@ -83,7 +83,7 @@ export default function EventRegisterClient({
     return (
       <div className="rounded-2xl border border-brand-gold/30 bg-brand-gold/10 p-5 text-center">
         <p className="text-sm text-brand-light">Masuk ke akunmu untuk mendaftar di acara ini.</p>
-        <Link href="/login" className="mt-3 inline-block rounded-xl bg-brand-gold px-6 py-2.5 text-sm font-bold text-brand-dark">Masuk</Link>
+        <Link href={`/login?next=/acara/${eventId}`} className="mt-3 inline-block rounded-xl bg-brand-gold px-6 py-2.5 text-sm font-bold text-brand-dark">Masuk</Link>
       </div>
     );
   }
