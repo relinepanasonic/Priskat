@@ -289,7 +289,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   if (!camp) return <div className="p-8 text-center text-gray-500">Loading Dashboard...</div>;
 
   return (
-    <div className="flex flex-col h-full bg-[#111]">
+    <div className="flex flex-col min-h-full bg-[#111]">
       <div className="p-6 border-b border-[#333] bg-[#1a1d24]">
         <Link href={inAdmin ? `/admin/communities/${slug}/promotion` : `/camp/${slug}/ongoing`} className="inline-flex items-center gap-2 text-brand-muted hover:text-brand-gold text-sm font-semibold mb-4 transition-colors">
           <ArrowLeft className="w-4 h-4" /> {inAdmin ? "Kembali ke Event" : "Back to My Services"}
@@ -323,7 +323,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         ))}
       </div>
 
-      <div className="flex-1 p-4 md:p-6 pb-28 md:pb-6 overflow-y-auto flex flex-col">
+      <div className="flex-1 p-4 md:p-6 pb-28 md:pb-8 flex flex-col">
         {activeTab === "peserta" && linkedEventId && (
           <PesertaSection eventId={linkedEventId} eventTitle={linkedEventTitle} crew={crewMembers.map((c) => ({ id: c.id, name: c.name, position: c.position }))} canMarkPaid={canMarkPaid} />
         )}

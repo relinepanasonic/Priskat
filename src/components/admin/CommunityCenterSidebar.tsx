@@ -81,7 +81,7 @@ export default function CommunityCenterSidebar({
       )}
     </div>
 
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-[#333] bg-[#1a1d24] md:flex">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-[#333] bg-[#1a1d24] md:flex">
       <div className="flex items-center gap-2.5 px-4 py-5">
         <Image src="/cc/logo.png" alt="" width={36} height={36} className="rounded-lg" />
         <div className="leading-tight">
@@ -90,7 +90,7 @@ export default function CommunityCenterSidebar({
         </div>
       </div>
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+      <div className="flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-4">
         {pathname !== "/admin/communities" && (
           <Link href="/admin/communities" className="flex items-center gap-2.5 rounded-xl border border-brand-gold/30 px-3 py-2.5 text-sm font-semibold text-brand-gold transition-colors hover:bg-brand-gold/10">
             <Home className="h-4 w-4" /> Community Center

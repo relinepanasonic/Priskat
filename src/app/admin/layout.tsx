@@ -70,7 +70,7 @@ export default async function AdminLayout({
       communities = sortCommunities(((mine as unknown as { community: C | null }[]) ?? []).map((r) => r.community).filter((c): c is C => !!c));
     }
     return (
-      <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
+      <div className="flex min-h-dvh flex-col bg-brand-dark md:h-dvh md:flex-row md:overflow-hidden">
         <CommunityCenterSidebar
           communities={communities}
           canManageAll={["founder", "superadmin"].includes(String(profile?.role ?? "").toLowerCase())}
@@ -79,7 +79,7 @@ export default async function AdminLayout({
         />
         <CommunityAdminGuard />
         {onCcHost && <InstallApp />}
-        <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">
+        <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-dvh md:overflow-y-auto md:overscroll-contain md:pb-0">
           <div className="min-h-full bg-[#1e2128] p-4 md:p-6 lg:p-8">
             {children}
           </div>
@@ -89,9 +89,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row bg-brand-dark">
+    <div className="flex min-h-dvh flex-col bg-brand-dark md:h-dvh md:flex-row md:overflow-hidden">
       <Navbar profile={profile} lang={lang} isCommunityAdmin={isCommunityAdmin} />
-      <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-screen md:overflow-y-auto md:pb-0">
+      <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-dvh md:overflow-y-auto md:overscroll-contain md:pb-0">
         <div className="p-6 lg:p-8 bg-[#1e2128] min-h-full">
           {children}
         </div>
