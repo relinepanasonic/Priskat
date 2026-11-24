@@ -124,14 +124,14 @@ function AboutForm({ event, eventId, settings, reload, isManager }: { event: Wor
         <button onClick={save} disabled={busy} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan"}</button>
       </Collapse>
 
-      {/* 2. Promotional Event: the text people read before they register, and up to 3 pictures */}
-      <Collapse title="Promotional Event" subtitle="Teks promosi dan foto yang dilihat orang sebelum mendaftar" open={openPromo} onToggle={() => setOpenPromo((v) => !v)}>
-        <PromoContent key={`${event.promo_text}-${(event.promo_images ?? []).length}`} event={event} reload={reload} />
-      </Collapse>
-
-      {/* 3. Pengaturan Pendaftaran */}
+      {/* 2. Pengaturan Pendaftaran: date, time and price first */}
       <Collapse title="Pengaturan Pendaftaran" subtitle="Biaya, rekening, batas tanggal, dan pertanyaan di formulir" open={openSettings} onToggle={() => setOpenSettings((v) => !v)}>
         <RegistrationSettings eventId={eventId} settings={settings} onSaved={() => void reload()} />
+      </Collapse>
+
+      {/* 3. Promotional Event: the text people read before they register, and up to 3 pictures */}
+      <Collapse title="Promotional Event" subtitle="Teks promosi dan foto yang dilihat orang sebelum mendaftar" open={openPromo} onToggle={() => setOpenPromo((v) => !v)}>
+        <PromoContent key={`${event.promo_text}-${(event.promo_images ?? []).length}`} event={event} reload={reload} />
       </Collapse>
 
       {/* 4. Pendaftaran dibuka: the link, the messages, and the button to close at the bottom */}
