@@ -145,8 +145,10 @@ export default function PesertaSection({ eventId, eventTitle, crew, canMarkPaid 
   const fieldCols = (settings?.fields ?? []).filter((x) => x.type !== "photo");
   const allCols: [SortKey, string][] = [...COLS.slice(0, 4), ...fieldCols.map((x) => [`f:${x.key}`, x.label] as [SortKey, string]), ...COLS.slice(4)];
   // one grid for the header and every row: name, paroki, WhatsApp, the questions, group, status, actions
-  const GRID = ["minmax(170px,1.4fr)", "minmax(120px,1fr)", "minmax(120px,1fr)", "minmax(170px,1.2fr)", ...fieldCols.map(() => "minmax(120px,1fr)"), "minmax(150px,1fr)", "minmax(120px,1fr)", "minmax(96px,0.7fr)", "minmax(250px,1.4fr)"].join(" ");
-  const GRID_MIN = 170 + 120 + 120 + 170 + fieldCols.length * 120 + 150 + 120 + 96 + 250 + 40 * 2;
+  // compact on purpose: the standard columns fit one screen; every extra question column (+ Kolom) adds width and the table scrolls sideways
+  const BASE = [130, 90, 110, 150, 115, 120, 70, 230];
+  const GRID = [`minmax(${BASE[0]}px,1.3fr)`, `minmax(${BASE[1]}px,1fr)`, `minmax(${BASE[2]}px,1fr)`, `minmax(${BASE[3]}px,1.3fr)`, ...fieldCols.map(() => "minmax(110px,1fr)"), `minmax(${BASE[4]}px,1fr)`, `minmax(${BASE[5]}px,1fr)`, `minmax(${BASE[6]}px,0.6fr)`, `minmax(${BASE[7]}px,1.3fr)`].join(" ");
+  const GRID_MIN = BASE.reduce((x, y) => x + y, 0) + fieldCols.length * 110 + (BASE.length + fieldCols.length - 1) * 12 + 32;
 
   function openEdit(r: Registration) {
     const answers: Record<string, string> = {};
