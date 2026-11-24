@@ -30,6 +30,9 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
   const { supabase, community, canEdit } = await getCommunityPageContext(slug);
   if (!community) redirect("/camp");
 
+  const { data: logoRow } = await supabase.from("communities").select("logo_url").eq("id", community.id).maybeSingle();
+  const logo = (logoRow as { logo_url?: string | null } | null)?.logo_url ?? null;
+
   const { data } = await supabase
     .from("events")
     .select("id, title, description, event_date, end_date, location, maps_url, banner_image_url")
@@ -43,12 +46,22 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
   const past = events.filter((e) => e.event_date && e.event_date.slice(0, 10) < today).reverse();
 
   const card = (e: EventRow, dim = false) => (
-    <article key={e.id} className={`overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c] ${dim ? "opacity-70" : ""}`}>
-      {e.banner_image_url && (
+    <article key={e.id} className={`flex flex-col overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c] ${dim ? "opacity-70" : ""}`}>
+      {/* Every card has the same picture: the event poster, or the community logo when there is none */}
+      {e.banner_image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={e.banner_image_url} alt="" className="aspect-[4/5] w-full object-cover md:aspect-auto md:h-40" loading="lazy" />
+      ) : (
+        <div className="flex aspect-[4/5] w-full items-center justify-center bg-[#0f1218] md:aspect-auto md:h-40">
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="" className="h-1/2 w-1/2 rounded-2xl object-contain" loading="lazy" />
+          ) : (
+            <CalendarDays className="h-10 w-10 text-brand-muted/40" />
+          )}
+        </div>
       )}
-      <div className="p-2.5 md:p-4">
+      <div className="flex flex-1 flex-col p-2.5 md:p-4">
         <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-white md:text-lg" style={serif}>{e.title}</h3>
         {e.event_date && (
           <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold" style={{ color: GOLD }}>
@@ -67,9 +80,9 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
           </p>
         )}
         {e.description && <p className="mt-2 hidden line-clamp-4 text-sm leading-relaxed text-gray-300 md:block">{e.description}</p>}
-        <Link href={`/acara/${e.id}`} className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-3 py-1.5 text-[11px] font-bold text-brand-dark md:mt-3 md:px-4 md:py-2 md:text-xs">
+        <div className="mt-auto pt-2.5"><Link href={`/acara/${e.id}`} className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-brand-gold px-3 py-1.5 text-[11px] font-bold text-brand-dark md:px-4 md:py-2 md:text-xs">
           Detail dan daftar
-        </Link>
+        </Link></div>
       </div>
     </article>
   );

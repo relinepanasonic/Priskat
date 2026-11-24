@@ -41,16 +41,15 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const promos = ((promoRows as { id: string; title: string; event_date: string | null; banner_image_url: string | null }[]) ?? []);
 
   // Everyone can read this page, private or not. People who are not members get the join button here.
-  // Being a site admin does not make you a member: only real membership (or being this community's admin) hides the button
+  // Being a site admin or community admin does not make you a member: only real membership hides the button
   let joinStatus: JoinStatus = everyone ? "member" : "none";
   if (user && !everyone) {
-    const [{ data: prof }, { data: ms }, { data: req }, { data: adm }] = await Promise.all([
+    const [{ data: prof }, { data: ms }, { data: req }] = await Promise.all([
       supabase.from("profiles").select("community_id").eq("id", user.id).maybeSingle(),
       supabase.from("community_memberships" as any).select("community_id").eq("user_id", user.id).eq("community_id", community.id).maybeSingle(),
       supabase.from("community_join_requests").select("id").eq("user_id", user.id).eq("community_id", community.id).eq("status", "pending").maybeSingle(),
-      supabase.from("community_admins").select("id").eq("user_id", user.id).eq("community_id", community.id).maybeSingle(),
     ]);
-    if ((prof as { community_id?: string | null } | null)?.community_id === community.id || ms || adm) joinStatus = "member";
+    if ((prof as { community_id?: string | null } | null)?.community_id === community.id || ms) joinStatus = "member";
     else if (req) joinStatus = "pending";
   }
   const showJoin = !everyone && joinStatus !== "member" && c.join_mode !== "closed";
