@@ -59,13 +59,23 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     .map((s) => s.replace(/^\s*\d+[.)]\s*/, "").trim())
     .filter(Boolean);
 
+  // Active events: published, not finished yet
+  const { count: activeEvents } = everyone
+    ? { count: 0 }
+    : await supabase.from("events").select("id", { count: "exact", head: true })
+        .eq("community_id", community.id).eq("status", "published")
+        .or(`end_date.gte.${todayJ},and(end_date.is.null,event_date.gte.${todayJ}),and(end_date.is.null,event_date.is.null)`);
+
   const stats = everyone
     ? [
         { label: "Anggota", value: members ?? 0, icon: Users },
         { label: "Keuskupan", value: dioceseCount, icon: MapPin },
         { label: "Romo", value: romo ?? 0, icon: BadgeCheck },
       ]
-    : [{ label: "Anggota", value: members ?? 0, icon: Users }];
+    : [
+        { label: "Anggota", value: members ?? 0, icon: Users },
+        { label: "Event Aktif", value: activeEvents ?? 0, icon: CalendarDays },
+      ];
 
   return (
     <div className="space-y-5 p-4 md:space-y-8 md:p-6">
@@ -105,7 +115,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           <p className="relative mt-2 text-[11px] text-brand-muted">{c.join_mode === "open" ? "Terbuka untuk semua." : "Permintaanmu akan ditinjau oleh admin komunitas."}</p>
         )}
 
-        <div className={`relative mt-5 gap-3 md:mt-6 ${stats.length === 1 ? "inline-grid w-36" : "grid max-w-md grid-cols-3"}`}>
+        <div className={`relative mt-5 gap-3 md:mt-6 grid max-w-md ${stats.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
           {stats.map((s) => (
             <div key={s.label} className="rounded-2xl bg-white/5 p-3 text-center" style={{ border: `1px solid ${GOLD}22` }}>
               <s.icon className="mx-auto h-4 w-4" style={{ color: GOLD }} />
