@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, MessageCircle } from "lucide-react";
+import { Copy } from "lucide-react";
 import { rupiah } from "@/lib/eventReg";
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
@@ -39,9 +39,7 @@ export default function PaymentInfo({ amount, bank, account, holder, note, treas
       {note && <p className="mt-3 text-xs leading-relaxed text-brand-light">{note}</p>}
       {wa ? (
         <a href={`https://wa.me/${wa}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-emerald-950 active:scale-[0.99]">
-          <MessageCircle className="h-4 w-4" /> Kirim bukti transfer ke WhatsApp Bendahara
-        </a>
+          className="mt-4 flex w-full items-center justify-center rounded-xl bg-emerald-500 py-3 text-sm font-bold text-emerald-950">Kirim bukti ke WhatsApp Bendahara</a>
       ) : (
         <p className="mt-3 text-[11px] text-brand-muted">Setelah transfer, kirim bukti ke panitia.</p>
       )}
