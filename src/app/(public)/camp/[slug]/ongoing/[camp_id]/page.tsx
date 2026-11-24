@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet, UserCheck, QrCode, Megaphone, Info } from "lucide-react";
+import { ArrowLeft, CheckSquare, Calendar, CalendarPlus, MessageSquare, Plus, Send, Users, Pencil, Trash2, Wallet, UserCheck, QrCode, Megaphone, Info, Images } from "lucide-react";
 import { usePathname } from "next/navigation";
 import CampFinance from "@/components/camp/CampFinance";
 import { isCampSeries } from "@/lib/campTypes";
@@ -11,6 +11,7 @@ import PesertaSection from "@/components/events/workspace/PesertaSection";
 import QrSection from "@/components/events/workspace/QrSection";
 import PromosiSection from "@/components/events/workspace/PromosiSection";
 import AboutSection from "@/components/events/workspace/AboutSection";
+import AlbumSection from "@/components/events/workspace/AlbumSection";
 import CrewSection, { type MyLevel } from "@/components/events/workspace/CrewSection";
 import MeetingSection from "@/components/events/workspace/MeetingSection";
 import Link from "next/link";
@@ -21,7 +22,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
   const camp_id = unwrappedParams.camp_id;
   const slug = unwrappedParams.slug;
 
-  const [activeTab, setActiveTab] = useState<"peserta" | "tentang" | "qr" | "promosi" | "todo" | "meeting" | "chat" | "crew" | "keuangan">("peserta");
+  const [activeTab, setActiveTab] = useState<"peserta" | "tentang" | "qr" | "promosi" | "album" | "todo" | "meeting" | "chat" | "crew" | "keuangan">("peserta");
   const inAdmin = usePathname().startsWith("/admin");
   const [camp, setCamp] = useState<any>(null);
   const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
@@ -310,6 +311,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
           { id: "meeting", label: "Meeting", Icon: Calendar },
           { id: "todo", label: "To Do", Icon: CheckSquare },
           { id: "chat", label: "Chat", Icon: MessageSquare },
+          ...(linkedEventId ? [{ id: "album", label: "Album", Icon: Images }] : []),
           ...(isLead ? [{ id: "keuangan", label: "Keuangan", Icon: Wallet }] : []),
         ].map(({ id, label, Icon }) => (
           <button
@@ -330,6 +332,7 @@ export default function ProductivityDashboard({ params }: { params: Promise<{ sl
         {activeTab === "tentang" && linkedEventId && <AboutSection eventId={linkedEventId} isManager={level.role === "manager"} />}
         {activeTab === "qr" && linkedEventId && <QrSection eventId={linkedEventId} />}
         {activeTab === "promosi" && linkedEventId && <PromosiSection eventId={linkedEventId} />}
+        {activeTab === "album" && linkedEventId && <AlbumSection eventId={linkedEventId} />}
 
         {activeTab === "crew" && (
           <CrewSection cohortId={camp_id} eventId={linkedEventId} camp={camp} crew={crewMembers} level={level} onChanged={() => fetchCrew(createClient())} />

@@ -31,6 +31,7 @@ type Props = {
   event: { id: string; title: string; date: string };
   me: string; isAdmin: boolean; isAttendee: boolean; open: boolean;
   initialPhotos: AlbumPhoto[]; initialTags: AlbumTag[]; people: AlbumPerson[]; initialCover: string | null; openPhoto: string | null;
+  embedded?: boolean;
 };
 
 const AUTO_BLUR_KEY = "album-auto-blur-v1";
@@ -39,7 +40,7 @@ const AUTO_BLUR_KEY = "album-auto-blur-v1";
  * The album of one event. Camera during the event, gallery uploads any time; automatic blur detection & removal
  * keeps the album sharp; Instagram-style tap-to-tag, custom cover, share or download.
  */
-export default function AlbumClient({ event, me, isAdmin, isAttendee, open, initialPhotos, initialTags, people, initialCover, openPhoto }: Props) {
+export default function AlbumClient({ event, me, isAdmin, isAttendee, open, initialPhotos, initialTags, people, initialCover, openPhoto, embedded = false }: Props) {
   const db = () => createClient() as any;
   const [photos, setPhotos] = useState(initialPhotos);
   const [tags, setTags] = useState(initialTags);
@@ -306,13 +307,19 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
   const canScanAny = isAdmin ? photos.length > 0 : photos.some(mine);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-3 pb-10 pt-4 md:px-6">
-      <Link href="/album" className="mb-3 inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white"><ArrowLeft className="h-4 w-4" /> Semua album</Link>
+    <div className={embedded ? "w-full" : "mx-auto w-full max-w-3xl px-3 pb-10 pt-4 md:px-6"}>
+      {!embedded && (
+        <Link href="/album" className="mb-3 inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white"><ArrowLeft className="h-4 w-4" /> Semua album</Link>
+      )}
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-white">{event.title}</h1>
-          <p className="text-xs text-brand-muted">{formatWeekdayDate(event.date)} · {photos.length} foto</p>
-        </div>
+        {!embedded ? (
+          <div>
+            <h1 className="text-xl font-bold text-white">{event.title}</h1>
+            <p className="text-xs text-brand-muted">{formatWeekdayDate(event.date)} · {photos.length} foto</p>
+          </div>
+        ) : (
+          <p className="text-xs font-medium text-brand-muted">{photos.length} foto tersimpan</p>
+        )}
         {canScanAny && (
           <button
             type="button"
