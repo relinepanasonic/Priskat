@@ -7,7 +7,7 @@ import { Calendar, Church, ChevronLeft, Newspaper, Crown, HandHeart } from "luci
 
 const FROM_KEY = "news-from-community";
 
-export default function NewsLayoutClient({ children }: { children: React.ReactNode }) {
+export default function NewsLayoutClient({ children, lang = "id" }: { children: React.ReactNode; lang?: "id" | "en" }) {
   const pathname = usePathname();
 
   // Opened from a community page (?cm=<slug>)? Keep a way back while browsing the schedule.
@@ -24,7 +24,7 @@ export default function NewsLayoutClient({ children }: { children: React.ReactNo
   const fromName = from && from.replace(/[-_]/g, "").toLowerCase() === "catholicindonesia" ? "Catholic Indonesia" : "komunitas";
 
   const tabs = [
-    { name: "Church", href: "/news/schedule", icon: Church },
+    { name: lang === "id" ? "Gereja" : "Church", href: "/news/schedule", icon: Church },
     { name: "Event", href: "/news/events", icon: Calendar },
     { name: "Wall of Fame", href: "/news/wall-of-fame", icon: Crown },
     { name: "Donation", href: "/news/donation", icon: HandHeart },

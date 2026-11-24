@@ -22,14 +22,16 @@ const RULES: Rule[] = [
   [/^\/news\/schedule\/search$/, "/news/schedule"],
   [/^\/news\/schedule\/[^/]+\/[^/]+\/[^/]+$/, (m) => m[0].split("/").slice(0, 5).join("/")],
   [/^\/news\/schedule\/[^/]+\/[^/]+$/, "/news/schedule"],
-  [/^\/news\/[^/]+$/, "/news"],
+  // Warta: /news only forwards to its first tab (Gereja), so every tab goes straight up to Beranda
+  [/^\/news(\/[^/]+)?$/, "/"],
   // Komunitas
-  [/^\/community\/messages\/[^/]+$/, "/community/messages"],
-  [/^\/community\/[^/]+$/, "/community"],
+  // Koneksi: /community and /community/messages only forward to a first tab (Thought, Private), so all of it goes up to Beranda
+  [/^\/community(\/.*)?$/, "/"],
   // Komunitas / camp pages
   [/^\/camp\/alumni-data$/, "/camp"],
   [/^\/camp\/[^/]+\/ongoing\/[^/]+$/, (m) => m[0].split("/").slice(0, 4).join("/")],
-  [/^\/camp\/[^/]+\/[^/]+$/, (m) => m[0].split("/").slice(0, 3).join("/")],
+  // /camp/<community> only forwards to its first tab (Tentang), so the tabs of a community go up to the list of communities
+  [/^\/camp\/[^/]+\/[^/]+$/, "/camp"],
   [/^\/camp\/[^/]+$/, "/camp"],
   // Profil
   [/^\/profile\/[^/]+$/, "/profile"],
