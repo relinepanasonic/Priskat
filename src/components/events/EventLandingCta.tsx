@@ -25,7 +25,7 @@ export default function EventLandingCta({ closed, startOpen, share, children }: 
   return (
     <>
       {open ? (
-        <div ref={form} id="daftar" className="scroll-mt-4 space-y-4 border-t border-white/10 pt-6">{children}{share}</div>
+        <div ref={form} id="daftar" className="scroll-mt-4 space-y-4 border-t border-white/10 pt-6">{children}</div>
       ) : (
         <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#121417] via-[#121417]/95 to-transparent px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-8">
           <button onClick={() => setOpen(true)} className="mx-auto block w-full max-w-md rounded-2xl bg-brand-gold py-4 text-base font-bold text-brand-dark shadow-lg shadow-black/40 active:scale-[0.99]">Daftar sekarang</button>
