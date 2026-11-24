@@ -124,18 +124,19 @@ export default function CommunitySlugLayout({
     { name: "Jadwal Misa", href: `/news/schedule?cm=${slug}`, icon: Calendar },
   ];
 
-  // The community page is for its members: about, events, and (for the leader of a Komsel) the Komsel.
+  // Members see Tentang, Event, Komsel and Coverage; non-members only Tentang and Event.
   // Everything an admin manages (camps, events, Komsel, coverage, members, promotion) is in the Community Center.
   const tabs = isCI ? ciTabs : [
     { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
     { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
-    ...(leadsCg && !canPromote ? [{ name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound }] : []),
+    { name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound },
+    { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
   ];
 
   const browseOnly = !isCI && isMember === false;
-  const shownTabs = browseOnly ? tabs.filter((t) => t.name === "Tentang") : tabs;
+  const shownTabs = browseOnly ? tabs.filter((t) => t.name === "Tentang" || t.name === "Event") : tabs;
   useEffect(() => {
-    if (browseOnly && !pathname.startsWith(`/camp/${slug}/tentang`)) router.replace(`/camp/${slug}/tentang`);
+    if (browseOnly && !pathname.startsWith(`/camp/${slug}/tentang`) && !pathname.startsWith(`/camp/${slug}/event`)) router.replace(`/camp/${slug}/tentang`);
   }, [browseOnly, pathname, slug, router]);
 
   // keep the active tab visible in the scrolling tab bar

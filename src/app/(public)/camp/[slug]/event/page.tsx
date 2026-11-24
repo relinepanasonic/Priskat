@@ -46,10 +46,10 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
     <article key={e.id} className={`overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c] ${dim ? "opacity-70" : ""}`}>
       {e.banner_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={e.banner_image_url} alt="" className="h-40 w-full object-cover" loading="lazy" />
+        <img src={e.banner_image_url} alt="" className="aspect-[4/5] w-full object-cover md:aspect-auto md:h-40" loading="lazy" />
       )}
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-white" style={serif}>{e.title}</h3>
+      <div className="p-2.5 md:p-4">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-white md:text-lg" style={serif}>{e.title}</h3>
         {e.event_date && (
           <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold" style={{ color: GOLD }}>
             <CalendarDays className="h-3.5 w-3.5" />
@@ -66,8 +66,8 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
             ) : e.location}
           </p>
         )}
-        {e.description && <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-gray-300">{e.description}</p>}
-        <Link href={`/acara/${e.id}`} className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-4 py-2 text-xs font-bold text-brand-dark">
+        {e.description && <p className="mt-2 hidden line-clamp-4 text-sm leading-relaxed text-gray-300 md:block">{e.description}</p>}
+        <Link href={`/acara/${e.id}`} className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-3 py-1.5 text-[11px] font-bold text-brand-dark md:mt-3 md:px-4 md:py-2 md:text-xs">
           Detail dan daftar
         </Link>
       </div>
@@ -102,13 +102,13 @@ export default async function CommunityEventsPage({ params }: { params: Promise<
           {upcoming.length > 0 && (
             <section>
               <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted">Akan datang</h3>
-              <div className="grid gap-4 sm:grid-cols-2">{upcoming.map((e) => card(e))}</div>
+              <div className="grid grid-cols-2 gap-3 md:gap-4">{upcoming.map((e) => card(e))}</div>
             </section>
           )}
           {past.length > 0 && (
             <section>
               <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted">Sudah berlalu</h3>
-              <div className="grid gap-4 sm:grid-cols-2">{past.map((e) => card(e, true))}</div>
+              <div className="grid grid-cols-2 gap-3 md:gap-4">{past.map((e) => card(e, true))}</div>
             </section>
           )}
         </div>
