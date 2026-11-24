@@ -7,7 +7,7 @@ import { BibleChallengeCard } from "@/components/game/BibleChallenge";
 import { NameText } from "@/components/game/Cosmetics";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Users, ArrowRight, Clock, Church } from "lucide-react";
+import { Images, Phone, MessageSquare, Tent, Heart, Pencil, Camera, X, Users, ArrowRight, Clock, Church } from "lucide-react";
 import FeedClient from "@/components/social/FeedClient";
 import { formatDate } from "@/lib/utils";
 import { uploadImage, storagePath } from "@/lib/upload";
@@ -97,8 +97,10 @@ export default function HomeTabsClient({
           <Pencil className="h-4 w-4" />
         </Link>
 
-        <div className="absolute bottom-[90px] right-4 flex flex-col gap-3 z-20">
-          
+        <div className="absolute bottom-[112px] right-4 flex flex-col gap-3 z-20">
+          <Link href="/album" aria-label="Album" className="h-12 w-12 bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] rounded-full flex items-center justify-center text-brand-gold shadow-lg shadow-black/50 hover:bg-[#2a2d35] transition-colors">
+            <Images className="h-5 w-5" />
+          </Link>
           <Link href="/community/messages" aria-label="Pesan" className="h-12 w-12 bg-[#1a1d24]/80 backdrop-blur-md border border-[#333] rounded-full flex items-center justify-center text-brand-gold shadow-lg shadow-black/50 hover:bg-[#2a2d35] transition-colors">
             <MessageSquare className="h-5 w-5 fill-current" />
           </Link>

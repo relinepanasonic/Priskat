@@ -33,6 +33,8 @@ const RULES: Rule[] = [
   // /camp/<community> only forwards to its first tab (Tentang), so the tabs of a community go up to the list of communities
   [/^\/camp\/[^/]+\/[^/]+$/, "/camp"],
   [/^\/camp\/[^/]+$/, "/camp"],
+  // Album: one album goes up to the shelf, the shelf to Beranda
+  [/^\/album\/[^/]+$/, "/album"],
   // Profil
   [/^\/profile\/[^/]+$/, "/profile"],
   // one event

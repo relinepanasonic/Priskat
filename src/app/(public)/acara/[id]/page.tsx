@@ -117,6 +117,10 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         </Link>
       )}
 
+      {reg?.status === "approved" && (
+        <Link href={`/album/${event.id}`} className="flex items-center justify-center gap-2 rounded-xl border border-brand-gold/40 bg-brand-gold/10 py-3 text-sm font-semibold text-brand-gold">Buka album foto event</Link>
+      )}
+
       {event.status === "published" && (
         <EventRegisterClient
           eventId={event.id}
