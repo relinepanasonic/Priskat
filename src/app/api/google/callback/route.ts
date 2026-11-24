@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { googleConfigured } from "@/lib/googleCalendar";
+import { googleConfigured, readState } from "@/lib/googleCalendar";
 
 const page = (title: string, text: string, ok: boolean) =>
   new NextResponse(
@@ -13,13 +13,10 @@ export async function GET(request: NextRequest) {
   if (!googleConfigured()) return page("Google belum diatur", "Isi variabel GOOGLE_* di Vercel.", false);
   const q = request.nextUrl.searchParams;
   if (q.get("error")) return page("Dibatalkan", "Sambungan ke Google Calendar dibatalkan.", false);
-  const state = q.get("state");
-  const cookie = request.cookies.get("g_state")?.value;
-  if (!state || !cookie || state !== cookie) return page("Sesi tidak cocok", "Mulai lagi dari tombol sambung.", false);
-
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return page("Belum masuk", "Masuk ke Ruang Iman dulu, lalu mulai lagi.", false);
+  if (!readState(q.get("state"), user.id)) return page("Sesi sudah habis", "Buka lagi /api/google/connect, lalu sambungkan.", false);
   const { data: prof } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (!["founder", "superadmin"].includes(String(prof?.role ?? "").toLowerCase())) return page("Tidak diizinkan", "Hanya founder atau superadmin.", false);
 
@@ -35,7 +32,5 @@ export async function GET(request: NextRequest) {
 
   const { error } = await (createAdminClient() as any).from("google_calendar_link").upsert({ id: true, refresh_token: j.refresh_token, connected_by: user.id, connected_at: new Date().toISOString() }, { onConflict: "id" });
   if (error) return page("Belum tersimpan", "Jalankan 140_google_calendar.sql di Supabase, lalu coba lagi.", false);
-  const out = page("Google Calendar tersambung", "Setiap pendaftar yang sudah disetujui akan diundang ke acara di kalender Google Ruang Iman, dan acaranya masuk ke kalender mereka.", true);
-  out.cookies.delete("g_state");
-  return out;
+  return page("Google Calendar tersambung", "Setiap pendaftar yang sudah disetujui akan diundang ke acara di kalender Google Ruang Iman, dan acaranya masuk ke kalender mereka.", true);
 }

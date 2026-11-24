@@ -1,4 +1,25 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createHmac, timingSafeEqual } from "crypto";
+
+/** A sign-in state: the user and the time, signed with the client secret. Checked when Google sends the person back. */
+export function makeState(userId: string): string {
+  const payload = Buffer.from(JSON.stringify({ u: userId, t: Date.now() })).toString("base64url");
+  const sig = createHmac("sha256", process.env.GOOGLE_CLIENT_SECRET ?? "").update(payload).digest("base64url");
+  return `${payload}.${sig}`;
+}
+
+export function readState(state: string | null, userId: string): boolean {
+  if (!state || !process.env.GOOGLE_CLIENT_SECRET) return false;
+  const [payload, sig] = state.split(".");
+  if (!payload || !sig) return false;
+  const want = createHmac("sha256", process.env.GOOGLE_CLIENT_SECRET).update(payload).digest("base64url");
+  const a = Buffer.from(sig), b = Buffer.from(want);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
+  try {
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString()) as { u: string; t: number };
+    return d.u === userId && Date.now() - d.t < 20 * 60_000;
+  } catch { return false; }
+}
 
 /**
  * Google Calendar for event registrations. The Ruang Iman Gmail (connected once at /api/google/connect) owns one calendar
