@@ -9,7 +9,7 @@ import { sendPush } from "@/lib/push";
  */
 const EVERY = 3 * 3600_000;
 const SLOT = 15 * 60_000;
-const LONG_AGO = 8 * 3600_000; // an event without an end time counts as running for 8 hours
+const LONG_AGO = 4 * 3600_000; // an event without an end time counts as running for 4 hours
 
 // five different sentences, so two reminders in a row never read the same
 const TEMPLATES: ((event: string) => { title: string; body: string })[] = [
