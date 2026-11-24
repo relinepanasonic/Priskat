@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendRegistrationEmail } from "@/lib/eventMail";
+import { inviteToCalendar } from "@/lib/googleCalendar";
 import { isRegisterKey, registerKeyFilter, type RegField } from "@/lib/eventReg";
 
 export const maxDuration = 30;
@@ -152,6 +153,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ key
   if (status === "approved") {
     emailed = await sendRegistrationEmail({ to: email, name, event: ev.title, start: ev.event_date, location: ev.location, code: ticketCode, passwordLink });
     if (emailed) await db.from("event_registrations" as any).update({ emailed_at: new Date().toISOString() }).eq("id", regId);
+    // the event goes into their Google Calendar (invitation from the Ruang Iman Gmail), when that is connected
+    await inviteToCalendar(ev.id, email, name);
   }
 
   return NextResponse.json({ ok: true, ticket_code: ticketCode, name, approved: status === "approved", emailed });

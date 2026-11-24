@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendRegistrationEmail } from "@/lib/eventMail";
+import { inviteToCalendar } from "@/lib/googleCalendar";
 
 /**
  * After a registration is marked Paid: email the person their QR ticket.
@@ -31,5 +32,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ key
   const e = ev as { title: string; event_date: string | null; location: string | null } | null;
   const sent = await sendRegistrationEmail({ to: r.email, name: r.full_name, event: e?.title ?? "Event", start: e?.event_date ?? null, location: e?.location ?? null, code: r.ticket_code });
   if (sent) await db.from("event_registrations" as any).update({ emailed_at: new Date().toISOString() }).eq("id", body.reg);
+  await inviteToCalendar(eventId, r.email, r.full_name);
   return NextResponse.json({ ok: sent });
 }
