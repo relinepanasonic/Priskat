@@ -43,7 +43,7 @@ export default async function ProfileEditPage() {
 
         {/* PROFILE EDIT */}
         <section className="mb-8">
-          <div className="card-3d p-6 shadow-sm">
+          <div className="card-lux p-6">
             <ProfileEditForm profile={profile} />
           </div>
         </section>

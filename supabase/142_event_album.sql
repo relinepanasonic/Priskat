@@ -1,6 +1,6 @@
 -- Event album: everyone who attends an event takes photos with the app or uploads them to the event's shared album.
 -- Who may SEE the album: people registered (approved) for the event, and the event's admins.
--- Who may ADD photos: the same people, only while the event is on (from 2 hours before the start until 06:00 the morning after the last day).
+-- Who may ADD photos: the same people. The camera is only for the event (from 2 hours before the start until 06:00 the morning after the last day); uploading from the phone gallery works any time.
 -- Tags (like Instagram), a personal album cover and sharing build on top of this.
 -- Run once in the Supabase SQL editor. Safe to run again.
 
@@ -59,7 +59,7 @@ DROP POLICY IF EXISTS event_photos_read ON public.event_photos;
 CREATE POLICY event_photos_read ON public.event_photos FOR SELECT TO authenticated USING (public.event_attendee(event_id));
 DROP POLICY IF EXISTS event_photos_insert ON public.event_photos;
 CREATE POLICY event_photos_insert ON public.event_photos FOR INSERT TO authenticated
-  WITH CHECK (uploader_id = auth.uid() AND public.event_attendee(event_id) AND public.event_gallery_open(event_id));
+  WITH CHECK (uploader_id = auth.uid() AND public.event_attendee(event_id));
 DROP POLICY IF EXISTS event_photos_delete ON public.event_photos;
 CREATE POLICY event_photos_delete ON public.event_photos FOR DELETE TO authenticated
   USING (uploader_id = auth.uid() OR public.event_admin_of(event_id));
@@ -114,7 +114,7 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('event-photos', 'event-ph
 
 DROP POLICY IF EXISTS event_photos_storage_insert ON storage.objects;
 CREATE POLICY event_photos_storage_insert ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (CASE WHEN bucket_id = 'event-photos' THEN public.event_attendee(((storage.foldername(name))[1])::uuid) AND public.event_gallery_open(((storage.foldername(name))[1])::uuid) ELSE false END);
+  WITH CHECK (CASE WHEN bucket_id = 'event-photos' THEN public.event_attendee(((storage.foldername(name))[1])::uuid) ELSE false END);
 DROP POLICY IF EXISTS event_photos_storage_delete ON storage.objects;
 CREATE POLICY event_photos_storage_delete ON storage.objects FOR DELETE TO authenticated
   USING (CASE WHEN bucket_id = 'event-photos' THEN (owner = auth.uid() OR public.event_admin_of(((storage.foldername(name))[1])::uuid)) ELSE false END);

@@ -44,7 +44,8 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
   const index = view ? photos.findIndex((p) => p.id === view) : -1;
   const photo = index >= 0 ? photos[index] : null;
   const photoTags = photo ? tags.filter((t) => t.photo_id === photo.id) : [];
-  const canAdd = isAttendee && open;
+  const canUpload = isAttendee; // from the phone gallery: any time
+  const canCamera = isAttendee && open; // the camera: only while the event is on
 
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2200); return () => clearTimeout(t); }, [toast]);
   useEffect(() => { setTagMode(false); setPending(null); setQ(""); }, [view]);
@@ -57,10 +58,10 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
     for (const file of list) {
       setProgress(`Mengunggah ${done + 1} dari ${list.length}…`);
       try {
-        const small = await imageCompression(file, { maxSizeMB: 1.2, maxWidthOrHeight: 1600, useWebWorker: true, fileType: "image/webp" });
+        const small = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1600, initialQuality: 0.75, useWebWorker: true, fileType: "image/webp" });
         const path = `${event.id}/${crypto.randomUUID()}.webp`;
         const up = await db().storage.from("event-photos").upload(path, small, { contentType: "image/webp" });
-        if (up.error) throw new Error(open ? "Foto belum bisa diunggah. Coba lagi." : "Album sudah ditutup untuk foto baru.");
+        if (up.error) throw new Error("Foto belum bisa diunggah. Coba lagi.");
         const { data, error: e } = await db().from("event_photos").insert({ event_id: event.id, uploader_id: me, path }).select("id, event_id, uploader_id, path, created_at").single();
         if (e || !data) { await db().storage.from("event-photos").remove([path]); throw new Error("Foto belum tersimpan."); }
         setPhotos((p) => [data as AlbumPhoto, ...p]);
@@ -149,17 +150,20 @@ export default function AlbumClient({ event, me, isAdmin, isAttendee, open, init
         <p className="text-xs text-brand-muted">{formatWeekdayDate(event.date)} · {photos.length} foto</p>
       </div>
 
-      {canAdd ? (
-        <div className="mb-4 grid grid-cols-2 gap-2.5">
-          <button onClick={() => camera.current?.click()} disabled={!!progress} className="flex items-center justify-center gap-2 rounded-xl bg-brand-gold py-3.5 text-sm font-bold text-brand-dark disabled:opacity-60"><Camera className="h-5 w-5" /> Kamera</button>
-          <button onClick={() => gallery.current?.click()} disabled={!!progress} className="flex items-center justify-center gap-2 rounded-xl border border-brand-gold/50 py-3.5 text-sm font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-60"><ImagePlus className="h-5 w-5" /> Unggah foto</button>
-          <input ref={camera} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => void addFiles(e.target.files)} />
-          <input ref={gallery} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => void addFiles(e.target.files)} />
-        </div>
+      {canUpload ? (
+        <>
+          <div className="mb-3 grid grid-cols-2 gap-2.5">
+            <button onClick={() => camera.current?.click()} disabled={!!progress || !canCamera} className="flex items-center justify-center gap-2 rounded-xl bg-brand-gold py-3.5 text-sm font-bold text-brand-dark disabled:opacity-40"><Camera className="h-5 w-5" /> Kamera</button>
+            <button onClick={() => gallery.current?.click()} disabled={!!progress} className="flex items-center justify-center gap-2 rounded-xl border border-brand-gold/50 py-3.5 text-sm font-bold text-brand-gold hover:bg-brand-gold/10 disabled:opacity-60"><ImagePlus className="h-5 w-5" /> Unggah foto</button>
+            <input ref={camera} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => void addFiles(e.target.files)} />
+            <input ref={gallery} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => void addFiles(e.target.files)} />
+          </div>
+          {!canCamera && <p className="mb-4 flex items-start gap-2 text-[11px] leading-relaxed text-brand-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-gold" /> Kamera hanya aktif selama event berlangsung. Foto dari galeri HP tetap bisa diunggah kapan saja.</p>}
+        </>
       ) : (
         <p className="mb-4 flex items-start gap-2 rounded-xl border border-[#2a2d35] bg-[#14171c] p-3 text-xs leading-relaxed text-brand-muted">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
-          {!isAttendee ? "Album ini untuk peserta event." : "Foto baru hanya bisa ditambahkan selama event berlangsung. Kamu tetap bisa melihat, menandai, dan membagikan foto di sini."}
+          Album ini untuk peserta event.
         </p>
       )}
       {progress && <p className="mb-3 flex items-center gap-2 rounded-xl bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold"><Loader2 className="h-4 w-4 animate-spin" /> {progress}</p>}

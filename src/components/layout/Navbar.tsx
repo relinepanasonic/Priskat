@@ -32,7 +32,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     { href: "/camp", label: isEn ? "Community" : "Komunitas", icon: Tent },
     { href: "/faith", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: BenedictusCross },
     { href: "/news", label: isEn ? "Warta" : "Warta", icon: Newspaper },
-    { href: "/profile", label: isEn ? "Profile" : "Profil", icon: User },
+    { href: "/profile/edit", label: isEn ? "Profile" : "Profil", icon: User },
   ];
 
   async function handleSignOut() {

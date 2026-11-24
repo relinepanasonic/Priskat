@@ -61,7 +61,7 @@ export default function JourneyEditClient({ userId, initialHistory }: Props) {
       <h2 className="text-xl font-semibold text-brand-gold mb-4 flex items-center gap-2">
         <Shield className="w-5 h-5" /> My Journey
       </h2>
-      <div className="card-3d p-5 shadow-sm">
+      <div className="card-lux p-5">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <p className="text-sm text-brand-muted mb-4">Update the camps you have completed.</p>
           

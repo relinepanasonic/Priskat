@@ -31,7 +31,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-brand-muted">
               <li><Link href="/login" className="hover:text-brand-gold transition-colors">Sign In</Link></li>
               <li><Link href="/register" className="hover:text-brand-gold transition-colors">Join</Link></li>
-              <li><Link href="/profile" className="hover:text-brand-gold transition-colors">My Profile</Link></li>
+              <li><Link href="/profile/edit" className="hover:text-brand-gold transition-colors">My Profile</Link></li>
             </ul>
           </div>
         </div>

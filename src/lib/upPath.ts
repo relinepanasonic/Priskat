@@ -36,7 +36,7 @@ const RULES: Rule[] = [
   // Album: one album goes up to the shelf, the shelf to Beranda
   [/^\/album\/[^/]+$/, "/album"],
   // Profil
-  [/^\/profile\/[^/]+$/, "/profile"],
+  [/^\/profile\/[^/]+$/, "/"],
   // one event
   [/^\/acara\/[^/]+$/, "/news/events"],
 ];
