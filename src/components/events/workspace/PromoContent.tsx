@@ -96,7 +96,9 @@ export default function PromoContent({ event, reload }: { event: WorkspaceEvent;
         <p className="text-[11px] text-brand-muted">Foto potret 4:5 paling pas. Tampil di halaman event, di bawah poster utama.</p>
       </div>
 
-      <div className="space-y-3 border-t border-[#2a2d35] pt-5">
+      {/* PC: the questions on the left, the written text on the right */}
+      <div className="grid items-start gap-5 border-t border-[#2a2d35] pt-5 md:grid-cols-2 md:gap-8">
+      <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-wider text-brand-gold">Jawab dulu, paragraf disusun otomatis</p>
         {QUESTIONS.map((q) => (
           <Field key={q.key} label={q.label}>
@@ -110,12 +112,13 @@ export default function PromoContent({ event, reload }: { event: WorkspaceEvent;
         <button type="button" onClick={write} className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-gold/50 py-2.5 text-sm font-bold text-brand-gold hover:bg-brand-gold/10"><Sparkles className="h-4 w-4" /> Susun paragraf promosi</button>
       </div>
 
-      <div className="space-y-2 border-t border-[#2a2d35] pt-5">
+      <div className="space-y-2 border-t border-[#2a2d35] pt-5 md:border-t-0 md:pt-0">
         <Field label="Teks promosi" hint="Boleh diubah sendiri. Pisahkan paragraf dengan baris kosong.">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={9} maxLength={4000} placeholder="Tulis sendiri di sini, atau jawab pertanyaan di atas lalu tekan Susun paragraf promosi." className={`${inputCls} rounded-2xl leading-relaxed`} />
+          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={14} maxLength={4000} placeholder="Tulis sendiri di sini, atau jawab pertanyaan di atas lalu tekan Susun paragraf promosi." className={`${inputCls} rounded-2xl leading-relaxed`} />
         </Field>
         {msg && <p className={`rounded-lg px-3 py-2 text-xs ${msg.ok ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>{msg.text}</p>}
         <button onClick={save} disabled={busy || uploading} className="w-full rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan promosi"}</button>
+      </div>
       </div>
     </div>
   );

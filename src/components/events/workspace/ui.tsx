@@ -48,15 +48,15 @@ export function Switch({ checked, onChange, label, hint }: { checked: boolean; o
 /** A box that opens and closes. */
 export function Collapse({ title, subtitle, open, onToggle, children }: { title: string; subtitle?: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#2a2d35] bg-[#14171c]">
-      <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left md:px-5">
+    <section className={`overflow-hidden rounded-2xl border transition-colors ${open ? "border-brand-gold/40 bg-[#171a1f]" : "border-[#2a2d35] bg-[#14171c]"}`}>
+      <button type="button" onClick={onToggle} aria-expanded={open} className={`flex w-full items-center justify-between gap-3 px-4 py-4 text-left md:px-5 ${open ? "bg-[#2a2418]" : ""}`}>
         <span>
           <span className="block text-sm font-bold text-white">{title}</span>
           {subtitle && <span className="mt-0.5 block text-xs text-brand-muted">{subtitle}</span>}
         </span>
         <ChevronDown className={`h-5 w-5 shrink-0 text-brand-gold transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && <div className="space-y-4 border-t border-[#2a2d35] p-4 md:p-5">{children}</div>}
+      {open && <div className="space-y-4 border-t border-brand-gold/20 p-4 md:p-5">{children}</div>}
     </section>
   );
 }
