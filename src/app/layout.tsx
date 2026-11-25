@@ -3,6 +3,7 @@ import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import UpNavigation from "@/components/native/UpNavigation";
+import AppSplash from "@/components/layout/AppSplash";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ruangiman.app"),
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Ruang Iman",
-    startupImage: "/apple-touch-icon.png",
+    startupImage: "/loadingRI.png",
   },
   icons: {
     icon: "/favicon.png",
@@ -51,6 +52,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-brand-cream antialiased">
+        <AppSplash />
         <SupabaseProvider session={session}>
           <UpNavigation />
           {children}
