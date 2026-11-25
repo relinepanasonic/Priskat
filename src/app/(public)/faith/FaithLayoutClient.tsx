@@ -4,14 +4,15 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { TRADISI } from "@/lib/spiritualNames";
-import { Sunrise, Book, HandHeart, Church, Heart, LifeBuoy, Mic2, CircleDot, Cross, Flame } from "lucide-react";
+import { Sunrise, Book, HandHeart, Church, Heart, LifeBuoy, Mic2, CircleDot, Cross, Flame, Sparkles } from "lucide-react";
 
-type TabId = "today" | "bible" | "hidup" | "intensi" | "devosi" | "ekaristi";
+type TabId = "today" | "bible" | "hidup" | "saints" | "intensi" | "devosi" | "ekaristi";
 
 /** Which tab a page belongs to. The specific pages are checked before the general ones. */
 function tabOf(p: string): TabId {
   if (p === "/faith") return "today";
   if (p.startsWith("/faith/bible")) return "bible";
+  if (p.startsWith("/faith/saints")) return "saints";
   if (p.startsWith("/faith/prayers/ekaristi")) return "ekaristi";
   if (["/faith/intensi", "/faith/prayers/sos"].some((x) => p.startsWith(x))) return "intensi";
   if (["/faith/devosi", "/faith/prayers/rosario", "/faith/prayers/jalan-salib"].some((x) => p.startsWith(x))) return "devosi";
@@ -30,6 +31,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
     { id: "today", name: isId ? "Hari Ini" : "Today", href: "/faith", icon: Sunrise },
     { id: "bible", name: isId ? "Alkitab" : "Bible", href: "/faith/bible", icon: Book },
     { id: "hidup", name: isId ? "Hidup Doa" : "Prayer Life", href: "/faith/hidup-doa", icon: Flame },
+    { id: "saints", name: isId ? "Santo & Santa" : "Saints", href: "/faith/saints", icon: Sparkles },
     { id: "intensi", name: isId ? "Intensi Doa" : "Intentions", href: "/faith/intensi", icon: HandHeart },
     { id: "devosi", name: isId ? TRADISI.id.name : TRADISI.en.name, href: "/faith/devosi", icon: CircleDot },
     { id: "ekaristi", name: isId ? "Ekaristi" : "Eucharist", href: "/faith/prayers/ekaristi", icon: Church },

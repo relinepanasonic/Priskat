@@ -88,14 +88,14 @@ export default async function SpiritualLanding() {
         )}
       </Link>
 
-      {/* Saints of the day */}
-      <Link href="/faith/saints" className="flex items-center gap-3 rounded-2xl border border-[#2a2d35] bg-[#14171c] p-4 transition-colors hover:bg-[#191c22]">
+      {/* Saints of the day & Novel Biography Library */}
+      <Link href="/faith/saints" className="flex items-center gap-3 rounded-2xl border border-brand-gold/30 bg-[#14171c] p-4 transition-colors hover:border-brand-gold/60 hover:bg-[#191c22]">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gold/15 text-brand-gold"><Sparkles className="h-5 w-5" /></span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-white">{isId ? "Santo dan Santa hari ini" : "Saints of the day"}</span>
-          <span className="block text-xs text-brand-muted">{isId ? "Kalender para kudus, bisa dilihat per tanggal" : "The calendar of saints, by date"}</span>
+          <span className="block text-sm font-semibold text-white">{isId ? "Kisah Santo & Santa" : "Stories of the Saints"}</span>
+          <span className="block text-xs text-brand-muted">{isId ? "Pustaka biografi para kudus & kalender harian" : "Saint biographies library & daily calendar"}</span>
         </span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-brand-muted" />
+        <ArrowRight className="h-4 w-4 shrink-0 text-brand-gold" />
       </Link>
 
       {/* Continue the devotion */}
