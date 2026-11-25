@@ -119,7 +119,10 @@ export type EvDay = { title: string; readings: EvReading[] };
 /** Fetch one day ("2026-11-15") from the API. null when it cannot be read. */
 export async function fetchEvangelizoDay(iso: string): Promise<EvDay | null> {
   try {
-    const res = await fetch(`https://publication.evangelizo.ws/AM/days/${iso}?include=readings`, { next: { revalidate: 3600 } });
+    const res = await fetch(`https://publication.evangelizo.ws/AM/days/${iso}?include=readings`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(3500),
+    });
     if (!res.ok) return null;
     const j = (await res.json()) as { data?: { liturgic_title?: string; readings?: { reading_code?: string; type?: string; book?: { short_title?: string } }[] } };
     const readings = (j.data?.readings ?? [])

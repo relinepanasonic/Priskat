@@ -81,6 +81,7 @@ export async function getSaints(month: number, day: number): Promise<Saint[]> {
   try {
     const res = await fetch(`https://katakombe.org/para-kudus/${MONTHS[month - 1]}-${day}.html`, {
       next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(4000),
       headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)", Accept: "text/html" },
     });
     if (!res.ok) return [];
@@ -100,6 +101,7 @@ async function fetchWikipediaSaint(queryName: string): Promise<SaintStory | null
     const searchUrl = `https://id.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=3&format=json`;
     const srRes = await fetch(searchUrl, {
       next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(4000),
       headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
     });
     if (!srRes.ok) return null;
@@ -115,6 +117,7 @@ async function fetchWikipediaSaint(queryName: string): Promise<SaintStory | null
     const pageUrl = `https://id.wikipedia.org/w/api.php?action=query&pageids=${match.pageid}&prop=extracts|pageimages|info&explaintext=1&pithumbsize=800&inprop=url&format=json`;
     const pRes = await fetch(pageUrl, {
       next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(4000),
       headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
     });
     if (!pRes.ok) return null;
@@ -169,6 +172,7 @@ async function fetchKatakombeStory(href: string): Promise<SaintStory | null> {
   try {
     const res = await fetch(href, {
       next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(4000),
       headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)", Accept: "text/html" },
     });
     if (!res.ok) return null;

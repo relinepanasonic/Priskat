@@ -63,7 +63,8 @@ async function readingsFromEvangelizo(): Promise<DayReadings> {
 }
 
 export async function getTodayReadings(): Promise<DayReadings> {
-  return (await readingsFromCalendarSite()) ?? (await readingsFromEvangelizo());
+  // imankatolik.or.id blocks server requests (bot check) and can stall SSR; go straight to Evangelizo API
+  return await readingsFromEvangelizo();
 }
 
 async function readingsFromCalendarSite(): Promise<DayReadings> {

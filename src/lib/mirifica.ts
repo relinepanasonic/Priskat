@@ -139,7 +139,11 @@ export async function getLectionary(day: number, month: number, year: number): P
   try {
     const res = await fetch(
       `https://www.mirifica.net/wp-json/wp/v2/posts?slug=${slug}&_fields=link,content`,
-      { next: { revalidate: 3600 }, headers: { Accept: "application/json", "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" } }
+      {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(4000),
+        headers: { Accept: "application/json", "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
+      }
     );
     if (!res.ok) return null;
     const rows = (await res.json()) as { link?: string; content?: { rendered?: string } }[];

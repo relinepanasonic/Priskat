@@ -24,9 +24,8 @@ export default async function SpiritualLanding() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const jp = jakartaParts();
-  const lect = await getLectionary(jp.day, jp.month, jp.year);
-  const [today, devotion] = await Promise.all([
-    getTodayReadings(),
+  const [lect, devotion] = await Promise.all([
+    getLectionary(jp.day, jp.month, jp.year),
     user
       ? supabase
           .from("user_devotion_progress")
@@ -38,6 +37,7 @@ export default async function SpiritualLanding() {
           .then((r) => (r.data?.[0] as any) ?? null)
       : Promise.resolve(null),
   ]);
+  const today = lect ? null : await getTodayReadings();
 
 
   return (

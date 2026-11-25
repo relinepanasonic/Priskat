@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import UpNavigation from "@/components/native/UpNavigation";
 import AppSplash from "@/components/layout/AppSplash";
+import { isCommunityCenterHost } from "@/lib/ccMode";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ruangiman.app"),
@@ -38,8 +39,9 @@ export default async function RootLayout({
   } = await supabase.auth.getSession();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning style={{ backgroundColor: "#051022" }}>
       <head>
+        <link rel="preload" as="image" href="/loadingRI.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -51,8 +53,8 @@ export default async function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-brand-cream antialiased">
-        <AppSplash />
+      <body className="min-h-screen bg-[#121417] antialiased">
+        <AppSplash variant={(await isCommunityCenterHost()) ? "cc" : "ri"} />
         <SupabaseProvider session={session}>
           <UpNavigation />
           {children}

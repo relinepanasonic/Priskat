@@ -16,12 +16,14 @@ export default async function HomePage() {
     redirect("/login");
   }
 
-  // All four queries are independent — run them together instead of one after another
+  // All queries are independent — run them together in a single round trip
   const [
     { data: profile },
     { data, error: postsError },
     { data: devotionData },
     { data: crewData, error: crewError },
+    { data: pendingRows },
+    { count: membershipCount },
   ] = await Promise.all([
     // Current user profile with complete details for the Profile tab
     supabase
@@ -53,12 +55,21 @@ export default async function HomePage() {
       .eq("is_finished", false)
       .order('started_at', { ascending: false })
       .limit(1),
-    // The user's crew/service assignments across ALL communities for the
-    // "My Service" tab — home shows everything merged, the community
-    // page (/camp/[slug]/ongoing) keeps it scoped to just that community.
+    // The user's crew/service assignments across ALL communities
     supabase
       .from("camp_crew")
       .select("cohort_id, position, camp_cohorts(*, community:communities(id, name, slug))")
+      .eq("user_id", user.id),
+    // Join requests still waiting for a community admin
+    supabase
+      .from("community_join_requests")
+      .select("community:communities(name)")
+      .eq("user_id", user.id)
+      .eq("status", "pending"),
+    // Membership count for main-community hint
+    supabase
+      .from("community_memberships" as any)
+      .select("community_id", { count: "exact", head: true })
       .eq("user_id", user.id),
   ]);
 
@@ -104,20 +115,8 @@ export default async function HomePage() {
     }
   }
 
-  // Join requests still waiting for a community admin
-  const { data: pendingRows } = await supabase
-    .from("community_join_requests")
-    .select("community:communities(name)")
-    .eq("user_id", user.id)
-    .eq("status", "pending");
   const pendingCommunities = ((pendingRows as any[]) ?? []).map((r) => r.community?.name).filter(Boolean) as string[];
-
-  // In several communities but no main one chosen yet (needs the 088 SQL; stays quiet until then)
-  let needsMain = false;
-  if ((profile as any).main_community_chosen === false) {
-    const { count } = await supabase.from("community_memberships" as any).select("community_id", { count: "exact", head: true }).eq("user_id", user.id);
-    needsMain = (count ?? 0) > 1;
-  }
+  const needsMain = (profile as any).main_community_chosen === false && (membershipCount ?? 0) > 1;
 
   return (
     <div className="md:p-6 md:h-full md:overflow-y-auto">
