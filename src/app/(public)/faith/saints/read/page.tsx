@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getSaintStory, isValidKatakombeSaintUrl, MONTH_NAMES, type SaintStory } from "@/lib/katakombe";
+import { getSaintStory, fetchWikiPortraits, isValidKatakombeSaintUrl, MONTH_NAMES, type SaintStory } from "@/lib/katakombe";
 import { findFamousSaintByName, getFamousSaintBySlug } from "@/lib/data/famousSaints";
 import SaintNovelReader from "@/components/faith/SaintNovelReader";
 
@@ -28,6 +28,7 @@ export default async function SaintReadPage({
   let refId = "saint";
 
   if (famous) {
+    const portraits = await fetchWikiPortraits([famous.wikiTitle]);
     story = {
       title: famous.name,
       subtitle: famous.subtitle,
@@ -35,7 +36,7 @@ export default async function SaintReadPage({
       era: famous.era,
       patronOf: famous.patronOf,
       quote: famous.quote,
-      image: null,
+      image: portraits.get(famous.wikiTitle) ?? null,
       chapters: famous.chapters,
       reflection: famous.reflection,
       prayer: famous.prayer,

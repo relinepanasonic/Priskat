@@ -42,6 +42,53 @@ const absUrl = (src: string | null | undefined): string | null => {
   return `https://katakombe.org${s.startsWith("/") ? "" : "/"}${s}`;
 };
 
+/** Rejects site logos, banners, social buttons and placeholders so katakombe's logo never appears as a saint portrait. */
+export function isBadSaintImage(src: string | null | undefined): boolean {
+  if (!src) return true;
+  return /(katakombe[-_]?logo|\/logo|logo\.|favicon|header|banner|icon|social|share|button|badge|ads|spacer|pixel|no[-_]?image|default[-_]?avatar|placeholder|templates\/|modules\/)/i.test(src);
+}
+
+/**
+ * Batch-fetches real classical portraits / sacred art thumbnails from Indonesian Wikipedia in ONE request.
+ * Cached for 24 hours, strict 3.5s timeout so it never slows down the page.
+ */
+export async function fetchWikiPortraits(titles: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const unique = [...new Set(titles.map((t) => t.trim()).filter(Boolean))].slice(0, 40);
+  if (unique.length === 0) return out;
+  try {
+    const url = `https://id.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(unique.join("|"))}&prop=pageimages&pithumbsize=600&redirects=1&format=json`;
+    const res = await fetch(url, {
+      next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(3500),
+      headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
+    });
+    if (!res.ok) return out;
+    const json = (await res.json()) as {
+      query?: {
+        normalized?: { from: string; to: string }[];
+        redirects?: { from: string; to: string }[];
+        pages?: Record<string, { title?: string; thumbnail?: { source?: string } }>;
+      };
+    };
+    const imgByCanonical = new Map<string, string>();
+    for (const p of Object.values(json.query?.pages ?? {})) {
+      if (p.title && p.thumbnail?.source && !isBadSaintImage(p.thumbnail.source)) {
+        imgByCanonical.set(p.title, p.thumbnail.source);
+      }
+    }
+    const normMap = new Map<string, string>((json.query?.normalized ?? []).map((x) => [x.from, x.to]));
+    const redirMap = new Map<string, string>((json.query?.redirects ?? []).map((x) => [x.from, x.to]));
+    for (const orig of unique) {
+      const n = normMap.get(orig) ?? orig;
+      const r = redirMap.get(n) ?? n;
+      const img = imgByCanonical.get(r) ?? imgByCanonical.get(n) ?? imgByCanonical.get(orig);
+      if (img) out.set(orig, img);
+    }
+  } catch { /* ignore */ }
+  return out;
+}
+
 export function isValidKatakombeSaintUrl(url: string): boolean {
   try {
     const u = new URL(url);
@@ -64,13 +111,15 @@ export function parseSaints(html: string): Saint[] {
     const name = clean(a[3]);
     if (!name || !/katakombe\.org\/para-kudus\//.test(href)) continue;
     const before = html.slice(Math.max(0, (m.index ?? 0) - 2500), m.index ?? 0);
-    const imgs = [...before.matchAll(/<img [^>]*src="([^"]+)"/g)];
+    const imgs = [...before.matchAll(/<img [^>]*src="([^"]+)"/g)]
+      .map((x) => absUrl(x[1]))
+      .filter((u): u is string => !!u && !isBadSaintImage(u));
     out.push({
       name,
       title: clean(`${a[1]} ${name} ${a[4]}`),
       description: clean(m[2]),
       href,
-      image: imgs.length ? absUrl(imgs[imgs.length - 1][1]) : null,
+      image: imgs.length ? imgs[imgs.length - 1] : null,
     });
   }
   return out;
@@ -85,7 +134,17 @@ export async function getSaints(month: number, day: number): Promise<Saint[]> {
       headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)", Accept: "text/html" },
     });
     if (!res.ok) return [];
-    return parseSaints(await res.text());
+    const list = parseSaints(await res.text());
+    // Fill missing portraits from Indonesian Wikipedia in a single batched call
+    const missing = list.filter((s) => !s.image);
+    if (missing.length > 0) {
+      const queries = missing.flatMap((s) => [s.title, s.name]);
+      const wikiImgs = await fetchWikiPortraits(queries);
+      for (const s of missing) {
+        s.image = wikiImgs.get(s.title) ?? wikiImgs.get(s.name) ?? null;
+      }
+    }
+    return list;
   } catch {
     return [];
   }
@@ -197,8 +256,9 @@ async function fetchKatakombeStory(href: string): Promise<SaintStory | null> {
     container.find("img").each((_, el) => {
       if (image) return;
       const src = $(el).attr("src") || $(el).attr("data-src");
-      if (!src || /icon|logo|banner|ads|spinner|pixel/i.test(src)) return;
-      image = absUrl(src);
+      const resolved = absUrl(src);
+      if (!resolved || isBadSaintImage(resolved)) return;
+      image = resolved;
     });
 
     const chapters: SaintChapter[] = [];

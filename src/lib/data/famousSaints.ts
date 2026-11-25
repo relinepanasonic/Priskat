@@ -6,6 +6,7 @@
 export type FamousSaint = {
   slug: string;
   name: string;
+  wikiTitle: string;
   subtitle: string;
   feastDay: string;
   era: string;
@@ -23,6 +24,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "fransiskus-assisi",
     name: "Santo Fransiskus dari Assisi",
+    wikiTitle: "Fransiskus dari Assisi",
     subtitle: "Si Miskin yang Mengasihi Seluruh Ciptaan",
     feastDay: "4 Oktober",
     era: "1181 – 1226",
@@ -62,6 +64,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "theresia-kanak-kanak-yesus",
     name: "Santa Theresia dari Kanak-Kanak Yesus",
+    wikiTitle: "Theresia dari Lisieux",
     subtitle: "Si Bunga Kecil & Jalan Kecil Menuju Surga",
     feastDay: "1 Oktober",
     era: "1873 – 1897",
@@ -99,6 +102,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "padre-pio",
     name: "Santo Padre Pio dari Pietrelcina",
+    wikiTitle: "Pio dari Pietrelcina",
     subtitle: "Imam Berstigmata & Bapa Pengakuan Dosa",
     feastDay: "23 September",
     era: "1887 – 1968",
@@ -136,6 +140,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "yohanes-paulus-ii",
     name: "Santo Yohanes Paulus II",
+    wikiTitle: "Paus Yohanes Paulus II",
     subtitle: "Paus Peziarah & Sahabat Orang Muda",
     feastDay: "22 Oktober",
     era: "1920 – 2005",
@@ -173,6 +178,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "teresa-kalkuta",
     name: "Santa Teresa dari Kalkuta",
+    wikiTitle: "Bunda Teresa",
     subtitle: "Pensil Kecil di Tangan Tuhan",
     feastDay: "5 September",
     era: "1910 – 1997",
@@ -210,6 +216,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "carlo-acutis",
     name: "Santo Carlo Acutis",
+    wikiTitle: "Carlo Acutis",
     subtitle: "Rasul Ekaristi di Era Digital",
     feastDay: "12 Oktober",
     era: "1991 – 2006",
@@ -247,6 +254,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "agustinus-hippo",
     name: "Santo Agustinus dari Hippo",
+    wikiTitle: "Agustinus dari Hippo",
     subtitle: "Dari Kegelisahan Menuju Cahaya Kebenaran",
     feastDay: "28 Agustus",
     era: "354 – 430",
@@ -284,6 +292,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "faustina-kowalska",
     name: "Santa Faustina Kowalska",
+    wikiTitle: "Faustina Kowalska",
     subtitle: "Sekretaris Kerahiman Ilahi",
     feastDay: "5 Oktober",
     era: "1905 – 1938",
@@ -321,6 +330,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "ignatius-loyola",
     name: "Santo Ignatius dari Loyola",
+    wikiTitle: "Ignatius dari Loyola",
     subtitle: "Prajurit yang Menjadi Peziarah Kristus",
     feastDay: "31 Juli",
     era: "1491 – 1556",
@@ -358,6 +368,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "santo-yosef",
     name: "Santo Yosef",
+    wikiTitle: "Santo Yosef",
     subtitle: "Penjaga Hening Keluarga Kudus",
     feastDay: "19 Maret",
     era: "Abad ke-1",
@@ -395,6 +406,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "antonius-padua",
     name: "Santo Antonius dari Padua",
+    wikiTitle: "Antonius dari Padua",
     subtitle: "Pengkhotbah Injil & Sahabat Kaum Miskin",
     feastDay: "13 Juni",
     era: "1195 – 1231",
@@ -431,6 +443,7 @@ export const FAMOUS_SAINTS: FamousSaint[] = [
   {
     slug: "yohanes-bosco",
     name: "Santo Yohanes Bosco",
+    wikiTitle: "Yohanes Bosco",
     subtitle: "Bapa dan Guru Kaum Muda",
     feastDay: "31 Januari",
     era: "1815 – 1888",

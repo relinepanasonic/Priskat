@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, BookOpen, Sparkles } from "lucide-react";
-import { getSaints, daysInMonth, MONTH_NAMES } from "@/lib/katakombe";
+import { getSaints, fetchWikiPortraits, daysInMonth, MONTH_NAMES } from "@/lib/katakombe";
 import { FAMOUS_SAINTS } from "@/lib/data/famousSaints";
 import { jakartaParts } from "@/lib/bacaanHarian";
 
@@ -22,7 +22,10 @@ export default async function SaintsPage({ searchParams }: { searchParams: Promi
   if (month < 1 || month > 12) month = today.month;
   if (day < 1 || day > daysInMonth(month)) day = Math.min(Math.max(day, 1), daysInMonth(month));
 
-  const saints = await getSaints(month, day);
+  const [saints, famousPortraits] = await Promise.all([
+    getSaints(month, day),
+    fetchWikiPortraits(FAMOUS_SAINTS.map((s) => s.wikiTitle)),
+  ]);
   const prev = addDay(month, day, -1);
   const next = addDay(month, day, 1);
   const isToday = month === today.month && day === today.day;
@@ -42,30 +45,51 @@ export default async function SaintsPage({ searchParams }: { searchParams: Promi
         </div>
 
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 hide-scrollbar md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-4">
-          {FAMOUS_SAINTS.map((s) => (
-            <Link
-              key={s.slug}
-              href={`/faith/saints/read?slug=${s.slug}`}
-              className="group relative flex w-44 shrink-0 flex-col justify-between overflow-hidden rounded-2xl border border-brand-gold/30 p-4 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/70 md:w-auto"
-              style={{ background: `linear-gradient(155deg, ${s.coverFrom} 0%, ${s.coverTo} 100%)` }}
-            >
-              {/* Subtle book spine highlight */}
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-brand-gold/70 via-brand-gold/30 to-transparent" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-gold/90">{s.feastDay}</p>
-                <h2 className="mt-1.5 text-base font-bold leading-snug text-white group-hover:text-brand-gold transition-colors" style={serif}>
-                  {s.name}
-                </h2>
-                <p className="mt-1 line-clamp-2 text-[11px] italic leading-relaxed text-[#EAE5D9]/75" style={serif}>
-                  {s.subtitle}
-                </p>
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-brand-gold">
-                <BookOpen className="h-3.5 w-3.5" />
-                Baca buku kisah
-              </div>
-            </Link>
-          ))}
+          {FAMOUS_SAINTS.map((s) => {
+            const portrait = famousPortraits.get(s.wikiTitle) ?? null;
+            return (
+              <Link
+                key={s.slug}
+                href={`/faith/saints/read?slug=${s.slug}`}
+                className="group relative flex h-64 w-44 shrink-0 flex-col justify-end overflow-hidden rounded-2xl border border-brand-gold/35 p-4 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/75 md:w-auto"
+                style={{ background: `linear-gradient(155deg, ${s.coverFrom} 0%, ${s.coverTo} 100%)` }}
+              >
+                {portrait && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={portrait}
+                    alt={s.name}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                )}
+                {/* Warm dark gradient overlay so the gold title & feast day always pop cleanly */}
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background: portrait
+                      ? "linear-gradient(180deg, rgba(10,12,16,0.12) 0%, rgba(10,12,16,0.55) 48%, rgba(10,12,16,0.95) 100%)"
+                      : "none",
+                  }}
+                />
+                {/* Subtle book spine highlight */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-brand-gold/80 via-brand-gold/30 to-transparent" />
+                <div className="relative z-10">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-gold">{s.feastDay}</p>
+                  <h2 className="mt-1 text-base font-bold leading-snug text-white transition-colors group-hover:text-brand-gold" style={serif}>
+                    {s.name}
+                  </h2>
+                  <p className="mt-1 line-clamp-2 text-[11px] italic leading-relaxed text-[#EAE5D9]/85" style={serif}>
+                    {s.subtitle}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-brand-gold">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Baca buku kisah
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
