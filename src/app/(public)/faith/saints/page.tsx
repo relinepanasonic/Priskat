@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, BookOpen, Sparkles } from "lucide-react";
 import { getSaints, daysInMonth, MONTH_NAMES } from "@/lib/katakombe";
 import { jakartaParts } from "@/lib/bacaanHarian";
 
@@ -66,11 +66,32 @@ export default async function SaintsPage({ searchParams }: { searchParams: Promi
       ) : (
         <div className="space-y-3">
           {saints.map((s) => (
-            <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer" className="block rounded-2xl border border-[#333] bg-[#1a1d24] p-4 transition-colors hover:border-brand-gold/40">
-              <p className="text-base font-bold text-white" style={serif}>{s.title}</p>
-              {s.description && <p className="mt-0.5 text-sm text-brand-muted">{s.description}</p>}
-              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold">Baca riwayat hidupnya <ExternalLink className="h-3 w-3" /></span>
-            </a>
+            <Link
+              key={s.href}
+              href={`/faith/saints/read?url=${encodeURIComponent(s.href)}&m=${month}&d=${day}`}
+              className="group flex items-start gap-3.5 rounded-2xl border border-[#333] bg-[#1a1d24] p-4 transition-all hover:border-brand-gold/45 hover:bg-[#1e222b]"
+            >
+              {s.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={s.image}
+                  alt={s.name}
+                  loading="lazy"
+                  className="h-16 w-16 shrink-0 rounded-xl border border-white/10 object-cover"
+                />
+              ) : (
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-brand-gold/25 bg-brand-gold/10 text-brand-gold">
+                  <Sparkles className="h-6 w-6" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-bold text-white transition-colors group-hover:text-brand-gold" style={serif}>{s.title}</p>
+                {s.description && <p className="mt-0.5 line-clamp-2 text-sm text-brand-muted">{s.description}</p>}
+                <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-brand-gold">
+                  <BookOpen className="h-3.5 w-3.5" /> Baca riwayat hidupnya
+                </span>
+              </div>
+            </Link>
           ))}
         </div>
       )}

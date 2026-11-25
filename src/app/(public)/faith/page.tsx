@@ -61,10 +61,12 @@ export default async function SpiritualLanding() {
           <>
             <p className="mt-2 text-sm text-brand-light">{[lect.title, ...lect.celebrations].filter(Boolean).join(" · ")}</p>
             <ul className="mt-2.5 space-y-1.5">
-              {lect.items.filter((r) => r.kind !== "bait").map((r, i) => (
+              {lect.items.map((r, i) => (
                 <li key={i} className="flex items-baseline gap-3">
-                  <span className="w-16 shrink-0 text-[10px] font-bold uppercase tracking-[0.15em] text-brand-muted">{r.kind === "mazmur" ? "Mazmur" : r.kind === "injil" ? "Injil" : r.label}</span>
-                  <span className="text-white" style={serif}>{r.ref}</span>
+                  <span className="w-20 shrink-0 text-[10px] font-bold uppercase tracking-[0.15em] text-brand-muted">
+                    {r.kind === "mazmur" ? "Mazmur" : r.kind === "bait" ? "Bait Injil" : r.kind === "injil" ? "Injil" : r.label}
+                  </span>
+                  <span className="text-white" style={serif}>{r.ref || r.summary}</span>
                 </li>
               ))}
             </ul>

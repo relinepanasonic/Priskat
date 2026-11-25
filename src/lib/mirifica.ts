@@ -1,8 +1,7 @@
 /**
  * Daily Mass readings in the official Indonesian lectionary wording, as published by Komsos KWI on
  * mirifica.net (one post per day, written the day before): Bacaan I, Mazmur Tanggapan with its refrain,
- * Bacaan II, Bait Pengantar Injil and the Injil, plus the day's celebration and the saints remembered.
- * The daily reflection (Renungan) is NOT copied: it belongs to its own publisher, so only a link is kept.
+ * Bacaan II, Bait Pengantar Injil, Bacaan Injil, and Renungan Harian, plus the day's celebration and saints.
  * The post is read through the WordPress API of the site, never by scraping pages.
  */
 export type LectItem = {
@@ -16,12 +15,19 @@ export type LectItem = {
   verses: string[];     // psalm verses
   closing: string;      // "Demikianlah Sabda Tuhan."
 };
+
+export type LectRenungan = {
+  title: string;
+  paragraphs: string[];
+};
+
 export type LectDay = {
   title: string;         // "JUMAT PEKAN BIASA XXXIII"
   celebrations: string[]; // "Santo Klemens I - Paus & Martir", "Hari Raya Kristus Raja Semesta Alam"
   color: string;         // "Hijau"
-  link: string;          // the post, for the credit line and the Renungan
+  link: string;          // the post, for the credit line
   items: LectItem[];
+  renungan?: LectRenungan | null;
 };
 
 const DAYS = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
@@ -35,7 +41,9 @@ const decode = (s: string) =>
     .replace(/&#(\d+);/g, (_m, n: string) => String.fromCharCode(Number(n)));
 const text = (html: string) => decode(html.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
 
-/** Parse the rendered post body (WordPress blocks: h5 headings, p, ul). */
+const BOILERPLATE_RE = /^(share this|bagikan|baca juga|related|lihat juga|tags?:|komentar|tinggalkan balasan|follow us)/i;
+
+/** Parse the rendered post body (WordPress blocks: h5 headings, p, ul, blockquote). */
 export function parseLectionary(html: string, link: string): LectDay | null {
   // The day's title, saints and liturgical colour sit before the first reading, either as headings or as one
   // paragraph with line breaks: read them as lines
@@ -52,13 +60,49 @@ export function parseLectionary(html: string, link: string): LectDay | null {
 
   const parts = html.slice(first).split(/(<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>)/i);
   const items: LectItem[] = [];
+  let renungan: LectRenungan | null = null;
+  let inRenungan = false;
+
   for (let i = 1; i < parts.length; i += 2) {
     const h = text(parts[i]);
     const body = parts[i + 1] ?? "";
-    if (/^renungan/i.test(h)) break; // the reflection is not copied
+
+    // Capture Renungan Harian after Injil (including any subheadings within the reflection)
+    if (/^renungan/i.test(h)) {
+      inRenungan = true;
+      const cleanTitle = h.replace(/^renungan(?:\s+harian)?(?:\s*[–—:-]\s*)?/i, "").trim();
+      renungan = { title: cleanTitle || "Renungan Harian", paragraphs: [] };
+      for (const m of body.matchAll(/<(p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+        const t = text(m[2]);
+        if (!t || BOILERPLATE_RE.test(t)) continue;
+        renungan.paragraphs.push(t);
+      }
+      continue;
+    }
+
+    if (inRenungan && renungan) {
+      if (BOILERPLATE_RE.test(h)) break;
+      // Subheading inside Renungan (e.g. reflection title or prayer heading)
+      if (h && renungan.paragraphs.length === 0 && renungan.title === "Renungan Harian") {
+        renungan.title = h;
+      } else if (h) {
+        renungan.paragraphs.push(h);
+      }
+      for (const m of body.matchAll(/<(p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+        const t = text(m[2]);
+        if (!t || BOILERPLATE_RE.test(t)) continue;
+        renungan.paragraphs.push(t);
+      }
+      continue;
+    }
+
     const kind: LectItem["kind"] | null =
-      /^Bacaan I\s+[–-]/i.test(h) ? "bacaan1" : /^Bacaan II\s+[–-]/i.test(h) ? "bacaan2" : /^Mazmur/i.test(h) ? "mazmur"
-        : /^Bait Pengantar Injil/i.test(h) ? "bait" : /^Bacaan Injil/i.test(h) ? "injil" : null;
+      /^Bacaan I\s+[–-]/i.test(h) ? "bacaan1"
+        : /^Bacaan II\s+[–-]/i.test(h) ? "bacaan2"
+        : /^Mazmur/i.test(h) ? "mazmur"
+        : /^(Bait Pengantar Injil|Alleluya|Alleluia)/i.test(h) ? "bait"
+        : /^Bacaan Injil/i.test(h) ? "injil"
+        : null;
     if (!kind) continue;
 
     // "Mazmur Tanggapan – Mazmur 23:1-2a.2b-3 – Refren:1": the separators have spaces around them, the verse ranges do not
@@ -67,7 +111,7 @@ export function parseLectionary(html: string, link: string): LectDay | null {
     const refren = rest.map((r) => r.match(/^Refren\s*:\s*(.+)$/i)?.[1]).find(Boolean);
     const cur: LectItem = { kind, label: label.trim(), ref: refPart, refren: refren?.trim(), summary: "", intro: "", paragraphs: [], verses: [], closing: "" };
 
-    for (const m of body.matchAll(/<(p|ul)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+    for (const m of body.matchAll(/<(p|ul|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
       if (m[1].toLowerCase() === "ul") {
         for (const li of m[2].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)) { const t = text(li[1]); if (t) cur.verses.push(t); }
         continue;
@@ -83,8 +127,9 @@ export function parseLectionary(html: string, link: string): LectDay | null {
   }
 
   if (!items.length) return null;
+  if (renungan && renungan.paragraphs.length === 0) renungan = null;
   const [title, ...celebrations] = head;
-  return { title: title ?? "", celebrations, color, link, items };
+  return { title: title ?? "", celebrations, color, link, items, renungan };
 }
 
 /** Today's (or any day's) readings; null when the post is not there or cannot be read. */

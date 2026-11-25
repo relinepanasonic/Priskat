@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { BookOpen, ExternalLink, Sparkles } from "lucide-react";
 import type { LectDay, LectItem } from "@/lib/mirifica";
 
 const serif = { fontFamily: "'Lora', Georgia, serif" };
@@ -11,8 +11,7 @@ const TITLE: Record<LectItem["kind"], string> = {
 
 /**
  * Today's Mass readings laid out like the daily lectionary posts: the day and its saints, then Bacaan I,
- * Mazmur Tanggapan (refrain and verses), Bacaan II, Bait Pengantar Injil and the Injil, each with its short
- * summary line, the introduction, the text and "Demikianlah Sabda Tuhan". The credit and link go to the source.
+ * Mazmur Tanggapan (refrain and verses), Bacaan II, Bait Pengantar Injil, Bacaan Injil, and Renungan Harian.
  */
 export default function LectionaryView({ day }: { day: LectDay }) {
   const dot = COLORS[day.color.toLowerCase()] ?? "#D6B072";
@@ -32,9 +31,19 @@ export default function LectionaryView({ day }: { day: LectDay }) {
       </div>
 
       {day.items.map((it, i) => (
-        <section key={i} className="rounded-2xl border border-[#333] bg-[#1a1d24] p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">{TITLE[it.kind]}</p>
-          <h3 className="mt-0.5 text-base font-bold text-white" style={serif}>{it.ref}</h3>
+        <section
+          key={i}
+          className={
+            it.kind === "bait"
+              ? "rounded-2xl border border-brand-gold/35 bg-gradient-to-br from-[#1e1b14] via-[#181a20] to-[#14171c] p-4"
+              : "rounded-2xl border border-[#333] bg-[#1a1d24] p-4"
+          }
+        >
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">
+            {it.kind === "bait" && <Sparkles className="h-3.5 w-3.5" />}
+            {TITLE[it.kind]}
+          </p>
+          {it.ref && <h3 className="mt-0.5 text-base font-bold text-white" style={serif}>{it.ref}</h3>}
           {it.summary && it.kind !== "mazmur" && it.kind !== "bait" && (
             <p className="mt-2 text-[15px] italic leading-relaxed text-brand-gold/90" style={serif}>{it.summary}</p>
           )}
@@ -51,12 +60,28 @@ export default function LectionaryView({ day }: { day: LectDay }) {
                 {it.verses.map((v, k) => (
                   <p key={k} className="text-[15px] leading-[1.8] text-[#EAE5D9]" style={serif}>{v}</p>
                 ))}
+                {it.paragraphs.map((p, k) => (
+                  <p key={`p-${k}`} className="text-[15px] leading-[1.8] text-[#EAE5D9]" style={serif}>{p}</p>
+                ))}
               </div>
             </>
           )}
 
-          {it.kind === "bait" && it.summary && (
-            <p className="mt-2 text-[15px] leading-[1.8] text-[#EAE5D9]" style={serif}>{it.summary}</p>
+          {it.kind === "bait" && (
+            <div className="mt-2.5 space-y-2">
+              {it.summary && (
+                <p className="rounded-xl bg-brand-gold/10 px-3 py-2 text-[15px] italic leading-relaxed text-brand-gold" style={serif}>
+                  {it.summary}
+                </p>
+              )}
+              {it.intro && <p className="text-sm font-semibold text-white">{it.intro}</p>}
+              {it.paragraphs.map((p, k) => (
+                <p key={k} className="text-[15px] leading-[1.8] text-[#EAE5D9]" style={serif}>{p}</p>
+              ))}
+              {it.verses.map((v, k) => (
+                <p key={`v-${k}`} className="text-[15px] leading-[1.8] text-[#EAE5D9]" style={serif}>{v}</p>
+              ))}
+            </div>
           )}
 
           {(it.kind === "bacaan1" || it.kind === "bacaan2" || it.kind === "injil") && (
@@ -71,10 +96,32 @@ export default function LectionaryView({ day }: { day: LectDay }) {
         </section>
       ))}
 
+      {/* Renungan Harian (after Injil) */}
+      {day.renungan && day.renungan.paragraphs.length > 0 && (
+        <section className="card-lux p-5">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-brand-gold">
+            <BookOpen className="h-3.5 w-3.5" />
+            Renungan Harian
+          </p>
+          {day.renungan.title && day.renungan.title !== "Renungan Harian" && (
+            <h3 className="mt-1 text-lg font-bold leading-snug text-white" style={serif}>
+              {day.renungan.title}
+            </h3>
+          )}
+          <div className="mt-3 space-y-3">
+            {day.renungan.paragraphs.map((p, idx) => (
+              <p key={idx} className="text-[15px] leading-[1.85] text-[#EAE5D9]" style={serif}>
+                {p}
+              </p>
+            ))}
+          </div>
+        </section>
+      )}
+
       <p className="flex flex-wrap items-center justify-center gap-x-1 text-center text-[11px] leading-relaxed text-brand-muted">
-        Teks bacaan: Komsos KWI, via mirifica.net.
+        Sumber bacaan & renungan: Komsos KWI, via{" "}
         <a href={day.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand-gold">
-          Baca renungan harian di sumbernya <ExternalLink className="h-3 w-3" />
+          mirifica.net <ExternalLink className="h-3 w-3" />
         </a>
       </p>
     </div>

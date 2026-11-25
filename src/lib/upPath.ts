@@ -16,6 +16,7 @@ const RULES: Rule[] = [
   [/^\/faith\/bible\/(bacaan|search)$/, "/faith/bible"],
   [/^\/faith\/bible\/[^/]+\/[^/]+$/, "/faith/bible"],
   [/^\/faith\/prayers\/[^/]+$/, "/faith/prayers"],
+  [/^\/faith\/saints\/read$/, "/faith/saints"],
   [/^\/faith\/[^/]+$/, "/faith"],
   // Warta
   [/^\/news\/blog\/[^/]+$/, "/news/blog"],
