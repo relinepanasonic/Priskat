@@ -24,7 +24,7 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
   const touch = useRef<{ x: number; y: number; ok: boolean } | null>(null);
   const isId = lang === "id";
 
-  const isReadingChapter = pathname.match(/\/faith\/bible\/\d+\/\d+/);
+  const isReadingChapter = Boolean(pathname.match(/\/faith\/bible\/\d+\/\d+/) || pathname.startsWith("/faith/saints/read"));
 
   const tabs: { id: TabId; name: string; href: string; icon: typeof Book }[] = [
     { id: "today", name: isId ? "Hari Ini" : "Today", href: "/faith", icon: Sunrise },

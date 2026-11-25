@@ -1,16 +1,30 @@
 import * as cheerio from "cheerio";
 
 /**
- * Saints remembered on a given day, from the public "Kalender Para Kudus" of katakombe.org
- * (one page per day, e.g. /para-kudus/november-22.html), plus in-app biography reader.
+ * Saints remembered on a given day (Kalender Para Kudus from katakombe.org),
+ * enriched with full multi-section biographies & portraits from Indonesian Wikipedia (id.wikipedia.org)
+ * so every saint reads like a rich, full in-app biography book.
  */
 export type Saint = { name: string; title: string; description: string; href: string; image: string | null };
 
+export type SaintChapter = {
+  title: string;
+  paragraphs: string[];
+};
+
 export type SaintStory = {
   title: string;
+  subtitle?: string;
+  feastDay?: string;
+  era?: string;
+  patronOf?: string;
+  quote?: string;
   image: string | null;
-  paragraphs: { text: string; heading?: boolean }[];
-  sourceUrl: string;
+  chapters: SaintChapter[];
+  reflection?: string;
+  prayer?: string;
+  sourceLabel: string;
+  sourceUrl?: string;
 };
 
 const MONTHS = ["januari", "februari", "maret", "april", "mei", "juni", "juli", "agustus", "september", "oktober", "november", "desember"];
@@ -49,7 +63,6 @@ export function parseSaints(html: string): Saint[] {
     const href = a[2].startsWith("http") ? a[2] : `https://katakombe.org${a[2]}`;
     const name = clean(a[3]);
     if (!name || !/katakombe\.org\/para-kudus\//.test(href)) continue;
-    // the picture of this saint is the nearest one before the title
     const before = html.slice(Math.max(0, (m.index ?? 0) - 2500), m.index ?? 0);
     const imgs = [...before.matchAll(/<img [^>]*src="([^"]+)"/g)];
     out.push({
@@ -77,10 +90,81 @@ export async function getSaints(month: number, day: number): Promise<Saint[]> {
   }
 }
 
-const SKIP_TEXT_RE = /^(bagikan|share|print|email|komentar|lihat juga|baca juga|sebelumnya|berikutnya|prev|next|hits:|dilihat:|ditulis oleh|kategori:|copyright)/i;
+const SKIP_TEXT_RE = /^(bagikan|share|print|email|komentar|lihat juga|baca juga|sebelumnya|berikutnya|prev|next|hits:|dilihat:|ditulis oleh|kategori:|copyright|referensi|pranala luar|catatan kaki|bibliografi|daftar pustaka)/i;
 
-/** Fetches and parses a saint's full biography from katakombe.org so users can read it inside Ruang Iman. */
-export async function getSaintStory(href: string): Promise<SaintStory | null> {
+/** Fetch a rich sectioned biography + high-res classical portrait from Indonesian Wikipedia (id.wikipedia.org). */
+async function fetchWikipediaSaint(queryName: string): Promise<SaintStory | null> {
+  const q = queryName.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+  if (q.length < 3) return null;
+  try {
+    const searchUrl = `https://id.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=3&format=json`;
+    const srRes = await fetch(searchUrl, {
+      next: { revalidate: 86400 },
+      headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
+    });
+    if (!srRes.ok) return null;
+    const srJson = (await srRes.json()) as { query?: { search?: { pageid: number; title: string; snippet?: string }[] } };
+    const candidates = srJson.query?.search ?? [];
+    if (!candidates.length) return null;
+
+    // Prefer a result that clearly relates to a Catholic saint / bishop / martyr / pope
+    const match =
+      candidates.find((c) => /santo|santa|beato|beata|paus|uskup|martir|katolik|gereja|kudus/i.test(`${c.title} ${c.snippet ?? ""}`)) ??
+      candidates[0];
+
+    const pageUrl = `https://id.wikipedia.org/w/api.php?action=query&pageids=${match.pageid}&prop=extracts|pageimages|info&explaintext=1&pithumbsize=800&inprop=url&format=json`;
+    const pRes = await fetch(pageUrl, {
+      next: { revalidate: 86400 },
+      headers: { "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
+    });
+    if (!pRes.ok) return null;
+    const pJson = (await pRes.json()) as {
+      query?: {
+        pages?: Record<
+          string,
+          { title?: string; extract?: string; fullurl?: string; thumbnail?: { source?: string } }
+        >;
+      };
+    };
+    const page = pJson.query?.pages?.[String(match.pageid)];
+    const extract = (page?.extract ?? "").trim();
+    if (extract.length < 180) return null;
+
+    // Split Wikipedia plain-text extract into novel-like chapters using "== Heading ==" markers
+    const chapters: SaintChapter[] = [];
+    let current: SaintChapter = { title: "Kisah Hidup", paragraphs: [] };
+
+    for (const rawLine of extract.split(/\n+/)) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const headingMatch = line.match(/^={2,4}\s*(.+?)\s*={2,4}$/);
+      if (headingMatch) {
+        const heading = headingMatch[1].trim();
+        if (SKIP_TEXT_RE.test(heading)) break;
+        if (current.paragraphs.length > 0) chapters.push(current);
+        current = { title: heading, paragraphs: [] };
+        continue;
+      }
+      if (line.length < 25 || SKIP_TEXT_RE.test(line)) continue;
+      current.paragraphs.push(line);
+    }
+    if (current.paragraphs.length > 0) chapters.push(current);
+    if (chapters.length === 0) return null;
+
+    return {
+      title: page?.title || queryName,
+      image: page?.thumbnail?.source ?? null,
+      chapters,
+      sourceLabel: "Wikipedia Indonesia",
+      sourceUrl: page?.fullurl,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch biography from katakombe.org as fallback / companion source. */
+async function fetchKatakombeStory(href: string): Promise<SaintStory | null> {
   if (!isValidKatakombeSaintUrl(href)) return null;
   try {
     const res = await fetch(href, {
@@ -91,7 +175,6 @@ export async function getSaintStory(href: string): Promise<SaintStory | null> {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // Remove noise elements before reading text
     $("script, style, nav, footer, aside, form, iframe, .moduletable, .pager, .pagination, .social-share, .share, .comments, #comments").remove();
 
     const container =
@@ -106,7 +189,6 @@ export async function getSaintStory(href: string): Promise<SaintStory | null> {
       clean($("title").text().replace(/\s*[-|–]\s*katakombe\.org.*/i, "")) ||
       "Riwayat Santo / Santa";
 
-    // Pick the first meaningful image inside the article
     let image: string | null = null;
     container.find("img").each((_, el) => {
       if (image) return;
@@ -115,25 +197,60 @@ export async function getSaintStory(href: string): Promise<SaintStory | null> {
       image = absUrl(src);
     });
 
-    const paragraphs: { text: string; heading?: boolean }[] = [];
+    const chapters: SaintChapter[] = [];
+    let current: SaintChapter = { title: "Riwayat Hidup", paragraphs: [] };
     const seen = new Set<string>();
 
-    container.find("h2, h3, h4, p, blockquote, li").each((_, el) => {
+    container.find("h2, h3, h4, p, blockquote").each((_, el) => {
       const tag = el.tagName.toLowerCase();
-      // Skip nested elements already captured inside a parent <p> or <blockquote>
-      if (tag === "li" && $(el).parents("nav, .pager, .pagination, .breadcrumb").length) return;
       const t = clean($(el).text());
-      if (!t || t.length < 3 || t === title || SKIP_TEXT_RE.test(t)) return;
-      if (seen.has(t)) return;
+      if (!t || t.length < 3 || t === title || SKIP_TEXT_RE.test(t) || seen.has(t)) return;
       seen.add(t);
-      const isHeading = tag === "h2" || tag === "h3" || tag === "h4";
-      if (!isHeading && t.length < 18 && paragraphs.length === 0) return;
-      paragraphs.push({ text: t, heading: isHeading });
+      if (tag === "h2" || tag === "h3" || tag === "h4") {
+        if (current.paragraphs.length > 0) chapters.push(current);
+        current = { title: t, paragraphs: [] };
+      } else {
+        if (t.length < 18 && current.paragraphs.length === 0) return;
+        current.paragraphs.push(t);
+      }
     });
+    if (current.paragraphs.length > 0) chapters.push(current);
+    if (chapters.length === 0) return null;
 
-    if (paragraphs.length === 0) return null;
-    return { title, image, paragraphs, sourceUrl: href };
+    return {
+      title,
+      image,
+      chapters,
+      sourceLabel: "Kalender Para Kudus (katakombe.org)",
+      sourceUrl: href,
+    };
   } catch {
     return null;
   }
+}
+
+const wordCount = (s: SaintStory | null) =>
+  s ? s.chapters.reduce((n, c) => n + c.paragraphs.join(" ").split(/\s+/).length, 0) : 0;
+
+/**
+ * Fetches the richest available in-app biography by comparing Indonesian Wikipedia and Katakombe in parallel.
+ * Always keeps the fuller story + best portrait image.
+ */
+export async function getSaintStory(href: string, nameHint?: string): Promise<SaintStory | null> {
+  const [kata, wiki] = await Promise.all([
+    href ? fetchKatakombeStory(href) : Promise.resolve(null),
+    nameHint ? fetchWikipediaSaint(nameHint) : Promise.resolve(null),
+  ]);
+
+  if (!kata && !wiki) return null;
+  if (wiki && wordCount(wiki) >= wordCount(kata)) {
+    return {
+      ...wiki,
+      image: wiki.image ?? kata?.image ?? null,
+    };
+  }
+  return {
+    ...kata!,
+    image: kata?.image ?? wiki?.image ?? null,
+  };
 }
