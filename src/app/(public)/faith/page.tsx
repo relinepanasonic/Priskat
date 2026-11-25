@@ -70,6 +70,11 @@ export default async function SpiritualLanding() {
                 </li>
               ))}
             </ul>
+            {lect.renungan && (
+              <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-brand-gold/10 px-2.5 py-1 text-[11px] font-semibold text-brand-gold">
+                <Sparkles className="h-3 w-3" /> Termasuk Renungan Harian
+              </p>
+            )}
           </>
         ) : today ? (
           <>

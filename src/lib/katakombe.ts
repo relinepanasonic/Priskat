@@ -42,10 +42,10 @@ const absUrl = (src: string | null | undefined): string | null => {
   return `https://katakombe.org${s.startsWith("/") ? "" : "/"}${s}`;
 };
 
-/** Rejects site logos, banners, social buttons and placeholders so katakombe's logo never appears as a saint portrait. */
+/** Rejects site logos, banners, social buttons and Katakombe's generic red-shield placeholder. */
 export function isBadSaintImage(src: string | null | undefined): boolean {
   if (!src) return true;
-  return /(katakombe[-_]?logo|\/logo|logo\.|favicon|header|banner|icon|social|share|button|badge|ads|spacer|pixel|no[-_]?image|default[-_]?avatar|placeholder|templates\/|modules\/)/i.test(src);
+  return /(santo-santa-beato-beata-katolik|media\/zoo\/images\/santo-santa|katakombe[-_]?logo|\/logo|logo\.|favicon|header|banner|icon|social|share|button|badge|ads|spacer|pixel|no[-_]?image|default[-_]?avatar|placeholder|templates\/|modules\/)/i.test(src);
 }
 
 /**
@@ -138,10 +138,17 @@ export async function getSaints(month: number, day: number): Promise<Saint[]> {
     // Fill missing portraits from Indonesian Wikipedia in a single batched call
     const missing = list.filter((s) => !s.image);
     if (missing.length > 0) {
-      const queries = missing.flatMap((s) => [s.title, s.name]);
+      const stripHonorific = (t: string) =>
+        t.replace(/^(Santo|Santa|Beato|Beata|St\.?)\s+/i, "").replace(/Alexandria/gi, "Aleksandria").trim();
+      const queries = missing.flatMap((s) => [s.title, s.name, stripHonorific(s.title), stripHonorific(s.name)]);
       const wikiImgs = await fetchWikiPortraits(queries);
       for (const s of missing) {
-        s.image = wikiImgs.get(s.title) ?? wikiImgs.get(s.name) ?? null;
+        s.image =
+          wikiImgs.get(s.title) ??
+          wikiImgs.get(s.name) ??
+          wikiImgs.get(stripHonorific(s.title)) ??
+          wikiImgs.get(stripHonorific(s.name)) ??
+          null;
       }
     }
     return list;

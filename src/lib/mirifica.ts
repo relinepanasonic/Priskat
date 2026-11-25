@@ -132,16 +132,22 @@ export function parseLectionary(html: string, link: string): LectDay | null {
   return { title: title ?? "", celebrations, color, link, items, renungan };
 }
 
+// Short in-memory cache so once mirifica.net responds for a day, every request in the next hour is instant.
+const LECT_CACHE = new Map<string, { value: LectDay; expires: number }>();
+
 /** Today's (or any day's) readings; null when the post is not there or cannot be read. */
 export async function getLectionary(day: number, month: number, year: number): Promise<LectDay | null> {
   const d = new Date(Date.UTC(year, month - 1, day));
   const slug = `bacaan-mazmur-tanggapan-dan-renungan-harian-katolik-${DAYS[d.getUTCDay()]}-${day}-${MONTHS[month - 1]}-${year}`;
+  const cached = LECT_CACHE.get(slug);
+  if (cached && cached.expires > Date.now()) return cached.value;
+
   try {
     const res = await fetch(
       `https://www.mirifica.net/wp-json/wp/v2/posts?slug=${slug}&_fields=link,content`,
       {
         next: { revalidate: 3600 },
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(8500),
         headers: { Accept: "application/json", "User-Agent": "RuangIman/1.0 (+https://apps.ruangiman.com)" },
       }
     );
@@ -149,7 +155,9 @@ export async function getLectionary(day: number, month: number, year: number): P
     const rows = (await res.json()) as { link?: string; content?: { rendered?: string } }[];
     const post = rows[0];
     if (!post?.content?.rendered) return null;
-    return parseLectionary(post.content.rendered, post.link ?? `https://www.mirifica.net/${slug}/`);
+    const parsed = parseLectionary(post.content.rendered, post.link ?? `https://www.mirifica.net/${slug}/`);
+    if (parsed) LECT_CACHE.set(slug, { value: parsed, expires: Date.now() + 3600_000 });
+    return parsed;
   } catch {
     return null;
   }
