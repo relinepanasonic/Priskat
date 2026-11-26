@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, HandHeart, Church, Users, MapPin, BadgeCheck, CalendarDays } from "lucide-react";
@@ -7,9 +8,44 @@ import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
 import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import JoinCommunityButton, { type JoinStatus } from "@/components/community/JoinCommunityButton";
 import ShareCommunityButton from "@/components/community/ShareCommunityButton";
+import { createClient } from "@/lib/supabase/server";
+import { resolveCommunity } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Tentang" };
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const comm = await resolveCommunity(supabase, slug);
+  const logo = "https://apps.ruangiman.com/logo.png";
+  if (!comm) {
+    return {
+      title: "Komunitas",
+      openGraph: { title: "Ruang Iman", images: [{ url: logo, width: 1000, height: 1000 }] },
+    };
+  }
+  const { data: info } = await supabase
+    .from("communities")
+    .select("name, tagline, motto, description, logo_url")
+    .eq("id", comm.id)
+    .maybeSingle();
+  const c = (info ?? {}) as { name?: string; tagline?: string; motto?: string; description?: string; logo_url?: string };
+  const title = c.name || comm.name || "Komunitas";
+  const description = (c.tagline || c.motto || c.description || `Komunitas ${title} di Ruang Iman`).slice(0, 160);
+  const image = c.logo_url || logo;
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} — Ruang Iman`,
+      description,
+      siteName: "Ruang Iman",
+      type: "website",
+      images: [{ url: image, width: 1000, height: 1000, alt: title }],
+    },
+    twitter: { card: "summary", title: `${title} — Ruang Iman`, description, images: [image] },
+  };
+}
 
 const GOLD = "#D6B072";
 const serif = { fontFamily: "'Lora', Georgia, serif" };

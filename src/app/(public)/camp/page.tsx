@@ -80,13 +80,13 @@ export default async function CommunityListingPage() {
 
           const head = (
             <>
-              <div className="mb-2 flex items-start justify-between gap-1">
+              <div className="mb-2 flex items-start justify-between gap-1 md:mb-3">
                 {c.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.logo_url} alt={c.name} className="h-10 w-10 rounded-xl object-cover md:h-14 md:w-14" loading="lazy" />
+                  <img src={c.logo_url} alt={c.name} className="h-10 w-10 rounded-xl object-cover md:h-16 md:w-16 md:rounded-2xl" loading="lazy" />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold/10 md:h-14 md:w-14">
-                    <Users className="h-5 w-5 text-brand-gold md:h-7 md:w-7" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold/10 md:h-16 md:w-16 md:rounded-2xl">
+                    <Users className="h-5 w-5 text-brand-gold md:h-8 md:w-8" />
                   </div>
                 )}
                 {/* Member of it: "Member". Not yet: Public or Private */}
@@ -105,8 +105,8 @@ export default async function CommunityListingPage() {
               <h3 className={`line-clamp-2 text-sm font-bold leading-tight text-white transition-colors md:text-xl ${hasAccess ? "group-hover:text-brand-gold" : ""}`}>
                 {c.name}
               </h3>
-              {(c.tagline || c.motto) && <p className="mt-0.5 line-clamp-2 text-[10px] italic leading-snug text-brand-gold/80 md:text-xs">{c.tagline || c.motto}</p>}
-              {c.description && <p className="mt-1 hidden text-sm text-brand-muted md:line-clamp-2">{c.description}</p>}
+              {(c.tagline || c.motto) && <p className="mt-1 line-clamp-2 text-[10px] italic leading-snug text-brand-gold/80 md:text-xs">{c.tagline || c.motto}</p>}
+              {c.description && <p className="mt-2 hidden text-sm leading-relaxed text-brand-muted md:line-clamp-4">{c.description}</p>}
             </>
           );
 
@@ -114,7 +114,7 @@ export default async function CommunityListingPage() {
             <div
               key={c.id}
               style={cardStyle}
-              className={`group relative flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:p-5 ${
+              className={`group relative flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:aspect-[4/5] md:p-5 ${
                 hasAccess ? "cursor-pointer hover:border-brand-gold/50 hover:bg-[#1e2129]" : "opacity-90"
               }`}
             >

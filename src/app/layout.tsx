@@ -7,7 +7,7 @@ import AppSplash from "@/components/layout/AppSplash";
 import { isCommunityCenterHost } from "@/lib/ccMode";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ruangiman.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://apps.ruangiman.com"),
   title: {
     default: "Ruang Iman",
     template: "%s | Ruang Iman",
@@ -15,6 +15,19 @@ export const metadata: Metadata = {
   description:
     "Ruang Iman — Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.",
   keywords: ["Ruang Iman", "community", "church", "catholic", "events", "news"],
+  openGraph: {
+    title: "Ruang Iman",
+    description: "Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.",
+    siteName: "Ruang Iman",
+    type: "website",
+    images: [{ url: "https://apps.ruangiman.com/logo.png", width: 1000, height: 1000, alt: "Ruang Iman" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Ruang Iman",
+    description: "Tempat Berkumpul, Belajar, dan Terhubung bagi Komunitas Katolik.",
+    images: ["https://apps.ruangiman.com/logo.png"],
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
