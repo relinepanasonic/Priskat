@@ -1,4 +1,4 @@
-import { BadgeCheck, Building2, GraduationCap, CalendarDays, LayoutDashboard, Map, Users, UsersRound } from "lucide-react";
+import { BadgeCheck, Building2, GraduationCap, CalendarDays, LayoutDashboard, Map, MessagesSquare, Users, UsersRound } from "lucide-react";
 import { isCatholicFamilyMinistry } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
@@ -15,6 +15,8 @@ export function communityNav(base: string, community: { name?: string | null; sl
     { name: "Event", href: `${base}/promotion`, icon: CalendarDays },
     ...(cfm ? [{ name: "Alumni", href: `${base}/alumni`, icon: GraduationCap }] : []),
     { name: "Komsel", href: `${base}/connect-group`, icon: UsersRound },
+    // Sub-communities by city or sister community, each with a leader and a chat
+    { name: "Group", href: `${base}/group`, icon: MessagesSquare },
     { name: "Coverage", href: `${base}/coverage`, icon: Map },
     ...(romo ? [{ name: "Romo", href: `${base}/romo`, icon: BadgeCheck }] : []),
   ];
