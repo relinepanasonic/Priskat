@@ -294,7 +294,7 @@ export default function StorePageClient({
   const activeVariantId = activeProd ? formatVariantId(activeProd.sku_id, activeVariant?.code) : "-";
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="space-y-6 px-0 py-1 md:p-6">
       {/* Back link */}
       <Link href="/news/marketplace" className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-muted hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Kembali ke Marketplace

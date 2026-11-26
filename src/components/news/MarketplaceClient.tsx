@@ -220,56 +220,59 @@ export default function MarketplaceClient({
   }
 
   return (
-    <div className="space-y-7 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+    <div className="space-y-6 px-0 py-1 md:space-y-7 md:p-6">
+      {/* Header — Buka Toko Gratis sits at the top */}
+      <div className="space-y-3 border-b border-white/10 pb-4 md:pb-5">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand-gold">
             Pasar Umat
           </p>
-          <h2 className="mt-1 text-2xl font-bold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>
-            Marketplace Ruang Iman
-          </h2>
-          <p className="mt-0.5 text-xs text-brand-muted">
-            Toko umat Katolik — buka tokomu sendiri dan tawarkan produk hingga 30 item.
-          </p>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {userId ? (
-            myStore ? (
-              <>
-                <Link
-                  href={`/news/marketplace/${myStore.slug}`}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
-                >
-                  <Store className="h-4 w-4" /> Toko Saya
-                </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {userId ? (
+              myStore ? (
+                <>
+                  <Link
+                    href={`/news/marketplace/${myStore.slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
+                  >
+                    <Store className="h-3.5 w-3.5" /> Toko Saya
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={openStoreModal}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-brand-light hover:border-brand-gold/40 hover:text-white"
+                  >
+                    Edit Toko
+                  </button>
+                </>
+              ) : (
                 <button
                   type="button"
                   onClick={openStoreModal}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-brand-light hover:border-brand-gold/40 hover:text-white"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
                 >
-                  Edit Toko
+                  <Store className="h-3.5 w-3.5" /> Buka Toko Gratis
                 </button>
-              </>
+              )
             ) : (
-              <button
-                type="button"
-                onClick={openStoreModal}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
+              <Link
+                href="/login?next=/news/marketplace"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3.5 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
               >
-                <Store className="h-4 w-4" /> Buka Toko Gratis
-              </button>
-            )
-          ) : (
-            <Link
-              href="/login?next=/news/marketplace"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-2.5 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
-            >
-              Masuk untuk buka toko
-            </Link>
-          )}
+                Masuk untuk buka toko
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>
+            Marketplace Ruang Iman
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-brand-muted md:text-sm">
+            Mari saling membantu dan berbagi rezeki sesama saudara seiman.
+          </p>
         </div>
       </div>
 
@@ -329,41 +332,58 @@ export default function MarketplaceClient({
             <p className="mt-1 text-xs text-brand-muted">Coba kata kunci lain atau jadilah yang pertama membuka toko di kategori ini.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4">
             {filteredStores.map((s) => (
               <Link
                 key={s.id}
                 href={`/news/marketplace/${s.slug}`}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-[#12151b] p-3.5 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-gold/50 hover:bg-[#171b23] md:p-4"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12151b] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-gold/50 hover:bg-[#171b23] md:flex-row"
               >
-                <div className="mb-2.5 flex items-start justify-between gap-2">
+                {/* Store photo: big square on phone, bigger square on left side on PC; category overlaid on picture */}
+                <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-[#0c0e13] md:h-40 md:w-40 lg:h-44 lg:w-44">
                   {s.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.logo_url} alt={s.name} loading="lazy" className="h-12 w-12 rounded-xl border border-white/10 object-cover md:h-14 md:w-14" />
+                    <img
+                      src={s.logo_url}
+                      alt={s.name}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-gold/25 bg-brand-gold/10 text-brand-gold md:h-14 md:w-14">
-                      <Store className="h-6 w-6" />
+                    <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle,rgba(214,176,114,0.14),transparent_70%)] text-brand-gold">
+                      <Store className="h-10 w-10" />
                     </div>
                   )}
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-brand-light">
+                  <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold text-brand-light backdrop-blur-sm">
                     {s.category}
                   </span>
                 </div>
 
-                <h4 className="line-clamp-2 text-sm font-bold leading-snug text-white transition-colors group-hover:text-brand-gold md:text-base" style={{ fontFamily: "'Lora', Georgia, serif" }}>
-                  {s.name}
-                </h4>
-                {s.tagline && (
-                  <p className="mt-0.5 line-clamp-2 text-[11px] italic text-brand-gold/80">{s.tagline}</p>
-                )}
+                {/* Store info: phone = title only + Kunjungi button (no description, no kota); PC = title + tagline + Kunjungi */}
+                <div className="flex min-w-0 flex-1 flex-col justify-between p-3 md:p-4">
+                  <div>
+                    <h4
+                      className="line-clamp-2 text-sm font-bold leading-snug text-white transition-colors group-hover:text-brand-gold md:text-lg"
+                      style={{ fontFamily: "'Lora', Georgia, serif" }}
+                    >
+                      {s.name}
+                    </h4>
+                    {s.tagline && (
+                      <p className="mt-1.5 hidden text-xs italic leading-relaxed text-brand-gold/80 md:line-clamp-2">
+                        {s.tagline}
+                      </p>
+                    )}
+                  </div>
 
-                <div className="mt-auto flex items-center justify-between gap-2 border-t border-white/10 pt-2.5 text-[11px] text-brand-muted">
-                  <span className="inline-flex items-center gap-1 truncate">
-                    {s.city ? <><MapPin className="h-3 w-3 shrink-0" /> {s.city}</> : <><Package className="h-3 w-3 shrink-0" /> {s.product_count ?? 0} produk</>}
-                  </span>
-                  <span className="inline-flex shrink-0 items-center gap-0.5 font-bold text-brand-gold">
-                    Kunjungi <ArrowRight className="h-3 w-3" />
-                  </span>
+                  <div className="mt-3 flex items-center justify-between gap-2 md:mt-auto md:pt-3">
+                    <span className="hidden text-xs text-brand-muted md:inline-flex md:items-center md:gap-1">
+                      <Package className="h-3.5 w-3.5 text-brand-gold/80" />
+                      {s.product_count ?? 0} produk
+                    </span>
+                    <span className="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-brand-gold/15 px-3 py-2 text-xs font-bold text-brand-gold transition group-hover:bg-brand-gold group-hover:text-brand-dark md:w-auto md:px-4">
+                      Kunjungi <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

@@ -73,8 +73,14 @@ export default function NewsLayoutClient({ children, lang = "id" }: { children: 
         </nav>
       </div>
 
-      {/* Tab Content */}
-      <div className="bg-[#1a1d24] border border-[#333] rounded-2xl shadow-xl overflow-hidden min-h-[500px]">
+      {/* Tab Content — on phones, Marketplace runs borderless so cards get maximum width */}
+      <div
+        className={
+          pathname.startsWith("/news/marketplace")
+            ? "min-h-[500px] overflow-hidden md:rounded-2xl md:border md:border-[#333] md:bg-[#1a1d24] md:shadow-xl"
+            : "min-h-[500px] overflow-hidden rounded-2xl border border-[#333] bg-[#1a1d24] shadow-xl"
+        }
+      >
         {children}
       </div>
     </div>
