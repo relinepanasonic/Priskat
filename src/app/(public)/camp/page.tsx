@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Users, Lock, Globe, ArrowRight, Settings, BadgeCheck } from "lucide-react";
+import { Users, Lock, Globe, Settings, BadgeCheck } from "lucide-react";
 import { sortCommunities } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import { getLanguage } from "@/lib/lang";
 import { MemberCountSafe } from "@/lib/memberCounts";
+import ShareCommunityButton from "@/components/community/ShareCommunityButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Community" };
@@ -105,7 +106,7 @@ export default async function CommunityListingPage() {
                 {c.name}
               </h3>
               {(c.tagline || c.motto) && <p className="mt-0.5 line-clamp-2 text-[10px] italic leading-snug text-brand-gold/80 md:text-xs">{c.tagline || c.motto}</p>}
-              {c.description && <p className="mt-1 hidden line-clamp-2 text-sm text-brand-muted md:block">{c.description}</p>}
+              {c.description && <p className="mt-1 hidden text-sm text-brand-muted md:line-clamp-2">{c.description}</p>}
             </>
           );
 
@@ -113,28 +114,32 @@ export default async function CommunityListingPage() {
             <div
               key={c.id}
               style={cardStyle}
-              className={`group flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:p-5 ${
-                hasAccess ? "hover:border-brand-gold/50 hover:bg-[#1e2129]" : "opacity-90"
+              className={`group relative flex flex-col rounded-2xl border border-[#2a2d35] bg-[#1a1d24] p-3 shadow-lg transition-all md:p-5 ${
+                hasAccess ? "cursor-pointer hover:border-brand-gold/50 hover:bg-[#1e2129]" : "opacity-90"
               }`}
             >
-              {hasAccess ? (
-                <Link href={`/camp/${c.slug || c.id}`} className="block flex-1">{head}</Link>
-              ) : (
-                <div className="flex-1">{head}</div>
+              {/* Clicking anywhere on the card enters the community */}
+              {hasAccess && (
+                <Link
+                  href={`/camp/${c.slug || c.id}`}
+                  aria-label={c.name}
+                  className="absolute inset-0 z-0 rounded-2xl"
+                />
               )}
 
-              <div className="mt-2 flex items-center justify-between gap-1 border-t border-[#2a2d35] pt-2 md:pt-4">
-                <span className="flex items-center gap-1 text-[11px] text-gray-400 md:text-sm">
+              <div className="pointer-events-none relative z-[1] flex-1">{head}</div>
+
+              <div className="relative z-10 mt-2 flex items-center justify-between gap-1 border-t border-[#2a2d35] pt-2 md:pt-4">
+                <span className="pointer-events-none flex items-center gap-1 text-[11px] text-gray-400 md:text-sm">
                   <Users className="h-3 w-3 md:h-4 md:w-4" />
                   {memberCounts[c.id] ?? c.member_count}
                 </span>
-                {hasAccess ? (
-                  <Link href={`/camp/${c.slug || c.id}`} className="flex items-center gap-1 text-xs font-bold text-brand-gold md:text-sm">
-                    {lang === "id" ? "Masuk" : "Enter"} <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                ) : (
-                  <span className="flex items-center gap-1 text-xs font-bold text-gray-500 md:text-sm"><Lock className="h-3 w-3" /> Private</span>
-                )}
+                <ShareCommunityButton
+                  name={c.name ?? ""}
+                  slug={c.slug || c.id}
+                  label={lang === "id" ? "Bagikan" : "Share"}
+                  compact
+                />
               </div>
             </div>
           );

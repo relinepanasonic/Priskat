@@ -11,7 +11,19 @@ const SITE = "https://apps.ruangiman.com";
  * "Bagikan": share a community's About page. Phone share sheet (WhatsApp, Instagram, anything installed),
  * WhatsApp directly, copy the link, or send it to a friend inside Ruang Iman as a message.
  */
-export default function ShareCommunityButton({ name, slug, className = "" }: { name: string; slug: string; className?: string }) {
+export default function ShareCommunityButton({
+  name,
+  slug,
+  className = "",
+  label = "Bagikan",
+  compact = false,
+}: {
+  name: string;
+  slug: string;
+  className?: string;
+  label?: string;
+  compact?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [friends, setFriends] = useState<Friend[] | null>(null);
@@ -72,8 +84,16 @@ export default function ShareCommunityButton({ name, slug, className = "" }: { n
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className={`inline-flex items-center gap-2 rounded-xl border border-brand-gold/50 px-4 py-3 text-sm font-bold text-brand-gold transition-colors hover:bg-brand-gold/10 ${className}`}>
-        <Share2 className="h-4 w-4" /> Bagikan
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        className={
+          compact
+            ? `inline-flex items-center gap-1.5 rounded-lg border border-brand-gold/40 bg-brand-gold/10 px-2.5 py-1.5 text-[11px] font-bold text-brand-gold transition-colors hover:bg-brand-gold hover:text-brand-dark md:px-3 md:text-xs ${className}`
+            : `inline-flex items-center gap-2 rounded-xl border border-brand-gold/50 px-4 py-3 text-sm font-bold text-brand-gold transition-colors hover:bg-brand-gold/10 ${className}`
+        }
+      >
+        <Share2 className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} /> {label}
       </button>
 
       {open && (
