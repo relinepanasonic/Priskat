@@ -112,14 +112,14 @@ drop policy if exists "mp_stores_update" on public.marketplace_stores;
 create policy "mp_stores_update" on public.marketplace_stores for update to authenticated
   using (
     auth.uid() = owner_id
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
   );
 
 drop policy if exists "mp_stores_delete" on public.marketplace_stores;
 create policy "mp_stores_delete" on public.marketplace_stores for delete to authenticated
   using (
     auth.uid() = owner_id
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
   );
 
 drop policy if exists "mp_products_read" on public.marketplace_products;
@@ -129,11 +129,11 @@ drop policy if exists "mp_products_write" on public.marketplace_products;
 create policy "mp_products_write" on public.marketplace_products for all to authenticated
   using (
     exists (select 1 from public.marketplace_stores s where s.id = store_id and s.owner_id = auth.uid())
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
   )
   with check (
     exists (select 1 from public.marketplace_stores s where s.id = store_id and s.owner_id = auth.uid())
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
   );
 
 drop policy if exists "mp_reviews_read" on public.marketplace_reviews;
@@ -147,7 +147,7 @@ drop policy if exists "mp_reviews_delete" on public.marketplace_reviews;
 create policy "mp_reviews_delete" on public.marketplace_reviews for delete to authenticated
   using (
     auth.uid() = author_id
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator'))
   );
 
 insert into storage.buckets (id, name, public)

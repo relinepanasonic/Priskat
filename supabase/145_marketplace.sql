@@ -36,7 +36,7 @@ create policy "marketplace_update"
     auth.uid() = seller_id
     or exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator')
+      where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator')
     )
   );
 
@@ -48,7 +48,7 @@ create policy "marketplace_delete"
     auth.uid() = seller_id
     or exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and lower(coalesce(p.role, '')) in ('founder', 'superadmin', 'admin', 'moderator')
+      where p.id = auth.uid() and lower(coalesce(p.role::text, '')) in ('founder', 'superadmin', 'admin', 'moderator')
     )
   );
 
