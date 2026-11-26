@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Calendar, Church, ChevronLeft, Newspaper, Crown, HandHeart } from "lucide-react";
+import { Calendar, Church, ChevronLeft, Newspaper, Crown, HandHeart, ShoppingBag } from "lucide-react";
 
 const FROM_KEY = "news-from-community";
 
@@ -24,8 +24,9 @@ export default function NewsLayoutClient({ children, lang = "id" }: { children: 
   const fromName = from && from.replace(/[-_]/g, "").toLowerCase() === "catholicindonesia" ? "Catholic Indonesia" : "komunitas";
 
   const tabs = [
+    { name: "Agenda", href: "/news/events", icon: Calendar },
     { name: lang === "id" ? "Gereja" : "Church", href: "/news/schedule", icon: Church },
-    { name: "Event", href: "/news/events", icon: Calendar },
+    { name: "Marketplace", href: "/news/marketplace", icon: ShoppingBag },
     { name: "Wall of Fame", href: "/news/wall-of-fame", icon: Crown },
     { name: "Donation", href: "/news/donation", icon: HandHeart },
     { name: "Blog", href: "/news/blog", icon: Newspaper },
