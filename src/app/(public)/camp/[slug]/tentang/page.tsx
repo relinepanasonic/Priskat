@@ -8,23 +8,25 @@ import { getCommunityPageContext, loadDioceses } from "@/lib/ciServer";
 import { ABOUT_FALLBACK, isCatholicIndonesia } from "@/lib/catholicIndonesia";
 import JoinCommunityButton, { type JoinStatus } from "@/components/community/JoinCommunityButton";
 import ShareCommunityButton from "@/components/community/ShareCommunityButton";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveCommunity } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  const comm = await resolveCommunity(supabase, slug);
-  const logo = "https://apps.ruangiman.com/logo.png";
+  // Use admin client so unauthenticated link-preview crawlers (WhatsApp, Telegram, social)
+  // always receive the community's own name, tagline and logo even for private communities.
+  const db = createAdminClient();
+  const comm = await resolveCommunity(db as any, slug);
+  const fallbackLogo = "https://apps.ruangiman.com/logo.png";
   if (!comm) {
     return {
       title: "Komunitas",
-      openGraph: { title: "Ruang Iman", images: [{ url: logo, width: 1000, height: 1000 }] },
+      openGraph: { title: "Ruang Iman", images: [{ url: fallbackLogo, width: 1000, height: 1000 }] },
     };
   }
-  const { data: info } = await supabase
+  const { data: info } = await db
     .from("communities")
     .select("name, tagline, motto, description, logo_url")
     .eq("id", comm.id)
@@ -32,7 +34,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const c = (info ?? {}) as { name?: string; tagline?: string; motto?: string; description?: string; logo_url?: string };
   const title = c.name || comm.name || "Komunitas";
   const description = (c.tagline || c.motto || c.description || `Komunitas ${title} di Ruang Iman`).slice(0, 160);
-  const image = c.logo_url || logo;
+  const rawLogo = (c.logo_url || "").trim();
+  const image = rawLogo
+    ? rawLogo.startsWith("http")
+      ? rawLogo
+      : `https://apps.ruangiman.com${rawLogo.startsWith("/") ? "" : "/"}${rawLogo}`
+    : fallbackLogo;
   return {
     title,
     description,
