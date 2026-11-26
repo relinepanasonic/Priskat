@@ -20,6 +20,7 @@ const RULES: Rule[] = [
   [/^\/faith\/[^/]+$/, "/faith"],
   // Warta
   [/^\/news\/blog\/[^/]+$/, "/news/blog"],
+  [/^\/news\/marketplace\/[^/]+$/, "/news/marketplace"],
   [/^\/news\/schedule\/search$/, "/news/schedule"],
   [/^\/news\/schedule\/[^/]+\/[^/]+\/[^/]+$/, (m) => m[0].split("/").slice(0, 5).join("/")],
   [/^\/news\/schedule\/[^/]+\/[^/]+$/, "/news/schedule"],

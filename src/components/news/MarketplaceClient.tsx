@@ -1,166 +1,217 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  CheckCircle2,
+  ArrowRight,
   ImagePlus,
   Loader2,
   MapPin,
-  MessageCircle,
-  MessageSquare,
-  Plus,
+  Package,
   Search,
   ShoppingBag,
-  Tag,
-  Trash2,
+  Sparkles,
+  Store,
   X,
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
+import {
+  MARKETPLACE_CATEGORIES,
+  rupiah,
+  slugifyStore,
+  type MarketplaceProduct,
+  type MarketplaceStore,
+} from "@/lib/marketplace";
 
-export type MarketplaceItem = {
-  id: string;
-  seller_id: string;
-  title: string;
-  category: string;
-  price: number;
-  description: string | null;
-  image_url: string | null;
-  city: string | null;
-  whatsapp: string | null;
-  status: "active" | "sold";
-  created_at: string;
-  seller?: { full_name: string | null; nama_panggilan: string | null; avatar_url: string | null } | null;
-};
-
-const CATEGORIES = [
-  "Semua",
-  "Benda Rohani",
-  "Buku & Alkitab",
-  "Kuliner & UMKM",
-  "Pakaian & Aksesoris",
-  "Jasa",
-  "Lainnya",
-] as const;
-
-const rupiah = (n: number) =>
-  n > 0 ? `Rp ${n.toLocaleString("id-ID")}` : "Hubungi penjual";
-
-function waLink(phone: string, title: string) {
-  const digits = phone.replace(/\D/g, "");
-  const intl = digits.startsWith("0") ? `62${digits.slice(1)}` : digits;
-  const text = encodeURIComponent(`Shalom, saya tertarik dengan "${title}" di Marketplace Ruang Iman.`);
-  return `https://wa.me/${intl}?text=${text}`;
+function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
+/**
+ * Marketplace Hub (/news/marketplace):
+ *   1. Store Cards sorted by last_activity_at desc (editing store/product or receiving a review bumps store to top)
+ *   2. Category filter + Unified Search (searches both Stores and Products)
+ *   3. Random Product Discovery when search is empty and category is "Semua"
+ *   4. "Buka Toko" / "Toko Saya" modal for any Ruang Iman user to open their own store
+ */
 export default function MarketplaceClient({
-  initialItems,
+  initialStores,
+  initialProducts,
+  myStore: initialMyStore,
   userId,
-  isAdmin,
   defaultCity,
   needsSql = false,
 }: {
-  initialItems: MarketplaceItem[];
+  initialStores: MarketplaceStore[];
+  initialProducts: MarketplaceProduct[];
+  myStore: MarketplaceStore | null;
   userId: string | null;
-  isAdmin: boolean;
   defaultCity?: string | null;
   needsSql?: boolean;
 }) {
+  const router = useRouter();
   const db = () => createClient() as any;
-  const [items, setItems] = useState<MarketplaceItem[]>(initialItems);
+
+  const [stores, setStores] = useState<MarketplaceStore[]>(initialStores);
+  const [myStore, setMyStore] = useState<MarketplaceStore | null>(initialMyStore);
   const [category, setCategory] = useState<string>("Semua");
   const [q, setQ] = useState("");
-  const [selected, setSelected] = useState<MarketplaceItem | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [randomProducts, setRandomProducts] = useState<MarketplaceProduct[]>(initialProducts.slice(0, 12));
 
-  // Create form state
-  const [title, setTitle] = useState("");
-  const [formCat, setFormCat] = useState<string>("Benda Rohani");
-  const [price, setPrice] = useState("");
-  const [city, setCity] = useState(defaultCity ?? "");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Shuffle random products on the client mount so each visit shows a fresh fair discovery mix
+  useEffect(() => {
+    setRandomProducts(shuffle(initialProducts).slice(0, 12));
+  }, [initialProducts]);
+
+  // Create/Edit Store Modal
+  const [storeModal, setStoreModal] = useState(false);
+  const [name, setName] = useState(myStore?.name ?? "");
+  const [tagline, setTagline] = useState(myStore?.tagline ?? "");
+  const [storeCat, setStoreCat] = useState(myStore?.category ?? "Benda Rohani");
+  const [city, setCity] = useState(myStore?.city ?? defaultCity ?? "");
+  const [whatsapp, setWhatsapp] = useState(myStore?.whatsapp ?? "");
+  const [description, setDescription] = useState(myStore?.description ?? "");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(myStore?.logo_url ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return items.filter((it) => {
-      if (category !== "Semua" && it.category !== category) return false;
+  const query = q.trim().toLowerCase();
+  const isDefaultBrowse = !query && category === "Semua";
+
+  const filteredStores = useMemo(() => {
+    return stores.filter((s) => {
+      if (category !== "Semua" && s.category !== category) {
+        // Also keep store if it has products in that category
+        const hasCatProd = initialProducts.some((p) => p.store_id === s.id && p.category === category);
+        if (!hasCatProd) return false;
+      }
+      if (!query) return true;
+      const storeHit =
+        s.name.toLowerCase().includes(query) ||
+        (s.tagline ?? "").toLowerCase().includes(query) ||
+        (s.city ?? "").toLowerCase().includes(query) ||
+        s.category.toLowerCase().includes(query);
+      const prodHit = initialProducts.some(
+        (p) =>
+          p.store_id === s.id &&
+          (p.title.toLowerCase().includes(query) ||
+            (p.sku_id ?? "").toLowerCase().includes(query) ||
+            (p.description ?? "").toLowerCase().includes(query)),
+      );
+      return storeHit || prodHit;
+    });
+  }, [stores, initialProducts, category, query]);
+
+  const filteredProducts = useMemo(() => {
+    if (isDefaultBrowse) return randomProducts;
+    return initialProducts.filter((p) => {
+      if (category !== "Semua" && p.category !== category) return false;
       if (!query) return true;
       return (
-        it.title.toLowerCase().includes(query) ||
-        (it.description ?? "").toLowerCase().includes(query) ||
-        (it.city ?? "").toLowerCase().includes(query) ||
-        it.category.toLowerCase().includes(query)
+        p.title.toLowerCase().includes(query) ||
+        (p.sku_id ?? "").toLowerCase().includes(query) ||
+        (p.description ?? "").toLowerCase().includes(query) ||
+        (p.store?.name ?? "").toLowerCase().includes(query) ||
+        (p.variants ?? []).some((v) => v.name.toLowerCase().includes(query) || v.code.toLowerCase().includes(query))
       );
     });
-  }, [items, category, q]);
+  }, [isDefaultBrowse, randomProducts, initialProducts, category, query]);
 
-  function onPickFile(file: File | null) {
-    setImageFile(file);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImagePreview(file ? URL.createObjectURL(file) : null);
-  }
-
-  function resetForm() {
-    setTitle("");
-    setFormCat("Benda Rohani");
-    setPrice("");
-    setCity(defaultCity ?? "");
-    setWhatsapp("");
-    setDescription("");
-    onPickFile(null);
+  function openStoreModal() {
+    setName(myStore?.name ?? "");
+    setTagline(myStore?.tagline ?? "");
+    setStoreCat(myStore?.category ?? "Benda Rohani");
+    setCity(myStore?.city ?? defaultCity ?? "");
+    setWhatsapp(myStore?.whatsapp ?? "");
+    setDescription(myStore?.description ?? "");
+    setLogoFile(null);
+    setLogoPreview(myStore?.logo_url ?? null);
     setError(null);
+    setStoreModal(true);
   }
 
-  async function submitListing(e: React.FormEvent) {
+  function onPickLogo(file: File | null) {
+    setLogoFile(file);
+    if (file) setLogoPreview(URL.createObjectURL(file));
+  }
+
+  async function saveStore(e: React.FormEvent) {
     e.preventDefault();
     if (!userId) return;
-    if (!title.trim()) { setError("Judul barang/jasa wajib diisi."); return; }
+    if (!name.trim()) { setError("Nama toko wajib diisi."); return; }
     setBusy(true);
     setError(null);
-
     try {
-      let imageUrl: string | null = null;
-      if (imageFile) {
-        const compressed = await imageCompression(imageFile, {
-          maxSizeMB: 0.45,
-          maxWidthOrHeight: 1200,
-          initialQuality: 0.78,
+      let logoUrl = myStore?.logo_url ?? null;
+      if (logoFile) {
+        const compressed = await imageCompression(logoFile, {
+          maxSizeMB: 0.35,
+          maxWidthOrHeight: 800,
+          initialQuality: 0.8,
           useWebWorker: true,
           fileType: "image/webp",
         });
-        const path = `${userId}/${crypto.randomUUID()}.webp`;
+        const path = `${userId}/store-${Date.now()}.webp`;
         const up = await db().storage.from("marketplace").upload(path, compressed, { contentType: "image/webp" });
-        if (up.error) throw new Error("Foto belum bisa diunggah. Coba lagi.");
-        imageUrl = db().storage.from("marketplace").getPublicUrl(path).data.publicUrl;
+        if (up.error) throw new Error("Logo belum bisa diunggah.");
+        logoUrl = db().storage.from("marketplace").getPublicUrl(path).data.publicUrl;
       }
 
-      const numericPrice = Math.max(0, Number(price.replace(/\D/g, "")) || 0);
-      const { data, error: insErr } = await db()
-        .from("marketplace_items")
-        .insert({
-          seller_id: userId,
-          title: title.trim(),
-          category: formCat,
-          price: numericPrice,
-          description: description.trim() || null,
-          image_url: imageUrl,
-          city: city.trim() || null,
-          whatsapp: whatsapp.trim() || null,
-          status: "active",
-        })
-        .select("*, seller:profiles!seller_id(full_name, nama_panggilan, avatar_url)")
-        .single();
-
-      if (insErr || !data) throw new Error(insErr?.message || "Iklan belum tersimpan.");
-      setItems((prev) => [data as MarketplaceItem, ...prev]);
-      resetForm();
-      setCreating(false);
+      if (myStore) {
+        const { data, error: uErr } = await db()
+          .from("marketplace_stores")
+          .update({
+            name: name.trim(),
+            tagline: tagline.trim() || null,
+            category: storeCat,
+            city: city.trim() || null,
+            whatsapp: whatsapp.trim() || null,
+            description: description.trim() || null,
+            logo_url: logoUrl,
+            last_activity_at: new Date().toISOString(),
+          })
+          .eq("id", myStore.id)
+          .select("*")
+          .single();
+        if (uErr || !data) throw new Error(uErr?.message || "Toko belum tersimpan.");
+        const updated = { ...myStore, ...(data as MarketplaceStore) };
+        setMyStore(updated);
+        setStores((prev) => [updated, ...prev.filter((s) => s.id !== updated.id)]);
+        setStoreModal(false);
+        router.push(`/news/marketplace/${updated.slug}`);
+      } else {
+        const slug = slugifyStore(name.trim());
+        const { data, error: iErr } = await db()
+          .from("marketplace_stores")
+          .insert({
+            owner_id: userId,
+            slug,
+            name: name.trim(),
+            tagline: tagline.trim() || null,
+            category: storeCat,
+            city: city.trim() || null,
+            whatsapp: whatsapp.trim() || null,
+            description: description.trim() || null,
+            logo_url: logoUrl,
+            last_activity_at: new Date().toISOString(),
+          })
+          .select("*")
+          .single();
+        if (iErr || !data) throw new Error(iErr?.message || "Toko belum bisa dibuat.");
+        const created = { ...(data as MarketplaceStore), product_count: 0 };
+        setMyStore(created);
+        setStores((prev) => [created, ...prev]);
+        setStoreModal(false);
+        router.push(`/news/marketplace/${created.slug}`);
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -168,34 +219,8 @@ export default function MarketplaceClient({
     }
   }
 
-  async function markSold(item: MarketplaceItem) {
-    setBusy(true);
-    const nextStatus = item.status === "sold" ? "active" : "sold";
-    const { error: uErr } = await db()
-      .from("marketplace_items")
-      .update({ status: nextStatus })
-      .eq("id", item.id);
-    setBusy(false);
-    if (uErr) return;
-    setItems((prev) => prev.map((x) => (x.id === item.id ? { ...x, status: nextStatus } : x)));
-    setSelected((cur) => (cur?.id === item.id ? { ...cur, status: nextStatus } : cur));
-  }
-
-  async function removeItem(item: MarketplaceItem) {
-    if (!confirm("Hapus produk ini dari Marketplace?")) return;
-    setBusy(true);
-    const { error: dErr } = await db().from("marketplace_items").delete().eq("id", item.id);
-    setBusy(false);
-    if (dErr) return;
-    setItems((prev) => prev.filter((x) => x.id !== item.id));
-    setSelected(null);
-  }
-
-  const sellerName = (it: MarketplaceItem) =>
-    it.seller?.nama_panggilan || it.seller?.full_name || "Anggota Ruang Iman";
-
   return (
-    <div className="space-y-5 p-4 md:p-6">
+    <div className="space-y-7 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -206,48 +231,68 @@ export default function MarketplaceClient({
             Marketplace Ruang Iman
           </h2>
           <p className="mt-0.5 text-xs text-brand-muted">
-            Benda rohani, buku, kuliner, dan karya UMKM umat Katolik dalam satu tempat.
+            Toko umat Katolik — buka tokomu sendiri dan tawarkan produk hingga 30 item.
           </p>
         </div>
 
-        {userId ? (
-          <button
-            type="button"
-            onClick={() => { resetForm(); setCreating(true); }}
-            className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
-          >
-            <Plus className="h-4 w-4" /> Pasang Iklan
-          </button>
-        ) : (
-          <Link
-            href="/login?next=/news/marketplace"
-            className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-2.5 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
-          >
-            Masuk untuk berjualan
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {userId ? (
+            myStore ? (
+              <>
+                <Link
+                  href={`/news/marketplace/${myStore.slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
+                >
+                  <Store className="h-4 w-4" /> Toko Saya
+                </Link>
+                <button
+                  type="button"
+                  onClick={openStoreModal}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-brand-light hover:border-brand-gold/40 hover:text-white"
+                >
+                  Edit Toko
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={openStoreModal}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
+              >
+                <Store className="h-4 w-4" /> Buka Toko Gratis
+              </button>
+            )
+          ) : (
+            <Link
+              href="/login?next=/news/marketplace"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-2.5 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
+            >
+              Masuk untuk buka toko
+            </Link>
+          )}
+        </div>
       </div>
 
       {needsSql && (
         <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 text-xs text-amber-200">
-          Tabel <code>marketplace_items</code> belum dibuat di Supabase. Jalankan <code>supabase/145_marketplace.sql</code> untuk mengaktifkan Marketplace.
+          Jalankan <code>supabase/146_marketplace_stores.sql</code> di Supabase SQL Editor untuk mengaktifkan Toko, Produk, dan Ulasan Marketplace.
         </div>
       )}
 
-      {/* Search & Category Filters */}
+      {/* Search & Category Filter */}
       <div className="space-y-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari rosario, buku, kuliner, kota..."
+            placeholder="Cari nama toko, produk, SKU, atau kota..."
             className="w-full rounded-xl border border-white/10 bg-[#12151b] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:border-brand-gold focus:outline-none"
           />
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
-          {CATEGORIES.map((c) => {
+          {MARKETPLACE_CATEGORIES.map((c) => {
             const active = category === c;
             return (
               <button
@@ -267,286 +312,198 @@ export default function MarketplaceClient({
         </div>
       </div>
 
-      {/* Product Grid */}
-      {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-[#12151b] px-6 py-16 text-center">
-          <ShoppingBag className="mx-auto h-10 w-10 text-brand-muted/40" />
-          <p className="mt-3 text-sm font-semibold text-white">Belum ada produk di kategori ini</p>
-          <p className="mt-1 text-xs text-brand-muted">Jadilah yang pertama menawarkan karya atau benda rohani di sini.</p>
+      {/* Section 1: Store Cards (bumped to top on store/product edit or new review) */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-gold">
+            <Store className="h-4 w-4" />
+            Toko Pilihan ({filteredStores.length})
+          </h3>
+          <span className="text-[11px] text-brand-muted">Aktivitas & ulasan terbaru di atas</span>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
-          {filtered.map((it) => (
-            <button
-              key={it.id}
-              type="button"
-              onClick={() => setSelected(it)}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12151b] text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-xl hover:shadow-black/40"
-            >
-              <div className="relative aspect-square w-full overflow-hidden bg-[#0c0e13]">
-                {it.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={it.image_url}
-                    alt={it.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle,rgba(214,176,114,0.12),transparent_70%)]">
-                    <ShoppingBag className="h-10 w-10 text-brand-gold/40" />
-                  </div>
-                )}
-                <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-brand-light backdrop-blur-sm">
-                  {it.category}
-                </span>
-                {it.status === "sold" && (
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-xs font-bold uppercase tracking-widest text-amber-300">
-                    Terjual
-                  </span>
-                )}
-              </div>
 
-              <div className="flex flex-1 flex-col p-3">
-                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-brand-gold transition-colors">
-                  {it.title}
-                </h3>
-                <p className="mt-1.5 text-sm font-bold text-brand-gold">{rupiah(it.price)}</p>
-                <div className="mt-auto flex items-center justify-between gap-2 pt-2 text-[11px] text-brand-muted">
-                  <span className="truncate">{sellerName(it)}</span>
-                  {it.city && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5">
-                      <MapPin className="h-3 w-3" />
-                      {it.city}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Product Detail Modal */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-[130] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm md:items-center md:p-4"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-white/15 bg-[#1a1d24] shadow-2xl md:rounded-3xl"
-          >
-            <div className="relative aspect-[4/3] w-full bg-[#0c0e13]">
-              {selected.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={selected.image_url} alt={selected.title} className="h-full w-full object-contain" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <ShoppingBag className="h-14 w-14 text-brand-gold/40" />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                aria-label="Tutup"
-                className="absolute right-3 top-3 rounded-full bg-black/70 p-2 text-white hover:bg-black"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-              <div>
-                <span className="inline-flex items-center gap-1 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-2.5 py-0.5 text-[11px] font-semibold text-brand-gold">
-                  <Tag className="h-3 w-3" /> {selected.category}
-                </span>
-                <h3 className="mt-2 text-xl font-bold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>
-                  {selected.title}
-                </h3>
-                <p className="mt-1 text-lg font-bold text-brand-gold">{rupiah(selected.price)}</p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 text-xs text-brand-muted">
-                <span>Penjual: <b className="text-white">{sellerName(selected)}</b></span>
-                {selected.city && (
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-brand-gold" /> {selected.city}
-                  </span>
-                )}
-              </div>
-
-              {selected.description && (
-                <p className="whitespace-pre-line rounded-xl border border-white/5 bg-[#12151b] p-3.5 text-sm leading-relaxed text-brand-light">
-                  {selected.description}
-                </p>
-              )}
-
-              {/* Contact Seller Actions */}
-              {selected.seller_id !== userId && (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {selected.whatsapp && (
-                    <a
-                      href={waLink(selected.whatsapp, selected.title)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-bold text-white transition hover:bg-emerald-500"
-                    >
-                      <MessageCircle className="h-4 w-4" /> Chat WhatsApp
-                    </a>
-                  )}
-                  <Link
-                    href={`/community/messages?u=${selected.seller_id}`}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-brand-gold px-4 py-3 text-xs font-bold text-brand-dark transition hover:bg-brand-gold-hover"
-                  >
-                    <MessageSquare className="h-4 w-4" /> Chat di Ruang Iman
-                  </Link>
-                </div>
-              )}
-
-              {/* Seller / Admin Controls */}
-              {(selected.seller_id === userId || isAdmin) && (
-                <div className="flex items-center gap-2 border-t border-white/10 pt-3">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void markSold(selected)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 py-2.5 text-xs font-bold text-brand-gold hover:bg-brand-gold/20 disabled:opacity-50"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    {selected.status === "sold" ? "Aktifkan Kembali" : "Tandai Terjual"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void removeItem(selected)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-2.5 text-xs font-bold text-red-300 hover:bg-red-500/20 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" /> Hapus
-                  </button>
-                </div>
-              )}
-            </div>
+        {filteredStores.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-[#12151b] px-6 py-12 text-center">
+            <Store className="mx-auto h-9 w-9 text-brand-muted/40" />
+            <p className="mt-2.5 text-sm font-semibold text-white">Belum ada toko yang cocok</p>
+            <p className="mt-1 text-xs text-brand-muted">Coba kata kunci lain atau jadilah yang pertama membuka toko di kategori ini.</p>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+            {filteredStores.map((s) => (
+              <Link
+                key={s.id}
+                href={`/news/marketplace/${s.slug}`}
+                className="group flex flex-col rounded-2xl border border-white/10 bg-[#12151b] p-3.5 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-gold/50 hover:bg-[#171b23] md:p-4"
+              >
+                <div className="mb-2.5 flex items-start justify-between gap-2">
+                  {s.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.logo_url} alt={s.name} loading="lazy" className="h-12 w-12 rounded-xl border border-white/10 object-cover md:h-14 md:w-14" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-gold/25 bg-brand-gold/10 text-brand-gold md:h-14 md:w-14">
+                      <Store className="h-6 w-6" />
+                    </div>
+                  )}
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-brand-light">
+                    {s.category}
+                  </span>
+                </div>
 
-      {/* Create Listing Modal */}
-      {creating && (
+                <h4 className="line-clamp-2 text-sm font-bold leading-snug text-white transition-colors group-hover:text-brand-gold md:text-base" style={{ fontFamily: "'Lora', Georgia, serif" }}>
+                  {s.name}
+                </h4>
+                {s.tagline && (
+                  <p className="mt-0.5 line-clamp-2 text-[11px] italic text-brand-gold/80">{s.tagline}</p>
+                )}
+
+                <div className="mt-auto flex items-center justify-between gap-2 border-t border-white/10 pt-2.5 text-[11px] text-brand-muted">
+                  <span className="inline-flex items-center gap-1 truncate">
+                    {s.city ? <><MapPin className="h-3 w-3 shrink-0" /> {s.city}</> : <><Package className="h-3 w-3 shrink-0" /> {s.product_count ?? 0} produk</>}
+                  </span>
+                  <span className="inline-flex shrink-0 items-center gap-0.5 font-bold text-brand-gold">
+                    Kunjungi <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Section 2: Random Products (when filter is empty / All) OR Matching Products (when searching/filtering) */}
+      <section className="space-y-3 border-t border-white/10 pt-6">
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-gold">
+            {isDefaultBrowse ? <Sparkles className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+            {isDefaultBrowse ? "Jelajahi Produk Acak" : `Produk Ditemukan (${filteredProducts.length})`}
+          </h3>
+          {isDefaultBrowse && initialProducts.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setRandomProducts(shuffle(initialProducts).slice(0, 12))}
+              className="text-[11px] font-semibold text-brand-gold hover:underline"
+            >
+              Acak lagi
+            </button>
+          )}
+        </div>
+
+        {filteredProducts.length === 0 ? (
+          <p className="rounded-2xl border border-white/10 bg-[#12151b] px-5 py-10 text-center text-xs text-brand-muted">
+            Belum ada produk untuk ditampilkan.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+            {filteredProducts.map((p) => (
+              <Link
+                key={p.id}
+                href={`/news/marketplace/${p.store?.slug ?? ""}?p=${p.id}`}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12151b] transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-xl hover:shadow-black/40"
+              >
+                <div className="relative aspect-square w-full overflow-hidden bg-[#0c0e13]">
+                  {p.images?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.images[0]}
+                      alt={p.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ShoppingBag className="h-10 w-10 text-brand-gold/35" />
+                    </div>
+                  )}
+                  <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-brand-light backdrop-blur-sm">
+                    {p.category}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-3">
+                  <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-brand-gold">
+                    {p.title}
+                  </h4>
+                  <p className="mt-1.5 text-sm font-bold text-brand-gold">{rupiah(p.price)}</p>
+                  <div className="mt-auto flex items-center justify-between gap-1 pt-2 text-[11px] text-brand-muted">
+                    <span className="truncate">{p.store?.name ?? "Toko"}</span>
+                    {p.stock <= 0 && <span className="shrink-0 text-red-400">Habis</span>}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Create / Edit Store Modal */}
+      {storeModal && (
         <div
           className="fixed inset-0 z-[130] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm md:items-center md:p-4"
-          onClick={() => setCreating(false)}
+          onClick={() => setStoreModal(false)}
         >
           <form
-            onSubmit={submitListing}
+            onSubmit={saveStore}
             onClick={(e) => e.stopPropagation()}
             className="max-h-[90dvh] w-full max-w-lg space-y-4 overflow-y-auto rounded-t-3xl border border-white/15 bg-[#1a1d24] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl md:rounded-3xl"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Pasang Iklan Baru</h3>
-              <button type="button" onClick={() => setCreating(false)} className="rounded-full p-1.5 text-brand-muted hover:bg-white/10 hover:text-white">
+              <h3 className="text-lg font-bold text-white">{myStore ? "Edit Toko Saya" : "Buka Toko di Ruang Iman"}</h3>
+              <button type="button" onClick={() => setStoreModal(false)} className="rounded-full p-1.5 text-brand-muted hover:bg-white/10 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Photo Upload */}
-            <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-dashed border-white/20 bg-[#12151b] p-4 text-center transition hover:border-brand-gold/60">
-              {imagePreview ? (
+            <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/20 bg-[#12151b] p-4 text-center transition hover:border-brand-gold/60">
+              {logoPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePreview} alt="Preview" className="max-h-48 rounded-xl object-contain" />
+                <img src={logoPreview} alt="Logo toko" className="h-20 w-20 rounded-2xl object-cover" />
               ) : (
                 <>
                   <ImagePlus className="h-7 w-7 text-brand-gold" />
-                  <span className="text-xs font-semibold text-brand-light">Pilih foto produk / jasa</span>
+                  <span className="text-xs font-semibold text-brand-light">Unggah logo toko</span>
                 </>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
-              />
+              <input type="file" accept="image/*" className="sr-only" onChange={(e) => onPickLogo(e.target.files?.[0] ?? null)} />
             </label>
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-brand-light">Nama Produk / Jasa *</label>
-                <input
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Contoh: Rosario Kayu Zaitun Asli"
-                  className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none"
-                />
+                <label className="mb-1 block text-xs font-semibold text-brand-light">Nama Toko *</label>
+                <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Contoh: Galeri Rosario Assisi" className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none" />
               </div>
-
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-brand-light">Tagline Singkat</label>
+                <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Kerajinan tangan penuh doa" className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none" />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-brand-light">Kategori</label>
-                  <select
-                    value={formCat}
-                    onChange={(e) => setFormCat(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none"
-                  >
-                    {CATEGORIES.filter((c) => c !== "Semua").map((c) => (
+                  <label className="mb-1 block text-xs font-semibold text-brand-light">Kategori Utama</label>
+                  <select value={storeCat} onChange={(e) => setStoreCat(e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none">
+                    {MARKETPLACE_CATEGORIES.filter((c) => c !== "Semua").map((c) => (
                       <option key={c} value={c} className="bg-[#1a1d24]">{c}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-brand-light">Harga (Rp)</label>
-                  <input
-                    inputMode="numeric"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="75000 (0 = Hubungi)"
-                    className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="mb-1 block text-xs font-semibold text-brand-light">Kota</label>
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Jakarta / Surabaya"
-                    className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-brand-light">WhatsApp (Opsional)</label>
-                  <input
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="0812xxxxxxxx"
-                    className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none"
-                  />
+                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Jakarta / Surabaya" className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none" />
                 </div>
               </div>
-
               <div>
-                <label className="mb-1 block text-xs font-semibold text-brand-light">Deskripsi</label>
-                <textarea
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Ceritakan detail barang, kondisi, atau cara pemesanan..."
-                  className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none"
-                />
+                <label className="mb-1 block text-xs font-semibold text-brand-light">Nomor WhatsApp Toko (Opsional)</label>
+                <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="0812xxxxxxxx" className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-brand-light">Tentang Toko</label>
+                <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ceritakan produk, jam layanan, atau pengiriman tokomu..." className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-sm text-white focus:border-brand-gold focus:outline-none" />
               </div>
             </div>
 
             {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark shadow-md transition hover:bg-brand-gold-hover disabled:opacity-60"
-            >
+            <button type="submit" disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gold py-3 text-sm font-bold text-brand-dark shadow-md transition hover:bg-brand-gold-hover disabled:opacity-60">
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {busy ? "Menyimpan…" : "Terbitkan Iklan"}
+              {busy ? "Menyimpan…" : myStore ? "Simpan Perubahan" : "Buka Toko Sekarang"}
             </button>
           </form>
         </div>
