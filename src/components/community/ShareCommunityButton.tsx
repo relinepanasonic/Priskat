@@ -33,7 +33,7 @@ export default function ShareCommunityButton({
   const [error, setError] = useState<string | null>(null);
   const [canNative, setCanNative] = useState(false);
 
-  const url = `${SITE}/camp/${slug}/tentang`;
+  const url = `${SITE}/camp/${slug}/tentang?ref=share`;
   const text = `Yuk kenalan dengan komunitas ${name} di Ruang Iman: ${url}`;
 
   useEffect(() => { setCanNative(typeof navigator !== "undefined" && typeof navigator.share === "function"); }, []);
