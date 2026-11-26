@@ -74,6 +74,34 @@ export function formatVariantId(skuId: string, variantCode?: string | null): str
   return s || v || "-";
 }
 
+/** Auto-generates a unique, trackable SKU ID such as "RI-BD-4K9M". */
+export function generateAutoSku(storeName: string, existingSkus: string[] = []): string {
+  const words = storeName
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  let prefix = "";
+  if (words.length >= 2) {
+    prefix = (words[0][0] + words[1][0] + (words[2]?.[0] ?? "")).toUpperCase();
+  } else if (words.length === 1) {
+    prefix = words[0].slice(0, 3).toUpperCase();
+  } else {
+    prefix = "ST";
+  }
+  const alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const taken = new Set(existingSkus.map((s) => s.toUpperCase()));
+  for (let attempt = 0; attempt < 20; attempt++) {
+    let rand = "";
+    for (let i = 0; i < 4; i++) {
+      rand += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    const candidate = `RI-${prefix}-${rand}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return `RI-${prefix}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+}
+
 export function slugifyStore(name: string): string {
   const base = name
     .toLowerCase()

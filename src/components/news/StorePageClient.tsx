@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Heart,
@@ -29,6 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import ProductShareModal from "@/components/news/ProductShareModal";
 import {
   formatVariantId,
+  generateAutoSku,
   getFavoriteProductIds,
   MARKETPLACE_CATEGORIES,
   MAX_PRODUCT_IMAGES,
@@ -61,8 +61,11 @@ export default function StorePageClient({
 }) {
   const router = useRouter();
   const db = () => createClient() as any;
+  // Strictly only the actual store owner can add, edit, or delete products in this store
   const isStoreOwner = Boolean(userId && userId === store.owner_id);
-  const isOwner = Boolean(isStoreOwner || (userId && isAdmin));
+  const isOwner = isStoreOwner;
+  void isAdmin;
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const [products, setProducts] = useState<MarketplaceProduct[]>(initialProducts);
   const [reviews, setReviews] = useState<MarketplaceReview[]>(initialReviews);
@@ -160,11 +163,11 @@ export default function StorePageClient({
   }, [reviews]);
 
   function openAddProduct() {
-    if (products.length >= MAX_STORE_PRODUCTS) return;
+    if (!isOwner || products.length >= MAX_STORE_PRODUCTS) return;
     setEditingProd(null);
     setTitle("");
     setCategory(store.category || "Benda Rohani");
-    setSkuId("");
+    setSkuId(generateAutoSku(store.name, products.map((p) => p.sku_id)));
     setPrice("");
     setStock("10");
     setDescription("");
@@ -177,10 +180,11 @@ export default function StorePageClient({
   }
 
   function openEditProduct(p: MarketplaceProduct) {
+    if (!isOwner) return;
     setEditingProd(p);
     setTitle(p.title);
     setCategory(p.category);
-    setSkuId(p.sku_id || "");
+    setSkuId(p.sku_id || generateAutoSku(store.name, products.map((x) => x.sku_id)));
     setPrice(String(p.price || ""));
     setStock(String(p.stock ?? 0));
     setDescription(p.description || "");
@@ -204,7 +208,7 @@ export default function StorePageClient({
 
   async function saveProduct(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId) return;
+    if (!userId || !isOwner) return;
     if (!title.trim()) { setError("Judul produk wajib diisi."); return; }
     setBusy(true);
     setError(null);
@@ -238,7 +242,7 @@ export default function StorePageClient({
         store_id: store.id,
         title: title.trim(),
         category,
-        sku_id: skuId.trim().toUpperCase(),
+        sku_id: (skuId.trim() || generateAutoSku(store.name, products.map((x) => x.sku_id))).toUpperCase(),
         variants: cleanVariants,
         description: description.trim() || null,
         price: Math.max(0, Number(price.replace(/\D/g, "")) || 0),
@@ -274,6 +278,7 @@ export default function StorePageClient({
   }
 
   async function deleteProduct(p: MarketplaceProduct) {
+    if (!isOwner) return;
     if (!confirm(`Hapus produk "${p.title}"?`)) return;
     setBusy(true);
     const { error: dErr } = await db().from("marketplace_products").delete().eq("id", p.id);
@@ -579,11 +584,33 @@ export default function StorePageClient({
             onClick={(e) => e.stopPropagation()}
             className="max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-3xl border border-white/15 bg-[#1a1d24] shadow-2xl md:rounded-3xl"
           >
-            {/* 5-Photo Carousel */}
-            <div className="relative aspect-[4/3] w-full bg-[#0c0e13]">
+            {/* 5-Photo Carousel (Swipeable + Arrow Navigation) */}
+            <div
+              className="relative aspect-[4/3] w-full touch-pan-y select-none bg-[#0c0e13]"
+              onTouchStart={(e) => {
+                const t = e.touches[0];
+                if (t) touchStartRef.current = { x: t.clientX, y: t.clientY };
+              }}
+              onTouchEnd={(e) => {
+                const start = touchStartRef.current;
+                touchStartRef.current = null;
+                if (!start || !activeProd.images || activeProd.images.length <= 1) return;
+                const t = e.changedTouches[0];
+                if (!t) return;
+                const dx = t.clientX - start.x;
+                const dy = t.clientY - start.y;
+                if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                  if (dx < 0) {
+                    setImgIdx((i) => (i + 1) % activeProd.images.length);
+                  } else {
+                    setImgIdx((i) => (i - 1 + activeProd.images.length) % activeProd.images.length);
+                  }
+                }
+              }}
+            >
               {activeProd.images?.[imgIdx] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={activeProd.images[imgIdx]} alt={activeProd.title} className="h-full w-full object-contain" />
+                <img src={activeProd.images[imgIdx]} alt={activeProd.title} draggable={false} className="h-full w-full object-contain" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center"><ShoppingBag className="h-14 w-14 text-brand-gold/40" /></div>
               )}
@@ -591,6 +618,14 @@ export default function StorePageClient({
                 <>
                   <button type="button" onClick={() => setImgIdx((i) => (i - 1 + activeProd.images.length) % activeProd.images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white"><ChevronLeft className="h-5 w-5" /></button>
                   <button type="button" onClick={() => setImgIdx((i) => (i + 1) % activeProd.images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white"><ChevronRight className="h-5 w-5" /></button>
+                  <div className="pointer-events-none absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 backdrop-blur-sm">
+                    {activeProd.images.map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-1.5 rounded-full transition-all ${i === imgIdx ? "w-4 bg-brand-gold" : "w-1.5 bg-white/45"}`}
+                      />
+                    ))}
+                  </div>
                 </>
               )}
               <button
@@ -732,34 +767,30 @@ export default function StorePageClient({
                 )}
               </div>
 
-              {/* Store Link Banner before Reviews — click to enter the store */}
+              {/* Store Link Banner before Reviews — click picture or store name to enter store */}
               <button
                 type="button"
                 onClick={() => {
                   setActiveProd(null);
                   router.push(`/news/marketplace/${store.slug}`);
                 }}
-                className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#12151b] p-3 text-left transition hover:border-brand-gold/45 hover:bg-[#171b23]"
+                className="group flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#12151b] p-3 text-left transition hover:border-brand-gold/45 hover:bg-[#171b23]"
               >
-                <div className="flex min-w-0 items-center gap-2.5">
-                  {store.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={store.logo_url} alt={store.name} className="h-10 w-10 shrink-0 rounded-xl border border-brand-gold/30 object-cover" />
-                  ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-gold/30 bg-brand-gold/10 text-brand-gold">
-                      <Store className="h-5 w-5" />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-white">{store.name}</p>
-                    <p className="truncate text-[11px] text-brand-muted">
-                      {store.city ? `${store.city} · ` : ""}{store.category}
-                    </p>
+                {store.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={store.logo_url} alt={store.name} className="h-11 w-11 shrink-0 rounded-xl border border-brand-gold/30 object-cover" />
+                ) : (
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-gold/30 bg-brand-gold/10 text-brand-gold">
+                    <Store className="h-5 w-5" />
                   </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-white transition-colors group-hover:text-brand-gold">{store.name}</p>
+                  <p className="truncate text-[11px] text-brand-muted">
+                    {store.city ? `${store.city} · ` : ""}{store.category}
+                  </p>
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-gold/15 px-2.5 py-1.5 text-[11px] font-bold text-brand-gold">
-                  Kunjungi <ArrowRight className="h-3 w-3" />
-                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-brand-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand-gold" />
               </button>
 
               {/* Product Reviews */}
@@ -877,8 +908,12 @@ export default function StorePageClient({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-brand-light">SKU ID</label>
-                  <input value={skuId} onChange={(e) => setSkuId(e.target.value.toUpperCase())} placeholder="ROS-001" className="w-full rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 font-mono text-sm text-white focus:border-brand-gold focus:outline-none" />
+                  <label className="mb-1 block text-xs font-semibold text-brand-light">SKU ID (Otomatis)</label>
+                  <input
+                    value={skuId}
+                    readOnly
+                    className="w-full cursor-not-allowed rounded-xl border border-white/10 bg-[#0e1015] px-3.5 py-2.5 font-mono text-sm text-brand-gold focus:outline-none"
+                  />
                 </div>
               </div>
 
