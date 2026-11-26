@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Heart,
   ImagePlus,
   Loader2,
   MapPin,
@@ -27,10 +29,12 @@ import { createClient } from "@/lib/supabase/client";
 import ProductShareModal from "@/components/news/ProductShareModal";
 import {
   formatVariantId,
+  getFavoriteProductIds,
   MARKETPLACE_CATEGORIES,
   MAX_PRODUCT_IMAGES,
   MAX_STORE_PRODUCTS,
   rupiah,
+  toggleFavoriteProductId,
   waBuyLink,
   type MarketplaceProduct,
   type MarketplaceReview,
@@ -72,6 +76,26 @@ export default function StorePageClient({
   const [imgIdx, setImgIdx] = useState(0);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState<number>(0);
   const [buyingChat, setBuyingChat] = useState(false);
+  const [favIds, setFavIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const sync = () => setFavIds(getFavoriteProductIds());
+    sync();
+    window.addEventListener("ri-marketplace-favs", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("ri-marketplace-favs", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  function onToggleFav(productId: string, e?: React.MouseEvent) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setFavIds(toggleFavoriteProductId(productId));
+  }
   const [sharePayload, setSharePayload] = useState<{
     title: string;
     subtitle: string;
@@ -461,6 +485,20 @@ export default function StorePageClient({
                 <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-brand-light">
                   {p.category}
                 </span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Favorit"
+                  onClick={(e) => onToggleFav(p.id, e)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onToggleFav(p.id); }}
+                  className={`absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full backdrop-blur-sm transition ${
+                    favIds.includes(p.id)
+                      ? "bg-rose-500/90 text-white"
+                      : "bg-black/65 text-white/85 hover:bg-black/85 hover:text-rose-300"
+                  }`}
+                >
+                  <Heart className={`h-3.5 w-3.5 ${favIds.includes(p.id) ? "fill-white" : ""}`} />
+                </span>
               </div>
               <div className="flex flex-1 flex-col p-3">
                 <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-brand-gold transition-colors">
@@ -555,6 +593,22 @@ export default function StorePageClient({
                   <button type="button" onClick={() => setImgIdx((i) => (i + 1) % activeProd.images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white"><ChevronRight className="h-5 w-5" /></button>
                 </>
               )}
+              <button
+                type="button"
+                aria-label="Bagikan produk"
+                onClick={() =>
+                  setSharePayload({
+                    title: activeProd.title,
+                    subtitle: `${store.name} · ${rupiah(activePrice)}`,
+                    url: `${SITE}/news/marketplace/${store.slug}?p=${activeProd.id}`,
+                    imageUrl: activeProd.images?.[0] ?? store.logo_url,
+                    shareText: `Lihat ${activeProd.title} (${rupiah(activePrice)}) di toko ${store.name} — Marketplace Ruang Iman:`,
+                  })
+                }
+                className="absolute left-3 top-3 rounded-full bg-black/70 p-2 text-white backdrop-blur-sm transition hover:bg-brand-gold hover:text-brand-dark"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
               <button type="button" onClick={() => setActiveProd(null)} aria-label="Tutup" className="absolute right-3 top-3 rounded-full bg-black/70 p-2 text-white">
                 <X className="h-5 w-5" />
               </button>
@@ -573,17 +627,47 @@ export default function StorePageClient({
 
             <div className="space-y-4 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
               <div className="flex items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0 flex-1">
                   <span className="rounded-full border border-brand-gold/30 bg-brand-gold/10 px-2.5 py-0.5 text-[10px] font-bold uppercase text-brand-gold">{activeProd.category}</span>
                   <h3 className="mt-1.5 text-xl font-bold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>{activeProd.title}</h3>
                   <p className="mt-1 text-lg font-bold text-brand-gold">{rupiah(activePrice)}</p>
                 </div>
-                {isOwner && (
-                  <div className="flex gap-1.5">
-                    <button type="button" onClick={() => openEditProduct(activeProd)} className="rounded-lg border border-white/15 p-2 text-brand-light hover:border-brand-gold hover:text-brand-gold"><Pencil className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => void deleteProduct(activeProd)} className="rounded-lg border border-red-500/30 p-2 text-red-300 hover:bg-red-500/15"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                )}
+                <div className="flex shrink-0 items-center gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    aria-label={favIds.includes(activeProd.id) ? "Hapus dari Favorit" : "Simpan ke Favorit"}
+                    onClick={() => onToggleFav(activeProd.id)}
+                    className={`rounded-xl border p-2 transition ${
+                      favIds.includes(activeProd.id)
+                        ? "border-rose-500/50 bg-rose-500/15 text-rose-400"
+                        : "border-white/15 bg-[#12151b] text-brand-light hover:border-rose-400/50 hover:text-rose-300"
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${favIds.includes(activeProd.id) ? "fill-rose-400" : ""}`} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Bagikan produk"
+                    onClick={() =>
+                      setSharePayload({
+                        title: activeProd.title,
+                        subtitle: `${store.name} · ${rupiah(activePrice)}`,
+                        url: `${SITE}/news/marketplace/${store.slug}?p=${activeProd.id}`,
+                        imageUrl: activeProd.images?.[0] ?? store.logo_url,
+                        shareText: `Lihat ${activeProd.title} (${rupiah(activePrice)}) di toko ${store.name} — Marketplace Ruang Iman:`,
+                      })
+                    }
+                    className="rounded-xl border border-brand-gold/40 bg-brand-gold/10 p-2 text-brand-gold transition hover:bg-brand-gold hover:text-brand-dark"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </button>
+                  {isOwner && (
+                    <>
+                      <button type="button" onClick={() => openEditProduct(activeProd)} className="rounded-xl border border-white/15 p-2 text-brand-light hover:border-brand-gold hover:text-brand-gold"><Pencil className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => void deleteProduct(activeProd)} className="rounded-xl border border-red-500/30 p-2 text-red-300 hover:bg-red-500/15"><Trash2 className="h-4 w-4" /></button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* SKU / Variant ID & Stock */}
@@ -625,23 +709,8 @@ export default function StorePageClient({
                 </p>
               )}
 
-              {/* Share & Buy Buttons (Thought/WA/Chat Share + Direct Owner Chat + WhatsApp) */}
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSharePayload({
-                      title: activeProd.title,
-                      subtitle: `${store.name} · ${rupiah(activePrice)}`,
-                      url: `${SITE}/news/marketplace/${store.slug}?p=${activeProd.id}`,
-                      imageUrl: activeProd.images?.[0] ?? store.logo_url,
-                      shareText: `Lihat ${activeProd.title} (${rupiah(activePrice)}) di toko ${store.name} — Marketplace Ruang Iman:`,
-                    })
-                  }
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3 py-3 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
-                >
-                  <Share2 className="h-4 w-4" /> Bagikan
-                </button>
+              {/* Buy Buttons in 1 single row */}
+              <div className={`grid gap-2 ${store.whatsapp ? "grid-cols-2" : "grid-cols-1"}`}>
                 <button
                   type="button"
                   disabled={buyingChat}
@@ -649,7 +718,7 @@ export default function StorePageClient({
                   className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-gold px-3 py-3 text-xs font-bold text-brand-dark hover:bg-brand-gold-hover disabled:opacity-60"
                 >
                   {buyingChat ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                  {buyingChat ? "Membuka chat…" : "Beli (Chat App)"}
+                  {buyingChat ? "Membuka…" : "Beli (Chat App)"}
                 </button>
                 {store.whatsapp && (
                   <a
@@ -662,6 +731,36 @@ export default function StorePageClient({
                   </a>
                 )}
               </div>
+
+              {/* Store Link Banner before Reviews — click to enter the store */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveProd(null);
+                  router.push(`/news/marketplace/${store.slug}`);
+                }}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#12151b] p-3 text-left transition hover:border-brand-gold/45 hover:bg-[#171b23]"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  {store.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={store.logo_url} alt={store.name} className="h-10 w-10 shrink-0 rounded-xl border border-brand-gold/30 object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-gold/30 bg-brand-gold/10 text-brand-gold">
+                      <Store className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-white">{store.name}</p>
+                    <p className="truncate text-[11px] text-brand-muted">
+                      {store.city ? `${store.city} · ` : ""}{store.category}
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-gold/15 px-2.5 py-1.5 text-[11px] font-bold text-brand-gold">
+                  Kunjungi <ArrowRight className="h-3 w-3" />
+                </span>
+              </button>
 
               {/* Product Reviews */}
               <div className="space-y-3 border-t border-white/10 pt-4">

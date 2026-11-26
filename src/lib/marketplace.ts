@@ -96,3 +96,33 @@ export function waBuyLink(phone: string, storeName: string, productTitle: string
   ].filter(Boolean);
   return `https://wa.me/${intl}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
+
+const FAV_STORAGE_KEY = "ri_marketplace_favs_v1";
+
+export function getFavoriteProductIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(FAV_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function toggleFavoriteProductId(productId: string): string[] {
+  const current = getFavoriteProductIds();
+  const next = current.includes(productId)
+    ? current.filter((id) => id !== productId)
+    : [productId, ...current];
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("ri-marketplace-favs"));
+    } catch {
+      // ignore storage quota errors
+    }
+  }
+  return next;
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  Heart,
   ImagePlus,
   Loader2,
   MapPin,
@@ -18,9 +19,11 @@ import {
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
 import {
+  getFavoriteProductIds,
   MARKETPLACE_CATEGORIES,
   rupiah,
   slugifyStore,
+  toggleFavoriteProductId,
   type MarketplaceProduct,
   type MarketplaceStore,
 } from "@/lib/marketplace";
@@ -64,11 +67,36 @@ export default function MarketplaceClient({
   const [category, setCategory] = useState<string>("Semua");
   const [q, setQ] = useState("");
   const [randomProducts, setRandomProducts] = useState<MarketplaceProduct[]>(initialProducts.slice(0, 12));
+  const [favIds, setFavIds] = useState<string[]>([]);
+  const [showFavOnly, setShowFavOnly] = useState(false);
 
   // Shuffle random products on the client mount so each visit shows a fresh fair discovery mix
   useEffect(() => {
     setRandomProducts(shuffle(initialProducts).slice(0, 12));
   }, [initialProducts]);
+
+  useEffect(() => {
+    const sync = () => setFavIds(getFavoriteProductIds());
+    sync();
+    window.addEventListener("ri-marketplace-favs", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("ri-marketplace-favs", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  function onToggleFav(productId: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setFavIds(toggleFavoriteProductId(productId));
+  }
+
+  const favoriteProducts = useMemo(() => {
+    if (favIds.length === 0) return [];
+    const byId = new Map(initialProducts.map((p) => [p.id, p]));
+    return favIds.map((id) => byId.get(id)).filter((p): p is MarketplaceProduct => Boolean(p));
+  }, [favIds, initialProducts]);
 
   // Create/Edit Store Modal
   const [storeModal, setStoreModal] = useState(false);
@@ -229,6 +257,18 @@ export default function MarketplaceClient({
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFavOnly((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                showFavOnly
+                  ? "border-rose-500/60 bg-rose-500/20 text-rose-300"
+                  : "border-white/15 bg-white/5 text-brand-light hover:border-rose-400/50 hover:text-rose-300"
+              }`}
+            >
+              <Heart className={`h-3.5 w-3.5 ${showFavOnly || favIds.length > 0 ? "fill-rose-400 text-rose-400" : ""}`} />
+              Favorit{favIds.length > 0 ? ` (${favIds.length})` : ""}
+            </button>
             {userId ? (
               myStore ? (
                 <>
@@ -301,7 +341,10 @@ export default function MarketplaceClient({
               <button
                 key={c}
                 type="button"
-                onClick={() => setCategory(c)}
+                onClick={() => {
+                  setCategory(c);
+                  setShowFavOnly(false);
+                }}
                 className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                   active
                     ? "bg-brand-gold text-brand-dark shadow-sm"
@@ -315,6 +358,89 @@ export default function MarketplaceClient({
         </div>
       </div>
 
+      {/* Favorit Menu View */}
+      {showFavOnly ? (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-rose-300">
+              <Heart className="h-4 w-4 fill-rose-400 text-rose-400" />
+              Produk Favorit Saya ({favoriteProducts.length})
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowFavOnly(false)}
+              className="text-xs font-semibold text-brand-gold hover:underline"
+            >
+              Lihat semua marketplace
+            </button>
+          </div>
+
+          {favoriteProducts.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-[#12151b] px-6 py-12 text-center">
+              <Heart className="mx-auto h-9 w-9 text-rose-400/40" />
+              <p className="mt-2.5 text-sm font-semibold text-white">Belum ada produk favorit</p>
+              <p className="mt-1 text-xs text-brand-muted">
+                Ketuk ikon hati pada produk yang kamu suka untuk menyimpannya di sini.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowFavOnly(false)}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2 text-xs font-bold text-brand-dark hover:bg-brand-gold-hover"
+              >
+                Jelajahi Produk
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+              {favoriteProducts.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/news/marketplace/${p.store?.slug ?? ""}?p=${p.id}`}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12151b] transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-xl hover:shadow-black/40"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden bg-[#0c0e13]">
+                    {p.images?.[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.images[0]}
+                        alt={p.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <ShoppingBag className="h-10 w-10 text-brand-gold/35" />
+                      </div>
+                    )}
+                    <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-brand-light backdrop-blur-sm">
+                      {p.category}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Hapus dari Favorit"
+                      onClick={(e) => onToggleFav(p.id, e)}
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500/90 text-white backdrop-blur-sm transition hover:bg-rose-600"
+                    >
+                      <Heart className="h-3.5 w-3.5 fill-white" />
+                    </button>
+                  </div>
+                  <div className="flex flex-1 flex-col p-3">
+                    <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-brand-gold">
+                      {p.title}
+                    </h4>
+                    <p className="mt-1.5 text-sm font-bold text-brand-gold">{rupiah(p.price)}</p>
+                    <div className="mt-auto flex items-center justify-between gap-1 pt-2 text-[11px] text-brand-muted">
+                      <span className="truncate">{p.store?.name ?? "Toko"}</span>
+                      {p.stock <= 0 && <span className="shrink-0 text-red-400">Habis</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+      <>
       {/* Section 1: Store Cards (bumped to top on store/product edit or new review) */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -438,6 +564,18 @@ export default function MarketplaceClient({
                   <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-brand-light backdrop-blur-sm">
                     {p.category}
                   </span>
+                  <button
+                    type="button"
+                    aria-label={favIds.includes(p.id) ? "Hapus dari Favorit" : "Simpan ke Favorit"}
+                    onClick={(e) => onToggleFav(p.id, e)}
+                    className={`absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full backdrop-blur-sm transition ${
+                      favIds.includes(p.id)
+                        ? "bg-rose-500/90 text-white"
+                        : "bg-black/65 text-white/85 hover:bg-black/85 hover:text-rose-300"
+                    }`}
+                  >
+                    <Heart className={`h-3.5 w-3.5 ${favIds.includes(p.id) ? "fill-white" : ""}`} />
+                  </button>
                 </div>
                 <div className="flex flex-1 flex-col p-3">
                   <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-brand-gold">
@@ -454,6 +592,8 @@ export default function MarketplaceClient({
           </div>
         )}
       </section>
+      </>
+      )}
 
       {/* Create / Edit Store Modal */}
       {storeModal && (
