@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Check,
   ChevronLeft,
   ChevronRight,
   ImagePlus,
@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
+import ProductShareModal from "@/components/news/ProductShareModal";
 import {
   formatVariantId,
   MARKETPLACE_CATEGORIES,
@@ -55,6 +56,7 @@ export default function StorePageClient({
   isAdmin: boolean;
   initialProductId?: string | null;
 }) {
+  const router = useRouter();
   const db = () => createClient() as any;
   const isOwner = Boolean(userId && (userId === store.owner_id || isAdmin));
 
@@ -69,7 +71,14 @@ export default function StorePageClient({
   );
   const [imgIdx, setImgIdx] = useState(0);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState<number>(0);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [buyingChat, setBuyingChat] = useState(false);
+  const [sharePayload, setSharePayload] = useState<{
+    title: string;
+    subtitle: string;
+    url: string;
+    imageUrl?: string | null;
+    shareText: string;
+  } | null>(null);
 
   // Review inputs (product & store)
   const [prodRating, setProdRating] = useState(5);
@@ -274,15 +283,42 @@ export default function StorePageClient({
     else { setStoreComment(""); setStoreRating(5); }
   }
 
-  async function shareUrl(url: string, label: string, key: string) {
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try { await navigator.share({ title: label, url }); return; } catch { /* cancelled */ }
+  /** Directly open (and pre-send the product inquiry into) the DM chat with the store owner. */
+  async function buyViaAppChat() {
+    if (!activeProd) return;
+    if (!userId) {
+      router.push(`/login?next=${encodeURIComponent(`/news/marketplace/${store.slug}?p=${activeProd.id}`)}`);
+      return;
     }
+    if (userId === store.owner_id) {
+      router.push("/community/messages/private");
+      return;
+    }
+    setBuyingChat(true);
     try {
-      await navigator.clipboard.writeText(url);
-      setCopiedId(key);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch { /* ignore */ }
+      const { data: threadId, error: tErr } = await db().rpc("get_or_create_dm_thread", { other: store.owner_id });
+      if (!tErr && threadId) {
+        const productUrl = `${SITE}/news/marketplace/${store.slug}?p=${activeProd.id}`;
+        const lines = [
+          `Shalom ${store.name}, saya tertarik membeli:`,
+          `• ${activeProd.title}`,
+          activeVariant?.name ? `• Varian: ${activeVariant.name}` : "",
+          activeVariantId !== "-" ? `• Kode: ${activeVariantId}` : "",
+          activePrice > 0 ? `• Harga: ${rupiah(activePrice)}` : "",
+          productUrl,
+        ].filter(Boolean);
+        await db().from("dm_messages").insert({
+          thread_id: threadId,
+          author_id: userId,
+          content: lines.join("\n"),
+        });
+        router.push(`/community/messages/private?t=${threadId}`);
+        return;
+      }
+      router.push(`/community/messages/private?u=${store.owner_id}`);
+    } finally {
+      setBuyingChat(false);
+    }
   }
 
   const activeVariant: ProductVariant | null =
@@ -335,11 +371,18 @@ export default function StorePageClient({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => void shareUrl(`${SITE}/news/marketplace/${store.slug}`, store.name, "store")}
+              onClick={() =>
+                setSharePayload({
+                  title: store.name,
+                  subtitle: store.category,
+                  url: `${SITE}/news/marketplace/${store.slug}`,
+                  imageUrl: store.logo_url,
+                  shareText: `Yuk kunjungi toko ${store.name} di Marketplace Ruang Iman!`,
+                })
+              }
               className="inline-flex items-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3.5 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition"
             >
-              {copiedId === "store" ? <Check className="h-3.5 w-3.5" /> : <Share2 className="h-3.5 w-3.5" />}
-              {copiedId === "store" ? "Tersalin" : "Bagikan Toko"}
+              <Share2 className="h-3.5 w-3.5" /> Bagikan Toko
             </button>
             {isOwner && (
               <button
@@ -582,22 +625,32 @@ export default function StorePageClient({
                 </p>
               )}
 
-              {/* Share & Buy Buttons (Chat in App + WhatsApp option) */}
+              {/* Share & Buy Buttons (Thought/WA/Chat Share + Direct Owner Chat + WhatsApp) */}
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <button
                   type="button"
-                  onClick={() => void shareUrl(`${SITE}/news/marketplace/${store.slug}?p=${activeProd.id}`, activeProd.title, activeProd.id)}
+                  onClick={() =>
+                    setSharePayload({
+                      title: activeProd.title,
+                      subtitle: `${store.name} · ${rupiah(activePrice)}`,
+                      url: `${SITE}/news/marketplace/${store.slug}?p=${activeProd.id}`,
+                      imageUrl: activeProd.images?.[0] ?? store.logo_url,
+                      shareText: `Lihat ${activeProd.title} (${rupiah(activePrice)}) di toko ${store.name} — Marketplace Ruang Iman:`,
+                    })
+                  }
                   className="flex items-center justify-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3 py-3 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
                 >
-                  {copiedId === activeProd.id ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                  {copiedId === activeProd.id ? "Tersalin" : "Bagikan"}
+                  <Share2 className="h-4 w-4" /> Bagikan
                 </button>
-                <Link
-                  href={`/community/messages?u=${store.owner_id}`}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-gold px-3 py-3 text-xs font-bold text-brand-dark hover:bg-brand-gold-hover"
+                <button
+                  type="button"
+                  disabled={buyingChat}
+                  onClick={() => void buyViaAppChat()}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-gold px-3 py-3 text-xs font-bold text-brand-dark hover:bg-brand-gold-hover disabled:opacity-60"
                 >
-                  <MessageSquare className="h-4 w-4" /> Beli (Chat App)
-                </Link>
+                  {buyingChat ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                  {buyingChat ? "Membuka chat…" : "Beli (Chat App)"}
+                </button>
                 {store.whatsapp && (
                   <a
                     href={waBuyLink(store.whatsapp, store.name, activeProd.title, activeVariantId, activeVariant?.name, activePrice)}
@@ -809,6 +862,16 @@ export default function StorePageClient({
             </button>
           </form>
         </div>
+      )}
+      {sharePayload && (
+        <ProductShareModal
+          title={sharePayload.title}
+          subtitle={sharePayload.subtitle}
+          url={sharePayload.url}
+          imageUrl={sharePayload.imageUrl}
+          shareText={sharePayload.shareText}
+          onClose={() => setSharePayload(null)}
+        />
       )}
     </div>
   );
