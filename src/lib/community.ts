@@ -79,3 +79,10 @@ export function isCatholicFamilyMinistry(name?: string | null, slug?: string | n
   const s = (slug ?? "").toLowerCase();
   return n.includes("family ministry") || s === "cfm" || s.startsWith("cfm-") || s.includes("catholic-family");
 }
+
+/** Ruang Iman's own official community gets the custom website About page and dedicated Features tab. */
+export function isRuangImanCommunity(name?: string | null, slug?: string | null) {
+  const n = (name ?? "").trim().toLowerCase();
+  const s = (slug ?? "").trim().toLowerCase();
+  return n === "ruang iman" || s === "ruangiman" || s === "ruang-iman";
+}

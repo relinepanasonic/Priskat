@@ -18,9 +18,10 @@ import {
   BadgeCheck,
   Images,
   Settings,
+  Sparkles,
   UsersRound,
 } from "lucide-react";
-import { resolveCommunity, isCatholicFamilyMinistry } from "@/lib/community";
+import { resolveCommunity, isCatholicFamilyMinistry, isRuangImanCommunity } from "@/lib/community";
 import { isCatholicIndonesia } from "@/lib/catholicIndonesia";
 
 const titleCase = (s: string) =>
@@ -45,6 +46,7 @@ export default function CommunitySlugLayout({
   // Known from the URL immediately; confirmed by name once the community loads
   const [isCI, setIsCI] = useState(isCatholicIndonesia(null, slug));
   const [isCFM, setIsCFM] = useState(isCatholicFamilyMinistry(null, slug));
+  const [isRI, setIsRI] = useState(isRuangImanCommunity(null, slug));
   const [canPromote, setCanPromote] = useState(false);
   const [leadsCg, setLeadsCg] = useState(false);
   // null = not known yet. Not a member of a community (other than Catholic Indonesia): only "Tentang" is open
@@ -62,6 +64,7 @@ export default function CommunitySlugLayout({
         setCommunityName(community.name);
         setIsCI(isCatholicIndonesia(community.name, community.slug));
         setIsCFM(isCatholicFamilyMinistry(community.name, community.slug));
+        setIsRI(isRuangImanCommunity(community.name, community.slug));
       }
 
       const {
@@ -125,19 +128,38 @@ export default function CommunitySlugLayout({
   ];
 
   // Members see Tentang, Event, Komsel and Coverage; non-members only Tentang and Event.
-  // Everything an admin manages (camps, events, Komsel, coverage, members, promotion) is in the Community Center.
-  const tabs = isCI ? ciTabs : [
-    { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
-    { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
-    { name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound },
-    { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
-  ];
+  // Ruang Iman's own community also exposes its dedicated public Features showcase tab.
+  const tabs = isCI
+    ? ciTabs
+    : isRI
+    ? [
+        { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
+        { name: "Features", href: `/camp/${slug}/features`, icon: Sparkles },
+        { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
+        { name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound },
+        { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
+      ]
+    : [
+        { name: "Tentang", href: `/camp/${slug}/tentang`, icon: Info },
+        { name: "Event", href: `/camp/${slug}/event`, icon: Calendar },
+        { name: "Komsel", href: `/camp/${slug}/connect-group`, icon: UsersRound },
+        { name: "Coverage", href: `/camp/${slug}/coverage`, icon: Map },
+      ];
 
   const browseOnly = !isCI && isMember === false;
-  const shownTabs = browseOnly ? tabs.filter((t) => t.name === "Tentang" || t.name === "Event") : tabs;
+  const shownTabs = browseOnly
+    ? tabs.filter((t) => t.name === "Tentang" || t.name === "Event" || (isRI && t.name === "Features"))
+    : tabs;
   useEffect(() => {
-    if (browseOnly && !pathname.startsWith(`/camp/${slug}/tentang`) && !pathname.startsWith(`/camp/${slug}/event`)) router.replace(`/camp/${slug}/tentang`);
-  }, [browseOnly, pathname, slug, router]);
+    if (
+      browseOnly &&
+      !pathname.startsWith(`/camp/${slug}/tentang`) &&
+      !pathname.startsWith(`/camp/${slug}/event`) &&
+      !(isRI && pathname.startsWith(`/camp/${slug}/features`))
+    ) {
+      router.replace(`/camp/${slug}/tentang`);
+    }
+  }, [browseOnly, isRI, pathname, slug, router]);
 
   // keep the active tab visible in the scrolling tab bar
   useEffect(() => {
