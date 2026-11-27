@@ -111,13 +111,22 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
               </a>
             )}
             {["superadmin", "founder"].includes(String(profile?.role).toLowerCase()) && (
-              <a
-                href="/admin/members"
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
-              >
-                <Users className="h-4 w-4" />
-                <span>{isEn ? "Manage Users" : "Kelola Pengguna"}</span>
-              </a>
+              <>
+                <a
+                  href="/admin"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-bold bg-brand-gold/15 text-brand-gold border border-brand-gold/45 hover:bg-brand-gold hover:text-brand-dark transition-all"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{isEn ? "Admin ERP" : "Admin ERP"}</span>
+                </a>
+                <a
+                  href="/admin/members"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
+                >
+                  <Users className="h-4 w-4" />
+                  <span>{isEn ? "Manage Users" : "Kelola Pengguna"}</span>
+                </a>
+              </>
             )}
             
             {(String(profile?.role).toLowerCase() === "superadmin" || String(profile?.role).toLowerCase() === "founder") && (

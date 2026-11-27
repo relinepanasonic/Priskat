@@ -27,14 +27,18 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // communitycenter.ruangiman.com is the community back office: "/" opens the admin
-  // dashboard and anything outside the admin/auth routes is sent back to "/".
+  // communitycenter.ruangiman.com is the community back office, and
+  // admin.ruangiman.com is the Ruang Iman Admin ERP control panel:
+  // "/" opens /admin and anything outside allowed routes redirects to "/".
   const host = (request.headers.get("host") ?? "").toLowerCase();
   const isCommunityCenterHost = host.startsWith("communitycenter.");
+  const isAdminHost = host.startsWith("admin.");
   let pathname = request.nextUrl.pathname;
   let rewriteToAdmin = false;
-  if (isCommunityCenterHost) {
-    const allowed = ["/admin", "/camp", "/login", "/forgot-password", "/reset-password", "/auth", "/api", "/privacy"];
+  if (isCommunityCenterHost || isAdminHost) {
+    const allowed = isAdminHost
+      ? ["/admin", "/login", "/forgot-password", "/reset-password", "/auth", "/api", "/privacy"]
+      : ["/admin", "/camp", "/login", "/forgot-password", "/reset-password", "/auth", "/api", "/privacy"];
     if (pathname === "/") {
       rewriteToAdmin = true;
       pathname = "/admin";
@@ -79,6 +83,10 @@ export async function middleware(request: NextRequest) {
         .limit(1)
         .maybeSingle();
       if (commAdmin) isCommunityAdmin = true;
+    }
+
+    if (isAdminHost && !isGlobalAdmin) {
+      return NextResponse.redirect(new URL("/login", request.url));
     }
 
     if (!isGlobalAdmin && !isCommunityAdmin) {

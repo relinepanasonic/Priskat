@@ -1,17 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Navbar from "@/components/layout/Navbar";
 import CommunityCenterSidebar from "@/components/admin/CommunityCenterSidebar";
+import AdminErpSidebar from "@/components/admin/AdminErpSidebar";
 import { getLanguage } from "@/lib/lang";
 import { sortCommunities } from "@/lib/community";
-import { isCommunityCenterHost } from "@/lib/ccMode";
+import { isAdminErpHost, isCommunityCenterHost } from "@/lib/ccMode";
 import CommunityAdminGuard from "@/components/admin/CommunityAdminGuard";
 import type { Profile } from "@/lib/types/database.types";
 import type { Metadata } from "next";
 import InstallApp from "@/components/admin/InstallApp";
 
-/** On communitycenter.ruangiman.com the site is its own app: its own icon, name and install, different from Ruang Iman. */
+/** On communitycenter.ruangiman.com and admin.ruangiman.com, each portal gets its own app title & metadata. */
 export async function generateMetadata(): Promise<Metadata> {
+  if (await isAdminErpHost()) {
+    return {
+      title: { default: "Ruang Iman Admin ERP", template: "%s | Ruang Iman Admin" },
+      applicationName: "Ruang Iman Admin ERP",
+      icons: { icon: [{ url: "/logo.png", type: "image/png" }], apple: "/logo.png" },
+    };
+  }
   if (!(await isCommunityCenterHost())) return {};
   return {
     manifest: "/cc-manifest.json",
@@ -88,11 +95,18 @@ export default async function AdminLayout({
     );
   }
 
+  // Global admins outside communitycenter.ruangiman.com get the dedicated Ruang Iman Admin ERP shell
   return (
-    <div className="flex min-h-dvh flex-col bg-brand-dark md:h-dvh md:flex-row md:overflow-hidden">
-      <Navbar profile={profile} lang={lang} isCommunityAdmin={isCommunityAdmin} />
-      <main className="flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:h-dvh md:overflow-y-auto md:overscroll-contain md:pb-0">
-        <div className="p-6 lg:p-8 bg-[#1e2128] min-h-full">
+    <div className="flex min-h-dvh flex-col bg-[#0c0e13] md:h-dvh md:flex-row md:overflow-hidden">
+      <AdminErpSidebar
+        userName={profile?.nama_panggilan || profile?.full_name || "Admin"}
+        userEmail={user.email}
+        avatarUrl={profile?.avatar_url ?? null}
+        role={String(profile?.role || "admin")}
+        lang={lang}
+      />
+      <main className="flex-1 overflow-x-hidden pb-[calc(4rem+env(safe-area-inset-bottom))] md:h-dvh md:overflow-y-auto md:overscroll-contain md:pb-0">
+        <div className="min-h-full bg-[#0f1217] p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>

@@ -5,3 +5,9 @@ export async function isCommunityCenterHost() {
   const host = ((await headers()).get("host") ?? "").toLowerCase();
   return host.startsWith("communitycenter.");
 }
+
+/** True on admin.ruangiman.com, the Ruang Iman Admin ERP control panel. */
+export async function isAdminErpHost() {
+  const host = ((await headers()).get("host") ?? "").toLowerCase();
+  return host.startsWith("admin.");
+}
