@@ -41,16 +41,22 @@ export default function GoogleButton({ label, onError }: { label: string; onErro
   const [busy, setBusy] = useState(false);
   const [gsiReady, setGsiReady] = useState(false);
   const [native, setNative] = useState(false);
+  const [useOAuthRedirect, setUseOAuthRedirect] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
     setNative(isNative);
     setShow(!isNative || Capacitor.isPluginAvailable("SocialLogin"));
+    // Subdomains like admin.ruangiman.com aren't registered in Google Cloud Console's GSI JS origins;
+    // Supabase's OAuth redirect routes through Supabase's callback URL so it works without touching Google Console.
+    if (typeof window !== "undefined" && window.location.hostname.startsWith("admin.")) {
+      setUseOAuthRedirect(true);
+    }
   }, []);
 
   useEffect(() => {
-    if (!show || native || !CLIENT_ID) return;
+    if (!show || native || !CLIENT_ID || useOAuthRedirect) return;
     let cancelled = false;
     (async () => {
       try {
@@ -89,7 +95,7 @@ export default function GoogleButton({ label, onError }: { label: string; onErro
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, native]);
+  }, [show, native, useOAuthRedirect]);
 
   if (!show) return null;
 
@@ -144,7 +150,7 @@ export default function GoogleButton({ label, onError }: { label: string; onErro
           </svg>
           {busy ? "…" : label}
         </button>
-      ) : CLIENT_ID ? (
+      ) : CLIENT_ID && !useOAuthRedirect ? (
         <div className={`flex min-h-[44px] w-full justify-center ${busy ? "pointer-events-none opacity-60" : ""}`}>
           <div ref={holder} className="w-full" style={{ display: "flex", justifyContent: "center" }} />
           {!gsiReady && <span className="sr-only">Google</span>}
