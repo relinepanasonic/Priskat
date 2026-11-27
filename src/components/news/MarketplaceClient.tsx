@@ -19,6 +19,7 @@ import {
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
 import {
+  categoryLabel,
   getFavoriteProductIds,
   MARKETPLACE_CATEGORIES,
   rupiah,
@@ -51,6 +52,7 @@ export default function MarketplaceClient({
   userId,
   defaultCity,
   needsSql = false,
+  lang = "id",
 }: {
   initialStores: MarketplaceStore[];
   initialProducts: MarketplaceProduct[];
@@ -58,7 +60,9 @@ export default function MarketplaceClient({
   userId: string | null;
   defaultCity?: string | null;
   needsSql?: boolean;
+  lang?: "id" | "en";
 }) {
+  const isEn = lang === "en";
   const router = useRouter();
   const db = () => createClient() as any;
 
@@ -253,7 +257,7 @@ export default function MarketplaceClient({
       <div className="space-y-3 border-b border-white/10 pb-4 md:pb-5">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand-gold">
-            Pasar Umat
+            {isEn ? "Community Market" : "Pasar Umat"}
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -267,7 +271,7 @@ export default function MarketplaceClient({
               }`}
             >
               <Heart className={`h-3.5 w-3.5 ${showFavOnly || favIds.length > 0 ? "fill-rose-400 text-rose-400" : ""}`} />
-              Favorit{favIds.length > 0 ? ` (${favIds.length})` : ""}
+              {isEn ? "Favorites" : "Favorit"}{favIds.length > 0 ? ` (${favIds.length})` : ""}
             </button>
             {userId ? (
               myStore ? (
@@ -276,14 +280,14 @@ export default function MarketplaceClient({
                     href={`/news/marketplace/${myStore.slug}`}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
                   >
-                    <Store className="h-3.5 w-3.5" /> Toko Saya
+                    <Store className="h-3.5 w-3.5" /> {isEn ? "My Store" : "Toko Saya"}
                   </Link>
                   <button
                     type="button"
                     onClick={openStoreModal}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-brand-light hover:border-brand-gold/40 hover:text-white"
                   >
-                    Edit Toko
+                    {isEn ? "Edit Store" : "Edit Toko"}
                   </button>
                 </>
               ) : (
@@ -292,7 +296,7 @@ export default function MarketplaceClient({
                   onClick={openStoreModal}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition hover:bg-brand-gold-hover"
                 >
-                  <Store className="h-3.5 w-3.5" /> Buka Toko Gratis
+                  <Store className="h-3.5 w-3.5" /> {isEn ? "Open Free Store" : "Buka Toko Gratis"}
                 </button>
               )
             ) : (
@@ -300,7 +304,7 @@ export default function MarketplaceClient({
                 href="/login?next=/news/marketplace"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3.5 py-2 text-xs font-bold text-brand-gold hover:bg-brand-gold/20"
               >
-                Masuk untuk buka toko
+                {isEn ? "Sign in to open a store" : "Masuk untuk buka toko"}
               </Link>
             )}
           </div>
@@ -308,10 +312,10 @@ export default function MarketplaceClient({
 
         <div>
           <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>
-            Marketplace Ruang Iman
+            {isEn ? "Ruang Iman Marketplace" : "Marketplace Ruang Iman"}
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-brand-muted md:text-sm">
-            Mari saling membantu dan berbagi rezeki sesama saudara seiman.
+            {isEn ? "Let's support one another and share blessings among brothers and sisters in faith." : "Mari saling membantu dan berbagi rezeki sesama saudara seiman."}
           </p>
         </div>
       </div>
@@ -329,7 +333,7 @@ export default function MarketplaceClient({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari nama toko, produk, SKU, atau kota..."
+            placeholder={isEn ? "Search stores, products, SKU, or city..." : "Cari nama toko, produk, SKU, atau kota..."}
             className="w-full rounded-xl border border-white/10 bg-[#12151b] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:border-brand-gold focus:outline-none"
           />
         </div>
@@ -351,7 +355,7 @@ export default function MarketplaceClient({
                     : "border border-white/10 bg-[#12151b] text-brand-muted hover:border-white/25 hover:text-white"
                 }`}
               >
-                {c}
+                {categoryLabel(c, lang)}
               </button>
             );
           })}
@@ -364,30 +368,30 @@ export default function MarketplaceClient({
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-rose-300">
               <Heart className="h-4 w-4 fill-rose-400 text-rose-400" />
-              Produk Favorit Saya ({favoriteProducts.length})
+              {isEn ? "My Favorite Products" : "Produk Favorit Saya"} ({favoriteProducts.length})
             </h3>
             <button
               type="button"
               onClick={() => setShowFavOnly(false)}
               className="text-xs font-semibold text-brand-gold hover:underline"
             >
-              Lihat semua marketplace
+              {isEn ? "View all marketplace" : "Lihat semua marketplace"}
             </button>
           </div>
 
           {favoriteProducts.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-[#12151b] px-6 py-12 text-center">
               <Heart className="mx-auto h-9 w-9 text-rose-400/40" />
-              <p className="mt-2.5 text-sm font-semibold text-white">Belum ada produk favorit</p>
+              <p className="mt-2.5 text-sm font-semibold text-white">{isEn ? "No favorite products yet" : "Belum ada produk favorit"}</p>
               <p className="mt-1 text-xs text-brand-muted">
-                Ketuk ikon hati pada produk yang kamu suka untuk menyimpannya di sini.
+                {isEn ? "Tap the heart icon on any product you like to save it here." : "Ketuk ikon hati pada produk yang kamu suka untuk menyimpannya di sini."}
               </p>
               <button
                 type="button"
                 onClick={() => setShowFavOnly(false)}
                 className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-gold px-4 py-2 text-xs font-bold text-brand-dark hover:bg-brand-gold-hover"
               >
-                Jelajahi Produk
+                {isEn ? "Explore Products" : "Jelajahi Produk"}
               </button>
             </div>
           ) : (
@@ -446,16 +450,18 @@ export default function MarketplaceClient({
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-gold">
             <Store className="h-4 w-4" />
-            Toko Pilihan ({filteredStores.length})
+            {isEn ? "Featured Stores" : "Toko Pilihan"} ({filteredStores.length})
           </h3>
-          <span className="text-[11px] text-brand-muted">Aktivitas & ulasan terbaru di atas</span>
+          <span className="text-[11px] text-brand-muted">{isEn ? "Latest activity & reviews first" : "Aktivitas & ulasan terbaru di atas"}</span>
         </div>
 
         {filteredStores.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-[#12151b] px-6 py-12 text-center">
             <Store className="mx-auto h-9 w-9 text-brand-muted/40" />
-            <p className="mt-2.5 text-sm font-semibold text-white">Belum ada toko yang cocok</p>
-            <p className="mt-1 text-xs text-brand-muted">Coba kata kunci lain atau jadilah yang pertama membuka toko di kategori ini.</p>
+            <p className="mt-2.5 text-sm font-semibold text-white">{isEn ? "No matching stores yet" : "Belum ada toko yang cocok"}</p>
+            <p className="mt-1 text-xs text-brand-muted">
+              {isEn ? "Try another keyword or be the first to open a store in this category." : "Coba kata kunci lain atau jadilah yang pertama membuka toko di kategori ini."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4">
@@ -481,7 +487,7 @@ export default function MarketplaceClient({
                     </div>
                   )}
                   <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold text-brand-light backdrop-blur-sm">
-                    {s.category}
+                    {categoryLabel(s.category, lang)}
                   </span>
                 </div>
 
@@ -504,10 +510,10 @@ export default function MarketplaceClient({
                   <div className="mt-3 flex items-center justify-between gap-2 md:mt-auto md:pt-3">
                     <span className="hidden text-xs text-brand-muted md:inline-flex md:items-center md:gap-1">
                       <Package className="h-3.5 w-3.5 text-brand-gold/80" />
-                      {s.product_count ?? 0} produk
+                      {s.product_count ?? 0} {isEn ? "products" : "produk"}
                     </span>
                     <span className="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-brand-gold/15 px-3 py-2 text-xs font-bold text-brand-gold transition group-hover:bg-brand-gold group-hover:text-brand-dark md:w-auto md:px-4">
-                      Kunjungi <ArrowRight className="h-3.5 w-3.5" />
+                      {isEn ? "Visit" : "Kunjungi"} <ArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
                 </div>
@@ -522,7 +528,9 @@ export default function MarketplaceClient({
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-gold">
             {isDefaultBrowse ? <Sparkles className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
-            {isDefaultBrowse ? "Jelajahi Produk Acak" : `Produk Ditemukan (${filteredProducts.length})`}
+            {isDefaultBrowse
+              ? (isEn ? "Explore Random Products" : "Jelajahi Produk Acak")
+              : `${isEn ? "Products Found" : "Produk Ditemukan"} (${filteredProducts.length})`}
           </h3>
           {isDefaultBrowse && initialProducts.length > 0 && (
             <button
@@ -530,14 +538,14 @@ export default function MarketplaceClient({
               onClick={() => setRandomProducts(shuffle(initialProducts).slice(0, 12))}
               className="text-[11px] font-semibold text-brand-gold hover:underline"
             >
-              Acak lagi
+              {isEn ? "Shuffle" : "Acak lagi"}
             </button>
           )}
         </div>
 
         {filteredProducts.length === 0 ? (
           <p className="rounded-2xl border border-white/10 bg-[#12151b] px-5 py-10 text-center text-xs text-brand-muted">
-            Belum ada produk untuk ditampilkan.
+            {isEn ? "No products to display yet." : "Belum ada produk untuk ditampilkan."}
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">

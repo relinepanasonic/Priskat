@@ -7,8 +7,9 @@ import { Camera, Users, X } from "lucide-react";
 const KEY = "photo-nudge-dismissed";
 
 /** Slim Beranda hints: add a profile photo (dismissible) and choose a main community. */
-export default function HomeNotices({ noPhoto, needsMain = false }: { noPhoto: boolean; needsMain?: boolean }) {
+export default function HomeNotices({ noPhoto, needsMain = false, lang = "id" }: { noPhoto: boolean; needsMain?: boolean; lang?: "id" | "en" }) {
   const [showPhoto, setShowPhoto] = useState(false);
+  const isEn = lang === "en";
 
   useEffect(() => {
     if (!noPhoto) return;
@@ -22,15 +23,27 @@ export default function HomeNotices({ noPhoto, needsMain = false }: { noPhoto: b
       {needsMain && (
         <Link href="/profile/edit#komunitas" className="flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-[11px] text-brand-light">
           <Users className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
-          <span className="min-w-0 flex-1 truncate">Kamu di beberapa komunitas. <b>Pilih komunitas utama</b></span>
+          <span className="min-w-0 flex-1 truncate">
+            {isEn ? (
+              <>You&apos;re in multiple communities. <b>Choose a main community</b></>
+            ) : (
+              <>Kamu di beberapa komunitas. <b>Pilih komunitas utama</b></>
+            )}
+          </span>
         </Link>
       )}
       {showPhoto && (
         <div className="flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-[11px] text-brand-light">
           <Camera className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
-          <Link href="/profile/edit" className="min-w-0 flex-1 truncate">Tambahkan <b>foto profil</b> supaya lebih hidup</Link>
+          <Link href="/profile/edit" className="min-w-0 flex-1 truncate">
+            {isEn ? (
+              <>Add a <b>profile photo</b> to personalize your profile</>
+            ) : (
+              <>Tambahkan <b>foto profil</b> supaya lebih hidup</>
+            )}
+          </Link>
           <button
-            aria-label="Tutup"
+            aria-label={isEn ? "Close" : "Tutup"}
             onClick={() => { setShowPhoto(false); try { localStorage.setItem(KEY, new Date().toDateString()); } catch { /* ignore */ } }}
             className="rounded-full p-0.5 text-gray-400 hover:bg-white/10"
           >

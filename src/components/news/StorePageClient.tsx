@@ -27,6 +27,7 @@ import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
 import ProductShareModal from "@/components/news/ProductShareModal";
 import {
+  categoryLabel,
   formatVariantId,
   generateAutoSku,
   getFavoriteProductIds,
@@ -51,6 +52,7 @@ export default function StorePageClient({
   userId,
   isAdmin,
   initialProductId,
+  lang = "id",
 }: {
   store: MarketplaceStore;
   initialProducts: MarketplaceProduct[];
@@ -58,7 +60,9 @@ export default function StorePageClient({
   userId: string | null;
   isAdmin: boolean;
   initialProductId?: string | null;
+  lang?: "id" | "en";
 }) {
+  const isEn = lang === "en";
   const router = useRouter();
   const db = () => createClient() as any;
   // Strictly only the actual store owner can add, edit, or delete products in this store
@@ -362,7 +366,7 @@ export default function StorePageClient({
     <div className="space-y-4 px-0 py-1 md:p-6">
       {/* Back link */}
       <Link href="/news/marketplace" className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-muted hover:text-white">
-        <ArrowLeft className="h-4 w-4" /> Kembali ke Marketplace
+        <ArrowLeft className="h-4 w-4" /> {isEn ? "Back to Marketplace" : "Kembali ke Marketplace"}
       </Link>
 
       {/* Store Header Card — compact so products stay front and center */}
@@ -383,22 +387,24 @@ export default function StorePageClient({
               onClick={() =>
                 setSharePayload({
                   title: store.name,
-                  subtitle: store.category,
+                  subtitle: categoryLabel(store.category, lang),
                   url: `${SITE}/news/marketplace/${store.slug}`,
                   imageUrl: store.logo_url,
-                  shareText: `Yuk kunjungi toko ${store.name} di Marketplace Ruang Iman!`,
+                  shareText: isEn
+                    ? `Check out ${store.name} on Ruang Iman Marketplace!`
+                    : `Yuk kunjungi toko ${store.name} di Marketplace Ruang Iman!`,
                 })
               }
               className="inline-flex w-16 items-center justify-center gap-1 rounded-lg border border-brand-gold/40 bg-brand-gold/10 py-1 text-[10px] font-bold text-brand-gold transition hover:bg-brand-gold hover:text-brand-dark sm:w-20 sm:text-[11px]"
             >
-              <Share2 className="h-3 w-3" /> Bagikan
+              <Share2 className="h-3 w-3" /> {isEn ? "Share" : "Bagikan"}
             </button>
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="inline-block rounded-full border border-brand-gold/30 bg-brand-gold/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-gold">
-                {store.category}
+                {categoryLabel(store.category, lang)}
               </span>
               {isStoreOwner && products.length < MAX_STORE_PRODUCTS && (
                 <button
@@ -406,7 +412,7 @@ export default function StorePageClient({
                   onClick={openAddProduct}
                   className="inline-flex items-center gap-1 rounded-xl bg-brand-gold px-3 py-1.5 text-[11px] font-bold text-brand-dark shadow-md transition hover:bg-brand-gold-hover"
                 >
-                  <Plus className="h-3.5 w-3.5" /> Tambah Produk
+                  <Plus className="h-3.5 w-3.5" /> {isEn ? "Add Product" : "Tambah Produk"}
                 </button>
               )}
             </div>
@@ -419,7 +425,7 @@ export default function StorePageClient({
                 {store.city && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-brand-gold" /> {store.city}</span>}
                 {avgRating && (
                   <span className="inline-flex items-center gap-1 text-amber-300">
-                    <Star className="h-3.5 w-3.5 fill-amber-300" /> {avgRating} ({reviews.length} ulasan)
+                    <Star className="h-3.5 w-3.5 fill-amber-300" /> {avgRating} ({reviews.length} {isEn ? "reviews" : "ulasan"})
                   </span>
                 )}
               </div>
@@ -440,7 +446,7 @@ export default function StorePageClient({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari produk, SKU, atau varian di toko ini..."
+            placeholder={isEn ? "Search products, SKU, or variants in this store..." : "Cari produk, SKU, atau varian di toko ini..."}
             className="w-full rounded-xl border border-white/10 bg-[#12151b] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:border-brand-gold focus:outline-none"
           />
         </div>
@@ -450,7 +456,7 @@ export default function StorePageClient({
           className="rounded-xl border border-white/10 bg-[#12151b] px-3.5 py-2.5 text-xs font-semibold text-white focus:border-brand-gold focus:outline-none"
         >
           {MARKETPLACE_CATEGORIES.map((c) => (
-            <option key={c} value={c} className="bg-[#1a1d24]">{c}</option>
+            <option key={c} value={c} className="bg-[#1a1d24]">{categoryLabel(c, lang)}</option>
           ))}
         </select>
       </div>
@@ -753,7 +759,7 @@ export default function StorePageClient({
                   className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-gold px-3 py-3 text-xs font-bold text-brand-dark hover:bg-brand-gold-hover disabled:opacity-60"
                 >
                   {buyingChat ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                  {buyingChat ? "Membuka…" : "Beli (Chat App)"}
+                  {buyingChat ? (isEn ? "Opening…" : "Membuka…") : (isEn ? "Buy (App Chat)" : "Beli (Chat App)")}
                 </button>
                 {store.whatsapp && (
                   <a
@@ -762,7 +768,7 @@ export default function StorePageClient({
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-3 text-xs font-bold text-white hover:bg-emerald-500"
                   >
-                    <MessageCircle className="h-4 w-4" /> Beli via WA
+                    <MessageCircle className="h-4 w-4" /> {isEn ? "Buy via WA" : "Beli via WA"}
                   </a>
                 )}
               </div>
@@ -796,7 +802,7 @@ export default function StorePageClient({
               {/* Product Reviews */}
               <div className="space-y-3 border-t border-white/10 pt-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-brand-gold">
-                  Ulasan Pembeli ({activeProdReviews.length})
+                  {isEn ? "Buyer Reviews" : "Ulasan Pembeli"} ({activeProdReviews.length})
                 </p>
                 {userId && (
                   <div className="space-y-2 rounded-xl border border-white/10 bg-[#12151b] p-3">
@@ -811,7 +817,7 @@ export default function StorePageClient({
                       <input
                         value={prodComment}
                         onChange={(e) => setProdComment(e.target.value)}
-                        placeholder="Tulis ulasan produk ini..."
+                        placeholder={isEn ? "Write a review for this product..." : "Tulis ulasan produk ini..."}
                         className="flex-1 rounded-lg border border-white/10 bg-[#1a1d24] px-3 py-2 text-xs text-white focus:border-brand-gold focus:outline-none"
                       />
                       <button
@@ -820,13 +826,13 @@ export default function StorePageClient({
                         onClick={() => void submitReview(activeProd.id)}
                         className="rounded-lg bg-brand-gold px-3.5 py-2 text-xs font-bold text-brand-dark disabled:opacity-50"
                       >
-                        Kirim
+                        {isEn ? "Send" : "Kirim"}
                       </button>
                     </div>
                   </div>
                 )}
                 {activeProdReviews.length === 0 ? (
-                  <p className="text-xs text-brand-muted">Belum ada ulasan untuk produk ini.</p>
+                  <p className="text-xs text-brand-muted">{isEn ? "No reviews for this product yet." : "Belum ada ulasan untuk produk ini."}</p>
                 ) : (
                   <div className="space-y-2">
                     {activeProdReviews.map((r) => (
@@ -1004,6 +1010,7 @@ export default function StorePageClient({
           url={sharePayload.url}
           imageUrl={sharePayload.imageUrl}
           shareText={sharePayload.shareText}
+          lang={lang}
           onClose={() => setSharePayload(null)}
         />
       )}

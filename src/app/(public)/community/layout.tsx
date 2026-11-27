@@ -1,52 +1,7 @@
-"use client";
+import { getLanguage } from "@/lib/lang";
+import CommunityLayoutClient from "./CommunityLayoutClient";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Users, MessageCircle, UsersRound, Mail, Music } from "lucide-react";
-import GroupUnreadBadge from "@/components/community/GroupUnreadBadge";
-import DmUnreadBadge from "@/components/community/DmUnreadBadge";
-
-const TABS: {
-  href: string;
-  label: string;
-  icon: typeof Users;
-  badge?: "group" | "dm";
-}[] = [
-  { href: "/community/friends", label: "Friends", icon: Users },
-  { href: "/community/thought", label: "Thought", icon: MessageCircle },
-  { href: "/community/messages", label: "Messages", icon: Mail, badge: "dm" },
-  { href: "/community/songs", label: "Songs", icon: Music },
-];
-
-export default function CommunityLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <div className="w-full min-h-[100dvh] bg-brand-dark text-white font-sans">
-      {/* Sub-tab header */}
-      <div className="sticky top-[70px] md:top-0 z-30 bg-brand-bg border-b border-brand-border">
-        <div className="flex h-16">
-          {TABS.map(({ href, label, icon: Icon, badge }) => {
-            const active = pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`relative flex-1 flex flex-col items-center justify-center gap-1 text-[11px] font-bold tracking-wide transition-colors ${
-                  active ? "text-brand-gold border-b-2 border-brand-gold" : "text-gray-500 hover:text-white"
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {label}
-                {badge === "group" && <GroupUnreadBadge />}
-                {badge === "dm" && <DmUnreadBadge />}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {children}
-    </div>
-  );
+export default async function CommunityLayout({ children }: { children: React.ReactNode }) {
+  const lang = await getLanguage();
+  return <CommunityLayoutClient lang={lang}>{children}</CommunityLayoutClient>;
 }

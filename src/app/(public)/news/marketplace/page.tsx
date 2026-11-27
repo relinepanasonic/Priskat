@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getLanguage } from "@/lib/lang";
 import MarketplaceClient from "@/components/news/MarketplaceClient";
 import type { MarketplaceProduct, MarketplaceStore } from "@/lib/marketplace";
 
@@ -7,7 +8,7 @@ export const metadata = { title: "Marketplace" };
 
 export default async function MarketplacePage() {
   const supabase = (await createClient()) as any;
-  const { data: { user } } = await supabase.auth.getUser();
+  const [{ data: { user } }, lang] = await Promise.all([supabase.auth.getUser(), getLanguage()]);
 
   const [storesRes, productsRes, profRes] = await Promise.all([
     supabase
@@ -44,6 +45,7 @@ export default async function MarketplacePage() {
       userId={user?.id ?? null}
       defaultCity={profRes.data?.kota ?? null}
       needsSql={needsSql}
+      lang={lang}
     />
   );
 }

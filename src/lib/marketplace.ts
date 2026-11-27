@@ -8,6 +8,20 @@ export const MARKETPLACE_CATEGORIES = [
   "Lainnya",
 ] as const;
 
+const CATEGORY_EN: Record<string, string> = {
+  "Semua": "All",
+  "Benda Rohani": "Religious Items",
+  "Buku & Alkitab": "Books & Bible",
+  "Kuliner & UMKM": "Food & Local Goods",
+  "Pakaian & Aksesoris": "Apparel & Accessories",
+  "Jasa": "Services",
+  "Lainnya": "Others",
+};
+
+export function categoryLabel(cat: string, lang: "id" | "en" = "id"): string {
+  return lang === "en" ? (CATEGORY_EN[cat] ?? cat) : cat;
+}
+
 export const MAX_STORE_PRODUCTS = 30;
 export const MAX_PRODUCT_IMAGES = 5;
 

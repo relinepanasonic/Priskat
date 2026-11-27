@@ -48,12 +48,16 @@ export default async function CommunityListingPage() {
     for (const m of (mems as { community_id: string }[]) ?? []) memberIds.add(m.community_id);
   }
 
+  const isEn = lang === "en";
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Community</h1>
-          <p className="text-brand-muted mt-1 text-sm">Pilih komunitas yang ingin kamu masuki</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">{isEn ? "Community" : "Komunitas"}</h1>
+          <p className="text-brand-muted mt-1 text-sm">
+            {isEn ? "Choose a community you would like to enter" : "Pilih komunitas yang ingin kamu masuki"}
+          </p>
         </div>
         {/* Phones have no sidebar, so admins get the Community Center here */}
         {(isSuperAdmin || myAdminCommunityIds.length > 0) && (
@@ -62,7 +66,7 @@ export default async function CommunityListingPage() {
             className="md:hidden flex shrink-0 items-center gap-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold active:scale-95"
           >
             <Settings className="h-4 w-4" />
-            Community Center
+            {isEn ? "Community Center" : "Pusat Komunitas"}
           </a>
         )}
       </div>
@@ -98,7 +102,7 @@ export default async function CommunityListingPage() {
                     : "border-orange-500/30 bg-orange-500/10 text-orange-400"
                 }`}>
                   {isMember ? <BadgeCheck className="h-2.5 w-2.5 md:h-3 md:w-3" /> : c.is_public ? <Globe className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <Lock className="h-2.5 w-2.5 md:h-3 md:w-3" />}
-                  {isMember ? "Member" : c.is_public ? "Public" : "Private"}
+                  {isMember ? (isEn ? "Member" : "Anggota") : c.is_public ? (isEn ? "Public" : "Publik") : (isEn ? "Private" : "Privat")}
                 </span>
               </div>
 
@@ -149,7 +153,7 @@ export default async function CommunityListingPage() {
       {(!communities || communities.length === 0) && (
         <div className="text-center text-brand-muted py-16">
           <Users className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p>No communities available yet.</p>
+          <p>{isEn ? "No communities available yet." : "Belum ada komunitas tersedia."}</p>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getLanguage } from "@/lib/lang";
 import EventsExplore, {
   type ExploreEvent,
   type PremiumBanner,
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewsEventsPage() {
   const supabase = await createClient();
+  const lang = await getLanguage();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -61,6 +63,7 @@ export default async function NewsEventsPage() {
       myCity={myCity}
       myCommunityId={myCommunityId}
       myCommunityName={myCommunityName}
+      lang={lang}
     />
   );
 }

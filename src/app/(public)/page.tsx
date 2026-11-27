@@ -121,7 +121,7 @@ export default async function HomePage() {
   return (
     <div className="md:p-6 md:h-full md:overflow-y-auto">
       <PushAskCard userId={user.id} />
-      <HomeNotices noPhoto={!profile.avatar_url} needsMain={needsMain} />
+      <HomeNotices noPhoto={!profile.avatar_url} needsMain={needsMain} lang={lang} />
       <HomeTabsClient
         profile={profile}
         posts={posts}

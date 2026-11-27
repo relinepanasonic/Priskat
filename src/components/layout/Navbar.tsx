@@ -31,7 +31,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
     { href: "/community", label: isEn ? "Connect" : "Koneksi", icon: Users },
     { href: "/camp", label: isEn ? "Community" : "Komunitas", icon: Tent },
     { href: "/faith", match: "/faith", label: isEn ? "Spiritual" : "Spiritual", icon: BenedictusCross },
-    { href: "/news", label: isEn ? "Warta" : "Warta", icon: Newspaper },
+    { href: "/news", label: isEn ? "News" : "Warta", icon: Newspaper },
     { href: "/profile/edit", label: isEn ? "Profile" : "Profil", icon: User },
   ];
 
@@ -144,7 +144,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
                 >
                   <Upload className="h-4 w-4" />
-                  <span>Upload</span>
+                  <span>{isEn ? "Upload" : "Unggah"}</span>
                 </a>
                 {String(profile?.role).toLowerCase() === "founder" && (
                   <a
@@ -152,7 +152,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
                   >
                     <ShieldCheck className="h-4 w-4" />
-                    <span>Security Log</span>
+                    <span>{isEn ? "Security Log" : "Log Keamanan"}</span>
                   </a>
                 )}
                 <a
@@ -160,7 +160,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/10 transition-all"
                 >
                   <Sparkles className="h-4 w-4" />
-                  <span>Kampanye</span>
+                  <span>{isEn ? "Campaigns" : "Kampanye"}</span>
                 </a>
               </>
             )}
@@ -262,7 +262,7 @@ export default function Navbar({ profile, lang = "id", isCommunityAdmin = false 
         {/* News */}
         <Link prefetch={true} href="/news" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith('/news') ? 'text-brand-gold' : 'text-gray-500'}`}>
           <Newspaper className="h-5 w-5" />
-          <span className="text-[10px] font-medium">{isEn ? "Warta" : "Warta"}</span>
+          <span className="text-[10px] font-medium">{isEn ? "News" : "Warta"}</span>
         </Link>
       </div>
     </nav>

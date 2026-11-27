@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getLanguage } from "@/lib/lang";
 import StorePageClient from "@/components/news/StorePageClient";
 import type { MarketplaceProduct, MarketplaceReview, MarketplaceStore } from "@/lib/marketplace";
 
@@ -74,7 +75,7 @@ export default async function MarketplaceStorePage({
   const { slug } = await params;
   const { p: initialProductId } = await searchParams;
   const supabase = (await createClient()) as any;
-  const { data: { user } } = await supabase.auth.getUser();
+  const [{ data: { user } }, lang] = await Promise.all([supabase.auth.getUser(), getLanguage()]);
 
   const { data: store } = await supabase
     .from("marketplace_stores")
@@ -113,6 +114,7 @@ export default async function MarketplaceStorePage({
       userId={user?.id ?? null}
       isAdmin={isAdmin}
       initialProductId={initialProductId ?? null}
+      lang={lang}
     />
   );
 }

@@ -3,6 +3,7 @@ import { ArrowLeft, BookOpen, Sparkles } from "lucide-react";
 import { getSaints, fetchWikiPortraits, daysInMonth } from "@/lib/katakombe";
 import { FAMOUS_SAINTS } from "@/lib/data/famousSaints";
 import { jakartaParts } from "@/lib/bacaanHarian";
+import { getLanguage } from "@/lib/lang";
 import SaintsDateBar from "@/components/faith/SaintsDateBar";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,8 @@ export const metadata = { title: "Santo dan Santa" };
 const serif = { fontFamily: "'Lora', Georgia, serif" };
 
 export default async function SaintsPage({ searchParams }: { searchParams: Promise<{ m?: string; d?: string }> }) {
-  const sp = await searchParams;
+  const [sp, lang] = await Promise.all([searchParams, getLanguage()]);
+  const isEn = lang === "en";
   const today = jakartaParts();
   let month = Number(sp.m) || today.month;
   let day = Number(sp.d) || today.day;
@@ -26,15 +28,23 @@ export default async function SaintsPage({ searchParams }: { searchParams: Promi
   return (
     <div className="w-full max-w-4xl space-y-7 p-4 pb-28 md:p-6">
       <Link href="/faith" className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-white">
-        <ArrowLeft className="h-4 w-4" /> Hari Ini
+        <ArrowLeft className="h-4 w-4" /> {isEn ? "Today" : "Hari Ini"}
       </Link>
 
       {/* Pustaka Kisah Para Kudus Populer (Novel-style curated library) */}
       <section className="space-y-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand-gold">Pustaka Biografi</p>
-          <h1 className="mt-1 text-2xl font-bold text-white" style={serif}>Kisah Santo & Santa Populer</h1>
-          <p className="mt-0.5 text-xs text-brand-muted">Baca kisah hidup para kudus dalam format buku yang nyaman — lengkap dengan teladan dan doa.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand-gold">
+            {isEn ? "Biography Library" : "Pustaka Biografi"}
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-white" style={serif}>
+            {isEn ? "Lives of Beloved Saints" : "Kisah Santo & Santa Populer"}
+          </h1>
+          <p className="mt-0.5 text-xs text-brand-muted">
+            {isEn
+              ? "Read the lives of the saints in a comfortable book format — complete with inspiration and prayer."
+              : "Baca kisah hidup para kudus dalam format buku yang nyaman — lengkap dengan teladan dan doa."}
+          </p>
         </div>
 
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 hide-scrollbar md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-4">
@@ -77,7 +87,7 @@ export default async function SaintsPage({ searchParams }: { searchParams: Promi
                   </p>
                   <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-brand-gold">
                     <BookOpen className="h-3.5 w-3.5" />
-                    Baca buku kisah
+                    {isEn ? "Read biography" : "Baca buku kisah"}
                   </div>
                 </div>
               </Link>
@@ -94,11 +104,14 @@ export default async function SaintsPage({ searchParams }: { searchParams: Promi
           day={day}
           todayMonth={today.month}
           todayDay={today.day}
+          lang={lang}
         />
 
         {saints.length === 0 ? (
           <div className="rounded-2xl border border-[#333] bg-[#1a1d24] p-6 text-center text-sm text-brand-muted">
-            Tidak ada santo atau santa yang tercatat pada hari ini, atau datanya belum bisa dimuat.
+            {isEn
+              ? "No saints are recorded for this day, or the data could not be loaded yet."
+              : "Tidak ada santo atau santa yang tercatat pada hari ini, atau datanya belum bisa dimuat."}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

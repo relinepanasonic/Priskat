@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Newspaper, ArrowRight } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import { getLanguage } from "@/lib/lang";
 
 export const metadata: Metadata = {
   title: "Blog Katolik",
@@ -36,7 +37,8 @@ async function getPublishedPosts(): Promise<BlogListRow[]> {
 }
 
 export default async function BlogPage() {
-  const posts = await getPublishedPosts();
+  const [posts, lang] = await Promise.all([getPublishedPosts(), getLanguage()]);
+  const isEn = lang === "en";
 
   if (posts.length === 0) {
     return (
@@ -44,9 +46,9 @@ export default async function BlogPage() {
         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-surface border border-[#333] shadow-3d-inset">
           <Newspaper className="h-10 w-10 text-brand-gold animate-pulse" />
         </div>
-        <h2 className="mb-2 text-2xl font-bold text-white tracking-wide">CFM Blog</h2>
+        <h2 className="mb-2 text-2xl font-bold text-white tracking-wide">Ruang Iman Blog</h2>
         <p className="mb-8 max-w-md text-brand-muted">
-          Artikel pertama sedang disiapkan — kembali lagi besok!
+          {isEn ? "Our first article is being prepared — check back tomorrow!" : "Artikel pertama sedang disiapkan — kembali lagi besok!"}
         </p>
       </div>
     );

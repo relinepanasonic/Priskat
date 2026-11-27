@@ -4,12 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
-const MONTH_NAMES = [
+const MONTH_NAMES_ID = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember",
 ];
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-const DAY_SHORT = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+const MONTH_NAMES_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const MONTH_SHORT_ID = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const MONTH_SHORT_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAY_SHORT_ID = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+const DAY_SHORT_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function daysInMonth(month: number, year: number) {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -26,14 +32,20 @@ export default function SaintsDateBar({
   day,
   todayMonth,
   todayDay,
+  lang = "id",
 }: {
   year: number;
   month: number;
   day: number;
   todayMonth: number;
   todayDay: number;
+  lang?: "id" | "en";
 }) {
   const router = useRouter();
+  const isEn = lang === "en";
+  const MONTH_NAMES = isEn ? MONTH_NAMES_EN : MONTH_NAMES_ID;
+  const MONTH_SHORT = isEn ? MONTH_SHORT_EN : MONTH_SHORT_ID;
+  const DAY_SHORT = isEn ? DAY_SHORT_EN : DAY_SHORT_ID;
   const isToday = month === todayMonth && day === todayDay;
 
   // Compute the Monday of the week containing (year, month, day)
@@ -64,11 +76,11 @@ export default function SaintsDateBar({
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand-gold">
-            Kalender Para Kudus
+            {isEn ? "Calendar of Saints" : "Kalender Para Kudus"}
           </p>
           <h2 className="mt-0.5 text-xl font-bold text-white" style={{ fontFamily: "'Lora', Georgia, serif" }}>
             {day} {MONTH_NAMES[month - 1]}
-            {isToday && <span className="ml-2 text-xs font-sans font-semibold text-brand-gold">(Hari ini)</span>}
+            {isToday && <span className="ml-2 text-xs font-sans font-semibold text-brand-gold">({isEn ? "Today" : "Hari ini"})</span>}
           </h2>
         </div>
 
@@ -78,13 +90,13 @@ export default function SaintsDateBar({
               href="/faith/saints"
               className="rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold transition hover:bg-brand-gold/20"
             >
-              Hari ini
+              {isEn ? "Today" : "Hari ini"}
             </Link>
           )}
           <div className="relative">
             <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-brand-gold" />
             <select
-              aria-label="Pilih bulan"
+              aria-label={isEn ? "Select month" : "Pilih bulan"}
               value={month}
               onChange={(e) => onChangeMonth(Number(e.target.value))}
               className="appearance-none rounded-xl border border-white/15 bg-[#1a1d24] py-2 pl-8 pr-8 text-xs font-semibold text-white transition hover:border-brand-gold/50 focus:border-brand-gold focus:outline-none"

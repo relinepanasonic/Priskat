@@ -21,14 +21,15 @@ export default function NewsLayoutClient({ children, lang = "id" }: { children: 
       else { sessionStorage.removeItem(FROM_KEY); setFrom(null); }
     } catch { setFrom(null); }
   }, [pathname]);
-  const fromName = from && from.replace(/[-_]/g, "").toLowerCase() === "catholicindonesia" ? "Catholic Indonesia" : "komunitas";
+  const isEn = lang === "en";
+  const fromName = from && from.replace(/[-_]/g, "").toLowerCase() === "catholicindonesia" ? "Catholic Indonesia" : (isEn ? "community" : "komunitas");
 
   const tabs = [
-    { name: "Agenda", href: "/news/events", icon: Calendar },
-    { name: lang === "id" ? "Gereja" : "Church", href: "/news/schedule", icon: Church },
+    { name: isEn ? "Agenda" : "Agenda", href: "/news/events", icon: Calendar },
+    { name: isEn ? "Church" : "Gereja", href: "/news/schedule", icon: Church },
     { name: "Marketplace", href: "/news/marketplace", icon: ShoppingBag },
     { name: "Wall of Fame", href: "/news/wall-of-fame", icon: Crown },
-    { name: "Donation", href: "/news/donation", icon: HandHeart },
+    { name: isEn ? "Donation" : "Donasi", href: "/news/donation", icon: HandHeart },
     { name: "Blog", href: "/news/blog", icon: Newspaper },
   ];
 
@@ -40,12 +41,12 @@ export default function NewsLayoutClient({ children, lang = "id" }: { children: 
           className="inline-flex items-center gap-1 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold"
         >
           <ChevronLeft className="h-4 w-4" />
-          Kembali ke {fromName}
+          {isEn ? `Back to ${fromName}` : `Kembali ke ${fromName}`}
         </Link>
       )}
 
       <div>
-        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Warta Iman</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">{isEn ? "Faith Bulletin" : "Warta Iman"}</h1>
       </div>
 
       {/* Tabs Navigation */}

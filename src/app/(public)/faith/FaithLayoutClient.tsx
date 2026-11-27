@@ -42,11 +42,11 @@ export default function FaithLayoutClient({ children, lang }: { children: React.
     hidup: [
       { name: isId ? "Doa" : "Prayers", href: "/faith/prayers", icon: Heart, active: (p) => p.startsWith("/faith/prayers") && !p.startsWith("/faith/prayers/sos") },
       { name: isId ? "Renungan" : "Devotion", href: "/faith/devotions", icon: Sunrise, active: (p) => p.startsWith("/faith/devotions") || p.startsWith("/faith/plans") },
-      { name: isId ? "Kotbah Romo" : "Romo", href: "/faith/romo", icon: Mic2, active: (p) => p.startsWith("/faith/romo") },
+      { name: isId ? "Kotbah Romo" : "Homilies", href: "/faith/romo", icon: Mic2, active: (p) => p.startsWith("/faith/romo") },
     ],
     intensi: [
       { name: isId ? "Intensi Doa" : "Intentions", href: "/faith/intensi", icon: HandHeart, active: (p) => p.startsWith("/faith/intensi") },
-      { name: "SOS Doa", href: "/faith/prayers/sos", icon: LifeBuoy, active: (p) => p.startsWith("/faith/prayers/sos") },
+      { name: isId ? "SOS Doa" : "SOS Prayer", href: "/faith/prayers/sos", icon: LifeBuoy, active: (p) => p.startsWith("/faith/prayers/sos") },
     ],
     devosi: [
       { name: isId ? "Rosario" : "Rosary", href: "/faith/prayers/rosario", icon: CircleDot, active: (p) => p.startsWith("/faith/prayers/rosario") },

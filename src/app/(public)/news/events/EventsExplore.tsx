@@ -36,37 +36,25 @@ export type PremiumBanner = {
 
 /* ---------------------------------------------------------------- helpers --- */
 
-const MONTHS = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
-];
+const MONTHS_EN = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const MONTHS_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
 
 const dayNum = (iso: string) => new Date(iso).getDate();
-const monthShort = (iso: string) => MONTHS[new Date(iso).getMonth()];
+const monthShort = (iso: string, isEn: boolean) => (isEn ? MONTHS_EN : MONTHS_ID)[new Date(iso).getMonth()];
 
-function countdown(startIso: string, endIso: string | null) {
+function countdown(startIso: string, endIso: string | null, isEn: boolean) {
   const now = new Date();
   const start = new Date(startIso);
   const end = endIso ? new Date(endIso) : null;
-  if (end && now >= start && now <= end) return "Now on";
+  if (end && now >= start && now <= end) return isEn ? "Now on" : "Berlangsung";
   const d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const d1 = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   const days = Math.round((d1.getTime() - d0.getTime()) / 86400000);
-  if (days <= 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  if (days < 7) return `In ${days} days`;
-  if (days < 30) return `In ${Math.round(days / 7)} wk`;
-  return `In ${Math.round(days / 30)} mo`;
+  if (days <= 0) return isEn ? "Today" : "Hari ini";
+  if (days === 1) return isEn ? "Tomorrow" : "Besok";
+  if (days < 7) return isEn ? `In ${days} days` : `${days} hari lagi`;
+  if (days < 30) return isEn ? `In ${Math.round(days / 7)} wk` : `${Math.round(days / 7)} minggu lagi`;
+  return isEn ? `In ${Math.round(days / 30)} mo` : `${Math.round(days / 30)} bulan lagi`;
 }
 
 function fullWhen(startIso: string, endIso: string | null) {
@@ -97,9 +85,11 @@ const norm = (s: string | null | undefined) =>
 function EventCard({
   ev,
   onOpen,
+  isEn,
 }: {
   ev: ExploreEvent;
   onOpen: (e: ExploreEvent) => void;
+  isEn: boolean;
 }) {
   return (
     <button
@@ -127,12 +117,12 @@ function EventCard({
             {dayNum(ev.event_date)}
           </p>
           <p className="text-[9px] font-bold tracking-wide text-brand-gold">
-            {monthShort(ev.event_date)}
+            {monthShort(ev.event_date, isEn)}
           </p>
         </div>
         {/* countdown */}
         <span className="absolute bottom-2 left-2 rounded-full bg-brand-gold/90 px-2 py-0.5 text-[10px] font-bold text-brand-dark">
-          {countdown(ev.event_date, ev.end_date)}
+          {countdown(ev.event_date, ev.end_date, isEn)}
         </span>
       </div>
       <p className="mt-2 line-clamp-2 text-[13px] font-bold leading-tight text-white">
@@ -149,14 +139,16 @@ function EventCard({
 function Row({
   events,
   onOpen,
+  isEn,
 }: {
   events: ExploreEvent[];
   onOpen: (e: ExploreEvent) => void;
+  isEn: boolean;
 }) {
   return (
     <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
       {events.map((ev) => (
-        <EventCard key={ev.id} ev={ev} onOpen={onOpen} />
+        <EventCard key={ev.id} ev={ev} onOpen={onOpen} isEn={isEn} />
       ))}
     </div>
   );
@@ -171,6 +163,7 @@ export default function EventsExplore({
   myCity,
   myCommunityId,
   myCommunityName,
+  lang = "id",
 }: {
   events: ExploreEvent[];
   banners?: PremiumBanner[];
@@ -178,7 +171,9 @@ export default function EventsExplore({
   myCity: string | null;
   myCommunityId: string | null;
   myCommunityName: string | null;
+  lang?: "id" | "en";
 }) {
+  const isEn = lang === "en";
   const [active, setActive] = useState<ExploreEvent | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const touchTimer = useRef<NodeJS.Timeout | null>(null);
@@ -264,7 +259,7 @@ export default function EventsExplore({
                   className="object-cover"
                 />
                 <span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/80">
-                  Sponsored
+                  {isEn ? "Sponsored" : "Sponsor"}
                 </span>
                 {b.title && (
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-2 pt-6 text-[12px] font-semibold text-white">
@@ -278,15 +273,15 @@ export default function EventsExplore({
                 className={`${slideCls} flex items-center justify-center border-2 border-dashed border-brand-gold/25 bg-gradient-to-br from-[#15181e] to-[#1a1d24]`}
               >
                 <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-muted">
-                  Sponsored
+                  {isEn ? "Sponsored" : "Sponsor"}
                 </span>
                 <div className="flex flex-col items-center gap-1 text-center">
                   <Megaphone className="h-6 w-6 text-brand-gold/60" />
                   <p className="text-sm font-bold text-brand-light">
-                    Premium ad space
+                    {isEn ? "Premium space" : "Ruang unggulan"}
                   </p>
                   <p className="text-[11px] text-brand-muted">
-                    Featured event placement — coming soon
+                    {isEn ? "Featured placement — coming soon" : "Penempatan unggulan — segera hadir"}
                   </p>
                 </div>
               </div>
@@ -305,13 +300,13 @@ export default function EventsExplore({
       {/* events that are being promoted: portrait cards, 4:5 like the event posters */}
       {promos.length > 0 && (
         <section className="mt-5">
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-white"><Megaphone className="h-4 w-4 text-brand-gold" /> Sedang dipromosikan</h2>
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-white"><Megaphone className="h-4 w-4 text-brand-gold" /> {isEn ? "Featured" : "Sedang dipromosikan"}</h2>
           <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {promos.map((b) => (
               <a key={b.id} href={b.link_url || undefined} target={b.link_url ? "_blank" : undefined} rel={b.link_url ? "noreferrer" : undefined}
                 className="relative aspect-[4/5] w-40 shrink-0 overflow-hidden rounded-xl border border-[#2a2d35] bg-[#111] sm:w-44">
-                <Image src={b.image_url} alt={b.title || "Event"} fill sizes="176px" className="object-cover" />
-                <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/85">Promosi</span>
+                <Image src={b.image_url} alt={b.title || "Agenda"} fill sizes="176px" className="object-cover" />
+                <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/85">{isEn ? "Featured" : "Promosi"}</span>
                 {b.title && <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pb-2 pt-8 text-[11px] font-semibold leading-tight text-white">{b.title}</span>}
               </a>
             ))}
@@ -325,18 +320,18 @@ export default function EventsExplore({
             <CalendarDays className="h-8 w-8 text-brand-gold" />
           </div>
           <h2 className="text-[15px] font-bold text-white">
-            No upcoming events yet
+            {isEn ? "No upcoming agenda yet" : "Belum ada agenda mendatang"}
           </h2>
           <p className="max-w-xs text-[13px] text-brand-muted">
-            Promotions published from a community will appear here.
+            {isEn ? "Activities published by communities will appear here." : "Kegiatan yang dipublikasikan komunitas akan muncul di sini."}
           </p>
         </div>
       ) : (
         <div className="mt-6 space-y-8">
           {/* upcoming — soonest first */}
           <section>
-            <h2 className="mb-3 text-lg font-bold text-white">Upcoming</h2>
-            <Row events={events} onOpen={setActive} />
+            <h2 className="mb-3 text-lg font-bold text-white">{isEn ? "Upcoming" : "Segera Hadir"}</h2>
+            <Row events={events} onOpen={setActive} isEn={isEn} />
           </section>
 
           {/* recommended for you */}
@@ -346,34 +341,34 @@ export default function EventsExplore({
             <section className="space-y-6">
               <h2 className="flex items-center gap-2 text-lg font-bold text-white">
                 <Sparkles className="h-4 w-4 text-brand-gold" />
-                Recommended for you
+                {isEn ? "Recommended for you" : "Rekomendasi untukmu"}
               </h2>
 
               {sameCity.length > 0 && (
                 <div>
                   <h3 className="mb-2 text-[12px] font-bold uppercase tracking-wide text-brand-gold">
-                    Same city{myCity ? ` · ${myCity}` : ""}
+                    {isEn ? "Same city" : "Di kotamu"}{myCity ? ` · ${myCity}` : ""}
                   </h3>
-                  <Row events={sameCity} onOpen={setActive} />
+                  <Row events={sameCity} onOpen={setActive} isEn={isEn} />
                 </div>
               )}
 
               {sameCommunity.length > 0 && (
                 <div>
                   <h3 className="mb-2 text-[12px] font-bold uppercase tracking-wide text-brand-gold">
-                    Same community
+                    {isEn ? "Same community" : "Komunitas yang sama"}
                     {myCommunityName ? ` · ${myCommunityName}` : ""}
                   </h3>
-                  <Row events={sameCommunity} onOpen={setActive} />
+                  <Row events={sameCommunity} onOpen={setActive} isEn={isEn} />
                 </div>
               )}
 
               {others.length > 0 && (
                 <div>
                   <h3 className="mb-2 text-[12px] font-bold uppercase tracking-wide text-brand-muted">
-                    Others
+                    {isEn ? "Others" : "Lainnya"}
                   </h3>
-                  <Row events={others} onOpen={setActive} />
+                  <Row events={others} onOpen={setActive} isEn={isEn} />
                 </div>
               )}
             </section>
@@ -439,7 +434,7 @@ export default function EventsExplore({
                   className="inline-flex items-center gap-2 rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-2 text-[13px] font-bold text-brand-gold hover:bg-brand-gold hover:text-brand-dark"
                 >
                   <Navigation className="h-4 w-4" />
-                  Open in Maps
+                  {isEn ? "Open in Maps" : "Buka di Maps"}
                 </a>
               )}
 

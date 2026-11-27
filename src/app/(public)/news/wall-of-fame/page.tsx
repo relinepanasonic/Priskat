@@ -1,5 +1,6 @@
 import { Crown, Medal, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getLanguage } from "@/lib/lang";
 import { badgeByKey } from "@/lib/gameCatalog";
 import { FramedAvatar, NameText } from "@/components/game/Cosmetics";
 
@@ -15,14 +16,17 @@ type Person = {
 type Top = { rank: number; user_id: string; name: string; avatar_url: string | null; frame: string | null; name_color: string | null; title: string | null; points: number };
 
 const PCOLS = "id, full_name, nama_panggilan, avatar_url, equipped_frame, equipped_name_color, equipped_title, show_on_leaderboard";
-const ago = (iso: string) => {
+const ago = (iso: string, isEn: boolean) => {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (isEn) return d <= 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
   return d <= 0 ? "hari ini" : d === 1 ? "kemarin" : `${d} hari lalu`;
 };
 
 /** Wall of Fame: this week's top prayers, the newest badges, and the highest ranks reached. */
 export default async function WallOfFamePage() {
   const supabase = await createClient();
+  const lang = await getLanguage();
+  const isEn = lang === "en";
 
   // Monday of this week in Jakarta time
   const j = new Date(Date.now() + 7 * 3600_000);
@@ -55,14 +59,18 @@ export default async function WallOfFamePage() {
     <div className="space-y-8 p-4 md:p-6">
       <header>
         <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.25em] text-brand-gold"><Crown className="h-4 w-4" /> Wall of Fame</p>
-        <h2 className="mt-1 text-2xl font-bold text-white" style={serif}>Teladan doa komunitas</h2>
-        <p className="mt-1 text-sm text-brand-muted">Mereka yang setia berdoa, membaca Firman, dan menyelesaikan tantangan.</p>
+        <h2 className="mt-1 text-2xl font-bold text-white" style={serif}>{isEn ? "Community Prayer Champions" : "Teladan doa komunitas"}</h2>
+        <p className="mt-1 text-sm text-brand-muted">
+          {isEn ? "Those who faithfully pray, read Scripture, and complete challenges." : "Mereka yang setia berdoa, membaca Firman, dan menyelesaikan tantangan."}
+        </p>
       </header>
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted">Pendoa minggu ini</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted">{isEn ? "Top prayers this week" : "Pendoa minggu ini"}</h3>
         {podium.length === 0 ? (
-          <p className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-6 text-center text-sm text-brand-muted">Belum ada poin minggu ini. Jadilah yang pertama! 🙏</p>
+          <p className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-6 text-center text-sm text-brand-muted">
+            {isEn ? "No points this week yet. Be the first! 🙏" : "Belum ada poin minggu ini. Jadilah yang pertama! 🙏"}
+          </p>
         ) : (
           <div className="space-y-2">
             {podium.map((r) => (
@@ -85,12 +93,14 @@ export default async function WallOfFamePage() {
             ))}
           </div>
         )}
-        <a href="/leaderboard" className="mt-3 block text-center text-xs font-semibold text-brand-gold underline underline-offset-4">Lihat seluruh peringkat</a>
+        <a href="/leaderboard" className="mt-3 block text-center text-xs font-semibold text-brand-gold underline underline-offset-4">
+          {isEn ? "View full leaderboard" : "Lihat seluruh peringkat"}
+        </a>
       </section>
 
       {hallRows.length > 0 && (
         <section>
-          <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted"><Medal className="h-3.5 w-3.5" /> Puncak tangga doa</h3>
+          <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted"><Medal className="h-3.5 w-3.5" /> {isEn ? "Top of the prayer ladder" : "Puncak tangga doa"}</h3>
           <div className="grid grid-cols-2 gap-2">
             {hallRows.map((r, i) => {
               const b = badgeByKey(r.badge_key);
@@ -107,9 +117,11 @@ export default async function WallOfFamePage() {
       )}
 
       <section>
-        <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted"><Sparkles className="h-3.5 w-3.5" /> Lencana terbaru</h3>
+        <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-brand-muted"><Sparkles className="h-3.5 w-3.5" /> {isEn ? "Latest badges" : "Lencana terbaru"}</h3>
         {recentBadges.length === 0 ? (
-          <p className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-6 text-center text-sm text-brand-muted">Lencana pertama akan muncul di sini.</p>
+          <p className="rounded-2xl border border-[#2a2d35] bg-[#14171c] p-6 text-center text-sm text-brand-muted">
+            {isEn ? "The first badges will appear here." : "Lencana pertama akan muncul di sini."}
+          </p>
         ) : (
           <div className="space-y-2">
             {recentBadges.map((r, i) => {
@@ -121,7 +133,7 @@ export default async function WallOfFamePage() {
                     <p className="truncate text-sm font-semibold"><NameText name={nm(r.profile!)} color={r.profile!.equipped_name_color} className="text-white" /></p>
                     <p className="truncate text-xs text-brand-muted">{b?.emoji} {b?.name ?? r.badge_key}</p>
                   </div>
-                  <span className="shrink-0 text-[11px] text-brand-muted">{ago(r.earned_at)}</span>
+                  <span className="shrink-0 text-[11px] text-brand-muted">{ago(r.earned_at, isEn)}</span>
                 </div>
               );
             })}

@@ -20,6 +20,7 @@ export default function ProductShareModal({
   imageUrl,
   shareText,
   onClose,
+  lang = "id",
 }: {
   title: string;
   subtitle: string;
@@ -27,7 +28,9 @@ export default function ProductShareModal({
   imageUrl?: string | null;
   shareText: string;
   onClose: () => void;
+  lang?: "id" | "en";
 }) {
+  const isEn = lang === "en";
   const [friends, setFriends] = useState<Friend[] | null>(null);
   const [q, setQ] = useState("");
   const [sent, setSent] = useState<Set<string>>(new Set());
@@ -139,10 +142,10 @@ export default function ProductShareModal({
       >
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold">Bagikan</h3>
+            <h3 className="text-lg font-bold">{isEn ? "Share" : "Bagikan"}</h3>
             <p className="truncate text-xs text-brand-muted">{title} · {subtitle}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Tutup" className="rounded-full p-1.5 text-gray-400 hover:bg-white/10">
+          <button type="button" onClick={onClose} aria-label={isEn ? "Close" : "Tutup"} className="rounded-full p-1.5 text-gray-400 hover:bg-white/10">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -150,7 +153,7 @@ export default function ProductShareModal({
         {/* 1. Thought di Beranda */}
         {!thoughtOpen ? (
           <button type="button" onClick={() => setThoughtOpen(true)} className={row}>
-            <BookOpenText className="h-5 w-5 text-brand-gold" /> Bagikan ke Thought di Beranda
+            <BookOpenText className="h-5 w-5 text-brand-gold" /> {isEn ? "Share to Thought on Home" : "Bagikan ke Thought di Beranda"}
           </button>
         ) : (
           <div className="space-y-2 rounded-xl border border-brand-gold/35 bg-[#14171c] p-3">
@@ -159,12 +162,12 @@ export default function ProductShareModal({
               onChange={(e) => setThoughtText(e.target.value)}
               rows={3}
               maxLength={450}
-              placeholder="Tulis rekomendasi singkatmu..."
+              placeholder={isEn ? "Write a short recommendation..." : "Tulis rekomendasi singkatmu..."}
               className="w-full rounded-lg border border-[#333] bg-[#0f1216] px-3 py-2 text-xs text-white focus:border-brand-gold focus:outline-none"
             />
             <div className="flex gap-2">
               <button type="button" onClick={() => setThoughtOpen(false)} className="flex-1 rounded-lg border border-[#333] py-2 text-xs font-semibold text-brand-light">
-                Batal
+                {isEn ? "Cancel" : "Batal"}
               </button>
               <button
                 type="button"
@@ -172,7 +175,7 @@ export default function ProductShareModal({
                 disabled={busy === "thought"}
                 className="flex-1 rounded-lg bg-brand-gold py-2 text-xs font-bold text-brand-dark disabled:opacity-60"
               >
-                {busy === "thought" ? "Mengirim…" : "Posting ke Thought"}
+                {busy === "thought" ? (isEn ? "Posting…" : "Mengirim…") : (isEn ? "Post to Thought" : "Posting ke Thought")}
               </button>
             </div>
           </div>
@@ -185,19 +188,19 @@ export default function ProductShareModal({
           rel="noopener noreferrer"
           className={row}
         >
-          <MessageCircle className="h-5 w-5 text-emerald-400" /> Bagikan ke WhatsApp
+          <MessageCircle className="h-5 w-5 text-emerald-400" /> {isEn ? "Share to WhatsApp" : "Bagikan ke WhatsApp"}
         </a>
 
         {/* Copy & Native Share */}
         <div className="grid grid-cols-2 gap-2">
           <button type="button" onClick={() => void copyLink()} className={row}>
             {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4 text-brand-gold" />}
-            <span className="text-xs">{copied ? "Tersalin!" : "Salin tautan"}</span>
+            <span className="text-xs">{copied ? (isEn ? "Copied!" : "Tersalin!") : (isEn ? "Copy link" : "Salin tautan")}</span>
           </button>
           {canNative && (
             <button type="button" onClick={() => void nativeShare()} className={row}>
               <Send className="h-4 w-4 text-brand-gold" />
-              <span className="text-xs">Aplikasi lain</span>
+              <span className="text-xs">{isEn ? "Other apps" : "Aplikasi lain"}</span>
             </button>
           )}
         </div>
@@ -214,9 +217,9 @@ export default function ProductShareModal({
         {/* 3. In-app Chat to a friend */}
         <div className="pt-2">
           <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-muted">
-            <UserRound className="h-4 w-4" /> Kirim ke Chat teman
+            <UserRound className="h-4 w-4" /> {isEn ? "Send to a friend's Chat" : "Kirim ke Chat teman"}
           </p>
-          {friends === null && <p className="py-3 text-center text-xs text-brand-muted">Memuat teman…</p>}
+          {friends === null && <p className="py-3 text-center text-xs text-brand-muted">{isEn ? "Loading friends…" : "Memuat teman…"}</p>}
           {friends !== null && friends.length === 0 && (
             <p className="rounded-xl bg-white/5 p-3 text-xs text-brand-muted">
               Belum ada teman di Ruang Iman. Tambah teman di menu Koneksi, atau bagikan lewat WhatsApp.
