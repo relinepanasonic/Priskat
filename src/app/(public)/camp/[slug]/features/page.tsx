@@ -34,6 +34,7 @@ const serif = { fontFamily: "'Lora', Georgia, serif" };
 type FeatureItem = {
   icon: typeof BookOpen;
   title: string;
+  subtitle?: string;
   href: string;
   why: string;
   bestFor: string[];
@@ -177,21 +178,24 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
           items: [
             {
               icon: Users,
-              title: "Community Center (communitycenter.ruangiman.com)",
+              title: "Community Center",
+              subtitle: "communitycenter.ruangiman.com",
               href: "/camp",
               why: "Manage members, events, QR attendance check-in, promotional posters, and event photo albums with automatic blur cleanup—saving committees hours of manual work.",
               bestFor: ["Community Admins", "Retreat & Camp Committees", "Komsel Coordinators"],
             },
             {
               icon: Store,
-              title: "Seller Center (sellercenter.ruangiman.com)",
+              title: "Seller Center",
+              subtitle: "sellercenter.ruangiman.com",
               href: "/news/marketplace",
               why: "Clean Shopee-style operational backoffice for store owners to upload products, update stock/prices inline, and answer buyer chats quickly.",
               bestFor: ["UMKM Owners", "Religious Goods Shops", "Food & Beverage Sellers"],
             },
             {
               icon: LayoutDashboard,
-              title: "Admin ERP (admin.ruangiman.com)",
+              title: "Admin ERP",
+              subtitle: "admin.ruangiman.com",
               href: "/news/donation",
               why: "Executive dashboard tracking website & mobile app progress, community operations, and transparent donations accounting.",
               bestFor: ["Ministry Founders", "Operations Team", "Stewardship & Finance"],
@@ -319,21 +323,24 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
           items: [
             {
               icon: Users,
-              title: "Community Center (communitycenter.ruangiman.com)",
+              title: "Community Center",
+              subtitle: "communitycenter.ruangiman.com",
               href: "/camp",
               why: "Kelola anggota, acara, absensi QR, poster promosi, hingga album foto acara dengan deteksi foto buram otomatis—menghemat waktu panitia secara drastis.",
               bestFor: ["Admin Komunitas", "Panitia Camp & Retret", "Koordinator Komsel"],
             },
             {
               icon: Store,
-              title: "Seller Center (sellercenter.ruangiman.com)",
+              title: "Seller Center",
+              subtitle: "sellercenter.ruangiman.com",
               href: "/news/marketplace",
               why: "Backoffice operasional bergaya Shopee yang ringkas untuk mengunggah produk, mengubah harga/stok dengan cepat, dan membalas chat pembeli.",
               bestFor: ["Pemilik Toko UMKM", "Penjual Benda Rohani", "Usaha Kuliner Umat"],
             },
             {
               icon: LayoutDashboard,
-              title: "Admin ERP (admin.ruangiman.com)",
+              title: "Admin ERP",
+              subtitle: "admin.ruangiman.com",
               href: "/news/donation",
               why: "Panel kendali eksekutif untuk memantau progres website & aplikasi mobile, operasional komunitas, dan pembukuan donasi yang tertib.",
               bestFor: ["Pendiri Pelayanan", "Tim Operasional", "Pengelola Keuangan"],
@@ -343,23 +350,23 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
       ];
 
   return (
-    <div className="space-y-8 p-4 pb-14 md:p-6">
+    <div className="space-y-6 overflow-x-hidden p-3.5 pb-14 sm:p-4 md:space-y-8 md:p-6">
       {/* Header */}
       <section
-        className="relative overflow-hidden rounded-3xl p-6 md:p-9"
+        className="relative overflow-hidden rounded-3xl p-5 sm:p-6 md:p-9"
         style={{
           background: "radial-gradient(circle at top left, rgba(214,176,114,0.2), transparent 55%), linear-gradient(150deg, #171f33 0%, #0d1017 80%)",
           border: `1px solid ${GOLD}38`,
         }}
       >
-        <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.25em]" style={{ color: GOLD }}>
-          <Sparkles className="h-3.5 w-3.5" />
+        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] sm:text-[11px]" style={{ color: GOLD }}>
+          <Sparkles className="h-3.5 w-3.5 shrink-0" />
           {isEn ? "Ruang Iman Feature Guide" : "Panduan Fitur Ruang Iman"}
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-white md:text-4xl" style={serif}>
+        <h1 className="mt-2 text-xl font-bold leading-snug text-white sm:text-2xl md:text-4xl" style={serif}>
           {isEn ? "Every Feature, Why It Matters & Who It Blesses Most" : "Semua Fitur Kami, Keunggulannya & Siapa yang Paling Terbantu"}
         </h1>
-        <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-[#EAE5D9]/85">
+        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#EAE5D9]/85 sm:text-sm">
           {isEn
             ? "Ruang Iman brings together daily Catholic spirituality, thriving community management, and practical fellowship tools—all 100% free and crafted for maximum impact."
             : "Ruang Iman menyatukan kehidupan rohani Katolik harian, manajemen komunitas yang rapi, dan ekosistem persaudaraan yang nyata—semuanya 100% gratis dan dirancang untuk dampak maksimal."}
@@ -382,32 +389,39 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
 
       {/* Feature Pillars */}
       {sections.map((sec) => (
-        <section key={sec.badge} className="space-y-4">
-          <div className="border-b border-white/10 pb-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: GOLD }}>
+        <section key={sec.badge} className="space-y-3.5">
+          <div className="border-b border-white/10 pb-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] sm:text-[11px]" style={{ color: GOLD }}>
               {sec.badge}
             </p>
-            <h2 className="mt-1 text-xl font-bold text-white md:text-2xl" style={serif}>
+            <h2 className="mt-1 text-lg font-bold text-white sm:text-xl md:text-2xl" style={serif}>
               {sec.heading}
             </h2>
-            <p className="mt-1 text-xs text-brand-muted sm:text-sm">{sec.intro}</p>
+            <p className="mt-1 text-xs leading-relaxed text-brand-muted sm:text-sm">{sec.intro}</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
             {sec.items.map((item) => (
               <Link
                 key={item.title}
                 href={item.href}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-[#151921] p-5 transition hover:-translate-y-0.5 hover:border-brand-gold/45 hover:bg-[#191e28]"
+                className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#151921] p-4 transition hover:-translate-y-0.5 hover:border-brand-gold/45 hover:bg-[#191e28] sm:p-5"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-gold/12 text-brand-gold">
-                      <item.icon className="h-5 w-5" />
+                <div className="flex min-w-0 items-start justify-between gap-2.5">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold sm:h-10 sm:w-10">
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </span>
-                    <h3 className="text-base font-bold text-white group-hover:text-brand-gold" style={serif}>
-                      {item.title}
-                    </h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="break-words text-[15px] font-bold leading-snug text-white group-hover:text-brand-gold sm:text-base" style={serif}>
+                        {item.title}
+                      </h3>
+                      {item.subtitle && (
+                        <p className="mt-0.5 truncate font-mono text-[10px] text-brand-gold/75">
+                          {item.subtitle}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-600 transition group-hover:translate-x-0.5 group-hover:text-brand-gold" />
                 </div>
@@ -417,13 +431,13 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
                   <p className="text-[10px] font-bold uppercase tracking-wider text-brand-gold/80">
                     {isEn ? "Why it's great" : "Mengapa fitur ini unggul"}
                   </p>
-                  <p className="mt-1 text-xs leading-relaxed text-[#EAE5D9]/85 sm:text-[13px]">
+                  <p className="mt-1 break-words text-xs leading-relaxed text-[#EAE5D9]/85 sm:text-[13px]">
                     {item.why}
                   </p>
                 </div>
 
                 {/* Best for / Maximal Impact */}
-                <div className="mt-auto pt-4">
+                <div className="mt-auto pt-3.5">
                   <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
                     {isEn ? "Maximal impact for" : "Dampak maksimal untuk"}
                   </p>

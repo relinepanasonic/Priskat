@@ -190,9 +190,9 @@ export default function CommunitySlugLayout({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col space-y-3 pb-28 pt-3 font-sans md:space-y-5 md:px-8 md:py-7">
+    <div className="mx-auto flex w-full max-w-6xl flex-col space-y-3 overflow-x-hidden pb-28 pt-3 font-sans md:space-y-5 md:px-8 md:py-7">
       {/* Back button + Community name */}
-      <div className="flex items-center gap-3 px-4 md:px-0">
+      <div className="flex min-w-0 items-center gap-2.5 px-4 md:gap-3 md:px-0">
         <Link
           href="/camp"
           className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 text-sm text-brand-muted transition-colors hover:border-white/10 hover:bg-white/5 hover:text-white md:border-white/10 md:bg-[#1a1d24] md:px-3 md:py-1.5"

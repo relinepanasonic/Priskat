@@ -163,111 +163,110 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     ];
 
     return (
-      <div className="space-y-6 p-4 pb-12 md:space-y-8 md:p-6">
+      <div className="space-y-5 overflow-x-hidden p-3.5 pb-12 sm:p-4 md:space-y-8 md:p-6">
         {/* Official Ruang Iman Website Hero */}
         <section
-          className="relative overflow-hidden rounded-3xl p-6 md:p-10"
+          className="relative overflow-hidden rounded-3xl p-4 sm:p-6 md:p-9"
           style={{
             background: "radial-gradient(circle at top right, rgba(214,176,114,0.22), transparent 55%), linear-gradient(155deg, #16223b 0%, #0d1017 75%)",
             border: `1px solid ${GOLD}40`,
           }}
         >
-          <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo.png"
-                alt="Ruang Iman"
-                className="h-18 w-18 shrink-0 rounded-2xl bg-white object-contain p-1 shadow-xl shadow-black/40 md:h-24 md:w-24"
-                style={{ border: `1px solid ${GOLD}66` }}
-              />
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.26em]" style={{ color: GOLD }}>
-                  ruangiman.com · {isEn ? "Catholic Digital Ecosystem" : "Ekosistem Digital Katolik"}
-                </p>
-                <h2 className="mt-1 text-3xl font-bold text-white md:text-4xl" style={serif}>
-                  Ruang Iman
-                </h2>
-                <p className="mt-1 text-sm italic text-[#EAE5D9]/85" style={serif}>
-                  &ldquo;{isEn ? "A Place to Gather, Learn, and Connect" : "Tempat Berkumpul, Belajar, dan Terhubung"}&rdquo;
-                </p>
-              </div>
+          <div className="relative flex items-center gap-3.5 sm:gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Ruang Iman"
+              className="h-16 w-16 shrink-0 rounded-2xl bg-white object-contain p-1 shadow-xl shadow-black/40 sm:h-20 sm:w-20"
+              style={{ border: `1px solid ${GOLD}66` }}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[10px] font-bold uppercase tracking-[0.18em] sm:text-[11px] sm:tracking-[0.22em]" style={{ color: GOLD }}>
+                ruangiman.com
+              </p>
+              <h2 className="mt-0.5 text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl" style={serif}>
+                Ruang Iman
+              </h2>
+              <p className="mt-1 text-xs italic leading-snug text-[#EAE5D9]/85 sm:text-sm" style={serif}>
+                &ldquo;{isEn ? "A Place to Gather, Learn, and Connect" : "Tempat Berkumpul, Belajar, dan Terhubung"}&rdquo;
+              </p>
             </div>
           </div>
 
-          <p className="relative mt-5 max-w-3xl text-[15px] leading-[1.8] text-[#EAE5D9]/90 md:text-base">
+          <p className="relative mt-4 max-w-3xl text-[13.5px] leading-[1.75] text-[#EAE5D9]/90 sm:mt-5 sm:text-[15px] md:text-base">
             {isEn
               ? "Ruang Iman was born in quiet prayer to bridge Catholic communities, parishes, and believers across Indonesia. May the screens we hold every day become a living sanctuary—bringing us closer to Scripture, prayer, our brothers and sisters in Christ, and meaningful service."
               : "Ruang Iman lahir dari doa yang sunyi untuk menjembatani umat Katolik, paroki, dan berbagai komunitas di seluruh Indonesia. Biarlah layar yang kita genggam setiap hari menjadi ruang perjumpaan yang membawa kita lebih dekat pada Firman, doa, persaudaraan, dan pelayanan yang nyata."}
           </p>
 
-          <p className="relative mt-3 text-xs italic text-brand-gold/90" style={serif}>
+          <p className="relative mt-3 text-xs italic leading-relaxed text-brand-gold/90" style={serif}>
             &ldquo;{isEn ? "For where two or three gather in my name, there am I with them." : "Sebab di mana dua atau tiga orang berkumpul dalam nama-Ku, di situ Aku ada di tengah-tengah mereka."}&rdquo; — {isEn ? "Matthew 18:20" : "Matius 18:20"}
           </p>
 
-          {/* Actions */}
-          <div className="relative mt-6 flex flex-wrap items-center gap-2.5">
+          {/* Actions — clean symmetric grid on mobile, inline flex on desktop */}
+          <div className="relative mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
             <Link
               href={`/camp/${slug}/features`}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-gold px-5 py-2.5 text-xs font-bold text-brand-dark shadow-md transition hover:bg-brand-gold-hover sm:text-sm"
+              className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-brand-dark shadow-md transition hover:bg-brand-gold-hover sm:col-span-1 sm:px-5 sm:text-sm"
             >
-              <Sparkles className="h-4 w-4" />
-              {isEn ? "Explore All Features" : "Lihat Semua Fitur"}
-              <ArrowRight className="h-4 w-4" />
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <span>{isEn ? "Explore All Features" : "Lihat Semua Fitur"}</span>
+              <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
             {riShowJoin && (user ? (
               <JoinCommunityButton
                 community={{ id: community.id, name: community.name ?? "Ruang Iman", join_mode: (c.join_mode ?? "open") as "open" | "request" | "closed", join_fields: c.join_fields ?? null }}
                 status={riJoinStatus}
-                className="!rounded-xl !px-4 !py-2.5 !text-xs sm:!text-sm"
+                className="justify-center !rounded-xl !px-3.5 !py-2.5 !text-xs sm:!px-4 sm:!text-sm"
               />
             ) : (
-              <Link href="/login" className="inline-flex items-center rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-4 py-2.5 text-xs font-bold text-brand-gold hover:bg-brand-gold/20 sm:text-sm">
-                {isEn ? "Sign in to join" : "Masuk untuk bergabung"}
+              <Link href="/login" className="inline-flex items-center justify-center rounded-xl border border-brand-gold/40 bg-brand-gold/10 px-3.5 py-2.5 text-xs font-bold text-brand-gold hover:bg-brand-gold/20 sm:px-4 sm:text-sm">
+                {isEn ? "Sign in to join" : "Masuk & Gabung"}
               </Link>
             ))}
             <a
               href="https://ruangiman.com"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white transition hover:border-brand-gold/50 sm:text-sm"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-white transition hover:border-brand-gold/50 sm:px-4 sm:text-sm"
             >
-              <Globe className="h-4 w-4 text-brand-gold" />
-              ruangiman.com
-              <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+              <Globe className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
+              <span className="truncate">ruangiman.com</span>
+              <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
             </a>
             <ShareCommunityButton
               name="Ruang Iman"
               slug={community.slug || community.id}
               label={isEn ? "Share" : "Bagikan"}
+              className="justify-center"
             />
           </div>
 
           {/* Live Ecosystem Numbers */}
-          <div className="relative mt-6 grid grid-cols-3 gap-3 max-w-lg">
+          <div className="relative mt-5 grid max-w-lg grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
             {[
               { label: isEn ? "Believers" : "Umat", value: totalUsers ?? 0, icon: Users },
               { label: isEn ? "Communities" : "Komunitas", value: totalCommunities ?? 0, icon: Tent },
               { label: isEn ? "UMKM Stores" : "Toko Umat", value: totalStores ?? 0, icon: ShoppingBag },
             ].map((s) => (
-              <div key={s.label} className="rounded-2xl bg-white/5 p-3 text-center" style={{ border: `1px solid ${GOLD}25` }}>
+              <div key={s.label} className="min-w-0 rounded-2xl bg-white/5 p-2.5 text-center sm:p-3" style={{ border: `1px solid ${GOLD}25` }}>
                 <s.icon className="mx-auto h-4 w-4" style={{ color: GOLD }} />
-                <div className="mt-1 text-xl font-bold text-white">{s.value}</div>
-                <div className="text-[10px] uppercase tracking-widest text-brand-muted">{s.label}</div>
+                <div className="mt-1 text-lg font-bold text-white sm:text-xl">{s.value}</div>
+                <div className="truncate text-[9px] uppercase tracking-wider text-brand-muted sm:text-[10px]">{s.label}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* 3 Core Pillars */}
-        <section className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-3 md:grid-cols-3 md:gap-4">
           {pillars.map((p) => (
-            <div key={p.title} className="rounded-2xl border border-white/10 bg-[#151921] p-5">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold">
-                <p.icon className="h-5 w-5" />
+            <div key={p.title} className="overflow-hidden rounded-2xl border border-white/10 bg-[#151921] p-4 sm:p-5">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold">
+                <p.icon className="h-4 w-4" />
               </span>
-              <h3 className="mt-3 text-lg font-bold text-white" style={serif}>{p.title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-brand-muted sm:text-sm">{p.text}</p>
+              <h3 className="mt-3 text-base font-bold text-white sm:text-lg" style={serif}>{p.title}</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-brand-muted sm:text-[13px]">{p.text}</p>
             </div>
           ))}
         </section>
@@ -275,10 +274,10 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         {/* Connected Ruang Iman Ecosystem */}
         <section className="space-y-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: GOLD }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] sm:text-[11px]" style={{ color: GOLD }}>
               {isEn ? "One Connected Ministry" : "Satu Ekosistem Pelayanan"}
             </p>
-            <h3 className="mt-1 text-xl font-bold text-white" style={serif}>
+            <h3 className="mt-1 text-lg font-bold text-white sm:text-xl" style={serif}>
               {isEn ? "Built for Individuals, Communities & Entrepreneurs" : "Dirancang untuk Umat, Komunitas & UMKM"}
             </h3>
           </div>
@@ -286,42 +285,42 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             {ecosystem.map((item) => {
               const isExternal = item.url.startsWith("http");
               const inner = (
-                <div className="group flex h-full items-start gap-3.5 rounded-2xl border border-white/10 bg-[#151921] p-4 transition hover:border-brand-gold/45 hover:bg-[#191e28]">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold">
-                    <item.icon className="h-5 w-5" />
+                <div className="group flex h-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#151921] p-4 transition hover:border-brand-gold/45 hover:bg-[#191e28]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold">
+                    <item.icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-white group-hover:text-brand-gold">{item.name}</p>
-                      <ExternalLink className="h-3.5 w-3.5 text-gray-500 group-hover:text-brand-gold" />
+                      <p className="truncate text-sm font-bold text-white group-hover:text-brand-gold">{item.name}</p>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-gray-500 group-hover:text-brand-gold" />
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-brand-muted">{item.desc}</p>
                   </div>
                 </div>
               );
               return isExternal ? (
-                <a key={item.name} href={item.url} target="_blank" rel="noreferrer">{inner}</a>
+                <a key={item.name} href={item.url} target="_blank" rel="noreferrer" className="min-w-0">{inner}</a>
               ) : (
-                <Link key={item.name} href={item.url}>{inner}</Link>
+                <Link key={item.name} href={item.url} className="min-w-0">{inner}</Link>
               );
             })}
           </div>
         </section>
 
         {/* Bottom CTA: Features & Support */}
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid gap-3 md:grid-cols-2 md:gap-4">
           <Link
             href={`/camp/${slug}/features`}
-            className="group flex items-center justify-between gap-4 rounded-2xl border border-brand-gold/35 bg-brand-gold/10 p-5 transition hover:bg-brand-gold/15"
+            className="group flex min-w-0 items-center justify-between gap-3 overflow-hidden rounded-2xl border border-brand-gold/35 bg-brand-gold/10 p-4 transition hover:bg-brand-gold/15 sm:p-5"
           >
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-gold">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-gold sm:text-[11px]">
                 {isEn ? "Complete Guide" : "Panduan Lengkap"}
               </p>
-              <h4 className="mt-1 text-lg font-bold text-white" style={serif}>
+              <h4 className="mt-1 text-base font-bold text-white sm:text-lg" style={serif}>
                 {isEn ? "Discover Every Ruang Iman Feature" : "Kenali Semua Fitur Ruang Iman"}
               </h4>
-              <p className="mt-1 text-xs text-brand-light/80">
+              <p className="mt-1 text-xs leading-relaxed text-brand-light/80">
                 {isEn ? "See why each feature matters and who benefits most." : "Pelajari keunggulan tiap fitur dan untuk siapa dampaknya paling maksimal."}
               </p>
             </div>
@@ -330,16 +329,16 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
 
           <Link
             href="/news/donation"
-            className="group flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#151921] p-5 transition hover:border-brand-gold/45"
+            className="group flex min-w-0 items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#151921] p-4 transition hover:border-brand-gold/45 sm:p-5"
           >
-            <div>
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-gold">
-                <ShieldCheck className="h-3.5 w-3.5" /> {isEn ? "100% Free for All" : "100% Gratis untuk Umat"}
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-gold sm:text-[11px]">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> {isEn ? "100% Free for All" : "100% Gratis untuk Umat"}
               </p>
-              <h4 className="mt-1 text-lg font-bold text-white" style={serif}>
+              <h4 className="mt-1 text-base font-bold text-white sm:text-lg" style={serif}>
                 {isEn ? "Support This Ministry" : "Dukung Pelayanan Ini"}
               </h4>
-              <p className="mt-1 text-xs text-brand-muted">
+              <p className="mt-1 text-xs leading-relaxed text-brand-muted">
                 {isEn ? "Read the Founder's letter and learn how to pray for or support Ruang Iman." : "Baca pesan pendiri Ruang Iman dan cara ikut ambil bagian dalam pelayanan."}
               </p>
             </div>
