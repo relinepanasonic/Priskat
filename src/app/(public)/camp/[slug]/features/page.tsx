@@ -24,6 +24,7 @@ import {
 import { getCommunityPageContext } from "@/lib/ciServer";
 import { isRuangImanCommunity } from "@/lib/community";
 import { getLanguage } from "@/lib/lang";
+import FeatureReturnLink from "@/components/community/FeatureReturnLink";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Features — Ruang Iman" };
@@ -402,9 +403,10 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
 
           <div className="grid gap-3 md:grid-cols-2 md:gap-4">
             {sec.items.map((item) => (
-              <Link
+              <FeatureReturnLink
                 key={item.title}
                 href={item.href}
+                returnTo={`/camp/${slug}/features`}
                 className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#151921] p-4 transition hover:-translate-y-0.5 hover:border-brand-gold/45 hover:bg-[#191e28] sm:p-5"
               >
                 <div className="flex min-w-0 items-start justify-between gap-2.5">
@@ -452,7 +454,7 @@ export default async function RuangImanFeaturesPage({ params }: { params: Promis
                     ))}
                   </div>
                 </div>
-              </Link>
+              </FeatureReturnLink>
             ))}
           </div>
         </section>

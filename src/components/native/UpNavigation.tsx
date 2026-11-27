@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { upOf } from "@/lib/upPath";
+import { FEATURES_RETURN_KEY } from "@/components/community/FeatureReturnLink";
 
 declare global {
   interface Window {
@@ -42,7 +43,16 @@ export default function UpNavigation() {
   const path = useRef(pathname);
   const lastHomeBack = useRef(0);
 
-  useEffect(() => { path.current = pathname; }, [pathname]);
+  useEffect(() => {
+    path.current = pathname;
+    // Clear any saved return-to-Features shortcut once we're back on Features or Home
+    try {
+      const saved = sessionStorage.getItem(FEATURES_RETURN_KEY);
+      if (saved && (pathname === saved || pathname === "/")) {
+        sessionStorage.removeItem(FEATURES_RETURN_KEY);
+      }
+    } catch { /* ignore */ }
+  }, [pathname]);
 
   useEffect(() => {
     window.__ruangUp = () => {
@@ -52,6 +62,16 @@ export default function UpNavigation() {
       }
       const open = document.querySelector("dialog[open]") as HTMLDialogElement | null;
       if (open) { open.close(); return "up"; }
+
+      // 1b. If user jumped into a feature from Ruang Iman's Features page, Back returns there
+      try {
+        const returnTo = sessionStorage.getItem(FEATURES_RETURN_KEY);
+        if (returnTo && returnTo !== path.current) {
+          sessionStorage.removeItem(FEATURES_RETURN_KEY);
+          router.replace(returnTo);
+          return "up";
+        }
+      } catch { /* ignore */ }
 
       // 2. one step up the ladder
       const parent = upOf(path.current);
